@@ -1,0 +1,32 @@
+{
+    "version": 2,
+    "builds": [
+          {
+                  "src": "api/**/*.js",
+                  "use": "@vercel/node"
+          },
+          {
+                  "src": "*.html",
+                  "use": "@vercel/static"
+          },
+          {
+                  "src": "*.css",
+                  "use": "@vercel/static"
+          },
+          {
+                  "src": "*.js",
+                  "use": "@vercel/static",
+                  "config": {
+                            "excludeFiles": "api/**"
+                  }
+          }
+    ],
+    "routes": [
+          { "src": "/api/(.*)", "dest": "/api/$1" },
+          { "src": "/login.html", "dest": "/login.html" },
+          { "src": "/dashboard.html", "dest": "/dashboard.html" },
+          { "src": "/style.css", "dest": "/style.css" },
+          { "src": "/script.js", "dest": "/script.js" },
+          { "src": "/(.*)", "dest": "/index.html" }
+    ]
+}

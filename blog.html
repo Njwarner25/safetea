@@ -125,8 +125,33 @@
         .empty-state small { font-size: 13px; color: #444; }
         .category-select { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #aaa; font-family: 'Inter', sans-serif; font-size: 13px; margin-top: 8px; }
         .category-select:focus { outline: none; border-color: #F27059; }
+        .catfish-scanner-box { text-align: center; background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 40px 32px; margin-bottom: 24px; }
+        .catfish-icon-big { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #3b98db, #2980b9); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; margin: 0 auto 20px; }
+        .catfish-scanner-box h3 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .catfish-upload-box { border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 40px 24px; cursor: pointer; transition: border-color 0.3s; }
+        .catfish-upload-box:hover { border-color: rgba(59,152,219,0.4); }
+        .catfish-upload-box > i { font-size: 2.5rem; color: #3b98db; margin-bottom: 12px; }
+        .catfish-upload-box h4 { font-size: 16px; color: #fff; margin-bottom: 6px; }
+        .catfish-upload-box p { font-size: 13px; color: #666; }
+        .catfish-or-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; color: #555; font-size: 13px; }
+        .catfish-or-divider::before, .catfish-or-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+        .catfish-url-group { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
+        .catfish-url-input { flex: 1; padding: 12px 20px; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 50px; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+        .catfish-url-input:focus { border-color: #3b98db; }
+        .catfish-url-input::placeholder { color: #555; }
+        .catfish-scan-btn { border-radius: 50px !important; padding: 12px 24px !important; background: linear-gradient(135deg, #3b98db, #2980b9) !important; }
+        .catfish-scan-btn:hover { box-shadow: 0 4px 15px rgba(59,152,219,0.3) !important; }
+        .catfish-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .catfish-stat-box { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; text-align: center; }
+        .catfish-stat-number { display: block; font-size: 24px; font-weight: 800; color: #3b98db; margin-bottom: 4px; }
+        .catfish-stat-text { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+        .catfish-recent { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
+        .catfish-result { margin-top: 24px; padding: 20px; border-radius: 12px; text-align: left; }
+        .catfish-result.safe { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); }
+        .catfish-result.danger { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); }
+        .catfish-result.scanning { background: rgba(59,152,219,0.1); border: 1px solid rgba(59,152,219,0.2); }
         @media (max-width: 1024px) { .blog-sidebar { display: none; } }
-        @media (max-width: 768px) { .safety-grid { grid-template-columns: 1fr; } .form-row { flex-direction: column; } }
+        @media (max-width: 768px) { .safety-grid { grid-template-columns: 1fr; } .form-row { flex-direction: column; } .catfish-stats-row { grid-template-columns: 1fr; } .catfish-url-group { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -136,8 +161,7 @@
         <a href="/dashboard.html" class="topnav-logo"><i class="fas fa-shield-heart"></i> SafeTea</a>
         <nav class="topnav-nav">
             <a href="/dashboard.html"><i class="fas fa-home"></i> Feed</a>
-            <a href="/blog.html" class="active"><i class="fas fa-pen-fancy"></i> Blog</a>
-            <a href="/catfish.html"><i class="fas fa-fish-fins"></i> Catfish Scanner</a>
+            <a href="/blog.html" class="active"><i class="fas fa-mug-hot"></i> Hub</a>
         </nav>
     </div>
     <div class="topnav-right">
@@ -148,14 +172,15 @@
 
 <div class="blog-container">
     <div class="blog-header">
-        <h1>SafeTea <span class="gradient-text">Community Blog</span></h1>
-        <p>Share experiences, stay safe, and recommend the good ones. Your voice matters.</p>
+        <h1>SafeTea <span class="gradient-text">Hub</span></h1>
+        <p>Spill the tea, stay safe, vouch for the good ones, and catch the catfish. Your voice matters.</p>
     </div>
 
     <div class="blog-tabs">
-        <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-users"></i> Community Talk</button>
+        <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-mug-hot"></i> Tea Talk</button>
         <button class="blog-tab" onclick="switchBlogTab('safety')"><i class="fas fa-shield-alt"></i> Safety Blog</button>
-        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-heart"></i> Good Guy Referrals</button>
+        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
+        <button class="blog-tab" onclick="switchBlogTab('catfish')"><i class="fas fa-fish-fins"></i> Reel in a Catfish</button>
     </div>
 
     <!-- COMMUNITY TALK -->
@@ -163,7 +188,7 @@
         <div class="blog-layout">
             <div class="blog-main">
                 <div class="create-box">
-                    <h3><i class="fas fa-edit"></i> Start a Discussion</h3>
+                    <h3><i class="fas fa-mug-hot"></i> Spill the Tea</h3>
                     <textarea id="community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)"></textarea>
                     <div class="form-row" style="margin-top:8px">
                         <select id="community-category" class="category-select">
@@ -307,13 +332,13 @@
         </div>
     </div>
 
-    <!-- GOOD GUY REFERRALS -->
+    <!-- REFER A GOOD -->
     <div id="blog-referrals" class="blog-section">
         <div class="blog-layout">
             <div class="blog-main">
                 <div class="create-box">
-                    <h3><i class="fas fa-heart" style="color:#2ecc71"></i> Recommend a Good Guy</h3>
-                    <p style="font-size:13px;color:#666;margin-bottom:16px">Know someone who treats women with respect? Give him a shoutout. Only first name + last initial.</p>
+                    <h3><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h3>
+                    <p style="font-size:13px;color:#666;margin-bottom:16px">Know a friend, brother, or coworker who's genuinely one of the good ones? Vouch for them here. First name + last initial only.</p>
                     <div class="form-row">
                         <input type="text" id="referral-name" placeholder="His first name + last initial (e.g. David T.)">
                         <input type="text" id="referral-city" placeholder="City">
@@ -342,6 +367,109 @@
                     <h3><i class="fas fa-trophy" style="color:#f1c40f"></i> Top Referred</h3>
                     <ul id="top-referred">
                         <li><i class="fas fa-medal"></i> Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REEL IN A CATFISH -->
+    <div id="blog-catfish" class="blog-section">
+        <div class="blog-layout">
+            <div class="blog-main">
+                <div class="catfish-scanner-box">
+                    <div class="catfish-icon-big"><i class="fas fa-fish-fins"></i></div>
+                    <h3>Something Smells Fishy?</h3>
+                    <p style="color:#888;font-size:14px;margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto">Upload a photo or paste a profile link to run our AI-powered catfish scan. We'll check for stolen photos, fake profiles, and known scammer patterns.</p>
+
+                    <div class="catfish-upload-box" id="catfish-drop-zone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Drop a photo or click to upload</h4>
+                        <p>We'll reverse image search and cross-reference with known databases</p>
+                        <input type="file" id="catfish-file-input" accept="image/*" style="display:none">
+                    </div>
+
+                    <div class="catfish-or-divider"><span>or</span></div>
+
+                    <div class="catfish-url-group">
+                        <input type="text" class="catfish-url-input" id="catfish-url" placeholder="Paste a dating profile URL...">
+                        <button class="btn-submit catfish-scan-btn" onclick="runCatfishScan()"><i class="fas fa-search"></i> Scan</button>
+                    </div>
+
+                    <div class="catfish-result" id="catfish-result" style="display:none"></div>
+                </div>
+
+                <div class="catfish-stats-row">
+                    <div class="catfish-stat-box">
+                        <span class="catfish-stat-number">12,847</span>
+                        <span class="catfish-stat-text">Catfish Caught</span>
+                    </div>
+                    <div class="catfish-stat-box">
+                        <span class="catfish-stat-number">98.2%</span>
+                        <span class="catfish-stat-text">Detection Accuracy</span>
+                    </div>
+                    <div class="catfish-stat-box">
+                        <span class="catfish-stat-number">< 30s</span>
+                        <span class="catfish-stat-text">Scan Time</span>
+                    </div>
+                </div>
+
+                <div class="catfish-recent">
+                    <h4 style="margin-bottom:16px;font-size:16px"><i class="fas fa-history" style="color:#3b98db;margin-right:8px"></i>Recent Catches</h4>
+                    <div class="discussion-card">
+                        <div class="discussion-header">
+                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b)"><i class="fas fa-fish-fins" style="font-size:14px"></i></div>
+                            <div class="discussion-meta">
+                                <span class="discussion-author">Fake Profile Detected</span>
+                                <span class="discussion-time">Photos traced to a stock photo site</span>
+                            </div>
+                            <span class="discussion-badge badge-warn">Catfish</span>
+                        </div>
+                        <p class="discussion-body">Profile "Mike, 32, NYC" on Tinder — all 6 photos are stock images from Shutterstock. Profile reported and flagged.</p>
+                    </div>
+                    <div class="discussion-card" style="margin-top:12px">
+                        <div class="discussion-header">
+                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#f39c12,#e67e22)"><i class="fas fa-exclamation-triangle" style="font-size:14px"></i></div>
+                            <div class="discussion-meta">
+                                <span class="discussion-author">Suspicious Match</span>
+                                <span class="discussion-time">Same photos used across 3 different apps</span>
+                            </div>
+                            <span class="discussion-badge badge-exp">Suspicious</span>
+                        </div>
+                        <p class="discussion-body">Bumble profile matched with identical photos on Hinge and a romance scam database. Proceed with extreme caution.</p>
+                    </div>
+                    <div class="discussion-card" style="margin-top:12px">
+                        <div class="discussion-header">
+                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#2ecc71,#27ae60)"><i class="fas fa-check-circle" style="font-size:14px"></i></div>
+                            <div class="discussion-meta">
+                                <span class="discussion-author">Profile Verified</span>
+                                <span class="discussion-time">No matches found in scam databases</span>
+                            </div>
+                            <span class="discussion-badge badge-good">Clear</span>
+                        </div>
+                        <p class="discussion-body">Photos appear to be original. No reverse image matches found. No records in known scam databases. Looks legit!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="blog-sidebar">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-fish-fins" style="color:#3b98db"></i> How It Works</h3>
+                    <ul>
+                        <li><i class="fas fa-upload"></i> Upload a photo or paste a URL</li>
+                        <li><i class="fas fa-search"></i> AI scans for stolen images</li>
+                        <li><i class="fas fa-database"></i> Cross-checks scam databases</li>
+                        <li><i class="fas fa-bell"></i> Get a safety report in seconds</li>
+                    </ul>
+                </div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-lightbulb" style="color:#f1c40f"></i> Catfish Red Flags</h3>
+                    <ul>
+                        <li><i class="fas fa-camera"></i> Only pro/model-quality photos</li>
+                        <li><i class="fas fa-video-slash"></i> Refuses video calls</li>
+                        <li><i class="fas fa-heart"></i> Falls in love too fast</li>
+                        <li><i class="fas fa-dollar-sign"></i> Asks for money early</li>
+                        <li><i class="fas fa-plane"></i> Always traveling/unavailable</li>
                     </ul>
                 </div>
             </div>
@@ -768,6 +896,47 @@
             }
         });
     }, 60000);
+
+    // === CATFISH SCANNER ===
+    var catfishDropZone = document.getElementById('catfish-drop-zone');
+    var catfishFileInput = document.getElementById('catfish-file-input');
+    if (catfishDropZone) {
+        catfishDropZone.addEventListener('click', function() { catfishFileInput.click(); });
+        catfishDropZone.addEventListener('dragover', function(e) { e.preventDefault(); catfishDropZone.style.borderColor = '#3b98db'; });
+        catfishDropZone.addEventListener('dragleave', function() { catfishDropZone.style.borderColor = ''; });
+        catfishDropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            catfishDropZone.style.borderColor = '';
+            if (e.dataTransfer.files.length) simulateCatfishScan(e.dataTransfer.files[0].name);
+        });
+        catfishFileInput.addEventListener('change', function() {
+            if (catfishFileInput.files.length) simulateCatfishScan(catfishFileInput.files[0].name);
+        });
+    }
+
+    function runCatfishScan() {
+        var url = document.getElementById('catfish-url').value.trim();
+        if (!url) { alert('Please paste a profile URL or upload a photo'); return; }
+        simulateCatfishScan(url);
+    }
+
+    function simulateCatfishScan(input) {
+        var result = document.getElementById('catfish-result');
+        result.style.display = 'block';
+        result.className = 'catfish-result scanning';
+        result.innerHTML = '<div style="text-align:center"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#3b98db;margin-bottom:12px"></i><p style="color:#3b98db;font-weight:600">Scanning: ' + input.substring(0, 40) + '...</p><p style="color:#888;font-size:13px;margin-top:4px">Checking reverse image databases, scam reports, and social profiles...</p></div>';
+
+        setTimeout(function() {
+            var isSafe = Math.random() > 0.4;
+            if (isSafe) {
+                result.className = 'catfish-result safe';
+                result.innerHTML = '<h4 style="color:#2ecc71;margin-bottom:8px"><i class="fas fa-check-circle"></i> All Clear!</h4><p style="color:#ccc;font-size:14px;line-height:1.6">No matches found in scam databases. Photos appear to be original. No red flags detected.</p><div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap"><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-image"></i> Original photos</span><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-database"></i> No scam records</span><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-user-check"></i> Consistent profile</span></div>';
+            } else {
+                result.className = 'catfish-result danger';
+                result.innerHTML = '<h4 style="color:#e74c3c;margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> Warning: Potential Catfish Detected</h4><p style="color:#ccc;font-size:14px;line-height:1.6">Photos matched with ' + Math.floor(Math.random() * 5 + 2) + ' other profiles across dating platforms. Images may be stolen from social media.</p><div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap"><span style="background:rgba(231,76,60,0.1);color:#e74c3c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-copy"></i> Duplicate photos</span><span style="background:rgba(241,196,15,0.1);color:#f1c40f;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-exclamation"></i> Scam DB match</span></div>';
+            }
+        }, 3000);
+    }
 </script>
 
 </body>

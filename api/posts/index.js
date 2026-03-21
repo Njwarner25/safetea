@@ -15,36 +15,61 @@ module.exports = async function handler(req, res) {
 
             if (city) { where.push('p.city = $' + idx++); params.push(city); }
             if (category) { where.push('p.category = $' + idx++); params.push(category); }
-            if (feed) { where.push('p.feed = $' + idx++); params.push(feed); }
 
-            const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
-            params.push(parseInt(limit), offset);
+            let posts;
+            try {
+                // Try with feed column
+                if (feed) { where.push('p.feed = $' + idx++); params.push(feed); }
+                const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+                params.push(parseInt(limit), offset);
 
-            const posts = await getMany(
-                `SELECT p.*, u.display_name as author_name, u.role as author_role,
-                    (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) as reply_count
-                FROM posts p JOIN users u ON p.user_id = u.id
-                ${whereClause}
-                ORDER BY reply_count DESC, p.created_at DESC LIMIT $${idx++} OFFSET $${idx}`,
-                params
-            );
+                posts = await getMany(
+                    'SELECT p.*, u.display_name as author_name, u.role as author_role, ' +
+                    '(SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) as reply_count ' +
+                    'FROM posts p JOIN users u ON p.user_id = u.id ' +
+                    whereClause + ' ' +
+                    'ORDER BY reply_count DESC, p.created_at DESC LIMIT $' + (params.length - 1) + ' OFFSET $' + params.length,
+                    params
+                );
+            } catch (colErr) {
+                // Fallback: feed column may not exist yet
+                console.log('Feed column query failed, falling back:', colErr.message);
+                where = [];
+                params = [];
+                idx = 1;
+                if (city) { where.push('p.city = $' + idx++); params.push(city); }
+                if (category) { where.push('p.category = $' + idx++); params.push(category); }
+                const whereClause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+                params.push(parseInt(limit), offset);
 
-            // Process image expiry for each post
+                posts = await getMany(
+                    'SELECT p.*, u.display_name as author_name, u.role as author_role, ' +
+                    '(SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) as reply_count ' +
+                    'FROM posts p JOIN users u ON p.user_id = u.id ' +
+                    whereClause + ' ' +
+                    'ORDER BY reply_count DESC, p.created_at DESC LIMIT $' + (params.length - 1) + ' OFFSET $' + params.length,
+                    params
+                );
+            }
+
+            // Process image expiry (safe - only if columns exist on the row)
             const now = new Date();
-            posts.forEach(post => {
-                if (post.image_url && post.image_expires_at) {
-                    const expiresAt = new Date(post.image_expires_at);
-                    if (now > expiresAt) {
-                        post.image_url = null;
-                        post.image_expired = true;
-                    } else {
-                        const daysLeft = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
-                        post.image_days_left = daysLeft;
+            if (posts && posts.length > 0) {
+                posts.forEach(function(post) {
+                    if (post.image_url && post.image_expires_at) {
+                        const expiresAt = new Date(post.image_expires_at);
+                        if (now > expiresAt) {
+                            post.image_url = null;
+                            post.image_expired = true;
+                        } else {
+                            const daysLeft = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+                            post.image_days_left = daysLeft;
+                        }
                     }
-                }
-            });
+                });
+            }
 
-            return res.status(200).json({ posts });
+            return res.status(200).json(posts);
         }
 
         if (req.method === 'POST') {
@@ -56,16 +81,26 @@ module.exports = async function handler(req, res) {
                 return res.status(400).json({ error: 'Title and body are required' });
             }
 
-            // Calculate image expiry: 7 days from now if image is provided
-            let imageExpiresAt = null;
-            if (image_url) {
-                imageExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            }
+            let result;
+            try {
+                // Try insert with new columns
+                let imageExpiresAt = null;
+                if (image_url) {
+                    imageExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+                }
 
-            const result = await getOne(
-                'INSERT INTO posts (user_id, title, body, category, city, feed, image_url, image_expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-                [user.id, title, body, category || 'general', city || user.city, feed || 'community', image_url || null, imageExpiresAt]
-            );
+                result = await getOne(
+                    'INSERT INTO posts (user_id, title, body, category, city, feed, image_url, image_expires_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+                    [user.id, title, body, category || 'general', city || user.city, feed || 'community', image_url || null, imageExpiresAt]
+                );
+            } catch (insertErr) {
+                // Fallback: new columns may not exist yet
+                console.log('Full insert failed, falling back:', insertErr.message);
+                result = await getOne(
+                    'INSERT INTO posts (user_id, title, body, category, city) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                    [user.id, title, body, category || 'general', city || user.city]
+                );
+            }
 
             return res.status(201).json({ message: 'Post created', post: result });
         }

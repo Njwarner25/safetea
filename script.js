@@ -337,6 +337,18 @@ function showVoteFeedback(msg, type) {
   }, 5000);
 }
 
+// ---- Community Hub Tabs ----
+document.querySelectorAll('.hub-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const section = tab.closest('.community-hub-section');
+    section.querySelectorAll('.hub-tab').forEach(t => t.classList.remove('active'));
+    section.querySelectorAll('.hub-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    const target = section.querySelector('#tab-' + tab.dataset.tab);
+    if (target) target.classList.add('active');
+  });
+});
+
 });document.addEventListener('DOMContentLoaded', () => {
 // ============== SAFETEA - INTERACTIVE JS ==============
 
@@ -675,5 +687,17 @@ function showVoteFeedback(msg, type) {
     voteFeedback.className = 'vote-feedback';
   }, 5000);
 }
+
+// ---- Community Hub Tabs ----
+document.querySelectorAll('.hub-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const section = tab.closest('.community-hub-section');
+    section.querySelectorAll('.hub-tab').forEach(t => t.classList.remove('active'));
+    section.querySelectorAll('.hub-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    const target = section.querySelector('#tab-' + tab.dataset.tab);
+    if (target) target.classList.add('active');
+  });
+});
 
 });

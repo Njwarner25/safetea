@@ -155,8 +155,7 @@
     }
 
     function loadPosts() {
-        var city = user.city || '';
-        apiFetch('/posts?city=' + encodeURIComponent(city)).then(function(data) {
+                apiFetch('/posts').then(function(data) {
             var feed = document.getElementById('posts-feed');
             if (!data || !data.posts || data.posts.length === 0) {
                 feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:40px;color:#333;display:block;margin-bottom:12px"></i><p>No posts yet. Be the first to share!</p></div>';

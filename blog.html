@@ -63,12 +63,12 @@
         .anon-toggle input[type="checkbox"] { accent-color: #F27059; }
         .btn-submit { background: linear-gradient(135deg, #F27059, #e85d44); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; transition: box-shadow 0.2s; }
         .btn-submit:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-submit-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .btn-submit-green:hover { box-shadow: 0 4px 15px rgba(46,204,113,0.3); }
         .safety-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
         .safety-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
         .safety-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
-        .safety-card-tag { height: 6px; background: linear-gradient(to right, #1a1a24, #13131a); display: flex; align-items: center; justify-content: center; }
         .safety-card-img { font-size: 48px; color: #F27059; opacity: 0.6; padding: 24px; text-align: center; }
         .safety-card-body { padding: 20px; }
         .safety-card-cat { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
@@ -116,458 +116,659 @@
         .img-expired-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,10,15,0.8); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; font-weight: 600; }
         .post-image-container { position: relative; margin-top: 12px; margin-bottom: 8px; }
         .post-image-container img { max-width: 100%; border-radius: 10px; max-height: 400px; object-fit: cover; }
+        .loading-spinner { text-align: center; padding: 40px; color: #666; }
+        .loading-spinner i { font-size: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 60px 20px; color: #555; }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; color: #333; }
+        .empty-state p { font-size: 16px; margin-bottom: 8px; }
+        .empty-state small { font-size: 13px; color: #444; }
+        .category-select { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #aaa; font-family: 'Inter', sans-serif; font-size: 13px; margin-top: 8px; }
+        .category-select:focus { outline: none; border-color: #F27059; }
         @media (max-width: 1024px) { .blog-sidebar { display: none; } }
         @media (max-width: 768px) { .safety-grid { grid-template-columns: 1fr; } .form-row { flex-direction: column; } }
     </style>
 </head>
 <body>
-    <nav class="topnav">
-        <div class="topnav-left">
-            <a href="/dashboard.html" class="topnav-logo"><i class="fas fa-shield-heart"></i> SafeTea</a>
-            <nav class="topnav-nav">
-                <a href="/dashboard.html"><i class="fas fa-home"></i> Feed</a>
-                <a href="/blog.html" class="active"><i class="fas fa-pen-fancy"></i> Blog</a>
-                <a href="/catfish.html"><i class="fas fa-fish-fins"></i> Catfish Scanner</a>
-            </nav>
-        </div>
-        <div class="topnav-right">
-            <div class="user-avatar" id="nav-avatar"></div>
-            <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
-        </div>
-    </nav>
 
-    <div class="blog-container">
-        <div class="blog-header">
-            <h1>SafeTea <span class="gradient-text">Community Blog</span></h1>
-            <p>Share experiences, stay safe, and recommend the good ones. Your voice matters.</p>
-        </div>
+<nav class="topnav">
+    <div class="topnav-left">
+        <a href="/dashboard.html" class="topnav-logo"><i class="fas fa-shield-heart"></i> SafeTea</a>
+        <nav class="topnav-nav">
+            <a href="/dashboard.html"><i class="fas fa-home"></i> Feed</a>
+            <a href="/blog.html" class="active"><i class="fas fa-pen-fancy"></i> Blog</a>
+            <a href="/catfish.html"><i class="fas fa-fish-fins"></i> Catfish Scanner</a>
+        </nav>
+    </div>
+    <div class="topnav-right">
+        <div class="user-avatar" id="nav-avatar"></div>
+        <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
+</nav>
 
-        <div class="blog-tabs">
-            <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-users"></i> Community Talk</button>
-            <button class="blog-tab" onclick="switchBlogTab('safety')"><i class="fas fa-shield-alt"></i> Safety Blog</button>
-            <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-heart"></i> Good Guy Referrals</button>
-        </div>
+<div class="blog-container">
+    <div class="blog-header">
+        <h1>SafeTea <span class="gradient-text">Community Blog</span></h1>
+        <p>Share experiences, stay safe, and recommend the good ones. Your voice matters.</p>
+    </div>
 
-        <!-- COMMUNITY TALK (AWDTSG Style) -->
-        <div id="blog-community" class="blog-section active">
-            <div class="blog-layout">
-                <div class="blog-main">
-                    <div class="create-box">
-                        <h3><i class="fas fa-edit"></i> Start a Discussion</h3>
-                        <textarea placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)"></textarea>
-                        <div class="img-upload-area" onclick="document.getElementById('community-img-input').click()">
-                            <i class="fas fa-camera"></i>
-                            <p>Add a photo (optional)</p>
-                            <p class="upload-note"><i class="fas fa-clock"></i> Images auto-expire after 7 days for privacy</p>
-                            <input type="file" id="community-img-input" accept="image/*" style="display:none" onchange="handleImagePreview(this, 'community-img-preview')">
-                        </div>
-                        <div class="img-preview" id="community-img-preview">
-                            <img src="" alt="Preview">
-                            <button class="remove-img" onclick="removeImagePreview('community-img-preview', 'community-img-input')"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="create-box-actions">
-                            <label class="anon-toggle"><input type="checkbox" checked> Post anonymously</label>
-                            <button class="btn-submit"><i class="fas fa-paper-plane"></i> Post</button>
-                        </div>
+    <div class="blog-tabs">
+        <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-users"></i> Community Talk</button>
+        <button class="blog-tab" onclick="switchBlogTab('safety')"><i class="fas fa-shield-alt"></i> Safety Blog</button>
+        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-heart"></i> Good Guy Referrals</button>
+    </div>
+
+    <!-- COMMUNITY TALK -->
+    <div id="blog-community" class="blog-section active">
+        <div class="blog-layout">
+            <div class="blog-main">
+                <div class="create-box">
+                    <h3><i class="fas fa-edit"></i> Start a Discussion</h3>
+                    <textarea id="community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)"></textarea>
+                    <div class="form-row" style="margin-top:8px">
+                        <select id="community-category" class="category-select">
+                            <option value="general">General</option>
+                            <option value="experience">Experience</option>
+                            <option value="warning">Warning</option>
+                            <option value="question">Question</option>
+                            <option value="positive">Positive</option>
+                        </select>
+                        <input type="text" id="community-city" placeholder="Your city (optional)" style="background:#1a1a24;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-size:13px">
                     </div>
-
-                    <div class="discussion-grid">
-                        <div class="discussion-card">
-                            <div class="discussion-header">
-                                <div class="discussion-avatar" style="background:#6c7b95">A</div>
-                                <div class="discussion-meta">
-                                    <div class="discussion-author">Anonymous <span class="discussion-badge badge-exp">Experience</span></div>
-                                    <div class="discussion-time">2h ago <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> Austin</span></div>
-                                </div>
-                            </div>
-                            <div class="discussion-body">Has anyone else been out with <span class="person-tag">Jake M.</span> from the Rainey St. area? He told me he was single but my friend saw him on a date with someone else the same week. Just want to compare notes - not trying to start drama, just looking out for each other.</div>
-                            <div class="discussion-actions">
-                                <button class="discussion-action"><i class="fas fa-comment"></i> 14 replies</button>
-                                <button class="discussion-action"><i class="fas fa-arrow-up"></i> 42</button>
-                                <button class="discussion-action"><i class="fas fa-flag"></i> Report</button>
-                                <button class="discussion-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
-
-                        <div class="discussion-card">
-                            <div class="discussion-header">
-                                <div class="discussion-avatar" style="background:#e85d44">M</div>
-                                <div class="discussion-meta">
-                                    <div class="discussion-author">Maria L. <span class="discussion-badge badge-warn">Warning</span></div>
-                                    <div class="discussion-time">5h ago <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> Denver</span></div>
-                                </div>
-                            </div>
-                            <div class="post-image-container">
-                                <img src="https://placehold.co/600x300/1a1a24/F27059?text=Photo+expires+in+5+days" alt="User uploaded">
-                                <div class="img-expiry-badge"><i class="fas fa-clock"></i> Expires in 5 days</div>
-                            </div>
-                            <div class="discussion-body">PSA for Denver ladies: If you match with someone claiming to be a pilot named <span class="person-tag">Chris R.</span> who says he flies for United - he uses the same story with everyone and his photos are stolen from an Instagram model. Already reported to the apps but heads up!</div>
-                            <div class="discussion-actions">
-                                <button class="discussion-action"><i class="fas fa-comment"></i> 23 replies</button>
-                                <button class="discussion-action"><i class="fas fa-arrow-up"></i> 87</button>
-                                <button class="discussion-action"><i class="fas fa-flag"></i> Report</button>
-                                <button class="discussion-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
-
-                        <div class="discussion-card">
-                            <div class="discussion-header">
-                                <div class="discussion-avatar" style="background:#2ecc71">S</div>
-                                <div class="discussion-meta">
-                                    <div class="discussion-author">Sarah R. <span class="discussion-badge badge-q">Question</span></div>
-                                    <div class="discussion-time">8h ago <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> Portland</span></div>
-                                </div>
-                            </div>
-                            <div class="discussion-body">New to the dating scene in Portland. What are some safe public spots for first dates here? I usually do coffee shops but looking for other ideas. Also, is there a local group for sharing experiences?</div>
-                            <div class="discussion-actions">
-                                <button class="discussion-action"><i class="fas fa-comment"></i> 31 replies</button>
-                                <button class="discussion-action"><i class="fas fa-arrow-up"></i> 56</button>
-                                <button class="discussion-action"><i class="fas fa-flag"></i> Report</button>
-                                <button class="discussion-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
-
-                        <div class="discussion-card">
-                            <div class="discussion-header">
-                                <div class="discussion-avatar" style="background:#9b59b6">J</div>
-                                <div class="discussion-meta">
-                                    <div class="discussion-author">Anonymous <span class="discussion-badge badge-good">Positive</span></div>
-                                    <div class="discussion-time">12h ago <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> Nashville</span></div>
-                                </div>
-                            </div>
-                            <div class="post-image-container">
-                                <img class="img-expired" src="https://placehold.co/600x300/1a1a24/F27059?text=Expired" alt="Expired image">
-                                <div class="img-expired-overlay"><i class="fas fa-clock"></i>&nbsp; Image expired for privacy</div>
-                            </div>
-                            <div class="discussion-body">Shoutout to the women in this community who had 3 different warnings posted here. You literally saved me from a potentially dangerous situation. I was about to go on a date with someone who had been flagged multiple times. This platform works!</div>
-                            <div class="discussion-actions">
-                                <button class="discussion-action"><i class="fas fa-comment"></i> 8 replies</button>
-                                <button class="discussion-action"><i class="fas fa-arrow-up"></i> 124</button>
-                                <button class="discussion-action"><i class="fas fa-flag"></i> Report</button>
-                                <button class="discussion-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
+                    <div class="img-upload-area" onclick="document.getElementById('community-img-input').click()">
+                        <i class="fas fa-camera"></i>
+                        <p>Add a photo (optional)</p>
+                        <p class="upload-note"><i class="fas fa-clock"></i> Images auto-expire after 7 days for privacy</p>
+                        <input type="file" id="community-img-input" accept="image/*" style="display:none" onchange="handleImagePreview(this, 'community-img-preview')">
+                    </div>
+                    <div class="img-preview" id="community-img-preview">
+                        <img src="" alt="Preview">
+                        <button class="remove-img" onclick="removeImagePreview('community-img-preview', 'community-img-input')"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="create-box-actions">
+                        <label class="anon-toggle"><input type="checkbox" id="community-anon" checked> Post anonymously</label>
+                        <button class="btn-submit" id="community-submit-btn" onclick="submitCommunityPost()"><i class="fas fa-paper-plane"></i> Post</button>
                     </div>
                 </div>
 
-                <div class="blog-sidebar">
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-info-circle" style="color:#F27059"></i> Community Guidelines</h3>
-                        <ul>
-                            <li><i class="fas fa-check"></i> First name + last initial only</li>
-                            <li><i class="fas fa-check"></i> Share experiences, not revenge</li>
-                            <li><i class="fas fa-check"></i> No doxxing or full addresses</li>
-                            <li><i class="fas fa-check"></i> Be honest and factual</li>
-                            <li><i class="fas fa-check"></i> Support each other</li>
-                        </ul>
-                    </div>
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-camera" style="color:#ffa500"></i> Photo Policy</h3>
-                        <ul>
-                            <li><i class="fas fa-clock"></i> All uploaded photos auto-expire after 7 days</li>
-                            <li><i class="fas fa-shield-alt"></i> Expired images are permanently removed</li>
-                            <li><i class="fas fa-eye-slash"></i> No screenshots policy enforced</li>
-                        </ul>
-                    </div>
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-fire" style="color:#F27059"></i> Trending Cities</h3>
-                        <ul>
-                            <li><i class="fas fa-map-marker-alt"></i> Austin, TX - 234 posts</li>
-                            <li><i class="fas fa-map-marker-alt"></i> Denver, CO - 189 posts</li>
-                            <li><i class="fas fa-map-marker-alt"></i> Nashville, TN - 156 posts</li>
-                            <li><i class="fas fa-map-marker-alt"></i> Portland, OR - 134 posts</li>
-                            <li><i class="fas fa-map-marker-alt"></i> Seattle, WA - 98 posts</li>
-                        </ul>
-                    </div>
+                <div id="community-posts" class="discussion-grid">
+                    <div class="loading-spinner"><i class="fas fa-spinner"></i> Loading discussions...</div>
+                </div>
+            </div>
+
+            <div class="blog-sidebar">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-info-circle" style="color:#F27059"></i> Community Guidelines</h3>
+                    <ul>
+                        <li><i class="fas fa-check"></i> First name + last initial only</li>
+                        <li><i class="fas fa-check"></i> Share experiences, not revenge</li>
+                        <li><i class="fas fa-check"></i> No doxxing or full addresses</li>
+                        <li><i class="fas fa-check"></i> Be honest and factual</li>
+                        <li><i class="fas fa-check"></i> Support each other</li>
+                    </ul>
+                </div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-camera" style="color:#ffa500"></i> Photo Policy</h3>
+                    <ul>
+                        <li><i class="fas fa-clock"></i> All uploaded photos auto-expire after 7 days</li>
+                        <li><i class="fas fa-shield-alt"></i> Expired images are permanently removed</li>
+                        <li><i class="fas fa-eye-slash"></i> No screenshots policy enforced</li>
+                    </ul>
+                </div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-fire" style="color:#F27059"></i> Trending Cities</h3>
+                    <ul id="trending-cities">
+                        <li><i class="fas fa-map-marker-alt"></i> Loading...</li>
+                    </ul>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- SAFETY BLOG -->
-        <div id="blog-safety" class="blog-section">
-            <div class="blog-layout">
-                <div class="blog-main">
-                    <div class="safety-grid">
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-map-marked-alt"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-warn">Safety</span>
-                                <div class="safety-card-title">10 First Date Safety Rules Every Woman Should Know</div>
-                                <div class="safety-card-excerpt">From sharing your location with a friend to choosing the right venue, here are essential safety practices that could save your life on a first date.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">SafeTea Team &bull; 2 days ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-user-secret"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-exp">Awareness</span>
-                                <div class="safety-card-title">How to Spot a Catfish: Red Flags in Online Dating Profiles</div>
-                                <div class="safety-card-excerpt">Reverse image searches are just the beginning. Learn the subtle signs that someone might not be who they claim to be online.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">Dr. Lisa Chen &bull; 4 days ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-phone-alt"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-good">Tips</span>
-                                <div class="safety-card-title">The Buddy System: Setting Up a Safety Call Protocol</div>
-                                <div class="safety-card-excerpt">Create a foolproof check-in system with your friends for dates. Includes code words, timing strategies, and emergency plans.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">Jamie R. &bull; 1 week ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-gavel"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-q">Legal</span>
-                                <div class="safety-card-title">Know Your Rights: Reporting Harassment in Your State</div>
-                                <div class="safety-card-excerpt">A state-by-state breakdown of harassment laws, restraining orders, and what to do if an online date crosses the line into criminal behavior.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">Legal Team &bull; 1 week ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-eye"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-exp">Awareness</span>
-                                <div class="safety-card-title">Love Bombing vs. Genuine Interest: Know the Difference</div>
-                                <div class="safety-card-excerpt">Excessive flattery, constant texting, and premature declarations of love can be manipulation tactics. Learn to tell genuine interest from control.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">Dr. Maya Torres &bull; 2 weeks ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="safety-card">
-                            <div class="safety-card-img"><i class="fas fa-shield-alt"></i></div>
-                            <div class="safety-card-body">
-                                <span class="safety-card-cat badge-good">Tips</span>
-                                <div class="safety-card-title">Protecting Your Digital Privacy While Dating Online</div>
-                                <div class="safety-card-excerpt">How to keep your personal information safe on dating apps. Covers phone numbers, social media, location data, and more.</div>
-                                <div class="safety-card-footer">
-                                    <span class="safety-card-author">SafeTea Team &bull; 2 weeks ago</span>
-                                    <a class="safety-card-read">Read More &rarr;</a>
-                                </div>
+    <!-- SAFETY BLOG -->
+    <div id="blog-safety" class="blog-section">
+        <div class="blog-layout">
+            <div class="blog-main">
+                <div class="safety-grid">
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-map-marked-alt"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-warn">Safety</span>
+                            <div class="safety-card-title">10 First Date Safety Rules Every Woman Should Know</div>
+                            <div class="safety-card-excerpt">From sharing your location with a friend to choosing the right venue, here are essential safety practices that could save your life on a first date.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">SafeTea Team &bull; 2 days ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- GOOD GUY REFERRALS -->
-        <div id="blog-referrals" class="blog-section">
-            <div class="blog-layout">
-                <div class="blog-main">
-                    <div class="create-box">
-                        <h3><i class="fas fa-heart" style="color:#2ecc71"></i> Recommend a Good Guy</h3>
-                        <p style="font-size:13px;color:#666;margin-bottom:16px">Know someone who treats women with respect? Give him a shoutout. Only first name + last initial.</p>
-                        <div class="form-row">
-                            <input type="text" placeholder="His first name + last initial (e.g. David T.)">
-                            <input type="text" placeholder="City">
-                        </div>
-                        <div class="form-row">
-                            <select><option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option></select>
-                        </div>
-                        <textarea placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:#1a1a24;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px"></textarea>
-                        <div class="create-box-actions">
-                            <label class="anon-toggle"><input type="checkbox"> Post anonymously</label>
-                            <button class="btn-submit btn-submit-green"><i class="fas fa-heart"></i> Submit Referral</button>
-                        </div>
-                    </div>
-
-                    <div class="discussion-grid">
-                        <div class="referral-card">
-                            <div class="referral-header">
-                                <div class="referral-avatar" style="background:#e085c2">K</div>
-                                <div>
-                                    <div class="discussion-author">Katie M.</div>
-                                    <div class="referral-rec-label"><i class="fas fa-star"></i> Verified Recommender</div>
-                                </div>
-                            </div>
-                            <div class="referral-person">
-                                <div class="referral-person-name">David T. <span class="verified-badge"><i class="fas fa-check-circle"></i> 3 Referrals</span></div>
-                                <div class="referral-traits">
-                                    <span class="referral-trait">Respectful</span>
-                                    <span class="referral-trait">Great listener</span>
-                                    <span class="referral-trait">Honest communicator</span>
-                                    <span class="referral-trait">Austin, TX</span>
-                                </div>
-                            </div>
-                            <div class="referral-quote">We dated for a few months and even though it didn't work out romantically, he was always respectful, never pushy, and genuinely cared about my comfort.</div>
-                            <div class="referral-actions">
-                                <button class="referral-action"><i class="fas fa-thumbs-up"></i> 28 vouches</button>
-                                <button class="referral-action"><i class="fas fa-comment"></i> 5 comments</button>
-                                <button class="referral-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
-
-                        <div class="referral-card">
-                            <div class="referral-header">
-                                <div class="referral-avatar" style="background:#6ec2e2">L</div>
-                                <div>
-                                    <div class="discussion-author">Lauren P.</div>
-                                    <div class="referral-rec-label"><i class="fas fa-star"></i> Recommender</div>
-                                </div>
-                            </div>
-                            <div class="referral-person">
-                                <div class="referral-person-name">Marcus J. <span class="verified-badge"><i class="fas fa-check-circle"></i> 5 Referrals</span></div>
-                                <div class="referral-traits">
-                                    <span class="referral-trait">Emotionally mature</span>
-                                    <span class="referral-trait">Family oriented</span>
-                                    <span class="referral-trait">Consistent</span>
-                                    <span class="referral-trait">Denver, CO</span>
-                                </div>
-                            </div>
-                            <div class="referral-quote">Marcus is my best friend's brother and I've seen how he treats his partners - with genuine kindness and respect. He's the real deal. Communication is his strong suit.</div>
-                            <div class="referral-actions">
-                                <button class="referral-action"><i class="fas fa-thumbs-up"></i> 41 vouches</button>
-                                <button class="referral-action"><i class="fas fa-comment"></i> 12 comments</button>
-                                <button class="referral-action"><i class="fas fa-share"></i> Share</button>
-                            </div>
-                        </div>
-
-                        <div class="referral-card">
-                            <div class="referral-header">
-                                <div class="referral-avatar" style="background:#a8d5ba">A</div>
-                                <div>
-                                    <div class="discussion-author">Anonymous</div>
-                                    <div class="referral-rec-label"><i class="fas fa-star"></i> Recommender</div>
-                                </div>
-                            </div>
-                            <div class="referral-person">
-                                <div class="referral-person-name">Ben S. <span class="verified-badge"><i class="fas fa-check-circle"></i> 2 Referrals</span></div>
-                                <div class="referral-traits">
-                                    <span class="referral-trait">Thoughtful</span>
-                                    <span class="referral-trait">Good boundaries</span>
-                                    <span class="referral-trait">Supportive</span>
-                                    <span class="referral-trait">Portland, OR</span>
-                                </div>
-                            </div>
-                            <div class="referral-quote">Dated Ben for 6 months. He always made sure I felt safe, never pressured me, and when we broke up he handled it with so much maturity. Genuinely a good one.</div>
-                            <div class="referral-actions">
-                                <button class="referral-action"><i class="fas fa-thumbs-up"></i> 19 vouches</button>
-                                <button class="referral-action"><i class="fas fa-comment"></i> 3 comments</button>
-                                <button class="referral-action"><i class="fas fa-share"></i> Share</button>
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-user-secret"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-exp">Awareness</span>
+                            <div class="safety-card-title">How to Spot a Catfish: Red Flags in Online Dating Profiles</div>
+                            <div class="safety-card-excerpt">Reverse image searches are just the beginning. Learn the subtle signs that someone might not be who they claim to be online.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">Dr. Lisa Chen &bull; 4 days ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="blog-sidebar">
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-heart" style="color:#2ecc71"></i> How Referrals Work</h3>
-                        <p>Women can recommend men they've dated or know personally. Multiple referrals build trust. The community can vouch or add their own experiences.</p>
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-phone-alt"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-good">Tips</span>
+                            <div class="safety-card-title">The Buddy System: Setting Up a Safety Call Protocol</div>
+                            <div class="safety-card-excerpt">Create a foolproof check-in system with your friends for dates. Includes code words, timing strategies, and emergency plans.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">Jamie R. &bull; 1 week ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-trophy" style="color:#f1c40f"></i> Top Referred</h3>
-                        <ul>
-                            <li><i class="fas fa-medal"></i> Marcus J. - 5 referrals</li>
-                            <li><i class="fas fa-medal"></i> David T. - 3 referrals</li>
-                            <li><i class="fas fa-medal"></i> Ben S. - 2 referrals</li>
-                            <li><i class="fas fa-medal"></i> Alex W. - 2 referrals</li>
-                        </ul>
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-gavel"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-q">Legal</span>
+                            <div class="safety-card-title">Know Your Rights: Reporting Harassment in Your State</div>
+                            <div class="safety-card-excerpt">A state-by-state breakdown of harassment laws, restraining orders, and what to do if an online date crosses the line into criminal behavior.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">Legal Team &bull; 1 week ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-eye"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-exp">Awareness</span>
+                            <div class="safety-card-title">Love Bombing vs. Genuine Interest: Know the Difference</div>
+                            <div class="safety-card-excerpt">Excessive flattery, constant texting, and premature declarations of love can be manipulation tactics. Learn to tell genuine interest from control.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">Dr. Maya Torres &bull; 2 weeks ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="safety-card">
+                        <div class="safety-card-img"><i class="fas fa-shield-alt"></i></div>
+                        <div class="safety-card-body">
+                            <span class="safety-card-cat badge-good">Tips</span>
+                            <div class="safety-card-title">Protecting Your Digital Privacy While Dating Online</div>
+                            <div class="safety-card-excerpt">How to keep your personal information safe on dating apps. Covers phone numbers, social media, location data, and more.</div>
+                            <div class="safety-card-footer">
+                                <span class="safety-card-author">SafeTea Team &bull; 2 weeks ago</span>
+                                <a class="safety-card-read">Read More &rarr;</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Tab switching
-        function switchBlogTab(tab) {
-            document.querySelectorAll('.blog-section').forEach(function(s) { s.classList.remove('active'); });
-            document.querySelectorAll('.blog-tab').forEach(function(t) { t.classList.remove('active'); });
-            document.getElementById('blog-' + tab).classList.add('active');
-            event.target.closest('.blog-tab').classList.add('active');
-        }
+    <!-- GOOD GUY REFERRALS -->
+    <div id="blog-referrals" class="blog-section">
+        <div class="blog-layout">
+            <div class="blog-main">
+                <div class="create-box">
+                    <h3><i class="fas fa-heart" style="color:#2ecc71"></i> Recommend a Good Guy</h3>
+                    <p style="font-size:13px;color:#666;margin-bottom:16px">Know someone who treats women with respect? Give him a shoutout. Only first name + last initial.</p>
+                    <div class="form-row">
+                        <input type="text" id="referral-name" placeholder="His first name + last initial (e.g. David T.)">
+                        <input type="text" id="referral-city" placeholder="City">
+                    </div>
+                    <div class="form-row">
+                        <select id="referral-relation"><option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option></select>
+                    </div>
+                    <textarea id="referral-body" placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:#1a1a24;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px"></textarea>
+                    <div class="create-box-actions">
+                        <label class="anon-toggle"><input type="checkbox" id="referral-anon"> Post anonymously</label>
+                        <button class="btn-submit btn-submit-green" onclick="submitReferral()"><i class="fas fa-heart"></i> Submit Referral</button>
+                    </div>
+                </div>
 
-        // Logout
-        function handleLogout() {
-            localStorage.removeItem('safetea_token');
-            localStorage.removeItem('safetea_user');
-            window.location.href = '/login.html';
-        }
+                <div id="referral-posts" class="discussion-grid">
+                    <div class="loading-spinner"><i class="fas fa-spinner"></i> Loading referrals...</div>
+                </div>
+            </div>
 
-        // Load user avatar
-        var user = JSON.parse(localStorage.getItem('safetea_user') || 'null');
-        if (user) {
-            document.getElementById('nav-avatar').textContent = (user.display_name || 'U')[0].toUpperCase();
-        }
+            <div class="blog-sidebar">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-heart" style="color:#2ecc71"></i> How Referrals Work</h3>
+                    <p>Women can recommend men they've dated or know personally. Multiple referrals build trust. The community can vouch or add their own experiences.</p>
+                </div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-trophy" style="color:#f1c40f"></i> Top Referred</h3>
+                    <ul id="top-referred">
+                        <li><i class="fas fa-medal"></i> Loading...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // === 7-DAY IMAGE EXPIRY SYSTEM ===
+<script>
+    var API_BASE = '/api';
+    var token = localStorage.getItem('safetea_token');
+    var user = JSON.parse(localStorage.getItem('safetea_user') || 'null');
+    var currentImageBase64 = null;
 
-        // Handle image preview for upload
-        function handleImagePreview(input, previewId) {
-            var preview = document.getElementById(previewId);
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.querySelector('img').src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(input.files[0]);
+    // Load user avatar
+    if (user) {
+        document.getElementById('nav-avatar').textContent = (user.display_name || 'U')[0].toUpperCase();
+    }
+
+    // Tab switching
+    function switchBlogTab(tab) {
+        document.querySelectorAll('.blog-section').forEach(function(s) { s.classList.remove('active'); });
+        document.querySelectorAll('.blog-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.getElementById('blog-' + tab).classList.add('active');
+        event.target.closest('.blog-tab').classList.add('active');
+        if (tab === 'community') loadCommunityPosts();
+        if (tab === 'referrals') loadReferralPosts();
+    }
+
+    // Logout
+    function handleLogout() {
+        localStorage.removeItem('safetea_token');
+        localStorage.removeItem('safetea_user');
+        window.location.href = '/login.html';
+    }
+
+    // === IMAGE HANDLING ===
+    function handleImagePreview(input, previewId) {
+        var preview = document.getElementById(previewId);
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image must be under 5MB');
+                input.value = '';
+                return;
             }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                preview.querySelector('img').src = e.target.result;
+                preview.style.display = 'block';
+                currentImageBase64 = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removeImagePreview(previewId, inputId) {
+        var preview = document.getElementById(previewId);
+        preview.style.display = 'none';
+        preview.querySelector('img').src = '';
+        document.getElementById(inputId).value = '';
+        currentImageBase64 = null;
+    }
+
+    // === TIME FORMATTING ===
+    function timeAgo(dateStr) {
+        var now = new Date();
+        var date = new Date(dateStr);
+        var seconds = Math.floor((now - date) / 1000);
+        if (seconds < 60) return 'just now';
+        var minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        var days = Math.floor(hours / 24);
+        if (days < 30) return days + 'd ago';
+        return date.toLocaleDateString();
+    }
+
+    // === BADGE MAPPING ===
+    function getCategoryBadge(category) {
+        var map = {
+            experience: '<span class="discussion-badge badge-exp">Experience</span>',
+            warning: '<span class="discussion-badge badge-warn">Warning</span>',
+            question: '<span class="discussion-badge badge-q">Question</span>',
+            positive: '<span class="discussion-badge badge-good">Positive</span>',
+            general: '<span class="discussion-badge badge-exp">General</span>',
+            referral: '<span class="discussion-badge badge-good">Referral</span>'
+        };
+        return map[category] || '';
+    }
+
+    // === AVATAR COLORS ===
+    function getAvatarColor(name) {
+        var colors = ['#6c7b95','#e85d44','#2ecc71','#9b59b6','#e085c2','#6ec2e2','#f39c12','#1abc9c','#e74c3c','#3498db'];
+        var hash = 0;
+        for (var i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    // === RENDER A DISCUSSION POST ===
+    function renderPost(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = getAvatarColor(authorName);
+        var cityHtml = post.city ? ' <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
+        var badgeHtml = getCategoryBadge(post.category);
+
+        var imageHtml = '';
+        if (post.image_expired) {
+            imageHtml = '<div class="post-image-container">' +
+                '<img class="img-expired" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'600\' height=\'300\'%3E%3Crect fill=\'%231a1a24\' width=\'600\' height=\'300\'/%3E%3C/svg%3E" alt="Expired">' +
+                '<div class="img-expired-overlay"><i class="fas fa-clock"></i>&nbsp; Image expired for privacy</div>' +
+                '</div>';
+        } else if (post.image_url) {
+            var daysHtml = post.image_days_left ? '<div class="img-expiry-badge"><i class="fas fa-clock"></i> Expires in ' + post.image_days_left + ' day' + (post.image_days_left !== 1 ? 's' : '') + '</div>' : '';
+            imageHtml = '<div class="post-image-container">' +
+                '<img src="' + escapeHtml(post.image_url) + '" alt="User uploaded">' +
+                daysHtml +
+                '</div>';
         }
 
-        // Remove image preview
-        function removeImagePreview(previewId, inputId) {
-            var preview = document.getElementById(previewId);
-            preview.style.display = 'none';
-            preview.querySelector('img').src = '';
-            document.getElementById(inputId).value = '';
-        }
+        var replyCount = post.reply_count || 0;
 
-        // Check and update image expiry status on page load
-        function checkImageExpiry() {
-            var imageContainers = document.querySelectorAll('.post-image-container');
-            imageContainers.forEach(function(container) {
-                var expiryAttr = container.getAttribute('data-expires');
-                if (!expiryAttr) return;
+        return '<div class="discussion-card" data-post-id="' + post.id + '">' +
+            '<div class="discussion-header">' +
+                '<div class="discussion-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div class="discussion-meta">' +
+                    '<div class="discussion-author">' + escapeHtml(authorName) + ' ' + badgeHtml + '</div>' +
+                    '<div class="discussion-time">' + timeAgo(post.created_at) + cityHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+            imageHtml +
+            '<div class="discussion-body">' + formatBody(post.body) + '</div>' +
+            '<div class="discussion-actions">' +
+                '<button class="discussion-action"><i class="fas fa-comment"></i> ' + replyCount + ' replies</button>' +
+                '<button class="discussion-action"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</button>' +
+                '<button class="discussion-action"><i class="fas fa-flag"></i> Report</button>' +
+                '<button class="discussion-action"><i class="fas fa-share"></i> Share</button>' +
+            '</div>' +
+        '</div>';
+    }
 
-                var expiryDate = new Date(expiryAttr);
-                var now = new Date();
-                var diff = expiryDate - now;
+    // === HELPER: ESCAPE HTML ===
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
-                if (diff <= 0) {
-                    // Image has expired - blur it and show overlay
-                    var img = container.querySelector('img');
-                    img.classList.add('img-expired');
-                    var overlay = container.querySelector('.img-expired-overlay');
-                    if (!overlay) {
-                        overlay = document.createElement('div');
-                        overlay.className = 'img-expired-overlay';
-                        overlay.innerHTML = '<i class="fas fa-clock"></i>&nbsp; Image expired for privacy';
-                        container.appendChild(overlay);
-                    }
-                    var badge = container.querySelector('.img-expiry-badge');
-                    if (badge) badge.remove();
-                } else {
-                    // Image still active - show countdown
-                    var daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    var badge = container.querySelector('.img-expiry-badge');
-                    if (badge) {
-                        badge.innerHTML = '<i class="fas fa-clock"></i> Expires in ' + daysLeft + ' day' + (daysLeft !== 1 ? 's' : '');
-                    }
+    // === HELPER: FORMAT BODY TEXT (detect person tags) ===
+    function formatBody(text) {
+        if (!text) return '';
+        var escaped = escapeHtml(text);
+        // Highlight names that look like "FirstName L." pattern
+        escaped = escaped.replace(/\b([A-Z][a-z]+\s[A-Z]\.)/g, '<span class="person-tag">$1</span>');
+        return escaped;
+    }
+
+    // === LOAD COMMUNITY POSTS FROM API ===
+    function loadCommunityPosts() {
+        var container = document.getElementById('community-posts');
+        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i> Loading discussions...</div>';
+
+        fetch(API_BASE + '/posts?feed=community&limit=20')
+            .then(function(res) { return res.json(); })
+            .then(function(posts) {
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<i class="fas fa-comments"></i>' +
+                        '<p>No discussions yet</p>' +
+                        '<small>Be the first to start a conversation!</small>' +
+                    '</div>';
+                    return;
                 }
+                var html = '';
+                posts.forEach(function(post) {
+                    html += renderPost(post);
+                });
+                container.innerHTML = html;
+            })
+            .catch(function(err) {
+                console.error('Failed to load posts:', err);
+                container.innerHTML = '<div class="empty-state">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<p>Could not load discussions</p>' +
+                    '<small>Check your connection and try again</small>' +
+                '</div>';
             });
+    }
+
+    // === SUBMIT COMMUNITY POST ===
+    function submitCommunityPost() {
+        var body = document.getElementById('community-body').value.trim();
+        var category = document.getElementById('community-category').value;
+        var city = document.getElementById('community-city').value.trim();
+        var isAnon = document.getElementById('community-anon').checked;
+
+        if (!body) {
+            alert('Please write something before posting.');
+            return;
         }
 
-        // Run expiry check on load
-        checkImageExpiry();
+        if (!token) {
+            alert('Please log in to post.');
+            window.location.href = '/login.html';
+            return;
+        }
 
-        // Re-check every minute for live updates
-        setInterval(checkImageExpiry, 60000);
-    </script>
+        var btn = document.getElementById('community-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+        var payload = {
+            title: body.substring(0, 80),
+            body: body,
+            category: category,
+            city: city || null,
+            feed: 'community',
+            image_url: currentImageBase64 || null
+        };
+
+        fetch(API_BASE + '/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            // Clear form
+            document.getElementById('community-body').value = '';
+            document.getElementById('community-city').value = '';
+            document.getElementById('community-category').value = 'general';
+            removeImagePreview('community-img-preview', 'community-img-input');
+            // Reload posts
+            loadCommunityPosts();
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            console.error('Post failed:', err);
+            alert('Failed to submit post. Please try again.');
+        });
+    }
+
+    // === RENDER A REFERRAL CARD ===
+    function renderReferral(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = getAvatarColor(authorName);
+        var personName = post.title || 'Unknown';
+        var replyCount = post.reply_count || 0;
+
+        return '<div class="referral-card" data-post-id="' + post.id + '">' +
+            '<div class="referral-header">' +
+                '<div class="referral-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div>' +
+                    '<div class="discussion-author">' + escapeHtml(authorName) + '</div>' +
+                    '<div class="referral-rec-label"><i class="fas fa-star"></i> Recommender</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="referral-person">' +
+                '<div class="referral-person-name">' + escapeHtml(personName) + '</div>' +
+                (post.city ? '<div class="referral-traits"><span class="referral-trait">' + escapeHtml(post.city) + '</span></div>' : '') +
+            '</div>' +
+            '<div class="referral-quote">' + escapeHtml(post.body) + '</div>' +
+            '<div class="referral-actions">' +
+                '<button class="referral-action"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</button>' +
+                '<button class="referral-action"><i class="fas fa-comment"></i> ' + replyCount + ' comments</button>' +
+                '<button class="referral-action"><i class="fas fa-share"></i> Share</button>' +
+            '</div>' +
+        '</div>';
+    }
+
+    // === LOAD REFERRAL POSTS ===
+    function loadReferralPosts() {
+        var container = document.getElementById('referral-posts');
+        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i> Loading referrals...</div>';
+
+        fetch(API_BASE + '/posts?feed=referral&limit=20')
+            .then(function(res) { return res.json(); })
+            .then(function(posts) {
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">' +
+                        '<i class="fas fa-heart"></i>' +
+                        '<p>No referrals yet</p>' +
+                        '<small>Be the first to recommend a good guy!</small>' +
+                    '</div>';
+                    return;
+                }
+                var html = '';
+                posts.forEach(function(post) {
+                    html += renderReferral(post);
+                });
+                container.innerHTML = html;
+            })
+            .catch(function(err) {
+                console.error('Failed to load referrals:', err);
+                container.innerHTML = '<div class="empty-state">' +
+                    '<i class="fas fa-exclamation-triangle"></i>' +
+                    '<p>Could not load referrals</p>' +
+                    '<small>Check your connection and try again</small>' +
+                '</div>';
+            });
+    }
+
+    // === SUBMIT REFERRAL ===
+    function submitReferral() {
+        var name = document.getElementById('referral-name').value.trim();
+        var city = document.getElementById('referral-city').value.trim();
+        var relation = document.getElementById('referral-relation').value;
+        var body = document.getElementById('referral-body').value.trim();
+
+        if (!name || !body) {
+            alert('Please fill in the name and your recommendation.');
+            return;
+        }
+
+        if (!token) {
+            alert('Please log in to submit a referral.');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        var payload = {
+            title: name,
+            body: body + (relation !== 'How do you know him?' ? ' [' + relation + ']' : ''),
+            category: 'referral',
+            city: city || null,
+            feed: 'referral'
+        };
+
+        fetch(API_BASE + '/posts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            // Clear form
+            document.getElementById('referral-name').value = '';
+            document.getElementById('referral-city').value = '';
+            document.getElementById('referral-body').value = '';
+            document.getElementById('referral-relation').selectedIndex = 0;
+            // Reload referrals
+            loadReferralPosts();
+        })
+        .catch(function(err) {
+            console.error('Referral submit failed:', err);
+            alert('Failed to submit referral. Please try again.');
+        });
+    }
+
+    // === LOAD TRENDING CITIES (static fallback) ===
+    function loadTrendingCities() {
+        var container = document.getElementById('trending-cities');
+        // Try to get from API, fallback to static
+        fetch(API_BASE + '/posts?limit=100&feed=community')
+            .then(function(res) { return res.json(); })
+            .then(function(posts) {
+                if (!posts || posts.length === 0) {
+                    container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> No data yet</li>';
+                    return;
+                }
+                var cityCounts = {};
+                posts.forEach(function(p) {
+                    if (p.city) {
+                        cityCounts[p.city] = (cityCounts[p.city] || 0) + 1;
+                    }
+                });
+                var sorted = Object.entries(cityCounts).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
+                if (sorted.length === 0) {
+                    container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> No city data yet</li>';
+                    return;
+                }
+                var html = '';
+                sorted.forEach(function(item) {
+                    html += '<li><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(item[0]) + ' - ' + item[1] + ' post' + (item[1] !== 1 ? 's' : '') + '</li>';
+                });
+                container.innerHTML = html;
+            })
+            .catch(function() {
+                container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> Austin, TX</li>' +
+                    '<li><i class="fas fa-map-marker-alt"></i> Denver, CO</li>' +
+                    '<li><i class="fas fa-map-marker-alt"></i> Nashville, TN</li>';
+            });
+    }
+
+    // === INIT: Load data on page load ===
+    loadCommunityPosts();
+    loadTrendingCities();
+
+    // Re-check image expiry every minute
+    setInterval(function() {
+        document.querySelectorAll('.post-image-container[data-expires]').forEach(function(container) {
+            var expiryDate = new Date(container.getAttribute('data-expires'));
+            var now = new Date();
+            var diff = expiryDate - now;
+            if (diff <= 0) {
+                var img = container.querySelector('img');
+                if (img) img.classList.add('img-expired');
+                if (!container.querySelector('.img-expired-overlay')) {
+                    var overlay = document.createElement('div');
+                    overlay.className = 'img-expired-overlay';
+                    overlay.innerHTML = '<i class="fas fa-clock"></i>&nbsp; Image expired for privacy';
+                    container.appendChild(overlay);
+                }
+                var badge = container.querySelector('.img-expiry-badge');
+                if (badge) badge.remove();
+            }
+        });
+    }, 60000);
+</script>
+
 </body>
 </html>

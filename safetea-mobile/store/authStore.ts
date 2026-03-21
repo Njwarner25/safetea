@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type UserRole = 'member' | 'junior_mod' | 'mod' | 'senior_mod' | 'city_lead' | 'admin';
-export type UserTier = 'free' | 'plus';
+export type UserTier = 'free' | 'plus' | 'pro';
 
 export interface User {
   id: string;

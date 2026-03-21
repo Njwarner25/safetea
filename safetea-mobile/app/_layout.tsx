@@ -50,6 +50,51 @@ export default function RootLayout() {
             headerTintColor: Colors.textPrimary,
           }}
         />
+        <Stack.Screen
+          name="screening"
+          options={{
+            headerShown: true,
+            headerTitle: 'AI Profile Screening',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
+        <Stack.Screen
+          name="safety-map"
+          options={{
+            headerShown: true,
+            headerTitle: 'Community Safety Map',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
+        <Stack.Screen
+          name="scam-database"
+          options={{
+            headerShown: true,
+            headerTitle: 'Scam Database',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
+        <Stack.Screen
+          name="subscription"
+          options={{
+            headerShown: true,
+            headerTitle: 'Subscription',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
+        <Stack.Screen
+          name="safewalk"
+          options={{
+            headerShown: true,
+            headerTitle: 'SafeWalk',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
       </Stack>
     </>
   );

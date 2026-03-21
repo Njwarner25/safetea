@@ -58,6 +58,10 @@ export default function ProfileScreen() {
             <Text style={styles.menuText}>Apply to Moderate</Text>
           </Pressable>
         )}
+        <Pressable style={styles.menuItem} onPress={() => router.push('/subscription')}>
+          <Text style={styles.menuIcon}>💎</Text>
+          <Text style={styles.menuText}>Subscription & Pricing</Text>
+        </Pressable>
         <Pressable style={styles.menuItem}>
           <Text style={styles.menuIcon}>⚙️</Text>
           <Text style={styles.menuText}>Settings</Text>

@@ -1,5 +1,6 @@
 import { View, Text, TextInput, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 
 export default function SearchScreen() {
@@ -33,6 +34,34 @@ export default function SearchScreen() {
           <View>
             <Text style={styles.toolTitle}>Sex Offender Registry</Text>
             <Text style={styles.toolDesc}>Check registered offenders in your area</Text>
+          </View>
+        </Pressable>
+        <Pressable style={styles.toolCard} onPress={() => router.push('/screening')}>
+          <Text style={styles.toolIcon}>🧠</Text>
+          <View>
+            <Text style={styles.toolTitle}>AI Profile Screening</Text>
+            <Text style={styles.toolDesc}>Scan dating profiles for red flags</Text>
+          </View>
+        </Pressable>
+        <Pressable style={styles.toolCard} onPress={() => router.push('/safewalk')}>
+          <Text style={styles.toolIcon}>🚶‍♀️</Text>
+          <View>
+            <Text style={styles.toolTitle}>SafeWalk</Text>
+            <Text style={styles.toolDesc}>Share your date with trusted contacts</Text>
+          </View>
+        </Pressable>
+        <Pressable style={styles.toolCard} onPress={() => router.push('/safety-map')}>
+          <Text style={styles.toolIcon}>🗺️</Text>
+          <View>
+            <Text style={styles.toolTitle}>Safety Map</Text>
+            <Text style={styles.toolDesc}>Crowd-sourced venue safety ratings</Text>
+          </View>
+        </Pressable>
+        <Pressable style={styles.toolCard} onPress={() => router.push('/scam-database')}>
+          <Text style={styles.toolIcon}>🗃️</Text>
+          <View>
+            <Text style={styles.toolTitle}>Scam Database</Text>
+            <Text style={styles.toolDesc}>Search known dating scam patterns</Text>
           </View>
         </Pressable>
       </View>

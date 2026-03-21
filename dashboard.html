@@ -14,20 +14,22 @@
         .topnav-logo { font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
         .topnav-logo i { color: #f27059; }
         .topnav-nav { display: flex; gap: 4px; }
-        .topnav-nav a { color: #888; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .topnav-nav a { color: #888; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; }
         .topnav-nav a:hover, .topnav-nav a.active { color: #fff; background: rgba(255,255,255,0.05); }
         .topnav-nav a.active { color: #f27059; }
         .topnav-right { display: flex; align-items: center; gap: 16px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; cursor: pointer; background: #f27059; }
         .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
         .dashboard { display: flex; min-height: calc(100vh - 64px); }
-        .main-content { flex: 1; max-width: 680px; margin: 0 auto; padding: 24px; }
-        .sidebar-right { width: 320px; padding: 24px; border-left: 1px solid rgba(255,255,255,0.06); }
+        .main-content { flex: 1; max-width: 720px; margin: 0 auto; padding: 24px; }
+        .sidebar-right { width: 340px; padding: 24px; border-left: 1px solid rgba(255,255,255,0.06); }
         .welcome-banner { background: linear-gradient(135deg, rgba(242,112,89,0.15), rgba(242,112,89,0.05)); border: 1px solid rgba(242,112,89,0.2); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
         .welcome-banner h2 { font-size: 18px; color: #fff; margin-bottom: 4px; }
         .welcome-banner p { color: #aaa; font-size: 14px; }
         .city-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(242,112,89,0.2); color: #f27059; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
         .create-post { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
         .create-post-input { display: flex; gap: 12px; align-items: flex-start; }
         .create-post textarea { flex: 1; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 80px; outline: none; }
@@ -35,8 +37,14 @@
         .create-post textarea::placeholder { color: #555; }
         .create-post-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
         .post-category-select { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+        .post-toolbar { display: flex; gap: 8px; align-items: center; }
+        .btn-upload { background: none; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
+        .btn-upload:hover { color: #f27059; border-color: #f27059; }
         .btn-post { background: linear-gradient(135deg, #f27059, #e85d44); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .btn-post:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
+        .image-preview { margin-top: 12px; position: relative; display: none; }
+        .image-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .image-preview .remove-image { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; }
         .post-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
         .post-card:hover { border-color: rgba(255,255,255,0.1); }
         .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -44,12 +52,13 @@
         .post-meta { flex: 1; }
         .post-author { font-weight: 600; font-size: 14px; color: #fff; }
         .post-time { font-size: 12px; color: #666; }
-        .post-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .post-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 8px; }
         .badge-warning { background: rgba(231,76,60,0.15); color: #e74c3c; }
         .badge-alert { background: rgba(241,196,15,0.15); color: #f1c40f; }
         .badge-verified { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .badge-question { background: rgba(52,152,219,0.15); color: #3498db; }
         .post-content { font-size: 14px; line-height: 1.6; color: #ccc; margin-bottom: 16px; }
+        .post-image { max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }
         .post-actions { display: flex; gap: 20px; }
         .post-action { display: flex; align-items: center; gap: 6px; color: #666; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
         .post-action:hover { color: #f27059; }
@@ -58,25 +67,83 @@
         .sidebar-card h3 i { color: #f27059; }
         .alert-item { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .alert-item:last-child { border-bottom: none; }
-        .alert-item .alert-title { font-size: 13px; font-weight: 500; color: #ddd; }
+        .alert-item .alert-title { font-size: 13px; font-weight: 500; color: #ddd; display: flex; align-items: center; }
         .alert-item .alert-meta { font-size: 11px; color: #666; margin-top: 4px; }
-        .severity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .severity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
         .severity-high { background: #e74c3c; }
         .severity-medium { background: #f1c40f; }
         .severity-low { background: #2ecc71; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .stat-item { text-align: center; padding: 12px; background: #1a1a24; border-radius: 8px; }
-        .stat-item .stat-number { font-size: 22px; font-weight: 700; color: #f27059; }
+        .stat-item .stat-number { font-size: 20px; font-weight: 700; color: #f27059; }
         .stat-item .stat-label { font-size: 11px; color: #666; margin-top: 4px; }
         .loading { text-align: center; padding: 40px; color: #666; }
         .empty-state { text-align: center; padding: 40px; color: #555; }
-        .empty-state i { font-size: 40px; margin-bottom: 12px; color: #333; }
         .city-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .city-row:last-child { border-bottom: none; }
         .city-rank { color: #f27059; font-weight: 700; font-size: 13px; }
         .city-name { font-size: 13px; color: #ddd; margin-left: 10px; }
         .city-votes { font-size: 12px; color: #888; }
+        .search-section { max-width: 720px; margin: 0 auto; padding: 24px; }
+        .search-header { margin-bottom: 24px; }
+        .search-header h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
+        .search-header p { color: #888; font-size: 14px; }
+        .search-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .search-tab { background: #13131a; border: 1px solid rgba(255,255,255,0.08); color: #888; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .search-tab:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+        .search-tab.active { background: rgba(242,112,89,0.15); color: #f27059; border-color: #f27059; }
+        .search-panel { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; display: none; }
+        .search-panel.active { display: block; }
+        .search-panel h3 { font-size: 16px; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .search-panel h3 i { color: #f27059; }
+        .search-panel p.desc { color: #888; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
+        .form-group input:focus { border-color: #f27059; }
+        .btn-search { background: linear-gradient(135deg, #f27059, #e85d44); color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; }
+        .btn-search:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
+        .search-results { margin-top: 24px; }
+        .result-card { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+        .result-avatar { width: 60px; height: 60px; border-radius: 8px; background: #2a2a34; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .result-avatar i { font-size: 24px; color: #555; }
+        .result-info { flex: 1; }
+        .result-info h4 { font-size: 14px; color: #fff; margin-bottom: 4px; }
+        .result-info .result-detail { font-size: 12px; color: #888; margin-bottom: 2px; }
+        .result-badge { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-danger { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .badge-caution { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .badge-clear { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .disclaimer { background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #f1c40f; line-height: 1.5; display: flex; gap: 10px; align-items: flex-start; }
+        .disclaimer i { flex-shrink: 0; margin-top: 2px; }
+        .alerts-section { max-width: 720px; margin: 0 auto; padding: 24px; }
+        .alerts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .alerts-header h2 { font-size: 22px; color: #fff; }
+        .alert-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
+        .alert-card:hover { border-color: rgba(255,255,255,0.12); }
+        .alert-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .alert-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .alert-icon.high { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .alert-icon.medium { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .alert-icon.low { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .alert-card-title { font-size: 15px; font-weight: 600; color: #fff; }
+        .alert-card-meta { font-size: 12px; color: #666; }
+        .alert-card-body { font-size: 14px; color: #bbb; line-height: 1.5; }
+        .profile-section { max-width: 600px; margin: 0 auto; padding: 24px; }
+        .profile-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 24px; }
+        .profile-avatar-large { width: 80px; height: 80px; border-radius: 50%; background: #f27059; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; }
+        .profile-name { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .profile-email { font-size: 14px; color: #888; margin-bottom: 8px; }
+        .profile-role { display: inline-flex; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(242,112,89,0.15); color: #f27059; }
+        .profile-form { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
+        .profile-form h3 { font-size: 16px; color: #fff; margin-bottom: 20px; }
+        .btn-save { background: linear-gradient(135deg, #f27059, #e85d44); color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #2ecc71; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .toast.error { background: #e74c3c; }
+        .toast.show { display: flex; align-items: center; gap: 8px; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } }
-        @media (max-width: 768px) { .topnav-nav { display: none; } .main-content { padding: 16px; } }
+        @media (max-width: 768px) { .topnav-nav { display: none; } .main-content, .search-section, .alerts-section, .profile-section { padding: 16px; } }
     </style>
 </head>
 <body>
@@ -84,10 +151,10 @@
         <div class="topnav-left">
             <a href="/" class="topnav-logo"><i class="fas fa-shield-heart"></i> SafeTea</a>
             <div class="topnav-nav">
-                <a href="#" class="active"><i class="fas fa-home"></i> Feed</a>
-                <a href="#"><i class="fas fa-bell"></i> Alerts</a>
-                <a href="#"><i class="fas fa-search"></i> Search</a>
-                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
+                <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
+                <a data-tab="search"><i class="fas fa-search"></i> Search</a>
+                <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
         <div class="topnav-right">
@@ -95,55 +162,206 @@
             <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
         </div>
     </nav>
-    <div class="dashboard">
-        <div class="main-content">
-            <div class="welcome-banner" id="welcome-banner">
-                <h2 id="welcome-name">Welcome back!</h2>
-                <p>Stay informed. Stay safe. Your community has your back.</p>
-                <div class="city-badge" id="city-badge"><i class="fas fa-map-marker-alt"></i> <span id="user-city">Loading...</span></div>
-            </div>
-            <div class="create-post">
-                <div class="create-post-input">
-                    <div class="post-avatar" id="post-avatar"></div>
-                    <textarea id="new-post-content" placeholder="Share an experience or warning with your community..."></textarea>
+
+    <!-- FEED TAB -->
+    <div id="tab-feed" class="tab-section active">
+        <div class="dashboard">
+            <div class="main-content">
+                <div class="welcome-banner" id="welcome-banner">
+                    <h2 id="welcome-name">Welcome back!</h2>
+                    <p>Stay informed. Stay safe. Your community has your back.</p>
+                    <div class="city-badge" id="city-badge"><i class="fas fa-map-marker-alt"></i> <span id="user-city">Loading...</span></div>
                 </div>
-                <div class="create-post-actions">
-                    <select class="post-category-select" id="new-post-category">
-                        <option value="general">General</option>
-                        <option value="safety-tip">Safety Tip</option>
-                        <option value="recommendation">Recommendation</option>
-                        <option value="good-news">Good News</option>
-                        <option value="warning">Warning</option>
-                    </select>
-                    <button class="btn-post" onclick="createPost()"><i class="fas fa-paper-plane"></i> Post</button>
+                <div class="create-post">
+                    <div class="create-post-input">
+                        <div class="post-avatar" id="post-avatar" style="background:#f27059"></div>
+                        <textarea id="new-post-content" placeholder="Share an experience or warning with your community..."></textarea>
+                    </div>
+                    <div id="image-preview" class="image-preview">
+                        <img id="preview-img" src="" alt="Preview">
+                        <button class="remove-image" onclick="removeImage()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="create-post-actions">
+                        <div class="post-toolbar">
+                            <select class="post-category-select" id="new-post-category">
+                                <option value="general">General</option>
+                                <option value="safety-tip">Safety Tip</option>
+                                <option value="recommendation">Recommendation</option>
+                                <option value="good-news">Good News</option>
+                                <option value="warning">Warning</option>
+                            </select>
+                            <button class="btn-upload" onclick="document.getElementById('file-input').click()"><i class="fas fa-image"></i> Photo</button>
+                            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+                        </div>
+                        <button class="btn-post" onclick="createPost()"><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                </div>
+                <div id="posts-feed">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading community feed...</div>
                 </div>
             </div>
-            <div id="posts-feed">
-                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading community feed...</div>
-            </div>
-        </div>
-        <div class="sidebar-right">
-            <div class="sidebar-card">
-                <h3><i class="fas fa-chart-bar"></i> Your Stats</h3>
-                <div class="stat-grid">
-                    <div class="stat-item"><div class="stat-number" id="stat-posts">-</div><div class="stat-label">Posts</div></div>
-                    <div class="stat-item"><div class="stat-number" id="stat-replies">-</div><div class="stat-label">Replies</div></div>
-                    <div class="stat-item"><div class="stat-number" id="stat-role">-</div><div class="stat-label">Role</div></div>
-                    <div class="stat-item"><div class="stat-number" id="stat-status">-</div><div class="stat-label">Status</div></div>
+            <div class="sidebar-right">
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-chart-bar"></i> Your Stats</h3>
+                    <div class="stat-grid">
+                        <div class="stat-item"><div class="stat-number" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
+                        <div class="stat-item"><div class="stat-number" id="stat-replies">0</div><div class="stat-label">Replies</div></div>
+                        <div class="stat-item"><div class="stat-number" id="stat-role">-</div><div class="stat-label">Role</div></div>
+                        <div class="stat-item"><div class="stat-number" id="stat-status">-</div><div class="stat-label">Status</div></div>
+                    </div>
                 </div>
-            </div>
-            <div class="sidebar-card">
-                <h3><i class="fas fa-exclamation-triangle"></i> Recent Alerts</h3>
-                <div id="alerts-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
-            </div>
-            <div class="sidebar-card">
-                <h3><i class="fas fa-trophy"></i> City Leaderboard</h3>
-                <div id="cities-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Recent Alerts</h3>
+                    <div id="alerts-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
+                </div>
+                <div class="sidebar-card">
+                    <h3><i class="fas fa-trophy"></i> City Leaderboard</h3>
+                    <div id="cities-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
+                </div>
             </div>
         </div>
     </div>
-<script>
-const API='/api';const token=localStorage.getItem('safetea_token');const user=JSON.parse(localStorage.getItem('safetea_user')||'null');if(!token||!user){window.location.href='/login.html';}function initUI(){document.getElementById('welcome-name').textContent='Welcome back, '+(user.display_name||'Member')+'!';document.getElementById('user-city').textContent=user.city||'Unknown';document.getElementById('nav-avatar').style.background='#f27059';document.getElementById('nav-avatar').textContent=(user.display_name||'?')[0].toUpperCase();document.getElementById('post-avatar').style.background='#f27059';document.getElementById('post-avatar').textContent=(user.display_name||'?')[0].toUpperCase();document.getElementById('stat-role').textContent=user.role||'member';document.getElementById('stat-status').textContent='Active';}async function apiFetch(endpoint,options={}){const headers={'Content-Type':'application/json',...options.headers};if(token)headers['Authorization']='Bearer '+token;const res=await fetch(API+endpoint,{...options,headers});if(res.status===401){localStorage.removeItem('safetea_token');localStorage.removeItem('safetea_user');window.location.href='/login.html';return;}return res.json();}async function loadPosts(){try{const data=await apiFetch('/posts?city='+encodeURIComponent(user.city||''));const feed=document.getElementById('posts-feed');if(!data||!data.posts||data.posts.length===0){feed.innerHTML='<div class="empty-state"><p>No posts yet. Be the first to share!<\/p><\/div>';return;}feed.innerHTML=data.posts.map(renderPost).join('');}catch(err){document.getElementById('posts-feed').innerHTML='<div class="empty-state"><p>Unable to load posts.<\/p><\/div>';}}function renderPost(post){var t=getTimeAgo(post.created_at);var b=getCategoryBadge(post.category);return '<div class="post-card"><div class="post-header"><div class="post-avatar" style="background:#6c7b95">'+((post.author_name||'?')[0]).toUpperCase()+'<\/div><div class="post-meta"><div class="post-author">'+escapeHtml(post.author_name||'Anonymous')+' '+b+'<\/div><div class="post-time">'+t+' \u2022 '+escapeHtml(post.city||'')+'<\/div><\/div><\/div><div class="post-content">'+escapeHtml(post.body||'')+'<\/div><div class="post-actions"><button class="post-action">\u{1F4AC} '+(post.reply_count||0)+' replies<\/button><button class="post-action">Report<\/button><button class="post-action">Share<\/button><\/div><\/div>';}function getCategoryBadge(cat){var badges={'warning':'<span class="post-badge badge-warning">Warning<\/span>','safety-tip':'<span class="post-badge badge-alert">Safety Tip<\/span>','recommendation':'<span class="post-badge badge-question">Rec<\/span>','good-news':'<span class="post-badge badge-verified">Good News<\/span>'};return badges[cat]||'';}async function createPost(){var c=document.getElementById('new-post-content').value.trim();var cat=document.getElementById('new-post-category').value;if(c.length<10){alert('Post must be at least 10 characters.');return;}try{await apiFetch('/posts',{method:'POST',body:JSON.stringify({title:c.substring(0,60),body:c,city:user.city,category:cat})});document.getElementById('new-post-content').value='';loadPosts();}catch(err){alert('Failed to create post.');}}async function loadAlerts(){try{var data=await apiFetch('/alerts?city='+encodeURIComponent(user.city||''));var list=document.getElementById('alerts-list');if(!data||!data.alerts||data.alerts.length===0){list.innerHTML='<div style="color:#555;font-size:13px;text-align:center;padding:12px">No alerts<\/div>';return;}list.innerHTML=data.alerts.slice(0,5).map(function(a){return '<div class="alert-item"><div class="alert-title"><span class="severity-dot severity-'+(a.severity||'low')+'"><\/span>'+escapeHtml(a.title)+'<\/div><div class="alert-meta">'+escapeHtml(a.type||'')+' \u2022 '+escapeHtml(a.city||'')+'<\/div><\/div>';}).join('');}catch(err){document.getElementById('alerts-list').innerHTML='<div style="color:#555;font-size:13px">Unable to load alerts<\/div>';}}async function loadCities(){try{var data=await apiFetch('/cities');var list=document.getElementById('cities-list');if(!data||!data.cities||data.cities.length===0){list.innerHTML='<div style="color:#555;font-size:13px">No cities yet<\/div>';return;}list.innerHTML=data.cities.slice(0,5).map(function(c,i){return '<div class="city-row"><div><span class="city-rank">#'+(i+1)+'<\/span><span class="city-name">'+escapeHtml(c.city)+', '+escapeHtml(c.state||'')+'<\/span><\/div><span class="city-votes">'+c.votes+' votes<\/span><\/div>';}).join('');}catch(err){document.getElementById('cities-list').innerHTML='<div style="color:#555;font-size:13px">Unable to load cities<\/div>';}}function handleLogout(){localStorage.removeItem('safetea_token');localStorage.removeItem('safetea_user');window.location.href='/login.html';}function escapeHtml(s){if(!s)return '';var d=document.createElement('div');d.textContent=s;return d.innerHTML;}function getTimeAgo(ds){if(!ds)return '';var n=new Date();var d=new Date(ds);var s=Math.floor((n-d)/1000);if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}initUI();loadPosts();loadAlerts();loadCities();
-<\/script>
+
+    <!-- ALERTS TAB -->
+    <div id="tab-alerts" class="tab-section">
+        <div class="alerts-section">
+            <div class="alerts-header">
+                <h2><i class="fas fa-bell" style="color:#f27059"></i> Alerts in Your Area</h2>
+            </div>
+            <div id="alerts-full-list">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading alerts...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH TAB -->
+    <div id="tab-search" class="tab-section">
+        <div class="search-section">
+            <div class="search-header">
+                <h2><i class="fas fa-shield-alt" style="color:#f27059"></i> Safety Search Tools</h2>
+                <p>Look up important safety information before meeting someone new.</p>
+            </div>
+            <div class="search-tabs">
+                <button class="search-tab active" data-search="offender"><i class="fas fa-user-shield"></i> Sex Offender Search</button>
+                <button class="search-tab" data-search="background"><i class="fas fa-file-alt"></i> Background Check</button>
+            </div>
+
+            <!-- Sex Offender Search Panel -->
+            <div id="search-offender" class="search-panel active">
+                <h3><i class="fas fa-user-shield"></i> Sex Offender Registry Search</h3>
+                <p class="desc">Search the national sex offender registry to check if someone is listed. Results are pulled from public records databases.</p>
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>This search uses publicly available registry data. Always verify results with your local law enforcement. Information may not be 100% current.</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="so-first-name" placeholder="Enter first name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="so-last-name" placeholder="Enter last name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="so-city" placeholder="City (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <select id="so-state">
+                            <option value="">Select state</option>
+                            <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
+                            <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
+                            <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
+                            <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
+                            <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
+                            <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
+                            <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
+                            <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
+                            <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
+                            <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
+                            <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
+                            <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
+                            <option>Wisconsin</option><option>Wyoming</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-search" onclick="searchOffenders()"><i class="fas fa-search"></i> Search Registry</button>
+                <div id="offender-results" class="search-results"></div>
+            </div>
+
+            <!-- Background Check Panel -->
+            <div id="search-background" class="search-panel">
+                <h3><i class="fas fa-file-alt"></i> Background Check</h3>
+                <p class="desc">Run a basic background check before meeting someone from a dating app. Includes criminal records, identity verification, and public records.</p>
+                <div class="disclaimer">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Background checks use public records and may not include all information. This is not a substitute for professional due diligence. Results are for personal safety purposes only.</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="bg-name" placeholder="Enter full name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="bg-city" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="bg-state" placeholder="State">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Approximate Age (optional)</label>
+                        <input type="number" id="bg-age" placeholder="Age">
+                    </div>
+                </div>
+                <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
+                <div id="background-results" class="search-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="tab-profile" class="tab-section">
+        <div class="profile-section">
+            <div class="profile-card">
+                <div class="profile-avatar-large" id="profile-avatar">?</div>
+                <div class="profile-name" id="profile-name">Loading...</div>
+                <div class="profile-email" id="profile-email"></div>
+                <div class="profile-role" id="profile-role">member</div>
+            </div>
+            <div class="profile-form">
+                <h3>Edit Profile</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="edit-name" placeholder="Your display name">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="edit-city" placeholder="Your city">
+                    </div>
+                    <div class="form-group">
+                        <label>Bio</label>
+                        <input type="text" id="edit-bio" placeholder="Short bio (optional)">
+                    </div>
+                </div>
+                <button class="btn-save" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="app.js"></script>
 </body>
 </html>

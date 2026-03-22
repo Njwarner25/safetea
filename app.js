@@ -6,6 +6,10 @@
     var token = localStorage.getItem('safetea_token');
     var user = JSON.parse(localStorage.getItem('safetea_user') || 'null');
     var selectedImage = null;
+    var selectedAvatarColor = null;
+    var generatedAvatarData = null;
+    var avatarUploadData = null;
+    var activeThreadUserId = null;
 
     // Auth check
     if (!token || !user) {
@@ -61,6 +65,10 @@
         });
     }
 
+    function checkPremium() {
+        return user && (user.subscription_tier === 'premium' || user.role === 'admin' || user.role === 'moderator');
+    }
+
     // ==================== TAB NAVIGATION ====================
     function initTabs() {
         var navLinks = document.querySelectorAll('.topnav-nav a[data-tab]');
@@ -91,6 +99,7 @@
         // Load data for tab
         if (tab === 'alerts') loadFullAlerts();
         if (tab === 'profile') loadProfile();
+        if (tab === 'inbox') loadInbox();
     }
 
     // ==================== SEARCH TABS ====================
@@ -118,6 +127,15 @@
         document.getElementById('post-avatar').textContent = initial;
         document.getElementById('stat-role').textContent = user.role || 'member';
         document.getElementById('stat-status').textContent = 'Active';
+
+        // Set nav avatar color if available
+        if (user.avatar_color) {
+            document.getElementById('nav-avatar').style.background = user.avatar_color;
+            document.getElementById('post-avatar').style.background = user.avatar_color;
+        }
+
+        // Load unread message count for badge
+        loadUnreadCount();
     }
 
     // ==================== POSTS ====================
@@ -155,7 +173,7 @@
     }
 
     function loadPosts() {
-                apiFetch('/posts').then(function(data) {
+        apiFetch('/posts').then(function(data) {
             var feed = document.getElementById('posts-feed');
             if (!data || !data.posts || data.posts.length === 0) {
                 feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:40px;color:#333;display:block;margin-bottom:12px"></i><p>No posts yet. Be the first to share!</p></div>';
@@ -277,16 +295,385 @@
         });
     }
 
+    // ==================== INBOX / MESSAGING ====================
+    function loadUnreadCount() {
+        apiFetch('/messages/unread/count').then(function(data) {
+            var badge = document.getElementById('inbox-badge');
+            if (data && data.unread > 0) {
+                badge.textContent = data.unread;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }).catch(function() {
+            // Silently fail — user may not be premium
+        });
+    }
+
+    function loadInbox() {
+        var gate = document.getElementById('inbox-gate');
+        var content = document.getElementById('inbox-content');
+
+        if (!checkPremium()) {
+            gate.style.display = 'flex';
+            content.style.display = 'none';
+            return;
+        }
+
+        gate.style.display = 'none';
+        content.style.display = 'block';
+
+        var convos = document.getElementById('inbox-conversations');
+        convos.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+        apiFetch('/messages').then(function(data) {
+            if (!data || !data.conversations || data.conversations.length === 0) {
+                convos.innerHTML = '<div style="text-align:center;padding:40px;color:#555"><i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No messages yet</p><p style="font-size:12px;margin-top:4px">Messages from referrals and the community will appear here.</p></div>';
+                return;
+            }
+            convos.innerHTML = data.conversations.map(function(c) {
+                var displayName = c.other_custom_name || c.other_name || 'User';
+                var initial = displayName[0].toUpperCase();
+                var color = c.other_avatar_color || '#6c7b95';
+                return '<div class="convo-item" onclick="openThread(\'' + c.other_user_id + '\')" data-uid="' + c.other_user_id + '">' +
+                    '<div class="convo-avatar" style="background:' + escapeHtml(color) + '">' + escapeHtml(initial) + '</div>' +
+                    '<div class="convo-info">' +
+                    '<div class="convo-name">' + escapeHtml(displayName) + '</div>' +
+                    '<div class="convo-preview">' + escapeHtml(c.last_message || '') + '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">' +
+                    '<div class="convo-time">' + getTimeAgo(c.last_message_at) + '</div>' +
+                    (c.unread_count > 0 ? '<div class="convo-unread">' + c.unread_count + '</div>' : '') +
+                    '</div></div>';
+            }).join('');
+        }).catch(function() {
+            convos.innerHTML = '<div style="text-align:center;padding:20px;color:#555">Unable to load conversations</div>';
+        });
+    }
+
+    window.openThread = function(userId) {
+        activeThreadUserId = userId;
+
+        // Highlight active conversation
+        document.querySelectorAll('.convo-item').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        var activeEl = document.querySelector('.convo-item[data-uid="' + userId + '"]');
+        if (activeEl) activeEl.classList.add('active');
+
+        loadThread(userId);
+    };
+
+    function loadThread(userId) {
+        var thread = document.getElementById('inbox-thread');
+        thread.innerHTML = '<div class="loading" style="display:flex;align-items:center;justify-content:center;height:100%"><i class="fas fa-spinner fa-spin"></i></div>';
+
+        apiFetch('/messages/' + userId).then(function(data) {
+            if (!data) return;
+
+            var otherName = 'User';
+            var otherColor = '#6c7b95';
+            var otherInitial = '?';
+            if (data.otherUser) {
+                otherName = data.otherUser.custom_display_name || data.otherUser.display_name || 'User';
+                otherColor = data.otherUser.avatar_color || '#6c7b95';
+                otherInitial = otherName[0].toUpperCase();
+            }
+
+            var messagesHtml = '';
+            if (data.messages && data.messages.length > 0) {
+                messagesHtml = data.messages.map(function(m) {
+                    var isSent = m.sender_id === user.id;
+                    return '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' +
+                        escapeHtml(m.content) +
+                        '</div>' +
+                        '<div class="msg-time ' + (isSent ? 'sent' : '') + '">' + getTimeAgo(m.created_at) + '</div>';
+                }).join('');
+            } else {
+                messagesHtml = '<div style="text-align:center;padding:40px;color:#555">No messages yet. Start the conversation!</div>';
+            }
+
+            thread.innerHTML =
+                '<div class="thread-header">' +
+                '<div class="convo-avatar" style="background:' + escapeHtml(otherColor) + ';width:36px;height:36px;font-size:14px">' + escapeHtml(otherInitial) + '</div>' +
+                '<div class="thread-header-name">' + escapeHtml(otherName) + '</div>' +
+                '</div>' +
+                '<div class="thread-messages" id="thread-messages">' + messagesHtml + '</div>' +
+                '<div class="thread-input">' +
+                '<input type="text" id="message-input" placeholder="Type a message..." onkeypress="if(event.key===\'Enter\')sendMessage()">' +
+                '<button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>' +
+                '</div>';
+
+            // Scroll to bottom
+            var msgContainer = document.getElementById('thread-messages');
+            if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Refresh unread count
+            loadUnreadCount();
+        }).catch(function() {
+            thread.innerHTML = '<div class="inbox-thread-empty"><p>Unable to load messages.</p></div>';
+        });
+    }
+
+    window.sendMessage = function() {
+        if (!activeThreadUserId) return;
+        var input = document.getElementById('message-input');
+        var content = input.value.trim();
+        if (!content) return;
+
+        input.value = '';
+
+        apiFetch('/messages', {
+            method: 'POST',
+            body: JSON.stringify({ recipient_id: activeThreadUserId, content: content })
+        }).then(function(data) {
+            if (data && data.message) {
+                loadThread(activeThreadUserId);
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        }).catch(function() {
+            showToast('Failed to send message.', true);
+        });
+    };
+
+    // ==================== AVATAR CUSTOMIZATION ====================
+    var AVATAR_COLORS = [
+        '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#6c7b95',
+        '#1abc9c', '#d35400', '#8e44ad', '#2980b9', '#27ae60', '#c0392b', '#7f8c8d'
+    ];
+
+    function initAvatarColorPicker() {
+        var container = document.getElementById('color-swatches');
+        if (!container) return;
+        var currentColor = user.avatar_color || '#f27059';
+        selectedAvatarColor = currentColor;
+
+        container.innerHTML = AVATAR_COLORS.map(function(c) {
+            var active = c === currentColor ? ' active' : '';
+            return '<div class="color-swatch' + active + '" style="background:' + c + '" onclick="selectAvatarColor(\'' + c + '\')" data-color="' + c + '"></div>';
+        }).join('');
+    }
+
+    window.selectAvatarColor = function(color) {
+        selectedAvatarColor = color;
+        document.querySelectorAll('.color-swatch').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        var swatch = document.querySelector('.color-swatch[data-color="' + color + '"]');
+        if (swatch) swatch.classList.add('active');
+
+        // Update preview
+        var preview = document.getElementById('avatar-preview');
+        if (preview) preview.style.background = color;
+    };
+
+    window.onAvatarTypeChange = function(type) {
+        // Hide all sub-options
+        document.getElementById('custom-name-input').style.display = 'none';
+        document.getElementById('generated-name-input').style.display = 'none';
+        document.getElementById('upload-avatar-input').style.display = 'none';
+
+        if (type === 'custom') {
+            document.getElementById('custom-name-input').style.display = 'block';
+        } else if (type === 'generated') {
+            document.getElementById('generated-name-input').style.display = 'block';
+            if (!generatedAvatarData) generateRandomName();
+        } else if (type === 'upload') {
+            document.getElementById('upload-avatar-input').style.display = 'block';
+            if (checkPremium()) {
+                document.getElementById('upload-avatar-gate').style.display = 'none';
+                document.getElementById('upload-avatar-form').style.display = 'block';
+            } else {
+                document.getElementById('upload-avatar-gate').style.display = 'block';
+                document.getElementById('upload-avatar-form').style.display = 'none';
+            }
+        }
+
+        updateAvatarPreview(type);
+    };
+
+    function updateAvatarPreview(type) {
+        var preview = document.getElementById('avatar-preview');
+        var previewName = document.getElementById('avatar-preview-name');
+        if (!preview || !previewName) return;
+
+        var name = user.display_name || 'Member';
+        var initial = name[0].toUpperCase();
+        var color = selectedAvatarColor || user.avatar_color || '#f27059';
+
+        preview.style.background = color;
+        preview.innerHTML = '';
+
+        if (type === 'initial') {
+            preview.textContent = initial;
+            previewName.textContent = 'Anonymous';
+        } else if (type === 'custom') {
+            var customName = document.getElementById('edit-custom-name');
+            var cn = customName ? customName.value.trim() : '';
+            preview.textContent = cn ? cn[0].toUpperCase() : initial;
+            previewName.textContent = cn || 'Custom Name';
+        } else if (type === 'generated') {
+            if (generatedAvatarData) {
+                preview.textContent = generatedAvatarData.initial;
+                previewName.textContent = generatedAvatarData.display_name;
+            } else {
+                preview.textContent = '?';
+                previewName.textContent = 'Generating...';
+            }
+        } else if (type === 'upload') {
+            if (avatarUploadData) {
+                preview.innerHTML = '<img src="' + avatarUploadData + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+            } else {
+                preview.textContent = initial;
+            }
+            previewName.textContent = name;
+        }
+    }
+
+    window.generateRandomName = function() {
+        apiFetch('/users/generate-avatar').then(function(data) {
+            if (data && data.display_name) {
+                generatedAvatarData = data;
+                document.getElementById('generated-name-display').textContent = data.display_name;
+                // Update color if provided
+                if (data.color) {
+                    window.selectAvatarColor(data.color);
+                }
+                updateAvatarPreview('generated');
+            }
+        }).catch(function() {
+            showToast('Failed to generate name.', true);
+        });
+    };
+
+    window.handleAvatarUpload = function(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            avatarUploadData = e.target.result;
+            document.getElementById('avatar-preview-img').src = e.target.result;
+            document.getElementById('avatar-upload-preview').style.display = 'block';
+            updateAvatarPreview('upload');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.saveAvatar = function() {
+        var selectedType = document.querySelector('input[name="avatar-type"]:checked');
+        if (!selectedType) {
+            showToast('Please select an avatar type.', true);
+            return;
+        }
+
+        var type = selectedType.value;
+        var payload = {
+            avatar_type: type,
+            avatar_color: selectedAvatarColor || user.avatar_color
+        };
+
+        if (type === 'custom') {
+            var customName = document.getElementById('edit-custom-name').value.trim();
+            if (!customName) {
+                showToast('Please enter a display name.', true);
+                return;
+            }
+            payload.custom_display_name = customName;
+            payload.avatar_initial = customName[0].toUpperCase();
+        } else if (type === 'generated') {
+            if (!generatedAvatarData) {
+                showToast('Please generate a name first.', true);
+                return;
+            }
+            payload.custom_display_name = generatedAvatarData.display_name;
+            payload.avatar_initial = generatedAvatarData.initial;
+            payload.avatar_color = generatedAvatarData.color || selectedAvatarColor;
+        } else if (type === 'upload') {
+            if (avatarUploadData) {
+                payload.avatar_url = avatarUploadData;
+            }
+        } else if (type === 'initial') {
+            payload.avatar_initial = (user.display_name || 'M')[0].toUpperCase();
+        }
+
+        apiFetch('/users/profile', {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+        }).then(function(data) {
+            if (data && data.user) {
+                // Update local user
+                user.avatar_type = data.user.avatar_type;
+                user.avatar_color = data.user.avatar_color;
+                user.avatar_initial = data.user.avatar_initial;
+                user.avatar_url = data.user.avatar_url;
+                user.custom_display_name = data.user.custom_display_name;
+                localStorage.setItem('safetea_user', JSON.stringify(user));
+                initUI();
+                showToast('Avatar updated!');
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        }).catch(function() {
+            showToast('Failed to update avatar.', true);
+        });
+    };
+
+    window.showUpgradePrompt = function() {
+        showToast('Upgrade coming soon! Premium features are $5.99/mo.', false);
+    };
+
     // ==================== PROFILE ====================
     function loadProfile() {
         var name = user.display_name || 'Member';
-        document.getElementById('profile-avatar').textContent = name[0].toUpperCase();
+        var initial = (user.avatar_initial || name[0]).toUpperCase();
+        var color = user.avatar_color || '#f27059';
+
+        // Profile card
+        var profileAvatar = document.getElementById('profile-avatar');
+        profileAvatar.textContent = initial;
+        profileAvatar.style.background = color;
+
         document.getElementById('profile-name').textContent = name;
         document.getElementById('profile-email').textContent = user.email || '';
         document.getElementById('profile-role').textContent = user.role || 'member';
+
+        // Show premium badge if applicable
+        var tierEl = document.getElementById('profile-tier');
+        if (tierEl) {
+            tierEl.style.display = checkPremium() ? 'block' : 'none';
+        }
+
+        // Edit form
         document.getElementById('edit-name').value = user.display_name || '';
         document.getElementById('edit-city').value = user.city || '';
         document.getElementById('edit-bio').value = user.bio || '';
+
+        // Avatar customization
+        var avatarPreview = document.getElementById('avatar-preview');
+        if (avatarPreview) {
+            avatarPreview.textContent = initial;
+            avatarPreview.style.background = color;
+        }
+        var previewName = document.getElementById('avatar-preview-name');
+        if (previewName) {
+            previewName.textContent = user.custom_display_name || 'Anonymous';
+        }
+
+        // Set avatar type radio
+        var currentType = user.avatar_type || 'initial';
+        var radio = document.querySelector('input[name="avatar-type"][value="' + currentType + '"]');
+        if (radio) {
+            radio.checked = true;
+            window.onAvatarTypeChange(currentType);
+        }
+
+        // Populate custom name if set
+        if (user.custom_display_name) {
+            document.getElementById('edit-custom-name').value = user.custom_display_name;
+        }
+
+        initAvatarColorPicker();
     }
 
     window.saveProfile = function() {
@@ -332,7 +719,6 @@
         // Simulate search with delay (in production this would hit a real API like NSOPW)
         setTimeout(function() {
             var query = (first + ' ' + last).trim().toLowerCase();
-            // Check against sample data for demo
             var sampleOffenders = [
                 { name: 'John Smith', city: 'Austin', state: 'Texas', risk: 'Level 2', offense: 'Indecency with a child', year: '2018' },
                 { name: 'Robert Johnson', city: 'Dallas', state: 'Texas', risk: 'Level 3', offense: 'Sexual assault', year: '2015' },
@@ -427,4 +813,12 @@
     loadPosts();
     loadAlerts();
     loadCities();
+
+    // Refresh user data from server to pick up subscription_tier changes
+    apiFetch('/auth/me').then(function(data) {
+        if (data && data.user) {
+            user = Object.assign(user, data.user);
+            localStorage.setItem('safetea_user', JSON.stringify(user));
+        }
+    }).catch(function() {});
 })();

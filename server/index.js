@@ -10,6 +10,8 @@ const postRoutes = require('./routes/posts');
 const userRoutes = require('./routes/users');
 const alertRoutes = require('./routes/alerts');
 const cityRoutes = require('./routes/cities');
+const messageRoutes = require('./routes/messages');
+const referralRoutes = require('./routes/referrals');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,52 +20,54 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
-    }));
+  credentials: true
+}));
 
-    // Rate limiting
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-        max: 100,
-          message: { error: 'Too many requests, please try again later.' }
-          });
-          app.use('/api/', limiter);
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use('/api/', limiter);
 
-          // Body parsing
-          app.use(express.json({ limit: '10mb' }));
-          app.use(express.urlencoded({ extended: true }));
+// Body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-          // Serve static frontend files
-          app.use(express.static(path.join(__dirname, '..')));
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, '..')));
 
-          // API routes
-          app.use('/api/auth', authRoutes);
-          app.use('/api/posts', postRoutes);
-          app.use('/api/users', userRoutes);
-          app.use('/api/alerts', alertRoutes);
-          app.use('/api/cities', cityRoutes);
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/cities', cityRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/referrals', referralRoutes);
 
-          // Health check
-          app.get('/api/health', (req, res) => {
-            res.json({ status: 'ok', timestamp: new Date().toISOString() });
-            });
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-            // SPA fallback - serve index.html for non-API routes
-            app.get('*', (req, res) => {
-              if (!req.path.startsWith('/api')) {
-                  res.sendFile(path.join(__dirname, '..', 'index.html'));
-                    } else {
-                        res.status(404).json({ error: 'API endpoint not found' });
-                          }
-                          });
+// SPA fallback - serve index.html for non-API routes
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+  } else {
+    res.status(404).json({ error: 'API endpoint not found' });
+  }
+});
 
-                          // Error handling middleware
-                          app.use((err, req, res, next) => {
-                            console.error('Server error:', err.stack);
-                              res.status(500).json({ error: 'Internal server error' });
-                              });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
-                              app.listen(PORT, () => {
-                                console.log(`SafeTea server running on port ${PORT}`);
-                                  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-                                  });
+app.listen(PORT, () => {
+  console.log(`SafeTea server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});

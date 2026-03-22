@@ -14,11 +14,11 @@ const adminId = uuidv4();
 const adminHash = bcrypt.hashSync('SafeTea2026!', salt);
 
 const insertUser = db.prepare(`
-  INSERT OR IGNORE INTO users (id, email, password_hash, display_name, role, city, state, is_verified, avatar_initial, avatar_color)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT OR IGNORE INTO users (id, email, password_hash, display_name, role, city, state, is_verified, avatar_initial, avatar_color, subscription_tier)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-insertUser.run(adminId, 'admin@getsafetea.app', adminHash, 'Admin', 'admin', 'Chicago', 'IL', 1, 'A', '#e74c3c');
+insertUser.run(adminId, 'admin@getsafetea.app', adminHash, 'Admin', 'admin', 'Chicago', 'IL', 1, 'A', '#e74c3c', 'premium');
 
 // Seed test members
 const members = [
@@ -33,7 +33,7 @@ members.forEach(m => {
     const id = uuidv4();
     memberIds.push(id);
     const hash = bcrypt.hashSync('TestPass123!', salt);
-    insertUser.run(id, m.email, hash, m.name, 'member', m.city, m.state, 1, m.initial, m.color);
+    insertUser.run(id, m.email, hash, m.name, 'member', m.city, m.state, 1, m.initial, m.color, null);
 });
 
 // Seed community posts

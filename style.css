@@ -176,9 +176,10 @@ h3 { font-size: 1.15rem; }
   display: flex; align-items: center; justify-content: center; gap: 2px;
 }
 .app-header-logo {
-  height: 18px; width: auto;
+  height: 24px; width: auto;
   vertical-align: middle;
-  margin-right: 4px;
+  margin-right: 6px;
+  filter: drop-shadow(0 0 8px rgba(232, 160, 181, 0.35)) drop-shadow(0 0 20px rgba(232, 160, 181, 0.1));
 }
 .search-bar-mock {
   display: flex; align-items: center; gap: 8px;

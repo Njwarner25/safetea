@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SafeTea - Privacy-First Dating Transparency</title>
-  <meta name="description" content="SafeTea is a privacy-first dating safety platform. Anonymous, transparent, and community-driven.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+  <title>SafeTea - Date Smarter. Stay Safer.</title>
+  <meta name="description" content="SafeTea is a private, women-first community where you can share, verify, and protect each other in the dating world.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,833 +13,181 @@
 
 <!-- NAVIGATION -->
 <nav class="navbar">
-    <div class="nav-container">
-          <a href="#" class="logo">
-            <svg class="logo-icon" width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#4CAF50"/>
-                  <stop offset="50%" stop-color="#F5A87A"/>
-                  <stop offset="100%" stop-color="#F27059"/>
-                </linearGradient>
-              </defs>
-              <!-- Teacup body -->
-              <path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#logoGrad)" opacity="0.9"/>
-              <!-- Teacup handle -->
-              <path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#logoGrad)" stroke-width="4" fill="none" stroke-linecap="round"/>
-              <!-- Saucer -->
-              <ellipse cx="28" cy="54" rx="20" ry="4" fill="url(#logoGrad)" opacity="0.5"/>
-              <!-- Checkmark -->
-              <path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-              <!-- Steam lines -->
-              <path d="M22 16 C22 12 26 12 26 16" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/>
-              <path d="M30 14 C30 10 34 10 34 14" stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
-            </svg>
-            <span><span style="color:#4CAF50">safe</span><span style="color:#F27059">tea</span></span>
-      </a>
-          <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#safety-tools">Safety Tools</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#faq">FAQ</a>
-      </div>
-          <div class="nav-actions">
-            <button class="theme-toggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
-            <a href="/login.html" class="btn btn-outline">Log In</a>
-            <a href="/login.html" class="btn btn-primary">Join Free</a>
-      </div>
-      <button class="hamburger" aria-label="Toggle menu">
-        <span></span><span></span><span></span>
-      </button>
+  <div class="nav-container">
+    <a href="#" class="logo">
+      <img src="logo.png" alt="SafeTea" class="logo-img">
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#trust">Why SafeTea</a>
+      <a href="#join">Join</a>
+    </div>
+    <div class="nav-actions">
+      <a href="#join" class="btn btn-primary">Join Your City</a>
+    </div>
+    <button class="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
-<!-- HERO SECTION (with problem context integrated) -->
+<!-- HERO -->
 <section class="hero">
-    <div class="hero-bg-shapes">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-      <div class="shape shape-3"></div>
-  </div>
-    <div class="container">
-          <div class="hero-content">
-                  <div class="hero-badge">
-                    <i class="fas fa-lock"></i> Private & Anonymous Community
-            </div>
-            <h1>Date Smarter.<br><span class="gradient-text">Stay Safer.</span></h1>
-                  <p class="hero-subtitle">The independent, privacy-first platform where women protect each other in the dating world. No Facebook. No screenshots. No compromise.</p>
-                  <p class="hero-problem-context" style="color:var(--gray);font-size:0.95rem;margin-top:8px;margin-bottom:16px;">Facebook groups get deleted overnight. Screenshots leak. Mods burn out. We built something better.</p>
-                  <div class="hero-cta">
-                            <a href="#join" class="btn btn-primary btn-lg">
-                              <i class="fas fa-arrow-right"></i> Join Your City's Community
-                    </a>
-                            <a href="#how-it-works" class="btn btn-ghost btn-lg">
-                              <i class="fas fa-play-circle"></i> See How It Works
-                    </a>
-            </div>
-                  <div class="hero-stats">
-                            <div class="stat">
-                              <span class="stat-number">250+</span>
-                              <span class="stat-label">Cities</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                            <div class="stat">
-                              <span class="stat-number">100%</span>
-                              <span class="stat-label">Anonymous</span>
-                    </div>
-                    <div class="stat-divider"></div>
-                            <div class="stat">
-                              <span class="stat-number">24/7</span>
-                              <span class="stat-label">Moderation</span>
-                    </div>
-            </div>
+  <div class="container hero-grid">
+    <div class="hero-content">
+      <h1>Date smarter.<br><span class="text-pink">Stay safer.</span></h1>
+      <p class="hero-subtitle">A private, women-first community where you can share, verify, and protect each other in the dating world.</p>
+      <p class="hero-trust">No Facebook. No screenshots. No compromise.</p>
+      <div class="hero-cta">
+        <a href="#join" class="btn btn-primary btn-lg">Join Your City's Community</a>
+        <a href="#how-it-works" class="btn btn-ghost">Learn how it works</a>
       </div>
-          <div class="hero-visual">
-                  <div class="phone-mockup">
-                    <div class="phone-notch"></div>
-                            <div class="phone-screen">
-                                        <div class="app-header">
-                                          <svg class="logo-icon" width="18" height="18" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <defs><linearGradient id="logoGradSm" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4CAF50"/><stop offset="50%" stop-color="#F5A87A"/><stop offset="100%" stop-color="#F27059"/></linearGradient></defs>
-                                            <path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#logoGradSm)" opacity="0.9"/>
-                                            <path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#logoGradSm)" stroke-width="4" fill="none" stroke-linecap="round"/>
-                                            <path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                                          </svg> SafeTea Chicago
-                              </div>
-                                        <div class="search-bar-mock">
-                                          <i class="fas fa-search"></i>
-                                          <span>Search by name...</span>
-                              </div>
-                                        <div class="phone-feed">
-                                        <div class="app-post">
-                                          <div class="post-avatar">A</div>
-                                                      <div class="post-content">
-                                                                      <div class="post-name">Anonymous Member</div>
-                                                                      <div class="post-text">Has anyone dated someone named Jake from Lincoln Park? Looking for experiences...</div>
-                                                                      <div class="post-meta">
-                                                                                        <span><i class="fas fa-comment"></i> 12 replies</span>
-                                                                                        <span><i class="fas fa-shield"></i> Verified</span>
-                                                        </div>
-                                          </div>
-                              </div>
-                                        <div class="app-post">
-                                          <div class="post-avatar">S</div>
-                                                      <div class="post-content">
-                                                                      <div class="post-name">Anonymous Member</div>
-                                                                      <div class="post-text">PSA: This person has been flagged by 4 members across 2 cities...</div>
-                                                                      <div class="post-meta">
-                                                                                        <span><i class="fas fa-comment"></i> 28 replies</span>
-                                                                                        <span><i class="fas fa-flag"></i> Alert</span>
-                                                        </div>
-                                          </div>
-                              </div>
-                              <div class="app-post">
-                                          <div class="post-avatar" style="background:var(--primary)">M</div>
-                                          <div class="post-content">
-                                                <div class="post-name">Anonymous Member</div>
-                                                <div class="post-text">Update: He has a second profile on Hinge under a different name. Verified by 3 members.</div>
-                                                <div class="post-meta">
-                                                      <span><i class="fas fa-comment"></i> 41 replies</span>
-                                                      <span><i class="fas fa-check-circle"></i> Verified</span>
-                                                </div>
-                                          </div>
-                              </div>
-                              <div class="app-post">
-                                          <div class="post-avatar" style="background:#8B5CF6">R</div>
-                                          <div class="post-content">
-                                                <div class="post-name">Anonymous Member</div>
-                                                <div class="post-text">Be careful around Wicker Park area. Same person reported by members in 3 cities.</div>
-                                                <div class="post-meta">
-                                                      <span><i class="fas fa-comment"></i> 56 replies</span>
-                                                      <span><i class="fas fa-exclamation-triangle"></i> Warning</span>
-                                                </div>
-                                          </div>
-                              </div>
-                    </div>
-                    </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="app-header">
+            <i class="fas fa-mug-hot"></i> SafeTea Chicago
+          </div>
+          <div class="search-bar-mock">
+            <i class="fas fa-search"></i>
+            <span>Search by name...</span>
+          </div>
+          <div class="phone-feed">
+            <div class="app-post">
+              <div class="post-avatar">A</div>
+              <div class="post-content">
+                <div class="post-name">Anonymous Member</div>
+                <div class="post-text">Has anyone dated someone named Jake from Lincoln Park? Looking for experiences...</div>
+                <div class="post-meta">
+                  <span><i class="fas fa-comment"></i> 12 replies</span>
+                  <span><i class="fas fa-shield"></i> Verified</span>
+                </div>
+              </div>
             </div>
+            <div class="app-post">
+              <div class="post-avatar accent">S</div>
+              <div class="post-content">
+                <div class="post-name">Anonymous Member</div>
+                <div class="post-text">PSA: This person has been flagged by 4 members across 2 cities...</div>
+                <div class="post-meta">
+                  <span><i class="fas fa-comment"></i> 28 replies</span>
+                  <span><i class="fas fa-flag"></i> Alert</span>
+                </div>
+              </div>
+            </div>
+            <div class="app-post">
+              <div class="post-avatar">M</div>
+              <div class="post-content">
+                <div class="post-name">Anonymous Member</div>
+                <div class="post-text">Update: He has a second profile on Hinge under a different name. Verified by 3 members.</div>
+                <div class="post-meta">
+                  <span><i class="fas fa-comment"></i> 41 replies</span>
+                  <span><i class="fas fa-check-circle"></i> Verified</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
   </div>
 </section>
 
-
-<!-- AS SEEN IN / PRESS BAR -->
-<section class="press-bar reveal">
+<!-- PROBLEM -->
+<section class="section section-alt" id="problem">
   <div class="container">
-    <p class="press-label">As Featured In</p>
-    <div class="press-logos">
-      <span class="press-logo">TechCrunch</span>
-      <span class="press-logo">Refinery29</span>
-      <span class="press-logo">Cosmopolitan</span>
-      <span class="press-logo">The Verge</span>
-      <span class="press-logo">Bustle</span>
-      <span class="press-logo">Mashable</span>
+    <div class="section-content-centered">
+      <h2>Dating shouldn't feel unsafe.</h2>
+      <p class="section-body">Group chats disappear. Screenshots leak. Information gets lost.<br>Women are left to figure things out alone — again and again.</p>
     </div>
   </div>
 </section>
 
-<!-- FEATURES SECTION (top 6) -->
-<section class="features-section reveal" id="features">
-    <div class="container">
-          <div class="section-header">
-            <span class="section-tag">Features</span>
-            <h2>Built for <span class="gradient-text">Safety</span>, Not Shareholders</h2>
-                  <p>Every feature designed with one goal: keeping women safe while protecting everyone's rights.</p>
+<!-- SOLUTION -->
+<section class="section" id="solution">
+  <div class="container">
+    <div class="section-content-centered">
+      <h2>SafeTea is built differently.</h2>
+      <div class="solution-points">
+        <div class="solution-point">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Private, city-based communities</span>
+        </div>
+        <div class="solution-point">
+          <i class="fas fa-user-secret"></i>
+          <span>Anonymous sharing and verification</span>
+        </div>
+        <div class="solution-point">
+          <i class="fas fa-shield-heart"></i>
+          <span>Designed to protect, not expose</span>
+        </div>
       </div>
-          <div class="features-grid">
-                  <div class="feature-card featured">
-                    <div class="feature-icon"><i class="fas fa-user-secret"></i></div>
-                    <h3>Anonymous by Default</h3>
-                            <p>Your identity is never revealed. Post, comment, and search without anyone knowing who you are.</p>
-                    <span class="feature-badge">Core</span>
-            </div>
-                  <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-ban"></i></div>
-                    <h3>Screenshot Blocking</h3>
-                            <p>Built-in technology prevents screenshots and screen recordings. Content stays on the platform.</p>
-            </div>
-                  <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-city"></i></div>
-                    <h3>Multi-City Search</h3>
-                            <p>Search across multiple cities at once. Because people move, travel, and date across metro areas.</p>
-            </div>
-                  <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-robot"></i></div>
-                    <h3>AI-Powered Moderation</h3>
-                            <p>Smart filters catch harassment and false claims before they go live, reducing mod workload by 80%.</p>
-            </div>
-                  <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-bell"></i></div>
-                    <h3>Smart Alerts</h3>
-                            <p>Get notified when someone you're dating is posted about. Stay informed before it's too late.</p>
-            </div>
-                  <div class="feature-card">
-                    <div class="feature-icon"><i class="fas fa-scale-balanced"></i></div>
-                    <h3>Fair Review Process</h3>
-                            <p>A structured appeals system protects the community from frivolous lawsuits and false claims.</p>
-            </div>
-      </div>
-  </div>
-</section>
-
-<!-- SAFETY TOOLS -->
-<section class="safety-tools" id="safety-tools">
-    <div class="container">
-        <div class="section-header">
-            <span class="section-tag">SAFETY TOOLS</span>
-            <h2>Know Who You're <span class="gradient-text">Really</span> Dating</h2>
-            <p>Powerful tools that search public records so you can make informed decisions before meeting someone new.</p>
-        </div>
-
-        <div class="tools-grid">
-            <!-- Sex Offender Registry Locator -->
-            <div class="tool-card tool-card-registry">
-                <div class="tool-card-header">
-                    <div class="tool-icon-wrapper">
-                        <div class="tool-icon"><i class="fas fa-map-marker-alt"></i></div>
-                        <span class="tool-badge">Real-Time</span>
-                    </div>
-                    <h3>Sex Offender Locator</h3>
-                    <p class="tool-description">Search the national sex offender registry by address, zip code, or current location. See who's nearby before you swipe right.</p>
-                </div>
-                <div class="tool-card-body">
-                    <div class="tool-search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Enter address or zip code..." disabled>
-                        <button class="tool-search-btn" disabled><i class="fas fa-crosshairs"></i></button>
-                    </div>
-                    <div class="tool-map-preview">
-                        <div class="map-placeholder">
-                            <div class="map-grid">
-                                <div class="map-dot map-dot-1"></div>
-                                <div class="map-dot map-dot-2"></div>
-                                <div class="map-dot map-dot-3"></div>
-                                <div class="map-dot map-dot-4"></div>
-                                <div class="map-pin"><i class="fas fa-map-pin"></i></div>
-                            </div>
-                            <div class="map-overlay">
-                                <i class="fas fa-lock"></i>
-                                <span>Available to verified members</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tool-stats-row">
-                        <div class="tool-stat">
-                            <strong>900K+</strong>
-                            <span>Registry entries</span>
-                        </div>
-                        <div class="tool-stat">
-                            <strong>All 50</strong>
-                            <span>States covered</span>
-                        </div>
-                        <div class="tool-stat">
-                            <strong>Daily</strong>
-                            <span>Updates</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="tool-source">
-                    <i class="fas fa-database"></i> Data sourced from the National Sex Offender Public Website (NSOPW)
-                </div>
-            </div>
-
-            <!-- Background Check / Mugshot Scanner -->
-            <div class="tool-card tool-card-background">
-                <div class="tool-card-header">
-                    <div class="tool-icon-wrapper">
-                        <div class="tool-icon"><i class="fas fa-user-shield"></i></div>
-                        <span class="tool-badge">Deep Scan</span>
-                    </div>
-                    <h3>Background &amp; Mugshot Check</h3>
-                    <p class="tool-description">Scan public court records, arrest databases, and mugshot repositories. One search reveals what dating profiles won't.</p>
-                </div>
-                <div class="tool-card-body">
-                    <div class="tool-search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Enter full name..." disabled>
-                        <button class="tool-search-btn" disabled><i class="fas fa-arrow-right"></i></button>
-                    </div>
-                    <div class="scan-results-preview">
-                        <div class="scan-item">
-                            <div class="scan-icon scan-icon-court"><i class="fas fa-gavel"></i></div>
-                            <div class="scan-info">
-                                <strong>Court Records</strong>
-                                <span>Federal & state criminal records</span>
-                            </div>
-                            <div class="scan-status"><i class="fas fa-check-circle"></i></div>
-                        </div>
-                        <div class="scan-item">
-                            <div class="scan-icon scan-icon-mugshot"><i class="fas fa-camera"></i></div>
-                            <div class="scan-info">
-                                <strong>Mugshot Databases</strong>
-                                <span>Arrest photos from public sources</span>
-                            </div>
-                            <div class="scan-status"><i class="fas fa-check-circle"></i></div>
-                        </div>
-                        <div class="scan-item">
-                            <div class="scan-icon scan-icon-warrant"><i class="fas fa-file-alt"></i></div>
-                            <div class="scan-info">
-                                <strong>Warrant Search</strong>
-                                <span>Active & outstanding warrants</span>
-                            </div>
-                            <div class="scan-status"><i class="fas fa-check-circle"></i></div>
-                        </div>
-                        <div class="scan-item">
-                            <div class="scan-icon scan-icon-dv"><i class="fas fa-exclamation-triangle"></i></div>
-                            <div class="scan-info">
-                                <strong>DV & Restraining Orders</strong>
-                                <span>Protection order databases</span>
-                            </div>
-                            <div class="scan-status"><i class="fas fa-check-circle"></i></div>
-                        </div>
-                        <div class="scan-overlay">
-                            <i class="fas fa-lock"></i>
-                            <span>Unlock with SafeTea+</span>
-                        </div>
-                    </div>
-                    <div class="tool-stats-row">
-                        <div class="tool-stat">
-                            <strong>500M+</strong>
-                            <span>Public records</span>
-                        </div>
-                        <div class="tool-stat">
-                            <strong>50</strong>
-                            <span>States</span>
-                        </div>
-                        <div class="tool-stat">
-                            <strong>&lt;30s</strong>
-                            <span>Scan time</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="tool-source">
-                    <i class="fas fa-shield-alt"></i> Searches public records only — fully legal & FCRA-aware
-                </div>
-            </div>
-        </div>
-
-        <div class="tools-disclaimer">
-            <i class="fas fa-info-circle"></i>
-            <p>SafeTea searches publicly available records only. Results are informational and should not be used for employment, housing, or credit decisions. Always verify information through official sources.</p>
-        </div>
-        <div class="fcra-notice">
-            <div class="fcra-header">
-              <i class="fas fa-balance-scale"></i>
-              <strong>FCRA Compliance Notice</strong>
-            </div>
-            <p>SafeTea is <strong>not</strong> a Consumer Reporting Agency (CRA) as defined by the Fair Credit Reporting Act (FCRA), 15 U.S.C. &sect; 1681 et seq. The information available through SafeTea's safety tools is gathered from publicly available sources and is provided on an "as-is" basis for personal awareness and community safety purposes only.</p>
-            <p><strong>You may not use SafeTea to:</strong></p>
-            <ul>
-              <li>Make decisions about employment, tenant screening, or hiring</li>
-              <li>Determine eligibility for credit, insurance, or financial services</li>
-              <li>Evaluate individuals for any purpose governed by the FCRA</li>
-              <li>Stalk, harass, or intimidate any individual</li>
-              <li>Violate any applicable local, state, or federal law</li>
-            </ul>
-            <p>By using SafeTea's background check and registry lookup features, you certify that you will not use the information for any prohibited purpose. SafeTea does not verify the accuracy, completeness, or timeliness of public records and assumes no liability for errors or omissions. For official records, contact the relevant government agency directly.</p>
-        </div>
     </div>
+  </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="how-section" id="how-it-works">
-    <div class="container">
-          <div class="section-header">
-            <span class="section-tag">How It Works</span>
-            <h2>Three Steps to <span class="gradient-text">Safer Dating</span></h2>
-      </div>
-          <div class="steps-grid">
-                  <div class="step-card">
-                    <div class="step-number">01</div>
-                    <div class="step-icon"><i class="fas fa-user-check"></i></div>
-                    <h3>Get Verified</h3>
-                            <p>Join your city's community through our secure verification process. It takes under 2 minutes and ensures a safe, women-only space.</p>
-            </div>
-            <div class="step-connector"><i class="fas fa-arrow-right"></i></div>
-                  <div class="step-card">
-                    <div class="step-number">02</div>
-                    <div class="step-icon"><i class="fas fa-search"></i></div>
-                    <h3>Search & Share</h3>
-                            <p>Look up anyone you're dating or considering dating. Share your own experiences anonymously to help protect others.</p>
-            </div>
-            <div class="step-connector"><i class="fas fa-arrow-right"></i></div>
-                  <div class="step-card">
-                    <div class="step-number">03</div>
-                    <div class="step-icon"><i class="fas fa-heart-circle-check"></i></div>
-                    <h3>Date with Confidence</h3>
-                            <p>Make informed decisions backed by real experiences from real women in your community. Your safety comes first.</p>
-            </div>
-      </div>
-  </div>
-</section>
-
-
-<!-- TESTIMONIALS -->
-<section class="testimonials-section reveal" id="testimonials">
+<section class="section section-alt" id="how-it-works">
   <div class="container">
-    <div class="section-header">
-      <span class="section-tag">Real Stories</span>
-      <h2>Women <span class="gradient-text">Protecting</span> Women</h2>
-      <p>Hear from verified members who are building safer dating communities across the country.</p>
+    <div class="section-content-centered">
+      <h2>How SafeTea works</h2>
     </div>
-
-    <div class="testimonials-grid">
-      <div class="testimonial-card">
-        <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-        <p class="testimonial-text">"I searched a guy I matched with on Bumble and found 3 warnings from women in neighboring cities. SafeTea literally saved me from a dangerous situation."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">K</div>
-          <div class="testimonial-info">
-            <span class="testimonial-name">Verified Member</span>
-            <span class="testimonial-city"><i class="fas fa-map-pin"></i> Chicago, IL</span>
-          </div>
-          <span class="verified-badge"><i class="fas fa-check-circle"></i></span>
-        </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Join your city</h3>
+        <p>Connect with women in your local dating community.</p>
       </div>
-
-      <div class="testimonial-card featured">
-        <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-        <p class="testimonial-text">"After the Facebook group got deleted overnight, we lost everything. SafeTea gave us a permanent home. The screenshot blocking alone makes it worth it."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar" style="background:var(--primary)">J</div>
-          <div class="testimonial-info">
-            <span class="testimonial-name">Community Moderator</span>
-            <span class="testimonial-city"><i class="fas fa-map-pin"></i> Austin, TX</span>
-          </div>
-          <span class="verified-badge"><i class="fas fa-check-circle"></i></span>
-        </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>Share or search</h3>
+        <p>Look up someone or share your experience safely.</p>
       </div>
-
-      <div class="testimonial-card">
-        <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-        <p class="testimonial-text">"The background check tool found a DUI and a restraining order. His Hinge profile said 'adventure seeker.' I wish this existed two years ago."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar" style="background:#8B5CF6">A</div>
-          <div class="testimonial-info">
-            <span class="testimonial-name">Verified Member</span>
-            <span class="testimonial-city"><i class="fas fa-map-pin"></i> Miami, FL</span>
-          </div>
-          <span class="verified-badge"><i class="fas fa-check-circle"></i></span>
-        </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Protect each other</h3>
+        <p>Real insights, real experiences — no noise.</p>
       </div>
-
-      <div class="testimonial-card">
-        <div class="testimonial-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-        <p class="testimonial-text">"As a moderator, the AI tools cut my workload in half. False reports get filtered, real warnings stay up, and the community actually trusts the process."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar" style="background:#10B981">L</div>
-          <div class="testimonial-info">
-            <span class="testimonial-name">Community Moderator</span>
-            <span class="testimonial-city"><i class="fas fa-map-pin"></i> Denver, CO</span>
-          </div>
-          <span class="verified-badge"><i class="fas fa-check-circle"></i></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="testimonial-stats-bar">
-      <div class="tstat"><span class="tstat-number">12,000+</span><span class="tstat-label">Verified Members</span></div>
-      <div class="tstat"><span class="tstat-number">4.9/5</span><span class="tstat-label">Community Rating</span></div>
-      <div class="tstat"><span class="tstat-number">98%</span><span class="tstat-label">Would Recommend</span></div>
     </div>
   </div>
 </section>
 
-<!-- TRUST & SAFETY + COMMUNITY GUIDELINES (merged "Our Promise") -->
-<section class="safety-section reveal" id="safety">
-    <div class="container">
-          <div class="safety-content">
-                  <div class="safety-text">
-                    <span class="section-tag">Our Promise</span>
-                    <h2>Your Privacy Is <span class="gradient-text">Non-Negotiable</span></h2>
-                            <ul class="safety-list">
-                              <li><i class="fas fa-check-circle"></i> <strong>End-to-end encryption</strong> — Your data is yours. We can't read your posts even if we wanted to.</li>
-                              <li><i class="fas fa-check-circle"></i> <strong>No data selling</strong> — We will never sell, share, or monetize your personal information.</li>
-                              <li><i class="fas fa-check-circle"></i> <strong>GDPR & CCPA compliant</strong> — Request deletion of your data at any time, no questions asked.</li>
-                              <li><i class="fas fa-check-circle"></i> <strong>Invisible watermarking</strong> — If someone leaks content, we can trace it back and ban them.</li>
-                              <li><i class="fas fa-check-circle"></i> <strong>Independent infrastructure</strong> — No Facebook, no Apple, no single point of failure.</li>
-                              <li><i class="fas fa-check-circle"></i> <strong>Legal protection</strong> — Our fair review process protects the community from frivolous lawsuits.</li>
-                    </ul>
-            </div>
-                  <div class="safety-visual">
-                            <div class="shield-graphic">
-                              <div class="shield-ring ring-1"></div>
-                              <div class="shield-ring ring-2"></div>
-                              <div class="shield-ring ring-3"></div>
-                                        <div class="shield-center">
-                                          <img src="/images/safetea-logo.svg" alt="SafeTea" width="48" height="48">
-                              </div>
-                    </div>
-            </div>
-      </div>
-
-      <!-- Community Guidelines integrated -->
-      <div class="guidelines-grid" style="margin-top:60px;">
-              <div class="section-header" style="margin-bottom:40px;">
-                <h2>Rules That <span class="gradient-text">Protect Everyone</span></h2>
-                <p>A healthy community needs clear boundaries. Here's what we stand for.</p>
-              </div>
-              <div class="guidelines-cards-grid">
-                  <div class="guideline-card green">
-                    <h3><i class="fas fa-circle-check"></i> What's Encouraged</h3>
-                            <ul>
-                              <li>Sharing specific dating experiences with context</li>
-                              <li>Warning others about genuinely unsafe behavior</li>
-                              <li>Supporting fellow members with empathy</li>
-                              <li>Using safety resources proactively</li>
-                              <li>Reporting posts that violate guidelines</li>
-                    </ul>
-            </div>
-                  <div class="guideline-card red">
-                    <h3><i class="fas fa-circle-xmark"></i> Zero Tolerance</h3>
-                            <ul>
-                              <li>Harassment, bullying, or personal attacks</li>
-                              <li>Posting without specific behavioral context</li>
-                              <li>Sharing content outside the platform</li>
-                              <li>Creating fake accounts or impersonation</li>
-                              <li>Using the platform for revenge or grudges</li>
-                    </ul>
-            </div>
-              </div>
-      </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="pricing-section reveal" id="pricing">
-    <div class="container">
-          <div class="section-header">
-            <span class="section-tag">Pricing</span>
-            <h2>Sustainable, Not <span class="gradient-text">Exploitative</span></h2>
-                  <p>We keep it affordable so no one has to go into personal debt to keep the community alive.</p>
-      </div>
-          <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-          <stripe-pricing-table pricing-table-id="prctbl_1TDXNtFaKA9n89CXUmNCErMw"
-            publishable-key="pk_live_51T3YOSFaKA9n89CXU7oTIn9qxtNt4Nyy6vo3Z4sO831XRSDlbdJIbM1Dj5SJ4ZgXthS23EKjQunElWQLny4tml5e00e8Z24wjm">
-          </stripe-pricing-table>
-  </div>
-</section>
-
-<!-- CITY VOTING SYSTEM -->
-<section class="city-voting-section reveal" id="request-city">
+<!-- TRUST -->
+<section class="section" id="trust">
   <div class="container">
-    <div class="section-header">
-      <span class="section-tag">Expand SafeTea</span>
-      <h2>Bring SafeTea to <span class="gradient-text">Your City</span></h2>
-      <p>Don't see your city? Vote to bring SafeTea to your community. Once a city hits 200 votes, we launch it.</p>
-    </div>
-
-    <div class="voting-layout">
-      <!-- Submit / Search City -->
-      <div class="voting-submit-card">
-        <h3><i class="fas fa-map-marker-alt"></i> Request a New City</h3>
-        <p>Enter your city below to cast your vote. If it's already on the list, your vote gets added automatically.</p>
-        <div class="vote-input-group">
-          <input type="text" class="vote-city-input" placeholder="Enter city name (e.g. Portland, OR)">
-          <button class="btn btn-primary vote-submit-btn"><i class="fas fa-vote-yea"></i> Vote</button>
+    <div class="section-content-centered">
+      <h2>Built for privacy. Designed for trust.</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <i class="fas fa-user-shield"></i>
+          <span>No real names required</span>
         </div>
-        <div class="vote-feedback"></div>
-
-        <div class="voting-how-it-works">
-          <h4>How City Voting Works</h4>
-          <div class="vote-steps">
-            <div class="vote-step">
-              <div class="vote-step-num">1</div>
-              <span>Submit or vote for your city</span>
-            </div>
-            <div class="vote-step">
-              <div class="vote-step-num">2</div>
-              <span>Rally your community to vote</span>
-            </div>
-            <div class="vote-step">
-              <div class="vote-step-num">3</div>
-              <span>City hits 200 votes</span>
-            </div>
-            <div class="vote-step">
-              <div class="vote-step-num"><i class="fas fa-check"></i></div>
-              <span>SafeTea launches in your city!</span>
-            </div>
-          </div>
+        <div class="trust-item">
+          <i class="fas fa-eye-slash"></i>
+          <span>No public profiles</span>
         </div>
-      </div>
-
-      <!-- Leaderboard -->
-      <div class="voting-leaderboard-card">
-        <div class="leaderboard-header">
-          <h3><i class="fas fa-trophy"></i> City Leaderboard</h3>
-          <span class="leaderboard-live"><span class="live-dot"></span> Live</span>
+        <div class="trust-item">
+          <i class="fas fa-ban"></i>
+          <span>No screenshots allowed</span>
         </div>
-
-        <div class="leaderboard-list" id="cityLeaderboard">
-          <div class="leaderboard-item" data-city="Phoenix, AZ" data-votes="187">
-            <div class="leaderboard-rank hot">1</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Phoenix, AZ <span class="almost-badge"><i class="fas fa-fire"></i> Almost there!</span></div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:93.5%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">187</span>/200</div>
-            <button class="btn-vote" data-city="Phoenix, AZ"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Nashville, TN" data-votes="156">
-            <div class="leaderboard-rank">2</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Nashville, TN</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:78%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">156</span>/200</div>
-            <button class="btn-vote" data-city="Nashville, TN"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Portland, OR" data-votes="134">
-            <div class="leaderboard-rank">3</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Portland, OR</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:67%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">134</span>/200</div>
-            <button class="btn-vote" data-city="Portland, OR"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Charlotte, NC" data-votes="112">
-            <div class="leaderboard-rank">4</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Charlotte, NC</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:56%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">112</span>/200</div>
-            <button class="btn-vote" data-city="Charlotte, NC"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="San Diego, CA" data-votes="98">
-            <div class="leaderboard-rank">5</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">San Diego, CA</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:49%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">98</span>/200</div>
-            <button class="btn-vote" data-city="San Diego, CA"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Minneapolis, MN" data-votes="76">
-            <div class="leaderboard-rank">6</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Minneapolis, MN</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:38%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">76</span>/200</div>
-            <button class="btn-vote" data-city="Minneapolis, MN"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Philadelphia, PA" data-votes="61">
-            <div class="leaderboard-rank">7</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Philadelphia, PA</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:30.5%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">61</span>/200</div>
-            <button class="btn-vote" data-city="Philadelphia, PA"><i class="fas fa-arrow-up"></i></button>
-          </div>
-
-          <div class="leaderboard-item" data-city="Las Vegas, NV" data-votes="43">
-            <div class="leaderboard-rank">8</div>
-            <div class="leaderboard-info">
-              <div class="leaderboard-city">Las Vegas, NV</div>
-              <div class="leaderboard-bar"><div class="leaderboard-fill" style="width:21.5%"></div></div>
-            </div>
-            <div class="leaderboard-votes"><span class="vote-count">43</span>/200</div>
-            <button class="btn-vote" data-city="Las Vegas, NV"><i class="fas fa-arrow-up"></i></button>
-          </div>
-        </div>
-
-        <div class="leaderboard-footer">
-          <span class="leaderboard-total"><i class="fas fa-users"></i> <strong>867</strong> total votes across all cities</span>
+        <div class="trust-item">
+          <i class="fas fa-gavel"></i>
+          <span>Moderated for safety and accuracy</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FAQ SECTION -->
-<section class="faq-section reveal" id="faq">
+<!-- FINAL CTA -->
+<section class="section section-cta" id="join">
   <div class="container">
-    <div class="section-header">
-      <span class="section-tag">FAQ</span>
-      <h2>Got <span class="gradient-text">Questions?</span></h2>
-      <p>Everything you need to know about SafeTea, answered.</p>
-    </div>
-
-    <div class="faq-list">
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>Is my identity really hidden from other members?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>Absolutely. SafeTea uses end-to-end encryption and zero-knowledge architecture. Your real name, email, and phone number are never visible to other members. You post and search using your verified anonymous identity. Not even our team can see your personal details.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>How does the verification process work?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>Verification is a 3-step process: First, you confirm your email address. Then, we send an SMS code to your phone. Finally, you take a quick selfie that our AI matches against your photo to confirm you're a real person. The whole process takes under 2 minutes and ensures only real women can access the community.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>What happens if someone posts false information?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>SafeTea has a fair review process built in. If someone is named in a post, they can submit a response that gets attached to the original post. AI moderation flags potentially false or malicious content automatically. Repeated false reporters get suspended, and our legal framework protects against defamation.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>Can men see what's posted about them?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>No. The platform is exclusively for verified women. Men cannot create accounts or view any content. Posts are invisible to anyone outside the verified community. Screenshot blocking and invisible watermarking add additional layers of protection.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>How is SafeTea different from Facebook groups?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>Facebook can delete your group overnight with zero warning. Posts can be screenshotted and shared publicly. Moderators burn out with no support. SafeTea is built on independent infrastructure that no third party controls. We offer screenshot blocking, AI moderation, background checks, sex offender lookups, and legal protections — none of which Facebook provides.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>Is the sex offender and background check data accurate?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>Our sex offender data comes directly from the National Sex Offender Public Website (NSOPW), which aggregates data from all 50 state registries. Background checks scan over 500 million public records across court records, arrest databases, and mugshot repositories. Results are informational only and should always be verified through official sources.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-question">
-          <span>What does SafeTea+ include and is it worth it?</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="faq-answer">
-          <p>SafeTea+ is $4/month and unlocks unlimited posts and searches, multi-city search, smart alerts and notifications, background check integrations, and priority support. The free tier lets you browse and post up to 3 times per month. Most active members upgrade within the first week because the safety tools alone are worth far more than $4.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA / JOIN + APP DOWNLOAD (merged "Get Started") -->
-<section class="cta-section reveal" id="join">
-    <div class="container">
-          <div class="cta-content">
-                  <h2>Ready to Join a Community<br>That <span class="gradient-text">Can't Be Taken Away?</span></h2>
-                  <p>Be part of the next chapter in dating safety. Enter your email to get early access.</p>
-                  <div class="cta-form">
-                            <div class="input-group">
-                              <i class="fas fa-envelope"></i>
-                                        <input type="email" placeholder="Enter your email address">
-                    </div>
-                            <div class="input-group">
-                              <i class="fas fa-city"></i>
-                                        <select>
-                                          <option>Select your city</option>
-                                          <option>Chicago, IL</option>
-                                          <option>New York, NY</option>
-                                          <option>Los Angeles, CA</option>
-                                          <option>Houston, TX</option>
-                                          <option>Miami, FL</option>
-                                          <option>Atlanta, GA</option>
-                                          <option>Dallas, TX</option>
-                                          <option>Denver, CO</option>
-                                          <option>Seattle, WA</option>
-                                          <option>Other</option>
-                              </select>
-                    </div>
-                            <button class="btn btn-primary btn-lg btn-block">
-                              <i class="fas fa-arrow-right"></i> Get Early Access
-                    </button>
-            </div>
-            <p class="cta-disclaimer">No spam. No data sharing. Unsubscribe anytime.</p>
-
-            <!-- App download integrated -->
-            <div class="app-store-badges" style="margin-top:32px;display:flex;gap:16px;justify-content:center;">
-              <div class="store-badge">
-                <i class="fab fa-apple"></i>
-                <div><small>Coming Soon on the</small><strong>App Store</strong></div>
-              </div>
-              <div class="store-badge">
-                <i class="fab fa-google-play"></i>
-                <div><small>Coming Soon on</small><strong>Google Play</strong></div>
-              </div>
-            </div>
-      </div>
-  </div>
-</section>
-
-
-<!-- LEGAL / FCRA DISCLAIMER BAR -->
-<section class="legal-bar">
-  <div class="container">
-    <div class="legal-content">
-      <div class="legal-icon"><i class="fas fa-gavel"></i></div>
-      <div class="legal-text">
-        <p><strong>Legal Disclaimer:</strong> SafeTea is not a Consumer Reporting Agency under the FCRA. All public records data is provided for personal safety awareness only and may not be used for employment, credit, housing, insurance, or any FCRA-regulated purpose. SafeTea does not guarantee accuracy of third-party data. Use of sex offender registry data is subject to state and federal regulations. Community-submitted content reflects individual experiences and does not constitute verified facts. By using SafeTea, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+    <div class="section-content-centered">
+      <h2>You don't have to navigate dating alone.</h2>
+      <div class="cta-actions">
+        <a href="#" class="btn btn-primary btn-lg">Join Your City's Community</a>
       </div>
     </div>
   </div>
@@ -847,52 +195,21 @@
 
 <!-- FOOTER -->
 <footer class="footer">
-    <div class="container">
-          <div class="footer-grid">
-                  <div class="footer-brand">
-                    <a href="#" class="logo">
-                      <svg class="logo-icon" width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <defs><linearGradient id="logoGradFoot" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4CAF50"/><stop offset="50%" stop-color="#F5A87A"/><stop offset="100%" stop-color="#F27059"/></linearGradient></defs>
-                        <path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#logoGradFoot)" opacity="0.9"/>
-                        <path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#logoGradFoot)" stroke-width="4" fill="none" stroke-linecap="round"/>
-                        <ellipse cx="28" cy="54" rx="20" ry="4" fill="url(#logoGradFoot)" opacity="0.5"/>
-                        <path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <span><span style="color:#4CAF50">safe</span><span style="color:#F27059">tea</span></span>
-                    </a>
-                    <p style="color:var(--gray);font-size:0.9rem;margin-top:12px;">Date Smarter. Stay Safe.</p>
-                    <p style="color:var(--gray);font-size:0.85rem;margin-top:8px;">Privacy-first dating transparency platform.</p>
-            </div>
-                  <div class="footer-col">
-                    <h4>Product</h4>
-                    <a href="#features">Features</a>
-                    <a href="#safety-tools">Safety Tools</a>
-                    <a href="#pricing">Pricing</a>
-                    <a href="/blog.html">Blog</a>
-            </div>
-                  <div class="footer-col">
-                    <h4>Company</h4>
-                    <a href="#">About</a>
-                    <a href="#">Careers</a>
-                    <a href="#">Press</a>
-                    <a href="#">Contact</a>
-            </div>
-                  <div class="footer-col">
-                    <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">FCRA Notice</a>
-                    <a href="#">Community Guidelines</a>
-            </div>
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="logo.png" alt="SafeTea" class="footer-logo">
+        <p>Privacy-first dating safety.</p>
       </div>
-          <div class="footer-bottom">
-            <p>&copy; 2026 SafeTea. All rights reserved.</p>
-                  <div class="footer-social">
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-tiktok"></i></a>
-            </div>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Contact</a>
       </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 SafeTea. All rights reserved.</p>
+    </div>
   </div>
 </footer>
 

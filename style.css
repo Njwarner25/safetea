@@ -67,7 +67,10 @@ h3 { font-size: 1.15rem; }
   display: flex; align-items: center; justify-content: space-between;
 }
 .logo { text-decoration: none; display: flex; align-items: center; }
-.logo-img { height: 56px; width: auto; }
+.logo-img {
+  height: 56px; width: auto;
+  filter: drop-shadow(0 0 20px rgba(232, 160, 181, 0.25)) drop-shadow(0 0 50px rgba(232, 160, 181, 0.08));
+}
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {
   color: var(--text-muted); text-decoration: none; font-size: 0.9rem;

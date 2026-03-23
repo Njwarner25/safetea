@@ -18,8 +18,23 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 app.use(helmet({ contentSecurityPolicy: false }));
+
+// CORS — allow mobile app, web frontend, and localhost
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  process.env.APP_URL || 'https://getsafetea.app',
+  'https://getsafetea.app',
+  'http://localhost:8081',  // Expo dev
+  'http://localhost:19006'  // Expo web
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(null, false);
+  },
   credentials: true
 }));
 
@@ -49,7 +64,7 @@ app.use('/api/referrals', referralRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
 // SPA fallback - serve index.html for non-API routes

@@ -1,19 +1,38 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const { Pool } = require('pg');
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', '..', 'data', 'safetea.db');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
+});
 
-// Ensure data directory exists
-const fs = require('fs');
-const dataDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+// Test connection on startup
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL');
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected PostgreSQL error:', err);
+});
+
+// Helper: run a query and return all rows
+async function query(text, params) {
+  const result = await pool.query(text, params);
+  return result;
 }
 
-const db = new Database(DB_PATH);
+// Helper: get a single row
+async function getOne(text, params) {
+  const result = await pool.query(text, params);
+  return result.rows[0] || null;
+}
 
-// Enable WAL mode for better concurrent performance
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// Helper: get all rows
+async function getAll(text, params) {
+  const result = await pool.query(text, params);
+  return result.rows;
+}
 
-module.exports = db;
+module.exports = { pool, query, getOne, getAll };

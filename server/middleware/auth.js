@@ -1,10 +1,16 @@
 const jwt = require('jsonwebtoken');
-const db = require('../db/database');
+const { getOne } = require('../db/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'safetea-dev-secret-change-in-production';
 
+const USER_SELECT = `
+  SELECT id, email, display_name, role, city, state, is_verified, is_anonymous,
+    avatar_initial, avatar_color, avatar_type, avatar_url, custom_display_name, subscription_tier
+  FROM users WHERE id = $1
+`;
+
 // Verify JWT token middleware
-function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,10 +21,7 @@ function authenticate(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    const user = db.prepare(
-      'SELECT id, email, display_name, role, city, state, is_verified, is_anonymous, avatar_initial, avatar_color, avatar_type, avatar_url, custom_display_name, subscription_tier FROM users WHERE id = ?'
-    ).get(decoded.userId);
+    const user = await getOne(USER_SELECT, [decoded.userId]);
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
@@ -35,16 +38,14 @@ function authenticate(req, res, next) {
 }
 
 // Optional auth - doesn't fail if no token
-function optionalAuth(req, res, next) {
+async function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      const user = db.prepare(
-        'SELECT id, email, display_name, role, city, state, is_verified, is_anonymous, avatar_initial, avatar_color, avatar_type, avatar_url, custom_display_name, subscription_tier FROM users WHERE id = ?'
-      ).get(decoded.userId);
+      const user = await getOne(USER_SELECT, [decoded.userId]);
       if (user) req.user = user;
     } catch (err) {
       // Silently ignore invalid tokens for optional auth

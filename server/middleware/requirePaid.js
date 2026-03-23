@@ -1,12 +1,12 @@
-const db = require('../db/database');
+const { getOne } = require('../db/database');
 
 // Middleware to gate features behind the $5.99 premium tier
-function requirePaid(req, res, next) {
+async function requirePaid(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  const user = db.prepare('SELECT subscription_tier, role FROM users WHERE id = ?').get(req.user.id);
+  const user = await getOne('SELECT subscription_tier, role FROM users WHERE id = $1', [req.user.id]);
 
   if (!user || (user.subscription_tier !== 'premium' && !['admin', 'moderator'].includes(user.role))) {
     return res.status(403).json({

@@ -72,6 +72,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
+// One-time seed endpoint (protected by MIGRATE_SECRET)
+// Usage: GET /api/seed?secret=YOUR_MIGRATE_SECRET
+// Remove this endpoint after initial seed is complete
+app.get('/api/seed', async (req, res) => {
+  const secret = req.query.secret;
+  if (!secret || secret !== process.env.MIGRATE_SECRET) {
+    return res.status(403).json({ error: 'Invalid or missing secret' });
+  }
+  try {
+    const seed = require('./db/seed');
+    await seed();
+    res.json({ success: true, message: 'Database seeded successfully! Admin: admin@getsafetea.app' });
+  } catch (err) {
+    console.error('Seed error:', err);
+    res.status(500).json({ error: 'Seed failed', details: err.message });
+  }
+});
+
 // Run scale threshold check every 10 minutes
 setInterval(() => {
   checkScaleThreshold().then(result => {

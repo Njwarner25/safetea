@@ -14,6 +14,11 @@ const messageRoutes = require('./routes/messages');
 const referralRoutes = require('./routes/referrals');
 const namewatchRoutes = require('./routes/namewatch');
 const adminRoutes = require('./routes/admin');
+const photoRoutes = require('./routes/photos');
+const removalRequestRoutes = require('./routes/removal-requests');
+const strikeRoutes = require('./routes/strikes');
+const bugRoutes = require('./routes/bugs');
+const suggestionRoutes = require('./routes/suggestions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,6 +70,11 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/namewatch', namewatchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/photos', photoRoutes);
+app.use('/api/removal-requests', removalRequestRoutes);
+app.use('/api/strikes', strikeRoutes);
+app.use('/api/bugs', bugRoutes);
+app.use('/api/suggestions', suggestionRoutes);
 
 // Health check (enhanced with pool metrics)
 const { getPoolHealth, checkScaleThreshold } = require('./db/database');

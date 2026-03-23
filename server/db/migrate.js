@@ -193,6 +193,143 @@ async function migrate() {
     await client.query('CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at DESC)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id)');
 
+    // ===== NEW TABLES: Safety Features (March 2026) =====
+
+    // Add is_suspended column to users table
+    await client.query(`
+      ALTER TABLE IF EXISTS users
+      ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT false;
+    `);
+
+    // Photos table (stores watermarked images)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS photos (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        image_data TEXT NOT NULL,
+        context TEXT DEFAULT 'general' CHECK(context IN ('referral', 'avatar', 'post', 'general')),
+        context_id TEXT,
+        original_size INTEGER,
+        is_deleted BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Photo watermarks table (forensic trail)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS photo_watermarks (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        photo_id TEXT NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        watermark_hash TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Removal requests table (public-facing)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS removal_requests (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        case_number TEXT UNIQUE NOT NULL,
+        requester_name TEXT NOT NULL,
+        requester_email TEXT NOT NULL,
+        relationship TEXT DEFAULT 'self' CHECK(relationship IN ('self', 'known_person')),
+        photo_data TEXT,
+        context TEXT,
+        watermark_detected BOOLEAN DEFAULT false,
+        watermark_user_id TEXT,
+        status TEXT DEFAULT 'submitted' CHECK(status IN ('submitted', 'watermark_verified', 'reviewing', 'match_found', 'removed', 'no_match', 'unverified', 'closed')),
+        matched_photo_id TEXT,
+        sla_deadline TIMESTAMPTZ,
+        resolution_notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+    `);
+
+    // User strikes table (ban system)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_strikes (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        strike_number INTEGER NOT NULL DEFAULT 1,
+        reason TEXT NOT NULL,
+        removal_request_id TEXT,
+        suspension_start TIMESTAMPTZ DEFAULT NOW(),
+        suspension_end TIMESTAMPTZ,
+        appeal_status TEXT DEFAULT 'none' CHECK(appeal_status IN ('none', 'pending', 'approved', 'denied')),
+        appeal_reason TEXT,
+        appeal_resolved_at TIMESTAMPTZ,
+        admin_notes TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Bug reports table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        category TEXT NOT NULL CHECK(category IN ('crash', 'visual', 'feature_broken', 'performance', 'other')),
+        description TEXT NOT NULL,
+        screenshot TEXT,
+        device_model TEXT,
+        os_version TEXT,
+        app_version TEXT,
+        build_number TEXT,
+        screen_trail JSONB DEFAULT '[]',
+        network_type TEXT,
+        status TEXT DEFAULT 'new' CHECK(status IN ('new', 'triaging', 'in_progress', 'resolved', 'wont_fix')),
+        priority TEXT DEFAULT 'medium' CHECK(priority IN ('low', 'medium', 'high', 'critical')),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+    `);
+
+    // Suggestions table (community feature voting)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suggestions (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        status TEXT DEFAULT 'pending_moderation' CHECK(status IN ('pending_moderation', 'approved', 'under_review', 'planned', 'in_progress', 'shipped', 'declined')),
+        vote_count INTEGER DEFAULT 0,
+        city_id TEXT,
+        flagged_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Suggestion votes table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suggestion_votes (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        suggestion_id TEXT NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(suggestion_id, user_id)
+      );
+    `);
+
+    // Indexes for new tables
+    await client.query('CREATE INDEX IF NOT EXISTS idx_photos_user ON photos(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_photos_context ON photos(context, context_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_photo_watermarks_user ON photo_watermarks(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_photo_watermarks_photo ON photo_watermarks(photo_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_removal_requests_case ON removal_requests(case_number)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_removal_requests_status ON removal_requests(status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_removal_requests_email ON removal_requests(requester_email)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_user_strikes_user ON user_strikes(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_bug_reports_user ON bug_reports(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_bug_reports_status ON bug_reports(status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_bug_reports_category ON bug_reports(category)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_bug_reports_created ON bug_reports(created_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_suggestions_status ON suggestions(status)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_suggestions_votes ON suggestions(vote_count DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_suggestion_votes_suggestion ON suggestion_votes(suggestion_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_suggestion_votes_user ON suggestion_votes(user_id)');
+
     await client.query('COMMIT');
     console.log('Migrations completed successfully!');
   } catch (err) {

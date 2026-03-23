@@ -84,23 +84,6 @@ setInterval(() => {
 // Initial check on startup (after 30 seconds to let DB connect)
 setTimeout(() => checkScaleThreshold(), 30000);
 
-// One-time seed endpoint (protected by MIGRATE_SECRET)
-// DELETE THIS AFTER SEEDING - visit: /api/seed?secret=YOUR_MIGRATE_SECRET
-app.get('/api/seed', async (req, res) => {
-  const secret = req.query.secret;
-  if (!secret || secret !== process.env.MIGRATE_SECRET) {
-    return res.status(403).json({ error: 'Invalid or missing secret' });
-  }
-  try {
-    const seed = require('./db/seed');
-    await seed();
-    res.json({ success: true, message: 'Database seeded successfully! Admin: admin@getsafetea.app' });
-  } catch (err) {
-    console.error('Seed error:', err);
-    res.status(500).json({ error: 'Seed failed', details: err.message });
-  }
-});
-
 // SPA fallback - serve index.html for non-API routes
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {

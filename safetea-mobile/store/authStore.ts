@@ -48,7 +48,7 @@ const ADMIN_SEED: User = {
   avatarBgColor: '#E8513F',
   avatarFrame: 'hexagon',
   cityId: 1,
-  tier: 'plus',
+  tier: 'pro',
   role: 'admin',
   contributionScore: 9999,
   strikes: 0,

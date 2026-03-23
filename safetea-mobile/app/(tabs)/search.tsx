@@ -36,6 +36,13 @@ export default function SearchScreen() {
             <Text style={styles.toolDesc}>Check registered offenders in your area</Text>
           </View>
         </Pressable>
+        <Pressable style={styles.toolCard} onPress={() => router.push('/name-watch')}>
+          <Text style={styles.toolIcon}>👁️</Text>
+          <View>
+            <Text style={styles.toolTitle}>Name Watch</Text>
+            <Text style={styles.toolDesc}>Get alerts when someone you know is posted about</Text>
+          </View>
+        </Pressable>
         <Pressable style={styles.toolCard} onPress={() => router.push('/screening')}>
           <Text style={styles.toolIcon}>🧠</Text>
           <View>

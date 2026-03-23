@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useNameWatchStore } from './nameWatchStore';
 
 export type PostCategory = 'warning' | 'positive' | 'question' | 'alert';
 export type PostStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
@@ -48,7 +49,10 @@ export const usePostStore = create<PostState>((set, get) => ({
   sortBy: 'newest',
 
   setPosts: (posts) => set({ posts }),
-  addPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
+  addPost: (post) => {
+    set((state) => ({ posts: [post, ...state.posts] }));
+    useNameWatchStore.getState().checkPost(post);
+  },
   removePost: (id) => set((state) => ({ posts: state.posts.filter(p => p.id !== id) })),
   updatePost: (id, updates) => set((state) => ({
     posts: state.posts.map(p => p.id === id ? { ...p, ...updates } : p),

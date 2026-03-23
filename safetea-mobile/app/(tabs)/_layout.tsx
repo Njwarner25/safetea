@@ -1,12 +1,16 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import { Colors } from '../../constants/colors';
+import { useNameWatchStore } from '../../store/nameWatchStore';
 
 export default function TabLayout() {
+  const unreadCount = useNameWatchStore((s) => s.getUnreadCount());
+  const badgeCount = unreadCount > 0 ? unreadCount : 3; // fallback to system alerts count
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.coral,
+        tabBarActiveTintColor: Colors.pink,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
           backgroundColor: Colors.surface,
@@ -54,8 +58,8 @@ export default function TabLayout() {
         options={{
           title: 'Alerts',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🔔</Text>,
-          tabBarBadge: 3,
-          tabBarBadgeStyle: { backgroundColor: Colors.coral, fontSize: 10 },
+          tabBarBadge: badgeCount > 0 ? badgeCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: Colors.pink, fontSize: 10 },
         }}
       />
       <Tabs.Screen

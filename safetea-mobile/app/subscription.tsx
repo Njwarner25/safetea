@@ -28,7 +28,7 @@ const PLANS = [
       'Everything in Free',
       'Unlimited posts & searches',
       'Multi-city search',
-      'Smart alerts & notifications',
+      'Smart alerts & notifications (community)',
       'SafeWalk date sharing',
       'AI Profile Screening (3/month)',
     ],
@@ -41,6 +41,7 @@ const PLANS = [
     description: 'Maximum protection, unlimited tools',
     features: [
       'Everything in SafeTea+',
+      'Name Watch \u2014 get alerted when someone you know is posted about',
       'Unlimited AI screening',
       'Background check credits (3/month)',
       'Safety map premium',

@@ -76,23 +76,46 @@ async function seed() {
       `, [uuidv4(), a.city, a.type, a.title, a.description, a.location, a.severity, a.reports]);
     }
 
-    // Seed city votes
+    // Seed city votes - includes major dating app user cities (18-35 demographic)
     const cities = [
-      { name: 'Phoenix', state: 'AZ', votes: 187 },
-      { name: 'Nashville', state: 'TN', votes: 156 },
-      { name: 'Portland', state: 'OR', votes: 134 },
-      { name: 'Charlotte', state: 'NC', votes: 112 },
-      { name: 'San Diego', state: 'CA', votes: 98 },
-      { name: 'Minneapolis', state: 'MN', votes: 76 },
-      { name: 'Philadelphia', state: 'PA', votes: 61 },
-      { name: 'Las Vegas', state: 'NV', votes: 43 }
+      // Active communities (already above 200 threshold)
+      { name: 'Chicago', state: 'IL', votes: 245, isActive: true },
+      { name: 'Austin', state: 'TX', votes: 228, isActive: true },
+      { name: 'Miami', state: 'FL', votes: 215, isActive: true },
+      { name: 'Denver', state: 'CO', votes: 202, isActive: true },
+
+      // Near-threshold cities
+      { name: 'Phoenix', state: 'AZ', votes: 187, isActive: false },
+      { name: 'Nashville', state: 'TN', votes: 156, isActive: false },
+      { name: 'Portland', state: 'OR', votes: 134, isActive: false },
+      { name: 'Charlotte', state: 'NC', votes: 112, isActive: false },
+      { name: 'San Diego', state: 'CA', votes: 98, isActive: false },
+      { name: 'Minneapolis', state: 'MN', votes: 76, isActive: false },
+      { name: 'Philadelphia', state: 'PA', votes: 61, isActive: false },
+      { name: 'Las Vegas', state: 'NV', votes: 43, isActive: false },
+
+      // Major metropolitan areas with high dating app usage
+      { name: 'New York', state: 'NY', votes: 289, isActive: true },
+      { name: 'Los Angeles', state: 'CA', votes: 267, isActive: true },
+      { name: 'Houston', state: 'TX', votes: 198, isActive: false },
+      { name: 'Dallas', state: 'TX', votes: 187, isActive: false },
+      { name: 'Atlanta', state: 'GA', votes: 176, isActive: false },
+      { name: 'Seattle', state: 'WA', votes: 168, isActive: false },
+      { name: 'Boston', state: 'MA', votes: 154, isActive: false },
+      { name: 'Washington DC', state: 'DC', votes: 142, isActive: false },
+      { name: 'San Francisco', state: 'CA', votes: 139, isActive: false },
+      { name: 'Miami Beach', state: 'FL', votes: 124, isActive: false },
+      { name: 'Brooklyn', state: 'NY', votes: 118, isActive: false },
+      { name: 'Santa Monica', state: 'CA', votes: 108, isActive: false },
+      { name: 'West Hollywood', state: 'CA', votes: 95, isActive: false },
+      { name: 'Arlington', state: 'VA', votes: 87, isActive: false }
     ];
 
     for (const c of cities) {
       await client.query(`
-        INSERT INTO city_votes (id, city_name, state, vote_count)
-        VALUES ($1, $2, $3, $4)
-      `, [uuidv4(), c.name, c.state, c.votes]);
+        INSERT INTO city_votes (id, city_name, state, vote_count, is_active)
+        VALUES ($1, $2, $3, $4, $5)
+      `, [uuidv4(), c.name, c.state, c.votes, c.isActive]);
     }
 
     await client.query('COMMIT');

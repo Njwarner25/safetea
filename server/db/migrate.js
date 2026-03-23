@@ -89,8 +89,15 @@ async function migrate() {
         city_name TEXT NOT NULL,
         state TEXT,
         vote_count INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT false,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+    `);
+
+    // Add is_active column if it doesn't exist (migration for existing databases)
+    await client.query(`
+      ALTER TABLE IF EXISTS city_votes
+      ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT false;
     `);
 
     // User city votes (prevent duplicates)

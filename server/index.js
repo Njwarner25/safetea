@@ -13,6 +13,7 @@ const cityRoutes = require('./routes/cities');
 const messageRoutes = require('./routes/messages');
 const referralRoutes = require('./routes/referrals');
 const namewatchRoutes = require('./routes/namewatch');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -63,11 +64,25 @@ app.use('/api/cities', cityRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/namewatch', namewatchRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Health check
+// Health check (enhanced with pool metrics)
+const { getPoolHealth, checkScaleThreshold } = require('./db/database');
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
+
+// Run scale threshold check every 10 minutes
+setInterval(() => {
+  checkScaleThreshold().then(result => {
+    if (result && result.needsUpgrade) {
+      console.log(`[MONITOR] Scale check: ${result.userCount} users, pool at ${Math.round(result.poolUtilization * 100)}%`);
+    }
+  });
+}, 10 * 60 * 1000);
+
+// Initial check on startup (after 30 seconds to let DB connect)
+setTimeout(() => checkScaleThreshold(), 30000);
 
 // SPA fallback - serve index.html for non-API routes
 app.get('*', (req, res) => {

@@ -113,13 +113,12 @@ router.get('/', optionalAuth, async (req, res) => {
       }
     }
 
-    // Get total count
+    // Get total count (exclude limit/offset params)
     let countQuery = 'SELECT COUNT(*) as total FROM suggestions s';
-    const countConditions = conditions.slice();
-    if (countConditions.length > 0) {
-      countQuery += ' WHERE ' + countConditions.join(' AND ');
+    if (conditions.length > 0) {
+      countQuery += ' WHERE ' + conditions.join(' AND ');
     }
-    const countParams = params.slice(0, conditions.length);
+    const countParams = params.slice(0, params.length - 2);
     const countResult = await getOne(countQuery, countParams);
 
     res.json({

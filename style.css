@@ -79,6 +79,7 @@ h3 { font-size: 1.15rem; }
 .nav-links a:hover { color: var(--text-light); }
 .nav-actions { display: flex; gap: 12px; align-items: center; }
 .nav-actions .btn { padding: 10px 24px; font-size: 0.9rem; }
+.nav-links .mobile-cta { display: none; }
 
 /* Hamburger */
 .hamburger {
@@ -371,6 +372,7 @@ h3 { font-size: 1.15rem; }
   }
   .nav-links.open { display: flex; }
   .nav-links a { font-size: 1.2rem; }
+  .nav-links .mobile-cta { display: inline-flex; }
   .nav-actions { display: none; }
   .hamburger { display: flex; }
   .footer-content { flex-direction: column; gap: 20px; text-align: center; }

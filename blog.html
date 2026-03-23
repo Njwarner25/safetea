@@ -166,7 +166,27 @@
         .catfish-result.danger { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); }
         .catfish-result.scanning { background: rgba(59,152,219,0.1); border: 1px solid rgba(59,152,219,0.2); }
         @media (max-width: 1024px) { .blog-sidebar { display: none; } }
-        @media (max-width: 768px) { .safety-grid { grid-template-columns: 1fr; } .form-row { flex-direction: column; } .catfish-stats-row { grid-template-columns: 1fr; } .catfish-url-group { flex-direction: column; } }
+        .mobile-tab-bar { display: none; }
+        @media (max-width: 768px) {
+            .safety-grid { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .catfish-stats-row { grid-template-columns: 1fr; }
+            .catfish-url-group { flex-direction: column; }
+            .topnav-nav { display: none; }
+            .blog-container { padding-bottom: 80px; }
+            .mobile-tab-bar {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+                background: #22223A; border-top: 1px solid rgba(255,255,255,0.06);
+                justify-content: space-around; align-items: center; height: 60px; padding: 0 8px;
+            }
+            .mobile-tab-bar a {
+                display: flex; flex-direction: column; align-items: center; gap: 2px;
+                color: #8080A0; text-decoration: none; font-size: 10px; font-weight: 500;
+                padding: 6px 0; cursor: pointer; transition: color 0.2s; flex: 1;
+            }
+            .mobile-tab-bar a i { font-size: 18px; }
+            .mobile-tab-bar a.active { color: #E8A0B5; }
+        }
     </style>
 </head>
 <body>
@@ -886,7 +906,7 @@
                 document.getElementById('referral-city').value = '';
                 document.getElementById('referral-body').value = '';
                 document.getElementById('referral-relation').selectedIndex = 0;
-                clearReferralPhoto();
+                removeReferralPhoto();
                 // Reload referrals
                 loadReferralPosts();
             });
@@ -1182,6 +1202,11 @@
         }, 3000);
     }
 </script>
+
+<div class="mobile-tab-bar">
+    <a href="/dashboard.html"><i class="fas fa-home"></i><span>Feed</span></a>
+    <a href="/blog.html" class="active"><i class="fas fa-mug-hot"></i><span>Hub</span></a>
+</div>
 
 </body>
 </html>

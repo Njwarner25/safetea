@@ -82,12 +82,17 @@
     }
 
     function switchTab(tab) {
-        // Update nav
+        // Update desktop nav
         document.querySelectorAll('.topnav-nav a').forEach(function(a) {
             a.classList.remove('active');
         });
         var activeLink = document.querySelector('.topnav-nav a[data-tab="' + tab + '"]');
         if (activeLink) activeLink.classList.add('active');
+
+        // Update mobile tab bar
+        document.querySelectorAll('.mobile-tab-bar a').forEach(function(a) {
+            a.classList.toggle('active', a.getAttribute('data-tab') === tab);
+        });
 
         // Show correct section
         document.querySelectorAll('.tab-section').forEach(function(s) {
@@ -101,6 +106,7 @@
         if (tab === 'profile') loadProfile();
         if (tab === 'inbox') loadInbox();
     }
+    window.switchTab = switchTab;
 
     // ==================== SEARCH TABS ====================
     function initSearchTabs() {

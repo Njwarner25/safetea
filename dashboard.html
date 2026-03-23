@@ -212,8 +212,26 @@
         .color-swatch:hover { transform: scale(1.15); }
         .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(232,160,181,0.5); }
         .profile-tier { margin-top: 8px; }
+        .mobile-tab-bar { display: none; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
-        @media (max-width: 768px) { .topnav-nav { display: none; } .main-content, .search-section, .alerts-section, .profile-section, .inbox-section { padding: 16px; } .inbox-layout { flex-direction: column; } .inbox-conversations { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); } }
+        @media (max-width: 768px) {
+            .topnav-nav { display: none; }
+            .main-content, .search-section, .alerts-section, .profile-section, .inbox-section { padding: 16px 16px 80px; }
+            .inbox-layout { flex-direction: column; }
+            .inbox-conversations { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+            .mobile-tab-bar {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+                background: #22223A; border-top: 1px solid rgba(255,255,255,0.06);
+                justify-content: space-around; align-items: center; height: 60px; padding: 0 8px;
+            }
+            .mobile-tab-bar a {
+                display: flex; flex-direction: column; align-items: center; gap: 2px;
+                color: #8080A0; text-decoration: none; font-size: 10px; font-weight: 500;
+                padding: 6px 0; cursor: pointer; transition: color 0.2s; flex: 1;
+            }
+            .mobile-tab-bar a i { font-size: 18px; }
+            .mobile-tab-bar a.active { color: #E8A0B5; }
+        }
     </style>
 </head>
 <body>
@@ -540,6 +558,15 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <div class="mobile-tab-bar">
+        <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
+        <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
+        <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
+        <a data-tab="search" onclick="switchTab('search')"><i class="fas fa-search"></i><span>Search</span></a>
+        <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

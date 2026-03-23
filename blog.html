@@ -120,6 +120,17 @@
         .img-expired-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,10,15,0.8); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #8080A0; font-size: 14px; font-weight: 600; }
         .post-image-container { position: relative; margin-top: 12px; margin-bottom: 8px; }
         .post-image-container img { max-width: 100%; border-radius: 10px; max-height: 400px; object-fit: cover; }
+        .search-filter-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-filter-bar input { flex: 1; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 50px; padding: 12px 20px 12px 44px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .search-filter-bar input:focus { border-color: #E8A0B5; }
+        .search-filter-bar input::placeholder { color: #8080A0; }
+        .search-filter-wrap { position: relative; flex: 1; }
+        .search-filter-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #8080A0; font-size: 14px; pointer-events: none; }
+        .search-filter-bar .btn-clear-search { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 10px 16px; border-radius: 50px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: all 0.2s; }
+        .search-filter-bar .btn-clear-search:hover { color: #E8A0B5; border-color: #E8A0B5; }
+        .search-result-info { font-size: 13px; color: #8080A0; margin-bottom: 16px; display: none; }
+        .search-result-info span { color: #E8A0B5; font-weight: 600; }
+        .search-highlight { background: rgba(232,160,181,0.25); color: #F2C4D4; border-radius: 2px; padding: 0 2px; }
         .loading-spinner { text-align: center; padding: 40px; color: #8080A0; }
         .loading-spinner i { font-size: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -183,7 +194,7 @@
     <div class="blog-tabs">
         <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-mug-hot"></i> Tea Talk</button>
         <button class="blog-tab" onclick="switchBlogTab('safety')"><i class="fas fa-shield-alt"></i> Safety Blog</button>
-        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
+        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-hand-holding-heart"></i> Refer a Good One</button>
         <button class="blog-tab" onclick="switchBlogTab('catfish')"><i class="fas fa-fish-fins"></i> Reel in a Catfish</button>
     </div>
 
@@ -191,6 +202,14 @@
     <div id="blog-community" class="blog-section active">
         <div class="blog-layout">
             <div class="blog-main">
+                <div class="search-filter-bar">
+                    <div class="search-filter-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="community-search" placeholder="Search by name, initials, or keyword..." oninput="filterCommunityPosts()">
+                    </div>
+                    <button class="btn-clear-search" id="community-clear-btn" onclick="clearCommunitySearch()" style="display:none"><i class="fas fa-times"></i> Clear</button>
+                </div>
+                <div class="search-result-info" id="community-search-info"></div>
                 <div class="create-box">
                     <h3><i class="fas fa-mug-hot"></i> Spill the Tea</h3>
                     <textarea id="community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)"></textarea>
@@ -340,6 +359,14 @@
     <div id="blog-referrals" class="blog-section">
         <div class="blog-layout">
             <div class="blog-main">
+                <div class="search-filter-bar">
+                    <div class="search-filter-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="referral-search" placeholder="Search by name, initials, or keyword..." oninput="filterReferralPosts()">
+                    </div>
+                    <button class="btn-clear-search" id="referral-clear-btn" onclick="clearReferralSearch()" style="display:none"><i class="fas fa-times"></i> Clear</button>
+                </div>
+                <div class="search-result-info" id="referral-search-info"></div>
                 <div class="create-box">
                     <h3><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h3>
                     <p style="font-size:13px;color:#666;margin-bottom:16px">Know a friend, brother, or coworker who's genuinely one of the good ones? Vouch for them here. First name + last initial only.</p>
@@ -589,7 +616,13 @@
     }
 
     // === RENDER A DISCUSSION POST ===
-    function renderPost(post) {
+    function highlightText(text, query) {
+        if (!query || !text) return text;
+        var escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return text.replace(new RegExp('(' + escaped + ')', 'gi'), '<span class="search-highlight">$1</span>');
+    }
+
+    function renderPost(post, searchQuery) {
         var authorName = post.author_name || 'Anonymous';
         var initial = authorName[0].toUpperCase();
         var avatarColor = getAvatarColor(authorName);
@@ -621,7 +654,7 @@
                 '</div>' +
             '</div>' +
             imageHtml +
-            '<div class="discussion-body">' + formatBody(post.body) + '</div>' +
+            '<div class="discussion-body">' + (searchQuery ? highlightText(formatBody(post.body), searchQuery) : formatBody(post.body)) + '</div>' +
             '<div class="discussion-actions">' +
                 '<button class="discussion-action"><i class="fas fa-comment"></i> ' + replyCount + ' replies</button>' +
                 '<button class="discussion-action"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</button>' +
@@ -655,6 +688,7 @@
             .then(function(res) { return res.json(); })
             .then(function(posts) {
                 if (!posts || posts.length === 0) {
+                    allCommunityPosts = [];
                     container.innerHTML = '<div class="empty-state">' +
                         '<i class="fas fa-comments"></i>' +
                         '<p>No discussions yet</p>' +
@@ -662,11 +696,8 @@
                     '</div>';
                     return;
                 }
-                var html = '';
-                posts.forEach(function(post) {
-                    html += renderPost(post);
-                });
-                container.innerHTML = html;
+                allCommunityPosts = posts;
+                renderCommunityList(posts);
             })
             .catch(function(err) {
                 console.error('Failed to load posts:', err);
@@ -780,6 +811,7 @@
             .then(function(data) {
                 var referrals = data && data.referrals ? data.referrals : [];
                 if (referrals.length === 0) {
+                    allReferralPosts = [];
                     container.innerHTML = '<div class="empty-state">' +
                         '<i class="fas fa-heart"></i>' +
                         '<p>No referrals yet</p>' +
@@ -787,11 +819,8 @@
                     '</div>';
                     return;
                 }
-                var html = '';
-                referrals.forEach(function(referral) {
-                    html += renderReferral(referral);
-                });
-                container.innerHTML = html;
+                allReferralPosts = referrals;
+                renderReferralList(referrals);
             })
             .catch(function(err) {
                 console.error('Failed to load referrals:', err);
@@ -866,6 +895,94 @@
             console.error('Referral submit failed:', err);
             alert('Failed to submit referral. Please try again.');
         });
+    }
+
+    // === SEARCH / FILTER ===
+    var allCommunityPosts = [];
+    var allReferralPosts = [];
+
+    function filterCommunityPosts() {
+        var query = document.getElementById('community-search').value.trim().toLowerCase();
+        var clearBtn = document.getElementById('community-clear-btn');
+        var info = document.getElementById('community-search-info');
+        clearBtn.style.display = query ? 'inline-block' : 'none';
+
+        if (!query) {
+            info.style.display = 'none';
+            renderCommunityList(allCommunityPosts);
+            return;
+        }
+
+        var filtered = allCommunityPosts.filter(function(post) {
+            var text = ((post.body || '') + ' ' + (post.author_name || '') + ' ' + (post.city || '') + ' ' + (post.title || '')).toLowerCase();
+            return text.indexOf(query) !== -1;
+        });
+
+        info.style.display = 'block';
+        info.innerHTML = 'Showing <span>' + filtered.length + '</span> result' + (filtered.length !== 1 ? 's' : '') + ' for "<span>' + escapeHtml(query) + '</span>"';
+        renderCommunityList(filtered, query);
+    }
+
+    function clearCommunitySearch() {
+        document.getElementById('community-search').value = '';
+        document.getElementById('community-clear-btn').style.display = 'none';
+        document.getElementById('community-search-info').style.display = 'none';
+        renderCommunityList(allCommunityPosts);
+    }
+
+    function renderCommunityList(posts, highlight) {
+        var container = document.getElementById('community-posts');
+        if (!posts || posts.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>No posts found</p><small>Try different keywords or names</small></div>';
+            return;
+        }
+        var html = '';
+        posts.forEach(function(post) {
+            html += renderPost(post, highlight);
+        });
+        container.innerHTML = html;
+    }
+
+    function filterReferralPosts() {
+        var query = document.getElementById('referral-search').value.trim().toLowerCase();
+        var clearBtn = document.getElementById('referral-clear-btn');
+        var info = document.getElementById('referral-search-info');
+        clearBtn.style.display = query ? 'inline-block' : 'none';
+
+        if (!query) {
+            info.style.display = 'none';
+            renderReferralList(allReferralPosts);
+            return;
+        }
+
+        var filtered = allReferralPosts.filter(function(ref) {
+            var text = ((ref.person_name || '') + ' ' + (ref.description || '') + ' ' + (ref.referrer_name || '') + ' ' + (ref.person_city || '')).toLowerCase();
+            return text.indexOf(query) !== -1;
+        });
+
+        info.style.display = 'block';
+        info.innerHTML = 'Showing <span>' + filtered.length + '</span> result' + (filtered.length !== 1 ? 's' : '') + ' for "<span>' + escapeHtml(query) + '</span>"';
+        renderReferralList(filtered, query);
+    }
+
+    function clearReferralSearch() {
+        document.getElementById('referral-search').value = '';
+        document.getElementById('referral-clear-btn').style.display = 'none';
+        document.getElementById('referral-search-info').style.display = 'none';
+        renderReferralList(allReferralPosts);
+    }
+
+    function renderReferralList(referrals, highlight) {
+        var container = document.getElementById('referral-posts');
+        if (!referrals || referrals.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>No referrals found</p><small>Try different keywords or names</small></div>';
+            return;
+        }
+        var html = '';
+        referrals.forEach(function(referral) {
+            html += renderReferral(referral);
+        });
+        container.innerHTML = html;
     }
 
     // === LOAD TRENDING CITIES (static fallback) ===

@@ -4,6 +4,8 @@ const { body, validationResult } = require('express-validator');
 const { getOne, getAll, query } = require('../db/database');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 
+const { checkNewPostAgainstWatchedNames } = require('./namewatch');
+
 const router = express.Router();
 
 // GET /api/posts - Get posts by city
@@ -98,6 +100,12 @@ router.post('/', authenticate, [
       'SELECT p.*, u.avatar_initial, u.avatar_color FROM posts p JOIN users u ON p.user_id = u.id WHERE p.id = $1',
       [id]
     );
+
+    // Async: check new post against all watched names in this city
+    checkNewPostAgainstWatchedNames(id, content, city).catch(err => {
+      console.error('Name Watch matching error (non-blocking):', err);
+    });
+
     res.status(201).json({ post });
   } catch (err) {
     console.error('Create post error:', err);

@@ -105,6 +105,7 @@
         if (tab === 'alerts') loadFullAlerts();
         if (tab === 'profile') loadProfile();
         if (tab === 'inbox') loadInbox();
+        if (tab === 'namewatch') loadNameWatch();
     }
     window.switchTab = switchTab;
 
@@ -812,6 +813,191 @@
         window.location.href = '/login.html';
     };
 
+    // ==================== NAME WATCH ====================
+    var nwLoaded = false;
+
+    function loadNameWatch() {
+        var isPro = checkPremium();
+        var gate = document.getElementById('nw-pro-gate');
+        var content = document.getElementById('nw-pro-content');
+
+        if (!isPro) {
+            if (gate) gate.style.display = 'block';
+            if (content) content.style.display = 'none';
+            return;
+        }
+
+        if (gate) gate.style.display = 'none';
+        if (content) content.style.display = 'block';
+
+        loadWatchedNames();
+        loadMatches();
+        nwLoaded = true;
+    }
+
+    function loadWatchedNames() {
+        var container = document.getElementById('nw-watched-list');
+        if (!container) return;
+
+        apiFetch('/namewatch').then(function(data) {
+            if (!data || !data.names) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-eye" style="font-size:32px;color:#8080A0;margin-bottom:12px"></i><p>No names being watched yet.<br>Add a name above to get started.</p></div>';
+                return;
+            }
+
+            if (data.names.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-eye" style="font-size:32px;color:#8080A0;margin-bottom:12px"></i><p>No names being watched yet.<br>Add a name above to get started.</p></div>';
+                return;
+            }
+
+            var html = '';
+            data.names.forEach(function(n) {
+                var matchCount = parseInt(n.match_count) || 0;
+                var terms = (n.search_terms || []).join(', ');
+                var badgeClass = matchCount > 0 ? 'nw-badge-matches' : 'nw-badge-none';
+                var badgeText = matchCount > 0 ? matchCount + ' match' + (matchCount !== 1 ? 'es' : '') : 'No matches';
+
+                html += '<div class="nw-list-item">' +
+                    '<div class="nw-list-icon"><i class="fas fa-user"></i></div>' +
+                    '<div class="nw-list-info">' +
+                        '<div class="nw-list-name">' + escapeHtml(n.display_name) + '</div>' +
+                        '<div class="nw-list-terms">Watching: ' + escapeHtml(terms) + '</div>' +
+                    '</div>' +
+                    '<span class="nw-list-badge ' + badgeClass + '">' + badgeText + '</span>' +
+                    '<button class="nw-list-delete" onclick="removeWatchedName(\'' + n.id + '\')" title="Remove"><i class="fas fa-trash-alt"></i></button>' +
+                '</div>';
+            });
+
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div class="empty-state">Failed to load watch list.</div>';
+        });
+    }
+
+    function loadMatches() {
+        var container = document.getElementById('nw-matches-list');
+        if (!container) return;
+
+        apiFetch('/namewatch/matches').then(function(data) {
+            if (!data || !data.matches || data.matches.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:24px"><i class="fas fa-bell-slash" style="font-size:28px;color:#8080A0;margin-bottom:10px;display:block"></i>No matches found yet. When someone in your city posts about a name you\'re watching, it will show up here.</div>';
+                return;
+            }
+
+            var html = '';
+            data.matches.forEach(function(m) {
+                var unreadClass = !m.is_read ? ' unread' : '';
+                var excerpt = m.post_content || '';
+                if (excerpt.length > 200) excerpt = excerpt.substring(0, 200) + '...';
+
+                html += '<div class="nw-match-card' + unreadClass + '">' +
+                    '<div class="nw-match-header">' +
+                        '<i class="fas fa-bell nw-match-icon"></i>' +
+                        '<span class="nw-match-label">Match: ' + escapeHtml(m.watched_name) + '</span>' +
+                        '<span class="nw-match-type-badge">' + escapeHtml(m.match_type) + ' match</span>' +
+                    '</div>' +
+                    '<div class="nw-match-body">' + escapeHtml(excerpt) + '</div>' +
+                    '<div class="nw-match-footer">' +
+                        '<span><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(m.post_city || '') + '</span>' +
+                        '<span><i class="fas fa-clock"></i> ' + getTimeAgo(m.post_created_at) + '</span>' +
+                        '<span><i class="fas fa-search"></i> Matched: "' + escapeHtml(m.matched_term) + '"</span>' +
+                        (!m.is_read ? '<button class="nw-mark-read" onclick="markMatchRead(\'' + m.id + '\', this)"><i class="fas fa-check"></i> Mark Read</button>' : '') +
+                    '</div>' +
+                '</div>';
+            });
+
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div class="empty-state">Failed to load matches.</div>';
+        });
+    }
+
+    function addWatchedName() {
+        var input = document.getElementById('nw-name-input');
+        var name = input.value.trim();
+        if (!name || name.length < 2) {
+            showToast('Please enter a name (at least 2 characters)', true);
+            return;
+        }
+
+        apiFetch('/namewatch', {
+            method: 'POST',
+            body: JSON.stringify({ name: name })
+        }).then(function(data) {
+            if (data && data.error) {
+                showToast(data.error, true);
+                return;
+            }
+            input.value = '';
+            showToast('Now watching "' + name + '"');
+            loadWatchedNames();
+            loadMatches();
+        }).catch(function() {
+            showToast('Failed to add watched name', true);
+        });
+    }
+    window.addWatchedName = addWatchedName;
+
+    function removeWatchedName(id) {
+        if (!confirm('Remove this name from your watch list?')) return;
+
+        apiFetch('/namewatch/' + id, { method: 'DELETE' }).then(function(data) {
+            if (data && data.success) {
+                showToast('Name removed from watch list');
+                loadWatchedNames();
+                loadMatches();
+            } else {
+                showToast('Failed to remove name', true);
+            }
+        }).catch(function() {
+            showToast('Failed to remove name', true);
+        });
+    }
+    window.removeWatchedName = removeWatchedName;
+
+    function markMatchRead(matchId, btn) {
+        apiFetch('/namewatch/matches/' + matchId + '/read', { method: 'PUT' }).then(function(data) {
+            if (data && data.success) {
+                var card = btn.closest('.nw-match-card');
+                if (card) card.classList.remove('unread');
+                btn.remove();
+                updateNwBadge();
+            }
+        });
+    }
+    window.markMatchRead = markMatchRead;
+
+    function markAllMatchesRead() {
+        apiFetch('/namewatch/matches/read-all', { method: 'PUT' }).then(function(data) {
+            if (data && data.success) {
+                showToast('All matches marked as read');
+                loadMatches();
+                updateNwBadge();
+            }
+        });
+    }
+    window.markAllMatchesRead = markAllMatchesRead;
+
+    function updateNwBadge() {
+        if (!checkPremium()) return;
+        apiFetch('/namewatch/unread').then(function(data) {
+            var badge = document.getElementById('nw-badge');
+            if (badge && data) {
+                var count = parseInt(data.count) || 0;
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }).catch(function() {});
+    }
+
+    // Allow enter key in name input
+    var nwInput = document.getElementById('nw-name-input');
+    if (nwInput) {
+        nwInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addWatchedName();
+        });
+    }
+
     // ==================== INIT ====================
     initUI();
     initTabs();
@@ -819,6 +1005,7 @@
     loadPosts();
     loadAlerts();
     loadCities();
+    updateNwBadge();
 
     // Refresh user data from server to pick up subscription_tier changes
     apiFetch('/auth/me').then(function(data) {

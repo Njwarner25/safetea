@@ -212,6 +212,51 @@
         .color-swatch:hover { transform: scale(1.15); }
         .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(232,160,181,0.5); }
         .profile-tier { margin-top: 8px; }
+        /* Name Watch */
+        .nw-section { max-width: 720px; margin: 0 auto; padding: 24px; }
+        .nw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .nw-header h2 { font-size: 22px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .nw-header h2 i { color: #E8A0B5; }
+        .nw-add-form { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .nw-add-form h3 { font-size: 15px; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .nw-add-form h3 i { color: #E8A0B5; }
+        .nw-add-row { display: flex; gap: 12px; }
+        .nw-add-row input { flex: 1; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
+        .nw-add-row input:focus { border-color: #E8A0B5; }
+        .nw-add-row input::placeholder { color: #8080A0; }
+        .btn-nw-add { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .btn-nw-add:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
+        .nw-hint { font-size: 12px; color: #8080A0; margin-top: 8px; }
+        .nw-list { margin-bottom: 24px; }
+        .nw-list-item { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
+        .nw-list-item:hover { border-color: rgba(255,255,255,0.12); }
+        .nw-list-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(232,160,181,0.1); display: flex; align-items: center; justify-content: center; color: #E8A0B5; font-size: 18px; flex-shrink: 0; }
+        .nw-list-info { flex: 1; min-width: 0; }
+        .nw-list-name { font-size: 15px; font-weight: 600; color: #fff; }
+        .nw-list-terms { font-size: 12px; color: #8080A0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .nw-list-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+        .nw-badge-matches { background: rgba(232,160,181,0.15); color: #E8A0B5; }
+        .nw-badge-none { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .nw-list-delete { background: none; border: none; color: #8080A0; cursor: pointer; font-size: 16px; padding: 8px; border-radius: 8px; transition: all 0.2s; flex-shrink: 0; }
+        .nw-list-delete:hover { color: #e74c3c; background: rgba(231,76,60,0.1); }
+        .nw-matches-section { margin-top: 32px; }
+        .nw-matches-section h3 { font-size: 16px; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .nw-matches-section h3 i { color: #E8A0B5; }
+        .nw-match-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .nw-match-card:hover { border-color: rgba(255,255,255,0.12); }
+        .nw-match-card.unread { border-left: 3px solid #E8A0B5; }
+        .nw-match-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .nw-match-icon { color: #E8A0B5; font-size: 14px; }
+        .nw-match-label { font-size: 13px; font-weight: 600; color: #E8A0B5; }
+        .nw-match-type-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(232,160,181,0.1); color: #E8A0B5; font-weight: 500; margin-left: auto; }
+        .nw-match-body { font-size: 14px; color: #F0D0C0; line-height: 1.5; margin-bottom: 8px; }
+        .nw-match-footer { font-size: 12px; color: #8080A0; display: flex; align-items: center; gap: 12px; }
+        .nw-match-footer i { font-size: 11px; }
+        .nw-mark-read { background: none; border: none; color: #8080A0; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-left: auto; }
+        .nw-mark-read:hover { color: #E8A0B5; }
+        .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
+        .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
+        .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
         .mobile-tab-bar { display: none; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
         @media (max-width: 768px) {
@@ -243,6 +288,7 @@
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
                 <a data-tab="search"><i class="fas fa-search"></i> Search</a>
+                <a data-tab="namewatch"><i class="fas fa-eye"></i> Name Watch <span id="nw-badge" class="inbox-badge" style="display:none">0</span></a>
                 <a href="/blog.html"><i class="fas fa-mug-hot"></i> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
@@ -452,6 +498,56 @@
         </div>
     </div>
 
+    <!-- NAME WATCH TAB -->
+    <div id="tab-namewatch" class="tab-section">
+        <div class="nw-section">
+            <div class="nw-header">
+                <h2><i class="fas fa-eye"></i> Name Watch</h2>
+            </div>
+
+            <!-- Pro gate (shown to non-Pro users) -->
+            <div id="nw-pro-gate" style="display:none">
+                <div class="premium-gate">
+                    <div class="premium-gate-content">
+                        <h2><i class="fas fa-eye" style="color:#E8A0B5;margin-right:8px"></i> Name Watch</h2>
+                        <p>Monitor names of people you're dating. Get instant alerts when anyone in your city posts about them.</p>
+                        <div class="premium-gate-price">$9.99<span>/mo</span></div>
+                        <button class="btn-upgrade" onclick="window.location.href='/login.html'"><i class="fas fa-crown"></i> Upgrade to Pro</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro content (shown to Pro users) -->
+            <div id="nw-pro-content" style="display:none">
+                <!-- Add Name Form -->
+                <div class="nw-add-form">
+                    <h3><i class="fas fa-plus-circle"></i> Add a Name to Watch</h3>
+                    <div class="nw-add-row">
+                        <input type="text" id="nw-name-input" placeholder="Enter a name (e.g., Jake Morrison, Tyler R.)">
+                        <button class="btn-nw-add" onclick="addWatchedName()"><i class="fas fa-plus"></i> Watch</button>
+                    </div>
+                    <p class="nw-hint"><i class="fas fa-lock" style="margin-right:4px"></i> Your watch list is completely private — only you can see it. We'll auto-generate search terms including initials and partial matches.</p>
+                </div>
+
+                <!-- Watched Names List -->
+                <div class="nw-list" id="nw-watched-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your watch list...</div>
+                </div>
+
+                <!-- Matches Section -->
+                <div class="nw-matches-section">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                        <h3 style="margin-bottom:0"><i class="fas fa-bell"></i> Match Alerts</h3>
+                        <button class="btn-nw-action" onclick="markAllMatchesRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
+                    </div>
+                    <div id="nw-matches-list">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading matches...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- PROFILE TAB -->
     <div id="tab-profile" class="tab-section">
         <div class="profile-section">
@@ -564,6 +660,7 @@
         <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
         <a data-tab="search" onclick="switchTab('search')"><i class="fas fa-search"></i><span>Search</span></a>
+        <a data-tab="namewatch" onclick="switchTab('namewatch')"><i class="fas fa-eye"></i><span>Watch</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 

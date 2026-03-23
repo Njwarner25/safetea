@@ -143,7 +143,37 @@ async function migrate() {
       );
     `);
 
+    // Watched names table (Name Watch feature - Pro tier)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS watched_names (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        display_name TEXT NOT NULL,
+        search_terms TEXT[] NOT NULL DEFAULT '{}',
+        match_count INTEGER DEFAULT 0,
+        last_match_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Name Watch matches table (tracks which posts matched which watched names)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS name_watch_matches (
+        id TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+        watched_name_id TEXT NOT NULL REFERENCES watched_names(id) ON DELETE CASCADE,
+        post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        match_type TEXT NOT NULL CHECK(match_type IN ('exact', 'partial', 'initials')),
+        matched_term TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(watched_name_id, post_id)
+      );
+    `);
+
     // Indexes
+    await client.query('CREATE INDEX IF NOT EXISTS idx_watched_names_user ON watched_names(user_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_name_watch_matches_watched ON name_watch_matches(watched_name_id)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_name_watch_matches_post ON name_watch_matches(post_id)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_posts_city ON posts(city)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC)');

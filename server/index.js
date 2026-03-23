@@ -12,6 +12,7 @@ const alertRoutes = require('./routes/alerts');
 const cityRoutes = require('./routes/cities');
 const messageRoutes = require('./routes/messages');
 const referralRoutes = require('./routes/referrals');
+const namewatchRoutes = require('./routes/namewatch');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,6 +62,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/referrals', referralRoutes);
+app.use('/api/namewatch', namewatchRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

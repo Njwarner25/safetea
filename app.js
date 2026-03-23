@@ -176,7 +176,7 @@
         apiFetch('/posts').then(function(data) {
             var feed = document.getElementById('posts-feed');
             if (!data || !data.posts || data.posts.length === 0) {
-                feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:40px;color:#333;display:block;margin-bottom:12px"></i><p>No posts yet. Be the first to share!</p></div>';
+                feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:40px;color:#8080A0;display:block;margin-bottom:12px"></i><p>No posts yet. Be the first to share!</p></div>';
                 return;
             }
             feed.innerHTML = data.posts.map(renderPost).join('');
@@ -239,7 +239,7 @@
         apiFetch('/alerts?city=' + encodeURIComponent(city)).then(function(data) {
             var list = document.getElementById('alerts-list');
             if (!data || !data.alerts || data.alerts.length === 0) {
-                list.innerHTML = '<div style="color:#555;font-size:13px;text-align:center;padding:12px">No alerts in your area</div>';
+                list.innerHTML = '<div style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No alerts in your area</div>';
                 return;
             }
             list.innerHTML = data.alerts.slice(0, 5).map(function(a) {
@@ -248,7 +248,7 @@
                     '<div class="alert-meta">' + escapeHtml(a.type || '') + ' \u2022 ' + escapeHtml(a.city || '') + '</div></div>';
             }).join('');
         }).catch(function() {
-            document.getElementById('alerts-list').innerHTML = '<div style="color:#555;font-size:13px">Unable to load alerts</div>';
+            document.getElementById('alerts-list').innerHTML = '<div style="color:#8080A0;font-size:13px">Unable to load alerts</div>';
         });
     }
 
@@ -281,7 +281,7 @@
         apiFetch('/cities').then(function(data) {
             var list = document.getElementById('cities-list');
             if (!data || !data.cities || data.cities.length === 0) {
-                list.innerHTML = '<div style="color:#555;font-size:13px">No cities yet</div>';
+                list.innerHTML = '<div style="color:#8080A0;font-size:13px">No cities yet</div>';
                 return;
             }
             list.innerHTML = data.cities.slice(0, 5).map(function(c, i) {
@@ -291,7 +291,7 @@
                     '<span class="city-votes">' + c.votes + ' votes</span></div>';
             }).join('');
         }).catch(function() {
-            document.getElementById('cities-list').innerHTML = '<div style="color:#555;font-size:13px">Unable to load cities</div>';
+            document.getElementById('cities-list').innerHTML = '<div style="color:#8080A0;font-size:13px">Unable to load cities</div>';
         });
     }
 
@@ -328,7 +328,7 @@
 
         apiFetch('/messages').then(function(data) {
             if (!data || !data.conversations || data.conversations.length === 0) {
-                convos.innerHTML = '<div style="text-align:center;padding:40px;color:#555"><i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No messages yet</p><p style="font-size:12px;margin-top:4px">Messages from referrals and the community will appear here.</p></div>';
+                convos.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No messages yet</p><p style="font-size:12px;margin-top:4px">Messages from referrals and the community will appear here.</p></div>';
                 return;
             }
             convos.innerHTML = data.conversations.map(function(c) {
@@ -347,7 +347,7 @@
                     '</div></div>';
             }).join('');
         }).catch(function() {
-            convos.innerHTML = '<div style="text-align:center;padding:20px;color:#555">Unable to load conversations</div>';
+            convos.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0">Unable to load conversations</div>';
         });
     }
 
@@ -390,7 +390,7 @@
                         '<div class="msg-time ' + (isSent ? 'sent' : '') + '">' + getTimeAgo(m.created_at) + '</div>';
                 }).join('');
             } else {
-                messagesHtml = '<div style="text-align:center;padding:40px;color:#555">No messages yet. Start the conversation!</div>';
+                messagesHtml = '<div style="text-align:center;padding:40px;color:#8080A0">No messages yet. Start the conversation!</div>';
             }
 
             thread.innerHTML =
@@ -446,7 +446,7 @@
     function initAvatarColorPicker() {
         var container = document.getElementById('color-swatches');
         if (!container) return;
-        var currentColor = user.avatar_color || '#f27059';
+        var currentColor = user.avatar_color || '#E8A0B5';
         selectedAvatarColor = currentColor;
 
         container.innerHTML = AVATAR_COLORS.map(function(c) {
@@ -500,7 +500,7 @@
 
         var name = user.display_name || 'Member';
         var initial = name[0].toUpperCase();
-        var color = selectedAvatarColor || user.avatar_color || '#f27059';
+        var color = selectedAvatarColor || user.avatar_color || '#E8A0B5';
 
         preview.style.background = color;
         preview.innerHTML = '';
@@ -627,7 +627,7 @@
     function loadProfile() {
         var name = user.display_name || 'Member';
         var initial = (user.avatar_initial || name[0]).toUpperCase();
-        var color = user.avatar_color || '#f27059';
+        var color = user.avatar_color || '#E8A0B5';
 
         // Profile card
         var profileAvatar = document.getElementById('profile-avatar');
@@ -747,9 +747,9 @@
                 results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center">' +
                     '<div><i class="fas fa-check-circle" style="color:#2ecc71;font-size:32px;margin-bottom:8px"></i>' +
                     '<h4 style="color:#2ecc71">No matches found</h4>' +
-                    '<p style="color:#888;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found in public records.' +
+                    '<p style="color:#8080A0;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found in public records.' +
                     (state ? ' State: ' + escapeHtml(state) : '') + '</p>' +
-                    '<p style="color:#666;font-size:11px;margin-top:8px">For comprehensive results, also check <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a></p></div></div>';
+                    '<p style="color:#8080A0;font-size:11px;margin-top:8px">For comprehensive results, also check <a href="https://www.nsopw.gov" target="_blank" style="color:#E8A0B5">NSOPW.gov</a></p></div></div>';
             }
         }, 2000);
     };
@@ -770,7 +770,7 @@
 
         // Simulate background check
         setTimeout(function() {
-            results.innerHTML = '<h4 style="color:#fff;margin-bottom:16px"><i class="fas fa-file-alt" style="color:#f27059"></i> Background Report for ' + escapeHtml(name) + '</h4>' +
+            results.innerHTML = '<h4 style="color:#fff;margin-bottom:16px"><i class="fas fa-file-alt" style="color:#E8A0B5"></i> Background Report for ' + escapeHtml(name) + '</h4>' +
                 '<div class="result-card">' +
                 '<div class="result-avatar" style="background:rgba(46,204,113,0.1)"><i class="fas fa-check" style="color:#2ecc71"></i></div>' +
                 '<div class="result-info">' +

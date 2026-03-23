@@ -11,8 +11,8 @@
         body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; }
         .topnav { background: #22223A; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .topnav-left { display: flex; align-items: center; gap: 24px; }
-        .topnav-logo { font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
-        .topnav-logo svg { vertical-align: middle; margin-right: 2px; }
+        .topnav-logo { text-decoration: none; display: flex; align-items: center; }
+        .topnav-logo img { height: 36px; width: auto; }
         .topnav-nav { display: flex; gap: 4px; }
         .topnav-nav a { color: #8080A0; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; }
         .topnav-nav a:hover, .topnav-nav a.active { color: #fff; background: rgba(255,255,255,0.05); }
@@ -219,7 +219,7 @@
 <body>
     <nav class="topnav">
         <div class="topnav-left">
-            <a href="/" class="topnav-logo"><svg class="logo-icon" width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4CAF50"/><stop offset="50%" stop-color="#F2C4D4"/><stop offset="100%" stop-color="#E8A0B5"/></linearGradient></defs><path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#logoGrad)" opacity="0.9"/><path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#logoGrad)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span style="color:#4CAF50">safe</span><span style="color:#E8A0B5">tea</span></a>
+            <a href="/" class="topnav-logo"><img src="/logo.png" alt="SafeTea"></a>
             <div class="topnav-nav">
                 <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>

@@ -1,5 +1,6 @@
 {
       "rewrites": [
+              { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },
               { "source": "/api/(.*)", "destination": "/api/$1" }
       ]
 }

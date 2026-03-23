@@ -1,5 +1,6 @@
 const { getMany, getOne, run } = require('../_utils/db');
 const { authenticate, cors } = require('../_utils/auth');
+const { checkNewPostAgainstWatchedNames } = require('../_utils/namewatch');
 
 module.exports = async function handler(req, res) {
     cors(res);
@@ -100,6 +101,13 @@ module.exports = async function handler(req, res) {
                     'INSERT INTO posts (user_id, title, body, category, city) VALUES ($1, $2, $3, $4, $5) RETURNING *',
                     [user.id, title, body, category || 'general', city || user.city]
                 );
+            }
+
+            // Check new post against watched names (non-blocking)
+            if (result && result.id) {
+                checkNewPostAgainstWatchedNames(result.id, body, city || user.city).catch(err => {
+                    console.error('Name Watch matching error:', err);
+                });
             }
 
             return res.status(201).json({ message: 'Post created', post: result });

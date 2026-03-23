@@ -81,7 +81,33 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT`; } catch(e) {}
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_expires_at TIMESTAMP`; } catch(e) {}
 
-        return res.status(200).json({ message: 'Migration complete' });
+        // Name Watch tables (Pro feature)
+        await sql`CREATE TABLE IF NOT EXISTS watched_names (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            display_name VARCHAR(200) NOT NULL,
+            search_terms TEXT[] NOT NULL DEFAULT '{}',
+            match_count INTEGER DEFAULT 0,
+            last_match_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS name_watch_matches (
+            id SERIAL PRIMARY KEY,
+            watched_name_id INTEGER NOT NULL REFERENCES watched_names(id) ON DELETE CASCADE,
+            post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+            match_type VARCHAR(20) NOT NULL,
+            matched_term VARCHAR(200) NOT NULL,
+            is_read BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(watched_name_id, post_id)
+        )`;
+
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_watched_names_user ON watched_names(user_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_nwm_watched ON name_watch_matches(watched_name_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_nwm_post ON name_watch_matches(post_id)`; } catch(e) {}
+
+        return res.status(200).json({ message: 'Migration complete (including Name Watch tables)' });
     } catch (error) {
         console.error('Migration error:', error);
         return res.status(500).json({ error: 'Migration failed', details: error.message });

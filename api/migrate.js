@@ -81,6 +81,14 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT`; } catch(e) {}
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_expires_at TIMESTAMP`; } catch(e) {}
 
+        // Avatar columns on users table
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_type VARCHAR(20) DEFAULT 'initial'`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_color VARCHAR(20) DEFAULT '#E8A0B5'`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_initial VARCHAR(5)`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_display_name VARCHAR(100)`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier VARCHAR(20) DEFAULT 'free'`; } catch(e) {}
+
         // Name Watch tables (Pro feature)
         await sql`CREATE TABLE IF NOT EXISTS watched_names (
             id SERIAL PRIMARY KEY,

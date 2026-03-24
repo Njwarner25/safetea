@@ -171,6 +171,8 @@
             '<div class="post-time">' + time + ' \u2022 ' + escapeHtml(post.city || '') + '</div>' +
             '</div></div>' +
             '<div class="post-content">' + escapeHtml(post.body || '') + '</div>' +
+            (post.image_url && !post.image_expired ? '<div class="post-image"><img src="' + post.image_url + '" alt="Post image" style="max-width:100%;border-radius:8px;margin:8px 0" loading="lazy"></div>' : '') +
+            (post.image_expired ? '<div style="color:#8080A0;font-size:12px;font-style:italic;margin:4px 0">Image expired</div>' : '') +
             '<div class="post-actions">' +
             '<button class="post-action">\uD83D\uDCAC ' + (post.reply_count || 0) + ' replies</button>' +
             '<button class="post-action"><i class="fas fa-flag"></i> Report</button>' +
@@ -218,26 +220,46 @@
             showToast('Post must be at least 10 characters.', true);
             return;
         }
-        apiFetch('/posts', {
-            method: 'POST',
-            body: JSON.stringify({
+
+        function submitPost(imageData) {
+            var postBody = {
                 title: content.substring(0, 60),
                 body: content,
                 city: user.city,
                 category: category
-            })
-        }).then(function(data) {
-            if (data && data.post) {
-                document.getElementById('new-post-content').value = '';
-                window.removeImage();
-                showToast('Post shared!');
-                loadPosts();
-            } else {
-                showToast('Failed to create post.', true);
+            };
+            if (imageData) {
+                postBody.image_url = imageData;
             }
-        }).catch(function() {
-            showToast('Failed to create post.', true);
-        });
+            apiFetch('/posts', {
+                method: 'POST',
+                body: JSON.stringify(postBody)
+            }).then(function(data) {
+                if (data && data.post) {
+                    document.getElementById('new-post-content').value = '';
+                    window.removeImage();
+                    showToast('Post shared!');
+                    loadPosts();
+                } else {
+                    showToast('Failed to create post.', true);
+                }
+            }).catch(function() {
+                showToast('Failed to create post.', true);
+            });
+        }
+
+        if (selectedImage) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                submitPost(e.target.result);
+            };
+            reader.onerror = function() {
+                showToast('Failed to process image.', true);
+            };
+            reader.readAsDataURL(selectedImage);
+        } else {
+            submitPost(null);
+        }
     };
 
     // ==================== ALERTS ====================
@@ -766,6 +788,7 @@
         var name = document.getElementById('bg-name').value.trim();
         var city = document.getElementById('bg-city').value.trim();
         var state = document.getElementById('bg-state').value.trim();
+        var age = document.getElementById('bg-age') ? document.getElementById('bg-age').value.trim() : '';
         var results = document.getElementById('background-results');
 
         if (!name) {
@@ -773,37 +796,73 @@
             return;
         }
 
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Running background check...</div>';
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching public records for ' + escapeHtml(name) + '...</div>';
 
-        // Simulate background check
-        setTimeout(function() {
-            results.innerHTML = '<h4 style="color:#fff;margin-bottom:16px"><i class="fas fa-file-alt" style="color:#E8A0B5"></i> Background Report for ' + escapeHtml(name) + '</h4>' +
-                '<div class="result-card">' +
-                '<div class="result-avatar" style="background:rgba(46,204,113,0.1)"><i class="fas fa-check" style="color:#2ecc71"></i></div>' +
-                '<div class="result-info">' +
-                '<h4>Identity Verification <span class="result-badge badge-clear">Verified</span></h4>' +
-                '<div class="result-detail">Name and location match public records</div>' +
-                '</div></div>' +
-                '<div class="result-card">' +
-                '<div class="result-avatar" style="background:rgba(46,204,113,0.1)"><i class="fas fa-gavel" style="color:#2ecc71"></i></div>' +
-                '<div class="result-info">' +
-                '<h4>Criminal Records <span class="result-badge badge-clear">Clear</span></h4>' +
-                '<div class="result-detail">No criminal records found in public databases</div>' +
-                '</div></div>' +
-                '<div class="result-card">' +
-                '<div class="result-avatar" style="background:rgba(46,204,113,0.1)"><i class="fas fa-user-shield" style="color:#2ecc71"></i></div>' +
-                '<div class="result-info">' +
-                '<h4>Sex Offender Registry <span class="result-badge badge-clear">Not Listed</span></h4>' +
-                '<div class="result-detail">Not found on national sex offender registry</div>' +
-                '</div></div>' +
-                '<div class="result-card">' +
-                '<div class="result-avatar" style="background:rgba(241,196,15,0.1)"><i class="fas fa-info-circle" style="color:#f1c40f"></i></div>' +
-                '<div class="result-info">' +
-                '<h4>Social Media <span class="result-badge badge-caution">Limited Info</span></h4>' +
-                '<div class="result-detail">Some social media profiles found but limited public information available</div>' +
-                '</div></div>' +
-                '<div class="disclaimer" style="margin-top:16px"><i class="fas fa-info-circle"></i><span>This is a demo report. In production, SafeTea partners with licensed data providers for comprehensive background checks. Always meet in public places and tell someone where you are going.</span></div>';
-        }, 3000);
+        apiFetch('/search/background', {
+            method: 'POST',
+            body: JSON.stringify({ name: name, city: city, state: state, age: age })
+        }).then(function(data) {
+            if (!data || data.error) {
+                results.innerHTML = '<div class="empty-state"><p>' + escapeHtml(data ? data.error : 'Search failed') + '</p></div>';
+                return;
+            }
+
+            var html = '<h4 style="color:#fff;margin-bottom:4px"><i class="fas fa-file-alt" style="color:#E8A0B5"></i> Background Report: ' + escapeHtml(data.name) + '</h4>';
+            html += '<div style="color:#8080A0;font-size:12px;margin-bottom:16px">' + escapeHtml(data.location) + ' \u2022 ' + data.total_results + ' results found \u2022 ' + new Date(data.searched_at).toLocaleString() + '</div>';
+
+            var iconMap = { gavel: 'fa-gavel', 'user-shield': 'fa-user-shield', 'balance-scale': 'fa-balance-scale', newspaper: 'fa-newspaper', globe: 'fa-globe', 'file-alt': 'fa-file-alt' };
+            var colorMap = { criminal: '#e74c3c', sex_offender: '#e74c3c', court: '#f39c12', news: '#3498db', social: '#9b59b6', other: '#95a5a6' };
+
+            var cats = data.categories || {};
+            var hasAnyResults = false;
+
+            Object.keys(cats).forEach(function(key) {
+                var cat = cats[key];
+                if (!cat.results || cat.results.length === 0) return;
+                hasAnyResults = true;
+
+                var catColor = colorMap[key] || '#95a5a6';
+                var iconClass = iconMap[cat.icon] || 'fa-search';
+                var badgeClass = (key === 'criminal' || key === 'sex_offender') ? 'badge-caution' : 'badge-clear';
+                var badgeText = cat.results.length + ' found';
+
+                html += '<div class="result-card" style="border-left:3px solid ' + catColor + '">';
+                html += '<div class="result-avatar" style="background:rgba(' + (key === 'criminal' || key === 'sex_offender' ? '231,76,60' : '52,152,219') + ',0.1)"><i class="fas ' + iconClass + '" style="color:' + catColor + '"></i></div>';
+                html += '<div class="result-info"><h4>' + escapeHtml(cat.label) + ' <span class="result-badge ' + badgeClass + '">' + badgeText + '</span></h4>';
+
+                cat.results.forEach(function(r) {
+                    html += '<div style="margin:8px 0;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">';
+                    if (r.link) {
+                        html += '<a href="' + escapeHtml(r.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:13px;font-weight:600;text-decoration:none">' + escapeHtml(r.title || 'View Source') + '</a>';
+                    } else {
+                        html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtml(r.title || 'Result') + '</div>';
+                    }
+                    if (r.snippet) {
+                        html += '<div style="color:#A0AEC0;font-size:12px;margin-top:4px">' + escapeHtml(r.snippet).substring(0, 200) + '</div>';
+                    }
+                    if (r.source) {
+                        html += '<div style="color:#718096;font-size:11px;margin-top:2px">' + escapeHtml(r.source) + '</div>';
+                    }
+                    html += '</div>';
+                });
+
+                html += '</div></div>';
+            });
+
+            if (!hasAnyResults) {
+                html += '<div class="result-card">';
+                html += '<div class="result-avatar" style="background:rgba(46,204,113,0.1)"><i class="fas fa-check" style="color:#2ecc71"></i></div>';
+                html += '<div class="result-info"><h4>No Public Records Found <span class="result-badge badge-clear">Clear</span></h4>';
+                html += '<div class="result-detail">No concerning public records found for this person. This does not guarantee safety \u2014 always take precautions.</div>';
+                html += '</div></div>';
+            }
+
+            html += '<div class="disclaimer" style="margin-top:16px"><i class="fas fa-info-circle"></i><span>' + escapeHtml(data.disclaimer) + '</span></div>';
+            results.innerHTML = html;
+
+        }).catch(function(err) {
+            results.innerHTML = '<div class="empty-state"><p>Search failed. Please try again.</p></div>';
+        });
     };
 
     // ==================== LOGOUT ====================

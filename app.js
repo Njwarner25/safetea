@@ -61,6 +61,10 @@
                 window.location.href = '/login.html';
                 return null;
             }
+            var ct = res.headers.get('content-type') || '';
+            if (ct.indexOf('application/json') === -1) {
+                return null;
+            }
             return res.json();
         });
     }

@@ -43,16 +43,22 @@ function cors(res) {
 
 function parseBody(req) {
     return new Promise((resolve, reject) => {
-          if (req.body) return resolve(req.body);
+          if (req.body) {
+                  if (typeof req.body === 'string') {
+                          try { return resolve(JSON.parse(req.body)); } catch(e) { return resolve({}); }
+                  }
+                  return resolve(req.body);
+          }
           let data = '';
           req.on('data', chunk => { data += chunk; });
           req.on('end', () => {
                   try {
                             resolve(data ? JSON.parse(data) : {});
                   } catch (e) {
-                            reject(new Error('Invalid JSON'));
+                            resolve({});
                   }
           });
+          req.on('error', () => resolve({}));
     });
 }
 

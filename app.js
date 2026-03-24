@@ -104,6 +104,7 @@
         // Load data for tab
         if (tab === 'alerts') loadFullAlerts();
         if (tab === 'profile') loadProfile();
+        if (tab === 'datecheck') initDateCheck();
         if (tab === 'inbox') loadInbox();
         if (tab === 'namewatch') loadNameWatch();
     }
@@ -1093,3 +1094,140 @@
         }
     }).catch(function() {});
 })();
+
+    // ==================== DATE CHECK-IN/CHECK-OUT ====================
+    var activeCheckout = null;
+    var dcTimerInterval = null;
+
+    function initDateCheck() {
+        if (!checkPremium()) {
+            document.getElementById('dc-upgrade-wall').style.display = 'block';
+            document.getElementById('dc-premium-content').style.display = 'none';
+        } else {
+            document.getElementById('dc-upgrade-wall').style.display = 'none';
+            document.getElementById('dc-premium-content').style.display = 'block';
+            loadDateHistory();
+        }
+        var now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        var el = document.getElementById('dc-scheduled-time');
+        if (el) el.value = now.toISOString().slice(0,16);
+        var ret = new Date(Date.now() + 3 * 3600000);
+        ret.setMinutes(ret.getMinutes() - ret.getTimezoneOffset());
+        var retEl = document.getElementById('dc-return-time');
+        if (retEl) retEl.value = ret.toISOString().slice(0,16);
+    }
+
+    window.addContactRow = function() {
+        var list = document.getElementById('dc-contacts-list');
+        if (list.children.length >= 5) { showToast('Maximum 5 contacts', true); return; }
+        var row = document.createElement('div');
+        row.className = 'dc-contact-row';
+        row.innerHTML = '<input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>';
+        list.appendChild(row);
+    };
+
+    window.dateCheckOut = function() {
+        var dateName = document.getElementById('dc-date-name').value.trim();
+        var venueName = document.getElementById('dc-venue-name').value.trim();
+        var scheduledTime = document.getElementById('dc-scheduled-time').value;
+        if (!dateName || !venueName || !scheduledTime) { showToast('Please fill in name, venue, and time.', true); return; }
+        var contactRows = document.querySelectorAll('.dc-contact-row');
+        var contacts = [];
+        contactRows.forEach(function(row) {
+            var name = row.querySelector('.dc-contact-name').value.trim();
+            var phone = row.querySelector('.dc-contact-phone').value.trim().replace(/[^\d+]/g, '');
+            if (phone) {
+                if (!phone.startsWith('+')) phone = '+1' + phone;
+                contacts.push({ name: name || 'Contact', phone: phone });
+            }
+        });
+        var btn = document.getElementById('dc-checkout-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking out...';
+        apiFetch('/dates/checkout', {
+            method: 'POST',
+            body: JSON.stringify({
+                dateName: dateName, venueName: venueName,
+                venueAddress: document.getElementById('dc-venue-address').value.trim(),
+                scheduledTime: new Date(scheduledTime).toISOString(),
+                estimatedReturn: document.getElementById('dc-return-time').value ? new Date(document.getElementById('dc-return-time').value).toISOString() : null,
+                notes: document.getElementById('dc-notes').value.trim(),
+                trustedContacts: contacts,
+            })
+        }).then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out';
+            if (data && data.success) {
+                activeCheckout = data.checkout;
+                showActiveDate(data.checkout);
+                showToast('Checked out! ' + (data.smsMessage || ''));
+            } else { showToast((data && data.error) || 'Failed to check out', true); }
+        }).catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out';
+            showToast('Check out failed: ' + err.message, true);
+        });
+    };
+
+    function showActiveDate(checkout) {
+        document.getElementById('dc-form').style.display = 'none';
+        document.getElementById('dc-active').style.display = 'block';
+        document.getElementById('dc-active-name').textContent = checkout.dateName || checkout.date_name;
+        document.getElementById('dc-active-venue').textContent = (checkout.venueName || checkout.venue_name) + (checkout.venueAddress || checkout.venue_address ? ' — ' + (checkout.venueAddress || checkout.venue_address) : '');
+        document.getElementById('dc-active-time').textContent = 'Started: ' + new Date(checkout.scheduledTime || checkout.scheduled_time).toLocaleString();
+        var startTime = new Date(checkout.createdAt || checkout.created_at || checkout.scheduledTime || checkout.scheduled_time).getTime();
+        if (dcTimerInterval) clearInterval(dcTimerInterval);
+        dcTimerInterval = setInterval(function() {
+            var elapsed = Date.now() - startTime;
+            var hrs = Math.floor(elapsed / 3600000);
+            var mins = Math.floor((elapsed % 3600000) / 60000);
+            var secs = Math.floor((elapsed % 60000) / 1000);
+            document.getElementById('dc-timer').textContent = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's';
+        }, 1000);
+    }
+
+    window.dateCheckIn = function() {
+        if (!activeCheckout) { showToast('No active checkout', true); return; }
+        apiFetch('/dates/checkin', {
+            method: 'POST',
+            body: JSON.stringify({ checkoutId: activeCheckout.id, safetyRating: 5, notes: 'Checked in via dashboard' })
+        }).then(function(data) {
+            if (data && data.success) {
+                if (dcTimerInterval) clearInterval(dcTimerInterval);
+                activeCheckout = null;
+                document.getElementById('dc-active').style.display = 'none';
+                document.getElementById('dc-form').style.display = 'block';
+                showToast('Checked in safely! Your contacts have been notified.');
+                loadDateHistory();
+                document.getElementById('dc-date-name').value = '';
+                document.getElementById('dc-venue-name').value = '';
+                document.getElementById('dc-venue-address').value = '';
+                document.getElementById('dc-notes').value = '';
+            } else { showToast((data && data.error) || 'Failed to check in', true); }
+        });
+    };
+
+    window.shareDateLink = function() {
+        if (!activeCheckout || !activeCheckout.shareCode) return;
+        var url = 'https://www.getsafetea.app/date-status?code=' + activeCheckout.shareCode;
+        if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function() { showToast('Tracking link copied!'); }); }
+        else { prompt('Share this tracking link:', url); }
+    };
+
+    function loadDateHistory() {
+        apiFetch('/dates/checkout').then(function(data) {
+            if (!data || !data.checkouts) return;
+            var active = data.checkouts.find(function(c) { return c.status === 'checked_out'; });
+            if (active) {
+                activeCheckout = { id: active.id, dateName: active.date_name, venueName: active.venue_name, venueAddress: active.venue_address, scheduledTime: active.scheduled_time, createdAt: active.created_at, shareCode: active.share_code };
+                showActiveDate(activeCheckout);
+            }
+            var completed = data.checkouts.filter(function(c) { return c.status === 'checked_in'; });
+            var container = document.getElementById('dc-history');
+            if (completed.length === 0) { container.innerHTML = '<p style="color:#666;font-size:13px;text-align:center;padding:12px">No completed dates yet.</p>'; return; }
+            container.innerHTML = completed.map(function(c) {
+                return '<div class="dc-history-item"><div><div class="dc-history-name">' + c.date_name + '</div><div class="dc-history-meta">' + c.venue_name + ' · ' + new Date(c.scheduled_time).toLocaleDateString() + '</div></div><span class="dc-history-status dc-status-safe">Safe ✓</span></div>';
+            }).join('');
+        });
+    }

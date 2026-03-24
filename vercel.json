@@ -1,5 +1,10 @@
 {
     "rewrites": [
+        { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
+        { "source": "/api/dates/checkout", "destination": "/api/dates/checkout" },
+        { "source": "/api/dates/checkin", "destination": "/api/dates/checkin" },
+        { "source": "/api/dates/status", "destination": "/api/dates/status" },
+        { "source": "/api/dates/share", "destination": "/api/dates/share" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },

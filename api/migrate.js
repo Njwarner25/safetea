@@ -233,8 +233,64 @@ module.exports = async function handler(req, res) {
         try { await sql`CREATE INDEX IF NOT EXISTS idx_removal_requests_post ON removal_requests(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_ban_log_user ON ban_log(banned_user_id)`; } catch(e) {}
 
+        // ============================================================
+        // CATFISH DETECTION (v4 migration)
+        // ============================================================
+        await sql`CREATE TABLE IF NOT EXISTS catfish_scans (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            image_url TEXT NOT NULL,
+            image_hash VARCHAR(20),
+            profile_name VARCHAR(200),
+            platform VARCHAR(50),
+            catfish_score INTEGER DEFAULT 0,
+            risk_level VARCHAR(20),
+            flags_json TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_catfish_scans_user ON catfish_scans(user_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_catfish_scans_hash ON catfish_scans(image_hash)`; } catch(e) {}
+
+        // ============================================================
+        // DATE CHECK-IN/CHECK-OUT (v4 migration continued)
+        // ============================================================
+        await sql`CREATE TABLE IF NOT EXISTS date_checkouts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            date_name VARCHAR(200) NOT NULL,
+            date_photo_url TEXT,
+            venue_name VARCHAR(300) NOT NULL,
+            venue_address TEXT,
+            venue_lat DECIMAL(10,7),
+            venue_lng DECIMAL(10,7),
+            scheduled_time TIMESTAMP NOT NULL,
+            estimated_return TIMESTAMP,
+            notes TEXT,
+            share_code VARCHAR(10) UNIQUE NOT NULL,
+            status VARCHAR(20) DEFAULT 'checked_out',
+            checked_in_at TIMESTAMP,
+            safety_rating INTEGER,
+            checkin_notes TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        await sql`CREATE TABLE IF NOT EXISTS date_trusted_contacts (
+            id SERIAL PRIMARY KEY,
+            checkout_id INTEGER REFERENCES date_checkouts(id) ON DELETE CASCADE,
+            contact_name VARCHAR(200),
+            contact_phone VARCHAR(20) NOT NULL,
+            notified BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_date_checkouts_user ON date_checkouts(user_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_date_checkouts_code ON date_checkouts(share_code)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_date_checkouts_status ON date_checkouts(status)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_date_contacts_checkout ON date_trusted_contacts(checkout_id)`; } catch(e) {}
+
         return res.status(200).json({
-            message: 'Migration complete (v3: phone auth + verification + moderation + Name Watch)'
+            message: 'Migration complete (v4: phone auth + verification + moderation + Name Watch + catfish + date check-in/out)'
         });
     } catch (error) {
         console.error('Migration error:', error);

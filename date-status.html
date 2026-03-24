@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Status - SafeTea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; padding: 32px 16px; }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo img { height: 36px; }
+        .card { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06); }
+        .status-header { text-align: center; margin-bottom: 24px; }
+        .status-icon { font-size: 48px; margin-bottom: 8px; }
+        .status-text { font-size: 20px; font-weight: 700; }
+        .status-sub { font-size: 13px; color: #8080A0; margin-top: 4px; }
+        .status-checked-out .status-text { color: #FFA500; }
+        .status-checked-in .status-text { color: #2ecc71; }
+        .status-overdue .status-text { color: #FF4444; }
+        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 13px; color: #8080A0; }
+        .detail-value { font-size: 14px; font-weight: 500; color: #fff; text-align: right; max-width: 60%; }
+        .date-photo { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; display: block; margin: 0 auto 16px; border: 2px solid rgba(255,255,255,0.1); }
+        .map-link { display: block; text-align: center; color: #E8A0B5; text-decoration: none; font-size: 13px; margin-top: 8px; padding: 8px; background: rgba(232,160,181,0.1); border-radius: 8px; }
+        .map-link:hover { background: rgba(232,160,181,0.2); }
+        .timer { text-align: center; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 12px 0; }
+        .timer-label { font-size: 12px; color: #8080A0; }
+        .error-msg { text-align: center; color: #FF6B6B; padding: 40px 20px; }
+        .loading { text-align: center; padding: 60px 20px; color: #8080A0; }
+        .branding { text-align: center; margin-top: 24px; font-size: 12px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><img src="logo.png" alt="SafeTea"></div>
+
+        <div id="loading" class="loading">Loading date status...</div>
+        <div id="error" class="error-msg" style="display:none"></div>
+        <div id="content" style="display:none"></div>
+
+        <div class="branding">Powered by SafeTea — Stay Safe</div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (!code) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = 'No share code provided.';
+        } else {
+            fetchStatus();
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/dates/status?code=' + encodeURIComponent(code));
+                const data = await res.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (!data.success) {
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = data.error || 'Unable to load status.';
+                    return;
+                }
+
+                renderStatus(data.date);
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Failed to load status. Please try again.';
+            }
+        }
+
+        function renderStatus(date) {
+            const content = document.getElementById('content');
+            content.style.display = 'block';
+
+            const isCheckedIn = date.status === 'checked_in';
+            const isOverdue = date.isOverdue;
+            const statusClass = isCheckedIn ? 'status-checked-in' : (isOverdue ? 'status-overdue' : 'status-checked-out');
+            const statusIcon = isCheckedIn ? '✅' : (isOverdue ? '🚨' : '📍');
+            const statusLabel = isCheckedIn ? 'Checked In Safely' : (isOverdue ? 'Overdue - Not Yet Checked In' : 'Currently on Date');
+            const statusSub = isCheckedIn
+                ? 'Made it home safe at ' + new Date(date.checkedInAt).toLocaleTimeString()
+                : (isOverdue ? 'Expected return time has passed' : 'Checked out ' + date.minutesSinceCheckout + ' minutes ago');
+
+            let html = '<div class="card ' + statusClass + '">';
+            html += '<div class="status-header">';
+            html += '<div class="status-icon">' + statusIcon + '</div>';
+            html += '<div class="status-text">' + statusLabel + '</div>';
+            html += '<div class="status-sub">' + statusSub + '</div>';
+            html += '</div>';
+
+            if (!isCheckedIn) {
+                html += '<div class="timer" id="timer"></div>';
+                html += '<div class="timer-label" style="text-align:center">Time since check-out</div>';
+            }
+
+            html += '</div>';
+
+            // Date details card
+            html += '<div class="card">';
+            if (date.datePhotoUrl) {
+                html += '<img class="date-photo" src="' + date.datePhotoUrl + '" alt="Date photo">';
+            }
+            html += '<div class="detail-row"><span class="detail-label">Your contact</span><span class="detail-value">' + date.userName + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Meeting</span><span class="detail-value">' + date.dateName + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Venue</span><span class="detail-value">' + date.venueName + '</span></div>';
+            if (date.venueAddress) {
+                html += '<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">' + date.venueAddress + '</span></div>';
+            }
+            html += '<div class="detail-row"><span class="detail-label">Date &amp; Time</span><span class="detail-value">' + new Date(date.scheduledTime).toLocaleString() + '</span></div>';
+            if (date.estimatedReturn) {
+                html += '<div class="detail-row"><span class="detail-label">Expected return</span><span class="detail-value">' + new Date(date.estimatedReturn).toLocaleString() + '</span></div>';
+            }
+            html += '</div>';
+
+            // Map link
+            if (date.venueLat && date.venueLng) {
+                html += '<a class="map-link" href="https://maps.google.com/?q=' + date.venueLat + ',' + date.venueLng + '" target="_blank">📍 View Venue on Map</a>';
+            } else if (date.venueAddress) {
+                html += '<a class="map-link" href="https://maps.google.com/?q=' + encodeURIComponent(date.venueAddress) + '" target="_blank">📍 View Venue on Map</a>';
+            }
+
+            content.innerHTML = html;
+
+            // Start timer if not checked in
+            if (!isCheckedIn) {
+                const checkoutTime = new Date(date.checkedOutAt).getTime();
+                setInterval(function() {
+                    const elapsed = Date.now() - checkoutTime;
+                    const hrs = Math.floor(elapsed / 3600000);
+                    const mins = Math.floor((elapsed % 3600000) / 60000);
+                    const secs = Math.floor((elapsed % 60000) / 1000);
+                    const timerEl = document.getElementById('timer');
+                    if (timerEl) {
+                        timerEl.textContent = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's';
+                        timerEl.style.color = date.isOverdue ? '#FF4444' : '#FFA500';
+                    }
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>

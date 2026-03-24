@@ -8,36 +8,41 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-          const body = await parseBody(req);
-          const { email, password } = body;
+        const body = await parseBody(req);
+        const email = body.email;
+        const password = body.password;
 
-      if (!email || !password) {
-              return res.status(400).json({ error: 'Email and password are required' });
-      }
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
 
-      const user = await getOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
-          if (!user) {
-                  return res.status(401).json({ error: 'Invalid email or password' });
-          }
+        const user = await getOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-      const validPassword = await bcrypt.compare(password, user.password_hash);
-          if (!validPassword) {
-                  return res.status(401).json({ error: 'Invalid email or password' });
-          }
+        const validPassword = await bcrypt.compare(password, user.password_hash);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
 
-      const token = generateToken(user);
-          return res.status(200).json({
-                  token,
-                  user: {
-                            id: user.id,
-                            email: user.email,
-                            display_name: user.display_name,
-                            role: user.role,
-                            city: user.city
-                  }
-          });
+        const token = generateToken(user);
+        return res.status(200).json({
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                display_name: user.display_name,
+                role: user.role,
+                city: user.city,
+                subscription_tier: user.subscription_tier,
+                avatar_color: user.avatar_color,
+                custom_display_name: user.custom_display_name,
+                bio: user.bio
+            }
+        });
     } catch (error) {
-          console.error('Login error:', error);
-          return res.status(500).json({ error: 'Internal server error' });
+        console.error('Login error:', error.message, error.stack);
+        return res.status(500).json({ error: 'Login failed: ' + error.message });
     }
 };

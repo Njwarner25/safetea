@@ -1,0 +1,7 @@
+{
+    "rewrites": [
+        { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },
+        { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },
+        { "source": "/api/(.*)", "destination": "/api/$1" }
+    ]
+}

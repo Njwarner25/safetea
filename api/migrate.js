@@ -172,8 +172,22 @@ module.exports = async function handler(req, res) {
         // Make email nullable for phone-only users
         try { await sql`ALTER TABLE users ALTER COLUMN email DROP NOT NULL`; } catch(e) {}
 
+        // ============================================================
+        // MESSAGES TABLE (v3 migration — inbox / DM system)
+        // ============================================================
+        await sql`CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            recipient_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            content TEXT NOT NULL,
+            is_read BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id)`; } catch(e) {}
+
         return res.status(200).json({
-            message: 'Migration complete (v2: phone auth + verification + Name Watch)'
+            message: 'Migration complete (v3: phone auth + verification + Name Watch + messages)'
         });
     } catch (error) {
         console.error('Migration error:', error);

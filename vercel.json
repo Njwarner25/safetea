@@ -1,5 +1,14 @@
 {
     "rewrites": [
+        { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
+        { "source": "/api/dates/checkout", "destination": "/api/dates/checkout" },
+        { "source": "/api/dates/checkin", "destination": "/api/dates/checkin" },
+        { "source": "/api/dates/status", "destination": "/api/dates/status" },
+        { "source": "/api/dates/share", "destination": "/api/dates/share" },
+        { "source": "/api/posts/report", "destination": "/api/posts/report" },
+        { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
+        { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
+        { "source": "/api/users/ban", "destination": "/api/users/ban" },
         { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },
         { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },
         { "source": "/api/(.*)", "destination": "/api/$1" }

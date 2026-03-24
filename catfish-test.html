@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catfish Detection - SafeTea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
+        .container { max-width: 700px; margin: 0 auto; padding: 32px 16px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header img { height: 40px; margin-bottom: 16px; }
+        .header h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .header p { color: #8080A0; font-size: 14px; }
+        .card { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06); }
+        .card h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: #A0A0C0; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; background: #2A2A44; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #E8A0B5; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+        .btn { padding: 14px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(242,112,89,0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .preview-area { margin-top: 16px; text-align: center; }
+        .preview-area img { max-width: 200px; max-height: 200px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); }
+        .results { display: none; }
+        .results.active { display: block; }
+        .score-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px auto; border: 4px solid; }
+        .score-number { font-size: 36px; font-weight: 800; }
+        .score-label { font-size: 11px; color: #8080A0; }
+        .risk-badge { text-align: center; font-size: 16px; font-weight: 700; padding: 8px 16px; border-radius: 8px; margin-bottom: 20px; }
+        .flag-section { margin-bottom: 16px; }
+        .flag-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+        .flag-item { background: #2A2A44; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid; }
+        .flag-item.critical { border-color: #FF4444; }
+        .flag-item.high { border-color: #FF6B6B; }
+        .flag-item.medium { border-color: #FFA500; }
+        .flag-item.low { border-color: #FFD700; }
+        .flag-label { font-weight: 600; font-size: 14px; color: #fff; }
+        .flag-desc { font-size: 12px; color: #8080A0; margin-top: 4px; }
+        .severity-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-top: 6px; }
+        .green-flag { background: #1a3a2a; padding: 10px; border-radius: 8px; margin-bottom: 6px; border-left: 3px solid #2ecc71; }
+        .green-flag .flag-label { color: #2ecc71; }
+        .analysis-detail { font-size: 12px; color: #666; background: #2A2A44; padding: 10px; border-radius: 8px; margin-top: 12px; }
+        .analysis-detail span { color: #A0A0C0; }
+        .loading { text-align: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #E8A0B5; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .note { font-size: 12px; color: #666; text-align: center; margin-top: 16px; font-style: italic; }
+        .back-link { display: inline-block; color: #E8A0B5; text-decoration: none; font-size: 14px; margin-bottom: 16px; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-link">&larr; Back to Dashboard</a>
+        <div class="header">
+            <img src="logo.png" alt="SafeTea">
+            <h1>Catfish Detection</h1>
+            <p>Upload or paste a photo URL to check if an image is stolen, stock, or belongs to a public figure.</p>
+        </div>
+
+        <div class="card" id="scan-form">
+            <h2>Scan a Photo</h2>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" id="imageUrl" placeholder="https://example.com/photo.jpg" />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Profile Name (optional)</label>
+                    <input type="text" id="profileName" placeholder="Name on their profile" />
+                </div>
+                <div class="form-group">
+                    <label>Platform (optional)</label>
+                    <select id="platform">
+                        <option value="">Select...</option>
+                        <option>Tinder</option>
+                        <option>Hinge</option>
+                        <option>Bumble</option>
+                        <option>Instagram</option>
+                        <option>Facebook</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="preview-area" id="preview" style="display:none">
+                <img id="previewImg" src="" alt="Preview" />
+            </div>
+            <button class="btn btn-primary" id="scanBtn" onclick="runScan()">Scan for Catfish</button>
+        </div>
+
+        <div class="card loading" id="loading" style="display:none">
+            <div class="spinner"></div>
+            <p style="color:#A0A0C0">Analyzing image metadata &amp; searching for matches...</p>
+        </div>
+
+        <div class="card results" id="results">
+            <h2>Scan Results</h2>
+            <div id="resultContent"></div>
+            <button class="btn btn-primary" onclick="resetScan()" style="margin-top:16px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1)">Scan Another Photo</button>
+        </div>
+
+        <p class="note">SafeTea catfish detection analyzes image metadata, EXIF data, and (when configured) performs reverse image searches. Always trust your instincts and meet in safe, public places.</p>
+    </div>
+
+    <script>
+        const imageUrlInput = document.getElementById('imageUrl');
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('previewImg');
+
+        imageUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                previewImg.src = url;
+                previewImg.onload = () => { preview.style.display = 'block'; };
+                previewImg.onerror = () => { preview.style.display = 'none'; };
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        async function runScan() {
+            const imageUrl = imageUrlInput.value.trim();
+            if (!imageUrl) { alert('Please enter an image URL'); return; }
+
+            document.getElementById('scan-form').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').classList.remove('active');
+
+            try {
+                const token = localStorage.getItem('safetea_token') || '';
+                const res = await fetch('/api/screening/catfish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+                    },
+                    body: JSON.stringify({
+                        imageUrl,
+                        profileName: document.getElementById('profileName').value.trim(),
+                        platform: document.getElementById('platform').value,
+                    }),
+                });
+
+                const data = await res.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (!data.success) {
+                    alert('Scan failed: ' + (data.error || 'Unknown error'));
+                    document.getElementById('scan-form').style.display = 'block';
+                    return;
+                }
+
+                renderResults(data.scan);
+            } catch (err) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Scan failed: ' + err.message);
+                document.getElementById('scan-form').style.display = 'block';
+            }
+        }
+
+        function renderResults(scan) {
+            const colors = {
+                high_risk: { bg: 'rgba(255,68,68,0.15)', text: '#FF4444', border: '#FF4444' },
+                medium_risk: { bg: 'rgba(255,165,0,0.15)', text: '#FFA500', border: '#FFA500' },
+                low_risk: { bg: 'rgba(255,215,0,0.15)', text: '#FFD700', border: '#FFD700' },
+                likely_safe: { bg: 'rgba(46,204,113,0.15)', text: '#2ecc71', border: '#2ecc71' },
+            };
+            const c = colors[scan.riskLevel] || colors.likely_safe;
+
+            let html = '';
+
+            // Score circle
+            html += '<div class="score-circle" style="border-color:' + c.border + '">';
+            html += '<div class="score-number" style="color:' + c.text + '">' + scan.catfishScore + '</div>';
+            html += '<div class="score-label">Catfish Score</div>';
+            html += '</div>';
+
+            // Risk badge
+            html += '<div class="risk-badge" style="background:' + c.bg + ';color:' + c.text + '">' + scan.riskLabel + '</div>';
+
+            // Red flags
+            if (scan.redFlags && scan.redFlags.length > 0) {
+                html += '<div class="flag-section"><h3 style="color:#FF6B6B">Red Flags</h3>';
+                scan.redFlags.forEach(function(flag) {
+                    const sev = flag.severity || 'medium';
+                    const sevColors = { critical: '#FF4444', high: '#FF6B6B', medium: '#FFA500', low: '#FFD700' };
+                    html += '<div class="flag-item ' + sev + '">';
+                    html += '<div class="flag-label">' + flag.label + '</div>';
+                    html += '<div class="flag-desc">' + flag.description + '</div>';
+                    html += '<span class="severity-tag" style="background:' + (sevColors[sev] || '#FFA500') + '22;color:' + (sevColors[sev] || '#FFA500') + '">' + sev + '</span>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Green flags
+            if (scan.greenFlags && scan.greenFlags.length > 0) {
+                html += '<div class="flag-section"><h3 style="color:#2ecc71">Green Flags</h3>';
+                scan.greenFlags.forEach(function(flag) {
+                    html += '<div class="green-flag">';
+                    html += '<div class="flag-label">' + flag.label + '</div>';
+                    html += '<div class="flag-desc">' + flag.description + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Image analysis details
+            html += '<div class="analysis-detail">';
+            html += '<strong style="color:#fff">Image Analysis</strong><br>';
+            html += '<span>Format:</span> ' + scan.imageAnalysis.format + ' &middot; ';
+            html += '<span>Size:</span> ' + scan.imageAnalysis.sizeKB + ' KB &middot; ';
+            html += '<span>EXIF:</span> ' + (scan.imageAnalysis.hasExif ? 'Present' : 'Missing') + '<br>';
+            if (scan.imageAnalysis.editingSoftware) {
+                html += '<span>Software:</span> ' + scan.imageAnalysis.editingSoftware + '<br>';
+            }
+            if (scan.imageAnalysis.exifNotes.length > 0) {
+                html += '<span>Notes:</span> ' + scan.imageAnalysis.exifNotes.join(' · ') + '<br>';
+            }
+            html += '<br><span>' + scan.note + '</span>';
+            html += '</div>';
+
+            document.getElementById('resultContent').innerHTML = html;
+            document.getElementById('results').classList.add('active');
+        }
+
+        function resetScan() {
+            document.getElementById('scan-form').style.display = 'block';
+            document.getElementById('results').classList.remove('active');
+            imageUrlInput.value = '';
+            document.getElementById('profileName').value = '';
+            document.getElementById('platform').value = '';
+            preview.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

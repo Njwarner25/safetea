@@ -326,10 +326,7 @@
                 <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="search"><i class="fas fa-search"></i> Search</a>
-                <a data-tab="namewatch"><i class="fas fa-eye"></i> Name Watch <span id="nw-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="datecheck"><i class="fas fa-calendar-check"></i> Date Check</a>
-                <a data-tab="hub"><i class="fas fa-mug-hot"></i> Hub</a>
+                <a data-tab="hub"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
@@ -444,270 +441,212 @@
     </div>
 
     <!-- SEARCH TAB -->
-    <div id="tab-search" class="tab-section">
-        <div class="search-section">
-            <div class="search-header">
-                <h2><img src="logo.png" alt="SafeTea" style="height:24px;vertical-align:middle"> Safety Search Tools</h2>
-                <p>Look up important safety information before meeting someone new.</p>
-            </div>
-            <div class="search-tabs">
-                <button class="search-tab active" data-search="offender"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Search</button>
-                <button class="search-tab" data-search="background"><i class="fas fa-file-alt"></i> Background Check</button>
-            </div>
-
-            <!-- Sex Offender Search Panel -->
-            <div id="search-offender" class="search-panel active">
-                <h3><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Registry Search</h3>
-                <p class="desc">Search the national sex offender registry to check if someone is listed. Results are pulled from public records databases.</p>
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>This search uses publicly available registry data. Always verify results with your local law enforcement. Information may not be 100% current.</span>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" id="so-first-name" placeholder="Enter first name">
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" id="so-last-name" placeholder="Enter last name">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="so-city" placeholder="City (optional)">
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <select id="so-state">
-                            <option value="">Select state</option>
-                            <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
-                            <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
-                            <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
-                            <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
-                            <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
-                            <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
-                            <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
-                            <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
-                            <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
-                            <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
-                            <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
-                            <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
-                            <option>Wisconsin</option><option>Wyoming</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="btn-search" onclick="searchOffenders()"><i class="fas fa-search"></i> Search Registry</button>
-                <div id="offender-results" class="search-results"></div>
-            </div>
-
-            <!-- Background Check Panel -->
-            <div id="search-background" class="search-panel">
-                <h3><i class="fas fa-file-alt"></i> Background Check</h3>
-                <p class="desc">Run a basic background check before meeting someone from a dating app. Includes criminal records, identity verification, and public records.</p>
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Background checks use public records and may not include all information. This is not a substitute for professional due diligence. Results are for personal safety purposes only.</span>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="bg-name" placeholder="Enter full name">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="bg-city" placeholder="City">
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <input type="text" id="bg-state" placeholder="State">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Approximate Age (optional)</label>
-                        <input type="number" id="bg-age" placeholder="Age">
-                    </div>
-                </div>
-                <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
-                <div id="background-results" class="search-results"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- NAME WATCH TAB -->
-    <div id="tab-namewatch" class="tab-section">
-        <div class="nw-section">
-            <div class="nw-header">
-                <h2><i class="fas fa-eye"></i> Name Watch</h2>
-            </div>
-
-            <!-- Pro gate (shown to non-Pro users) -->
-            <div id="nw-pro-gate" style="display:none">
-                <div class="premium-gate">
-                    <div class="premium-gate-content">
-                        <h2><i class="fas fa-eye" style="color:#E8A0B5;margin-right:8px"></i> Name Watch</h2>
-                        <p>Monitor names of people you're dating. Get instant alerts when anyone in your city posts about them.</p>
-                        <div class="premium-gate-price">$9.99<span>/mo</span></div>
-                        <button class="btn-upgrade" onclick="window.location.href='/login.html'"><i class="fas fa-crown"></i> Upgrade to Pro</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pro content (shown to Pro users) -->
-            <div id="nw-pro-content" style="display:none">
-                <!-- Add Name Form -->
-                <div class="nw-add-form">
-                    <h3><i class="fas fa-plus-circle"></i> Add a Name to Watch</h3>
-                    <div class="nw-add-row">
-                        <input type="text" id="nw-name-input" placeholder="Enter a name (e.g., Jake Morrison, Tyler R.)">
-                        <button class="btn-nw-add" onclick="addWatchedName()"><i class="fas fa-plus"></i> Watch</button>
-                    </div>
-                    <p class="nw-hint"><i class="fas fa-lock" style="margin-right:4px"></i> Your watch list is completely private — only you can see it. We'll auto-generate search terms including initials and partial matches.</p>
-                </div>
-
-                <!-- Watched Names List -->
-                <div class="nw-list" id="nw-watched-list">
-                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your watch list...</div>
-                </div>
-
-                <!-- Matches Section -->
-                <div class="nw-matches-section">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h3 style="margin-bottom:0"><i class="fas fa-bell"></i> Match Alerts</h3>
-                        <button class="btn-nw-action" onclick="markAllMatchesRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
-                    </div>
-                    <div id="nw-matches-list">
-                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading matches...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
     <!-- HUB TAB -->
     <div id="tab-hub" class="tab-section">
-        <div class="hub-section" style="max-width:720px;margin:0 auto;padding:24px">
+        <div style="max-width:720px;margin:0 auto;padding:24px">
             <div style="margin-bottom:24px">
                 <h2 style="color:#fff;font-size:22px;margin-bottom:8px"><img src="logo.png" alt="SafeTea" style="height:28px;vertical-align:middle"> SafeTea Hub</h2>
-                <p style="color:#8080A0;font-size:14px">Your one-stop command center for all SafeTea safety tools and features.</p>
+                <p style="color:#8080A0;font-size:14px">Your command center for all SafeTea safety tools.</p>
             </div>
-            <div style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:16px;padding:24px;margin-bottom:24px">
-                <h3 style="color:#E8A0B5;font-size:16px;margin-bottom:16px"><i class="fas fa-crown"></i> SafeTea+ Features</h3>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-                    <div onclick="switchTab('datecheck')" style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                        <div style="font-size:28px;margin-bottom:8px"><i class="fas fa-calendar-check" style="color:#f27059"></i></div>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Date Check-In/Out</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Share your date details with trusted contacts via SMS. They get a live tracking link and you check in when safe.</p>
-                        <span style="display:inline-block;margin-top:8px;font-size:11px;color:#E8A0B5;font-weight:600">Open &rarr;</span>
-                    </div>
-                    <div onclick="switchTab('namewatch')" style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                        <div style="font-size:28px;margin-bottom:8px"><i class="fas fa-eye" style="color:#E8A0B5"></i></div>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Name Watch</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Monitor names across SafeTea posts. Get instant alerts when someone you're watching is mentioned.</p>
-                        <span style="display:inline-block;margin-top:8px;font-size:11px;color:#E8A0B5;font-weight:600">Open &rarr;</span>
-                    </div>
-                    <div onclick="switchTab('search')" style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                        <div style="font-size:28px;margin-bottom:8px"><i class="fas fa-search" style="color:#5BA0D0"></i></div>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Safety Search</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Sex offender registry lookup and background checks before meeting someone new.</p>
-                        <span style="display:inline-block;margin-top:8px;font-size:11px;color:#E8A0B5;font-weight:600">Open &rarr;</span>
-                    </div>
-                    <div onclick="window.open('catfish-test.html','_blank')" style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                        <div style="font-size:28px;margin-bottom:8px"><i class="fas fa-fish" style="color:#FFA500"></i></div>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Catfish Detector</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Analyze profile photos for catfishing signs — metadata, editing software, reverse image search.</p>
-                        <span style="display:inline-block;margin-top:8px;font-size:11px;color:#E8A0B5;font-weight:600">Open &rarr;</span>
-                    </div>
-                </div>
-            </div>
-            <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;margin-bottom:24px">
-                <h3 style="color:#fff;font-size:16px;margin-bottom:16px"><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> How SafeTea Keeps You Safe</h3>
-                <div style="display:flex;flex-direction:column;gap:16px">
-                    <div style="display:flex;gap:16px;align-items:flex-start">
-                        <div style="min-width:40px;height:40px;background:rgba(242,112,89,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#f27059"></i></div>
-                        <div><h4 style="color:#fff;font-size:14px;margin-bottom:4px">1. Check Out Before Your Date</h4><p style="color:#8080A0;font-size:13px;line-height:1.5">Enter who you're meeting, where, and when. Add trusted contacts who will get an SMS with all the details.</p></div>
-                    </div>
-                    <div style="display:flex;gap:16px;align-items:flex-start">
-                        <div style="min-width:40px;height:40px;background:rgba(90,160,210,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-sms" style="color:#5BA0D0"></i></div>
-                        <div><h4 style="color:#fff;font-size:14px;margin-bottom:4px">2. Trusted Contacts Get an SMS</h4><p style="color:#8080A0;font-size:13px;line-height:1.5">Your people receive a text with date info and a live tracking link — no app download required for them.</p></div>
-                    </div>
-                    <div style="display:flex;gap:16px;align-items:flex-start">
-                        <div style="min-width:40px;height:40px;background:rgba(255,165,0,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#FFA500"></i></div>
-                        <div><h4 style="color:#fff;font-size:14px;margin-bottom:4px">3. Live Tracking Page</h4><p style="color:#8080A0;font-size:13px;line-height:1.5">Your contacts can check your status anytime — whether you're on the date and if you're overdue.</p></div>
-                    </div>
-                    <div style="display:flex;gap:16px;align-items:flex-start">
-                        <div style="min-width:40px;height:40px;background:rgba(76,175,80,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50"></i></div>
-                        <div><h4 style="color:#fff;font-size:14px;margin-bottom:4px">4. Check In When Safe</h4><p style="color:#8080A0;font-size:13px;line-height:1.5">After your date, tap "Check In" and all your trusted contacts get a confirmation text.</p></div>
-                    </div>
-                </div>
-            </div>
-            <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px">
-                <h3 style="color:#fff;font-size:16px;margin-bottom:16px"><i class="fas fa-link" style="color:#E8A0B5"></i> Quick Links</h3>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                    <a href="/blog.html" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;transition:all 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-mug-hot" style="color:#E8A0B5;width:20px;text-align:center"></i> SafeTea Blog</a>
-                    <a onclick="switchTab('feed')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-users" style="color:#E8A0B5;width:20px;text-align:center"></i> Community Feed</a>
-                    <a onclick="switchTab('alerts')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-bell" style="color:#E8A0B5;width:20px;text-align:center"></i> Safety Alerts</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- DATE CHECK-IN/CHECK-OUT TAB -->
-    <div id="tab-datecheck" class="tab-section">
-        <div class="datecheck-section">
-            <div class="datecheck-header">
-                <h2><i class="fas fa-calendar-check" style="color:#f27059"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
-                <p>Share your date details with trusted contacts. They'll get an SMS with the info and a tracking link.</p>
+            <!-- Hub Sub-Navigation -->
+            <div class="hub-tabs" style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+                <button class="hub-tab active" data-hubsub="overview" onclick="switchHubTab('overview')" style="background:#E8A0B5;color:#1A1A2E;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Overview</button>
+                <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
+                <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
+                <button class="hub-tab" data-hubsub="datecheck" onclick="switchHubTab('datecheck')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-calendar-check"></i> Date Check</button>
+                <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Catfish Check</button>
             </div>
-            <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
-                <h3><i class="fas fa-lock" style="color:#E8A0B5"></i> SafeTea+ Feature</h3>
-                <p style="color:#8080A0;margin-bottom:20px">Date Check-In/Check-Out is a SafeTea+ feature. Upgrade to share your date details with trusted contacts via SMS and get safety tracking.</p>
-                <button class="dc-btn dc-btn-primary" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto">Upgrade to SafeTea+</button>
+
+            <!-- HUB: OVERVIEW -->
+            <div id="hub-overview" class="hub-sub active">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+                    <div onclick="switchHubTab('datecheck')" style="background:linear-gradient(135deg,rgba(242,112,89,0.15),rgba(242,112,89,0.05));border:1px solid rgba(242,112,89,0.25);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-calendar-check" style="font-size:26px;color:#f27059;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Date Check-In/Out</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Share date details via SMS with trusted contacts. Live tracking + safety check-in.</p>
+                        <span class="plus-badge" style="display:inline-block;margin-top:8px">SafeTea+</span>
+                    </div>
+                    <div onclick="switchHubTab('namewatch')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-eye" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Name Watch</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Monitor names across SafeTea. Get alerts when someone is mentioned by the community.</p>
+                        <span class="plus-badge" style="display:inline-block;margin-top:8px">SafeTea+</span>
+                    </div>
+                    <div onclick="switchHubTab('search')" style="background:linear-gradient(135deg,rgba(91,160,208,0.12),rgba(91,160,208,0.04));border:1px solid rgba(91,160,208,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-search" style="font-size:26px;color:#5BA0D0;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Safety Search</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Sex offender registry, background checks with social media, mugshots, and data broker exposure.</p>
+                    </div>
+                    <div onclick="switchHubTab('catfish')" style="background:linear-gradient(135deg,rgba(255,165,0,0.12),rgba(255,165,0,0.04));border:1px solid rgba(255,165,0,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-fish" style="font-size:26px;color:#FFA500;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Catfish Detector</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Analyze profile photos for catfishing — metadata, editing software, reverse image search.</p>
+                    </div>
+                </div>
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:24px">
+                    <h3 style="color:#fff;font-size:16px;margin-bottom:16px"><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> How SafeTea Keeps You Safe</h3>
+                    <div style="display:flex;flex-direction:column;gap:14px">
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(242,112,89,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#f27059"></i></div>
+                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">1. Check Out Before Your Date</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Enter who, where, and when. Add trusted contacts who get an SMS with all the details.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(90,160,210,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-sms" style="color:#5BA0D0"></i></div>
+                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">2. Trusted Contacts Get an SMS</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">They receive a text with date info and a live tracking link — no app needed.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(255,165,0,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#FFA500"></i></div>
+                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">3. Live Tracking Page</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Contacts can check your status anytime — whether you're on the date and if you're overdue.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(76,175,80,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50"></i></div>
+                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">4. Check In When Safe</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Tap "Check In" and all your trusted contacts get a confirmation text instantly.</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px">
+                    <h3 style="color:#fff;font-size:16px;margin-bottom:12px"><i class="fas fa-link" style="color:#E8A0B5"></i> Quick Links</h3>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <a href="/blog.html" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;transition:background 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-mug-hot" style="color:#E8A0B5;width:20px;text-align:center"></i> SafeTea Blog</a>
+                        <a onclick="switchTab('feed')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-users" style="color:#E8A0B5;width:20px;text-align:center"></i> Community Feed</a>
+                    </div>
+                </div>
             </div>
-            <div id="dc-premium-content" style="display:none">
-                <div class="dc-howto">
-                    <h4><i class="fas fa-info-circle"></i> How It Works</h4>
-                    <ol>
-                        <li><strong>Check Out</strong> — Before your date, fill in who you're meeting, where, and when. Add your trusted contacts (mom, friend, roommate).</li>
-                        <li><strong>SMS Alert</strong> — Your contacts receive a text with the date details and a live tracking link.</li>
-                        <li><strong>Live Tracking</strong> — Your contacts can see your status in real time via the tracking link. If you're overdue, they'll know.</li>
-                        <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation text.</li>
-                    </ol>
-                </div>
-                <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
-                    <h3><i class="fas fa-map-marker-alt" style="color:#FFA500"></i> Active Date</h3>
-                    <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#FFA500;font-weight:500">Currently on date</span></div>
-                    <div style="margin-bottom:12px">
-                        <div style="color:#fff;font-weight:600;font-size:16px" id="dc-active-name"></div>
-                        <div style="color:#8080A0;font-size:13px" id="dc-active-venue"></div>
-                        <div style="color:#8080A0;font-size:13px" id="dc-active-time"></div>
+
+            <!-- HUB: SEARCH (moved from standalone tab) -->
+            <div id="hub-search" class="hub-sub" style="display:none">
+                <div class="search-section">
+                    <div class="search-header">
+                        <h2><img src="logo.png" alt="SafeTea" style="height:24px;vertical-align:middle"> Safety Search Tools</h2>
+                        <p>Look up important safety information before meeting someone new.</p>
                     </div>
-                    <div style="text-align:center;margin:16px 0">
-                        <div class="dc-timer" id="dc-timer">0m 0s</div>
-                        <div style="font-size:11px;color:#8080A0">Time since check-out</div>
+                    <div class="search-tabs">
+                        <button class="search-tab active" data-search="offender"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Search</button>
+                        <button class="search-tab" data-search="background"><i class="fas fa-file-alt"></i> Background Check</button>
                     </div>
-                    <button class="dc-btn dc-btn-success" onclick="dateCheckIn()"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
-                    <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Tracking Link</button>
-                </div>
-                <div id="dc-form" class="datecheck-card">
-                    <h3><i class="fas fa-door-open" style="color:#f27059"></i> Check Out for a Date</h3>
-                    <div class="dc-form-group"><label>Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
-                    <div class="dc-form-row"><div class="dc-form-group"><label>Venue / Location *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park..."></div><div class="dc-form-group"><label>Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago"></div></div>
-                    <div class="dc-form-row"><div class="dc-form-group"><label>Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div><div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div></div>
-                    <div class="dc-form-group"><label>Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
-                    <div class="dc-form-group">
-                        <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll get an SMS)</label>
-                        <div id="dc-contacts-list"><div class="dc-contact-row"><input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button></div></div>
-                        <button class="dc-btn dc-btn-outline" style="margin-top:8px;width:auto;padding:6px 16px;font-size:12px" onclick="addContactRow()"><i class="fas fa-plus"></i> Add Contact</button>
+                    <div id="search-offender" class="search-panel active">
+                        <h3><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Registry Search</h3>
+                        <p class="desc">Search the national sex offender registry to check if someone is listed.</p>
+                        <div class="disclaimer"><i class="fas fa-exclamation-triangle"></i><span>This search uses publicly available registry data. Always verify with local law enforcement.</span></div>
+                        <div class="form-row"><div class="form-group"><label>First Name</label><input type="text" id="so-first-name" placeholder="Enter first name"></div><div class="form-group"><label>Last Name</label><input type="text" id="so-last-name" placeholder="Enter last name"></div></div>
+                        <div class="form-row"><div class="form-group"><label>City</label><input type="text" id="so-city" placeholder="City (optional)"></div><div class="form-group"><label>State</label><select id="so-state"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div></div>
+                        <button class="btn-search" onclick="searchOffenders()"><i class="fas fa-search"></i> Search Registry</button>
+                        <div id="offender-results" class="search-results"></div>
                     </div>
-                    <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out</button>
+                    <div id="search-background" class="search-panel">
+                        <h3><i class="fas fa-file-alt"></i> Background Check</h3>
+                        <p class="desc">Run a real background check — searches social media profiles, criminal records, mugshot databases, court records, data broker sites, and news mentions.</p>
+                        <div class="disclaimer"><i class="fas fa-exclamation-triangle"></i><span>Background checks use public records and web search. This is not a substitute for professional due diligence. Results are for personal safety purposes only.</span></div>
+                        <div class="form-row"><div class="form-group"><label>Full Name</label><input type="text" id="bg-name" placeholder="Enter full name"></div></div>
+                        <div class="form-row"><div class="form-group"><label>City</label><input type="text" id="bg-city" placeholder="City"></div><div class="form-group"><label>State</label><input type="text" id="bg-state" placeholder="State"></div></div>
+                        <div class="form-row"><div class="form-group"><label>Approximate Age (optional)</label><input type="number" id="bg-age" placeholder="Age"></div></div>
+                        <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
+                        <div id="background-results" class="search-results"></div>
+                    </div>
                 </div>
-                <div class="datecheck-card"><h3><i class="fas fa-history" style="color:#A0A0C0"></i> Recent Dates</h3><div id="dc-history"><p style="color:#666;font-size:13px;text-align:center;padding:12px">No date history yet.</p></div></div>
+            </div>
+
+            <!-- HUB: NAME WATCH (moved from standalone tab) -->
+            <div id="hub-namewatch" class="hub-sub" style="display:none">
+                <div class="nw-section">
+                    <div class="nw-header">
+                        <h2><i class="fas fa-eye"></i> Name Watch <span class="plus-badge">SafeTea+</span></h2>
+                        <p style="color:#8080A0;font-size:14px;margin-top:4px">Monitor names across SafeTea posts. Get alerts when someone is mentioned.</p>
+                    </div>
+                    <div id="nw-upgrade-wall" style="display:none;text-align:center;padding:40px 20px;background:#22223A;border-radius:12px;border:1px solid rgba(255,255,255,0.06)">
+                        <h3 style="color:#E8A0B5"><i class="fas fa-lock"></i> SafeTea+ Feature</h3>
+                        <p style="color:#8080A0;margin:12px 0 20px">Name Watch is available with SafeTea+. Upgrade to monitor names and get real-time alerts.</p>
+                        <button class="btn-post" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto;display:block">Upgrade to SafeTea+</button>
+                    </div>
+                    <div id="nw-content" style="display:none">
+                        <div class="nw-add" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:16px">
+                            <div style="display:flex;gap:8px"><input type="text" id="nw-input" placeholder="Enter a name to watch..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none"><button class="btn-post" onclick="addWatchedName()" style="padding:10px 20px"><i class="fas fa-plus"></i> Watch</button></div>
+                        </div>
+                        <div id="nw-list"></div>
+                        <div id="nw-matches" style="margin-top:16px"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: DATE CHECK (moved from standalone tab) -->
+            <div id="hub-datecheck" class="hub-sub" style="display:none">
+                <div class="datecheck-section">
+                    <div class="datecheck-header">
+                        <h2><i class="fas fa-calendar-check" style="color:#f27059"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
+                        <p>Share your date details with trusted contacts. They'll get an SMS with the info and a tracking link.</p>
+                    </div>
+                    <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
+                        <h3><i class="fas fa-lock" style="color:#E8A0B5"></i> SafeTea+ Feature</h3>
+                        <p style="color:#8080A0;margin-bottom:20px">Date Check-In/Check-Out is a SafeTea+ feature. Upgrade to share your date details with trusted contacts via SMS.</p>
+                        <button class="dc-btn dc-btn-primary" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto">Upgrade to SafeTea+</button>
+                    </div>
+                    <div id="dc-premium-content" style="display:none">
+                        <div class="dc-howto">
+                            <h4><i class="fas fa-info-circle"></i> How It Works</h4>
+                            <ol>
+                                <li><strong>Check Out</strong> — Before your date, fill in who you're meeting, where, and when. Add your trusted contacts.</li>
+                                <li><strong>SMS Alert</strong> — Your contacts receive a text with the date details and a live tracking link.</li>
+                                <li><strong>Live Tracking</strong> — Your contacts can see your status in real time. If you're overdue, they'll know.</li>
+                                <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation text.</li>
+                            </ol>
+                        </div>
+                        <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
+                            <h3><i class="fas fa-map-marker-alt" style="color:#FFA500"></i> Active Date</h3>
+                            <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#FFA500;font-weight:500">Currently on date</span></div>
+                            <div style="margin-bottom:12px">
+                                <div style="color:#fff;font-weight:600;font-size:16px" id="dc-active-name"></div>
+                                <div style="color:#8080A0;font-size:13px" id="dc-active-venue"></div>
+                                <div style="color:#8080A0;font-size:13px" id="dc-active-time"></div>
+                            </div>
+                            <div style="text-align:center;margin:16px 0">
+                                <div class="dc-timer" id="dc-timer">0m 0s</div>
+                                <div style="font-size:11px;color:#8080A0">Time since check-out</div>
+                            </div>
+                            <button class="dc-btn dc-btn-success" onclick="dateCheckIn()"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
+                            <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Tracking Link</button>
+                        </div>
+                        <div id="dc-form" class="datecheck-card">
+                            <h3><i class="fas fa-door-open" style="color:#f27059"></i> Check Out for a Date</h3>
+                            <div class="dc-form-group"><label>Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
+                            <div class="dc-form-row"><div class="dc-form-group"><label>Venue / Location *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park..."></div><div class="dc-form-group"><label>Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago"></div></div>
+                            <div class="dc-form-row"><div class="dc-form-group"><label>Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div><div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div></div>
+                            <div class="dc-form-group"><label>Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll get an SMS)</label>
+                                <div id="dc-contacts-list"><div class="dc-contact-row"><input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button></div></div>
+                                <button class="dc-btn dc-btn-outline" style="margin-top:8px;width:auto;padding:6px 16px;font-size:12px" onclick="addContactRow()"><i class="fas fa-plus"></i> Add Contact</button>
+                            </div>
+                            <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out</button>
+                        </div>
+                        <div class="datecheck-card"><h3><i class="fas fa-history" style="color:#A0A0C0"></i> Recent Dates</h3><div id="dc-history"><p style="color:#666;font-size:13px;text-align:center;padding:12px">No date history yet.</p></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: CATFISH CHECK -->
+            <div id="hub-catfish" class="hub-sub" style="display:none">
+                <div class="catfish-section">
+                    <div style="margin-bottom:20px">
+                        <h2><i class="fas fa-fish" style="color:#FFA500"></i> Catfish Detector</h2>
+                        <p style="color:#8080A0;font-size:14px;margin-top:4px">Analyze a profile photo for signs of catfishing — EXIF metadata, editing software, reverse image search.</p>
+                    </div>
+                    <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
+                        <div class="dc-form-group"><label>Image URL *</label><input type="text" id="cf-image-url" placeholder="Paste image URL from dating profile..."></div>
+                        <div class="dc-form-group"><label>Profile Name (optional)</label><input type="text" id="cf-profile-name" placeholder="Their display name"></div>
+                        <div class="dc-form-group"><label>Platform</label>
+                            <select id="cf-platform" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px">
+                                <option value="">Select platform</option>
+                                <option>Tinder</option><option>Hinge</option><option>Bumble</option>
+                                <option>OkCupid</option><option>Match</option><option>Instagram</option>
+                                <option>Facebook</option><option>Other</option>
+                            </select>
+                        </div>
+                        <button class="btn-search" onclick="runCatfishCheck()"><i class="fas fa-fish"></i> Analyze Photo</button>
+                        <div id="cf-preview" style="margin-top:12px;display:none"><img id="cf-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid rgba(255,255,255,0.1)"></div>
+                        <div id="catfish-results" class="search-results" style="margin-top:16px"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -823,12 +762,10 @@
         <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
         <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
-        <a data-tab="search" onclick="switchTab('search')"><i class="fas fa-search"></i><span>Search</span></a>
-        <a data-tab="namewatch" onclick="switchTab('namewatch')"><i class="fas fa-eye"></i><span>Watch</span></a>
-        <a data-tab="hub" onclick="switchTab('hub')"><i class="fas fa-mug-hot"></i><span>Hub</span></a>
+        <a data-tab="hub" onclick="switchTab('hub')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
     <script src="app.js"></script>
-</body>
-</html>
+
+    </html>

@@ -843,6 +843,421 @@
         window.location.href = '/login.html';
     };
 
+    // ==================== DATE CHECK-IN / CHECK-OUT ====================
+    var activeCheckout = null;
+    var dcTimerInterval = null;
+    var datePhotoData = null; // stores base64 or URL of uploaded photo
+
+    function initDateCheck() {
+        var wall = document.getElementById('dc-upgrade-wall');
+        var content = document.getElementById('dc-premium-content');
+        if (checkPremium()) {
+            if (wall) wall.style.display = 'none';
+            if (content) content.style.display = 'block';
+        } else {
+            if (wall) wall.style.display = 'block';
+            if (content) content.style.display = 'none';
+            return;
+        }
+        // Show transport details if a transport is selected
+        var transportSelect = document.getElementById('dc-transportation');
+        if (transportSelect) {
+            transportSelect.addEventListener('change', function() {
+                var wrap = document.getElementById('dc-transport-details-wrap');
+                if (wrap) wrap.style.display = this.value ? 'block' : 'none';
+            });
+        }
+        loadDateHistory();
+        checkActiveDate();
+    }
+    window.initDateCheck = initDateCheck;
+
+    window.handleDatePhotoUpload = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Photo must be under 5MB', true);
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                datePhotoData = e.target.result;
+                var preview = document.getElementById('dc-photo-preview');
+                var previewImg = document.getElementById('dc-photo-preview-img');
+                var placeholder = document.getElementById('dc-photo-placeholder');
+                if (previewImg) previewImg.src = datePhotoData;
+                if (preview) preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.addContactRow = function() {
+        var list = document.getElementById('dc-contacts-list');
+        if (!list) return;
+        var rows = list.querySelectorAll('.dc-contact-row');
+        if (rows.length >= 5) { showToast('Maximum 5 contacts', true); return; }
+        var row = document.createElement('div');
+        row.className = 'dc-contact-row';
+        row.innerHTML = '<input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>';
+        list.appendChild(row);
+    };
+
+    window.dateCheckOut = function() {
+        var dateName = document.getElementById('dc-date-name').value.trim();
+        var venueName = document.getElementById('dc-venue-name').value.trim();
+        var venueAddress = document.getElementById('dc-venue-address').value.trim();
+        var transportation = document.getElementById('dc-transportation').value;
+        var transportDetails = document.getElementById('dc-transport-details').value.trim();
+        var scheduledTime = document.getElementById('dc-scheduled-time').value;
+        var returnTime = document.getElementById('dc-return-time').value;
+        var notes = document.getElementById('dc-notes').value.trim();
+        var photoUrl = document.getElementById('dc-photo-url').value.trim();
+
+        if (!dateName) { showToast('Who are you meeting?', true); return; }
+        if (!venueName) { showToast('Where will the date be?', true); return; }
+        if (!scheduledTime) { showToast('When is the date?', true); return; }
+
+        // Get photo: prefer uploaded file, fall back to URL
+        var finalPhoto = datePhotoData || photoUrl || null;
+
+        // Gather contacts
+        var contacts = [];
+        document.querySelectorAll('#dc-contacts-list .dc-contact-row').forEach(function(row) {
+            var name = row.querySelector('.dc-contact-name').value.trim();
+            var phone = row.querySelector('.dc-contact-phone').value.trim();
+            if (name && phone) contacts.push({ name: name, phone: phone });
+        });
+
+        var btn = document.getElementById('dc-checkout-btn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating SafeTea Report...'; }
+
+        apiFetch('/dates/checkout', {
+            method: 'POST',
+            body: JSON.stringify({
+                dateName: dateName,
+                datePhotoUrl: finalPhoto,
+                venueName: venueName,
+                venueAddress: venueAddress,
+                transportation: transportation,
+                transportDetails: transportDetails,
+                scheduledTime: scheduledTime,
+                estimatedReturn: returnTime || null,
+                notes: notes,
+                trustedContacts: contacts,
+            })
+        }).then(function(data) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out & Generate SafeTea Report'; }
+            if (data && data.success) {
+                activeCheckout = data.checkout;
+                activeCheckout.report = data.report;
+                showToast('Checked out! SafeTea Report generated.');
+                showActiveDate(data.checkout);
+                renderSafeTeaReport(data.report);
+                // Show report automatically
+                var reportDiv = document.getElementById('dc-report');
+                if (reportDiv) reportDiv.style.display = 'block';
+                // Clear form
+                document.getElementById('dc-date-name').value = '';
+                document.getElementById('dc-venue-name').value = '';
+                document.getElementById('dc-venue-address').value = '';
+                document.getElementById('dc-transportation').value = '';
+                document.getElementById('dc-transport-details').value = '';
+                document.getElementById('dc-scheduled-time').value = '';
+                document.getElementById('dc-return-time').value = '';
+                document.getElementById('dc-notes').value = '';
+                document.getElementById('dc-photo-url').value = '';
+                datePhotoData = null;
+                var preview = document.getElementById('dc-photo-preview');
+                var placeholder = document.getElementById('dc-photo-placeholder');
+                if (preview) preview.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'block';
+                document.getElementById('dc-form').style.display = 'none';
+                loadDateHistory();
+            } else {
+                showToast(data.error || 'Checkout failed', true);
+            }
+        }).catch(function(err) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out & Generate SafeTea Report'; }
+            showToast('Failed to check out: ' + (err.message || 'Unknown error'), true);
+        });
+    };
+
+    function showActiveDate(checkout) {
+        var active = document.getElementById('dc-active');
+        if (!active) return;
+        active.style.display = 'block';
+        document.getElementById('dc-active-name').textContent = 'Meeting: ' + (checkout.dateName || checkout.date_name);
+        document.getElementById('dc-active-venue').textContent = (checkout.venueName || checkout.venue_name) + (checkout.venueAddress || checkout.venue_address ? ' - ' + (checkout.venueAddress || checkout.venue_address) : '');
+        var transport = document.getElementById('dc-active-transport');
+        if (transport) transport.textContent = checkout.transportation ? 'Getting there: ' + checkout.transportation : '';
+        var timeStr = checkout.scheduledTime || checkout.scheduled_time;
+        document.getElementById('dc-active-time').textContent = timeStr ? new Date(timeStr).toLocaleString() : '';
+
+        // Photo
+        var photoWrap = document.getElementById('dc-active-photo');
+        var photoImg = document.getElementById('dc-active-photo-img');
+        var photoUrl = checkout.datePhotoUrl || checkout.date_photo_url;
+        if (photoUrl && photoWrap && photoImg) {
+            photoImg.src = photoUrl;
+            photoWrap.style.display = 'block';
+            photoImg.onerror = function() { photoWrap.style.display = 'none'; };
+        }
+
+        // Timer
+        startTimer(checkout.createdAt || checkout.created_at);
+    }
+
+    function startTimer(since) {
+        if (dcTimerInterval) clearInterval(dcTimerInterval);
+        var start = new Date(since).getTime();
+        function update() {
+            var diff = Math.floor((Date.now() - start) / 1000);
+            var h = Math.floor(diff / 3600);
+            var m = Math.floor((diff % 3600) / 60);
+            var s = diff % 60;
+            var timer = document.getElementById('dc-timer');
+            if (timer) timer.textContent = (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's';
+        }
+        update();
+        dcTimerInterval = setInterval(update, 1000);
+    }
+
+    function renderSafeTeaReport(report) {
+        var container = document.getElementById('dc-report-content');
+        if (!container) return;
+
+        var photoHtml = '';
+        if (report.datePhotoUrl) {
+            photoHtml = '<div class="safetea-report-photo"><img src="' + escapeHtml(report.datePhotoUrl) + '" alt="Date photo" onerror="this.parentElement.style.display=\'none\'"></div>';
+        }
+
+        var rows = '';
+        rows += reportRow('fa-user', 'Meeting', escapeHtml(report.dateName));
+        rows += reportRow('fa-map-marker-alt', 'Location', escapeHtml(report.venue) + (report.address ? '<br><span style="font-size:12px;color:#8080A0">' + escapeHtml(report.address) + '</span>' : ''));
+        rows += reportRow('fa-car', 'Transportation', escapeHtml(report.transportation) + (report.transportDetails ? '<br><span style="font-size:12px;color:#8080A0">' + escapeHtml(report.transportDetails) + '</span>' : ''));
+        if (report.scheduledTime) rows += reportRow('fa-clock', 'Date & Time', new Date(report.scheduledTime).toLocaleString());
+        if (report.estimatedReturn) rows += reportRow('fa-home', 'Expected Back', new Date(report.estimatedReturn).toLocaleString());
+        if (report.notes) rows += reportRow('fa-sticky-note', 'Notes', escapeHtml(report.notes));
+        rows += reportRow('fa-link', 'Live Tracking', '<a href="' + escapeHtml(report.trackingUrl) + '" target="_blank" style="color:#E8A0B5;text-decoration:underline;word-break:break-all">' + escapeHtml(report.trackingUrl) + '</a>');
+
+        container.innerHTML =
+            '<div class="safetea-report">' +
+                '<div class="safetea-report-header">' +
+                    '<h3><i class="fas fa-shield-alt"></i> SafeTea Report</h3>' +
+                    '<p>Date Safety Details for ' + escapeHtml(report.userName) + '</p>' +
+                '</div>' +
+                '<div class="safetea-report-body">' +
+                    photoHtml +
+                    rows +
+                '</div>' +
+                '<div class="safetea-report-footer">' +
+                    '<span>Report #' + report.shareCode + ' | Generated ' + new Date(report.createdAt).toLocaleString() + '</span>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function reportRow(icon, label, value) {
+        return '<div class="safetea-report-row">' +
+            '<div class="safetea-report-icon"><i class="fas ' + icon + '"></i></div>' +
+            '<div><div class="safetea-report-label">' + label + '</div><div class="safetea-report-value">' + value + '</div></div>' +
+        '</div>';
+    }
+
+    window.viewSafeTeaReport = function() {
+        var reportDiv = document.getElementById('dc-report');
+        if (reportDiv) {
+            if (reportDiv.style.display === 'block') {
+                reportDiv.style.display = 'none';
+            } else {
+                reportDiv.style.display = 'block';
+                // If we have active checkout but no rendered report, fetch it
+                if (activeCheckout && !document.getElementById('dc-report-content').innerHTML) {
+                    apiFetch('/dates/report?id=' + activeCheckout.id).then(function(data) {
+                        if (data && data.report) renderSafeTeaReport(data.report);
+                    });
+                }
+            }
+        }
+    };
+
+    window.closeReport = function() {
+        var reportDiv = document.getElementById('dc-report');
+        if (reportDiv) reportDiv.style.display = 'none';
+    };
+
+    window.shareReportSMS = function() {
+        if (!activeCheckout) { showToast('No active date to share', true); return; }
+        // Show SMS share modal
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'dc-share-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-sms" style="color:#E8A0B5"></i> Share Report via SMS</h3>' +
+                '<div class="dc-form-group"><label>Recipient Phone Number</label><input type="tel" id="dc-share-phone" placeholder="+1 (630) 675-8076" style="width:100%;padding:10px 12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px"></div>' +
+                '<button class="dc-btn dc-btn-primary" onclick="sendReportSMS()"><i class="fas fa-paper-plane"></i> Send SafeTea Report</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'dc-share-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.sendReportSMS = function() {
+        var phone = document.getElementById('dc-share-phone').value.trim();
+        if (!phone) { showToast('Enter a phone number', true); return; }
+
+        apiFetch('/dates/report', {
+            method: 'POST',
+            body: JSON.stringify({ checkoutId: activeCheckout.id, shareMethod: 'sms', recipientPhone: phone })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('SafeTea Report sent via SMS!');
+                var modal = document.getElementById('dc-share-modal');
+                if (modal) modal.remove();
+            } else {
+                showToast(data.error || 'Failed to send SMS', true);
+            }
+        }).catch(function() { showToast('Failed to send SMS', true); });
+    };
+
+    window.shareReportInbox = function() {
+        if (!activeCheckout) { showToast('No active date to share', true); return; }
+        // Show inbox share modal — search users
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'dc-share-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-envelope" style="color:#E8A0B5"></i> Send Report to Inbox</h3>' +
+                '<div class="dc-form-group"><label>Search for a SafeTea user</label><input type="text" id="dc-share-search" placeholder="Search by name..." oninput="searchUsersForShare(this.value)" style="width:100%;padding:10px 12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px"></div>' +
+                '<div id="dc-share-results" style="max-height:200px;overflow-y:auto"></div>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:12px" onclick="document.getElementById(\'dc-share-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.searchUsersForShare = function(query) {
+        var results = document.getElementById('dc-share-results');
+        if (!query || query.length < 2) { results.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center">Type at least 2 characters...</p>'; return; }
+        apiFetch('/users/search?q=' + encodeURIComponent(query)).then(function(data) {
+            if (!data || !data.users || data.users.length === 0) {
+                results.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center">No users found</p>';
+                return;
+            }
+            var html = '';
+            data.users.forEach(function(u) {
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#2A2A44;border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="sendReportInbox(' + u.id + ', \'' + escapeHtml(u.display_name) + '\')">' +
+                    '<div style="width:32px;height:32px;border-radius:50%;background:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1A1A2E;font-size:14px">' + (u.display_name ? u.display_name[0].toUpperCase() : '?') + '</div>' +
+                    '<div><div style="color:#fff;font-weight:500;font-size:14px">' + escapeHtml(u.display_name) + '</div><div style="color:#8080A0;font-size:11px">' + escapeHtml(u.city || '') + '</div></div>' +
+                    '<i class="fas fa-paper-plane" style="margin-left:auto;color:#E8A0B5"></i>' +
+                '</div>';
+            });
+            results.innerHTML = html;
+        }).catch(function() { results.innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">Search failed</p>'; });
+    };
+
+    window.sendReportInbox = function(userId, userName) {
+        apiFetch('/dates/report', {
+            method: 'POST',
+            body: JSON.stringify({ checkoutId: activeCheckout.id, shareMethod: 'inbox', recipientUserId: userId })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('SafeTea Report sent to ' + userName + '\'s inbox!');
+                var modal = document.getElementById('dc-share-modal');
+                if (modal) modal.remove();
+            } else {
+                showToast(data.error || 'Failed to send to inbox', true);
+            }
+        }).catch(function() { showToast('Failed to send to inbox', true); });
+    };
+
+    window.dateCheckIn = function() {
+        if (!activeCheckout) { showToast('No active date to check in from', true); return; }
+        if (!confirm('Check in safely from your date?')) return;
+
+        apiFetch('/dates/checkin', {
+            method: 'POST',
+            body: JSON.stringify({ checkoutId: activeCheckout.id, safetyRating: 5 })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Checked in safely! Your contacts have been notified.');
+                if (dcTimerInterval) clearInterval(dcTimerInterval);
+                activeCheckout = null;
+                document.getElementById('dc-active').style.display = 'none';
+                document.getElementById('dc-report').style.display = 'none';
+                document.getElementById('dc-form').style.display = 'block';
+                loadDateHistory();
+            } else {
+                showToast(data.error || 'Check-in failed', true);
+            }
+        }).catch(function() { showToast('Failed to check in', true); });
+    };
+
+    window.shareDateLink = function() {
+        if (!activeCheckout) return;
+        var url = 'https://www.getsafetea.app/date-status?code=' + activeCheckout.shareCode;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Tracking link copied!');
+            });
+        } else {
+            prompt('Copy this tracking link:', url);
+        }
+    };
+
+    function checkActiveDate() {
+        apiFetch('/dates/checkout').then(function(data) {
+            if (data && data.checkouts) {
+                var active = data.checkouts.find(function(c) { return c.status === 'checked_out'; });
+                if (active) {
+                    activeCheckout = {
+                        id: active.id,
+                        shareCode: active.share_code,
+                        dateName: active.date_name,
+                        datePhotoUrl: active.date_photo_url,
+                        venueName: active.venue_name,
+                        venueAddress: active.venue_address,
+                        transportation: active.transportation,
+                        scheduledTime: active.scheduled_time,
+                        estimatedReturn: active.estimated_return,
+                        createdAt: active.created_at,
+                    };
+                    showActiveDate(activeCheckout);
+                    document.getElementById('dc-form').style.display = 'none';
+                    // Load report
+                    apiFetch('/dates/report?id=' + active.id).then(function(rData) {
+                        if (rData && rData.report) renderSafeTeaReport(rData.report);
+                    });
+                }
+            }
+        });
+    }
+
+    function loadDateHistory() {
+        apiFetch('/dates/checkout').then(function(data) {
+            var container = document.getElementById('dc-history');
+            if (!container) return;
+            if (!data || !data.checkouts || data.checkouts.length === 0) {
+                container.innerHTML = '<p style="color:#666;font-size:13px;text-align:center;padding:12px">No date history yet.</p>';
+                return;
+            }
+            var html = '';
+            data.checkouts.forEach(function(c) {
+                var statusClass = c.status === 'checked_in' ? 'dc-status-safe' : '';
+                var statusText = c.status === 'checked_in' ? 'Safe' : 'Active';
+                html += '<div class="dc-history-item">' +
+                    '<div><div class="dc-history-name">' + escapeHtml(c.date_name) + '</div>' +
+                    '<div class="dc-history-meta">' + escapeHtml(c.venue_name) + ' | ' + new Date(c.scheduled_time).toLocaleDateString() + '</div></div>' +
+                    '<span class="dc-history-status ' + statusClass + '">' + statusText + '</span>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+        });
+    }
+
     // ==================== HUB TAB SWITCHER ====================
     window.switchHubTab = function(sub) {
         document.querySelectorAll('.hub-tab').forEach(function(btn) {

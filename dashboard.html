@@ -316,6 +316,23 @@
         .dc-howto ol { padding-left: 20px; }
         .dc-howto li { color: #A0A0C0; font-size: 13px; margin-bottom: 8px; line-height: 1.5; }
         .dc-howto li strong { color: #fff; }
+        #dc-photo-upload:hover { border-color: #E8A0B5 !important; }
+        .safetea-report { background: linear-gradient(135deg, #1A1A2E 0%, #22223A 100%); border: 2px solid #E8A0B5; border-radius: 16px; overflow: hidden; }
+        .safetea-report-header { background: linear-gradient(135deg, #f27059, #E8A0B5); padding: 20px; text-align: center; }
+        .safetea-report-header h3 { color: #fff; font-size: 18px; margin: 0; }
+        .safetea-report-header p { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 4px; }
+        .safetea-report-body { padding: 20px; }
+        .safetea-report-photo { text-align: center; margin-bottom: 16px; }
+        .safetea-report-photo img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #E8A0B5; }
+        .safetea-report-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .safetea-report-row:last-child { border-bottom: none; }
+        .safetea-report-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(232,160,181,0.15); display: flex; align-items: center; justify-content: center; color: #E8A0B5; font-size: 14px; flex-shrink: 0; }
+        .safetea-report-label { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .safetea-report-value { font-size: 14px; color: #fff; font-weight: 500; margin-top: 2px; }
+        .safetea-report-footer { text-align: center; padding: 12px 20px; background: rgba(232,160,181,0.05); border-top: 1px solid rgba(255,255,255,0.06); }
+        .safetea-report-footer span { font-size: 11px; color: #8080A0; }
+        .dc-share-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .dc-share-modal-content { background: #22223A; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -574,7 +591,7 @@
                 <div class="datecheck-section">
                     <div class="datecheck-header">
                         <h2><i class="fas fa-calendar-check" style="color:#f27059"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
-                        <p>Share your date details with trusted contacts. They'll get an SMS with the info and a tracking link.</p>
+                        <p>Share your date details with trusted contacts. They'll get an SMS with your SafeTea Report and a tracking link.</p>
                     </div>
                     <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
                         <h3><i class="fas fa-lock" style="color:#E8A0B5"></i> SafeTea+ Feature</h3>
@@ -585,18 +602,23 @@
                         <div class="dc-howto">
                             <h4><i class="fas fa-info-circle"></i> How It Works</h4>
                             <ol>
-                                <li><strong>Check Out</strong> — Before your date, fill in who you're meeting, where, and when. Add your trusted contacts.</li>
-                                <li><strong>SMS Alert</strong> — Your contacts receive a text with the date details and a live tracking link.</li>
+                                <li><strong>Check Out</strong> — Upload a photo of your date, enter the location, how you're getting there, and add trusted contacts.</li>
+                                <li><strong>SafeTea Report</strong> — A shareable safety report is generated with all your date details.</li>
+                                <li><strong>Share It</strong> — Send the report via SMS or through the SafeTea inbox to your trusted contacts.</li>
                                 <li><strong>Live Tracking</strong> — Your contacts can see your status in real time. If you're overdue, they'll know.</li>
-                                <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation text.</li>
+                                <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation.</li>
                             </ol>
                         </div>
+
+                        <!-- ACTIVE DATE CARD (shown when checked out) -->
                         <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
                             <h3><i class="fas fa-map-marker-alt" style="color:#FFA500"></i> Active Date</h3>
                             <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#FFA500;font-weight:500">Currently on date</span></div>
+                            <div id="dc-active-photo" style="text-align:center;margin-bottom:12px;display:none"><img id="dc-active-photo-img" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFA500" alt="Date photo"></div>
                             <div style="margin-bottom:12px">
                                 <div style="color:#fff;font-weight:600;font-size:16px" id="dc-active-name"></div>
                                 <div style="color:#8080A0;font-size:13px" id="dc-active-venue"></div>
+                                <div style="color:#8080A0;font-size:13px" id="dc-active-transport"></div>
                                 <div style="color:#8080A0;font-size:13px" id="dc-active-time"></div>
                             </div>
                             <div style="text-align:center;margin:16px 0">
@@ -604,21 +626,84 @@
                                 <div style="font-size:11px;color:#8080A0">Time since check-out</div>
                             </div>
                             <button class="dc-btn dc-btn-success" onclick="dateCheckIn()"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
-                            <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Tracking Link</button>
+                            <div style="display:flex;gap:8px;margin-top:8px">
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="viewSafeTeaReport()"><i class="fas fa-file-alt"></i> View Report</button>
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Link</button>
+                            </div>
                         </div>
+
+                        <!-- SAFETEA REPORT (shown after checkout, shareable) -->
+                        <div id="dc-report" class="datecheck-card" style="display:none">
+                            <div id="dc-report-content"></div>
+                            <div style="margin-top:16px;display:flex;gap:8px">
+                                <button class="dc-btn dc-btn-primary" style="flex:1" onclick="shareReportSMS()"><i class="fas fa-sms"></i> Share via SMS</button>
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="shareReportInbox()"><i class="fas fa-envelope"></i> Send to Inbox</button>
+                            </div>
+                            <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="closeReport()"><i class="fas fa-times"></i> Close Report</button>
+                        </div>
+
+                        <!-- CHECK-OUT FORM -->
                         <div id="dc-form" class="datecheck-card">
                             <h3><i class="fas fa-door-open" style="color:#f27059"></i> Check Out for a Date</h3>
-                            <div class="dc-form-group"><label>Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
-                            <div class="dc-form-row"><div class="dc-form-group"><label>Venue / Location *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park..."></div><div class="dc-form-group"><label>Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago"></div></div>
-                            <div class="dc-form-row"><div class="dc-form-group"><label>Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div><div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div></div>
-                            <div class="dc-form-group"><label>Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
+
+                            <!-- Photo Upload -->
                             <div class="dc-form-group">
-                                <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll get an SMS)</label>
+                                <label><i class="fas fa-camera"></i> Upload a Photo of Your Date *</label>
+                                <div id="dc-photo-upload" style="border:2px dashed rgba(255,255,255,0.15);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" onclick="document.getElementById('dc-photo-file').click()">
+                                    <div id="dc-photo-preview" style="display:none;margin-bottom:8px"><img id="dc-photo-preview-img" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #E8A0B5" alt="Preview"></div>
+                                    <div id="dc-photo-placeholder"><i class="fas fa-cloud-upload-alt" style="font-size:28px;color:#8080A0;display:block;margin-bottom:8px"></i><span style="color:#8080A0;font-size:13px">Tap to upload a photo (screenshot from their profile, etc.)</span></div>
+                                    <input type="file" id="dc-photo-file" accept="image/*" style="display:none" onchange="handleDatePhotoUpload(this)">
+                                </div>
+                                <div class="dc-form-group" style="margin-top:8px"><input type="text" id="dc-photo-url" placeholder="Or paste an image URL instead"></div>
+                            </div>
+
+                            <!-- Who -->
+                            <div class="dc-form-group"><label><i class="fas fa-user"></i> Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
+
+                            <!-- Where -->
+                            <div class="dc-form-group"><label><i class="fas fa-map-marker-alt"></i> Where will the date be? *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park name..."></div>
+                            <div class="dc-form-group"><label>Full Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago, IL"></div>
+
+                            <!-- How getting there -->
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-car"></i> How are you getting there? *</label>
+                                <select id="dc-transportation">
+                                    <option value="">Select transportation...</option>
+                                    <option value="driving">Driving myself</option>
+                                    <option value="rideshare">Rideshare (Uber/Lyft)</option>
+                                    <option value="public_transit">Public transit</option>
+                                    <option value="walking">Walking</option>
+                                    <option value="biking">Biking</option>
+                                    <option value="taxi">Taxi</option>
+                                    <option value="friend_drop">Friend dropping me off</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="dc-form-group" id="dc-transport-details-wrap" style="display:none">
+                                <label>Transportation Details</label>
+                                <input type="text" id="dc-transport-details" placeholder="e.g. license plate, ride details, bus route...">
+                            </div>
+
+                            <!-- When -->
+                            <div class="dc-form-row">
+                                <div class="dc-form-group"><label><i class="fas fa-clock"></i> Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div>
+                                <div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="dc-form-group"><label><i class="fas fa-sticky-note"></i> Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
+
+                            <!-- Trusted Contacts -->
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll receive your SafeTea Report)</label>
                                 <div id="dc-contacts-list"><div class="dc-contact-row"><input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button></div></div>
                                 <button class="dc-btn dc-btn-outline" style="margin-top:8px;width:auto;padding:6px 16px;font-size:12px" onclick="addContactRow()"><i class="fas fa-plus"></i> Add Contact</button>
                             </div>
-                            <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out</button>
+
+                            <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out &amp; Generate SafeTea Report</button>
                         </div>
+
+                        <!-- History -->
                         <div class="datecheck-card"><h3><i class="fas fa-history" style="color:#A0A0C0"></i> Recent Dates</h3><div id="dc-history"><p style="color:#666;font-size:13px;text-align:center;padding:12px">No date history yet.</p></div></div>
                     </div>
                 </div>

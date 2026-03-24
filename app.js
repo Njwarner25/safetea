@@ -818,33 +818,52 @@
 
             Object.keys(cats).forEach(function(key) {
                 var cat = cats[key];
-                if (!cat.results || cat.results.length === 0) return;
+                var hasResults = cat.results && cat.results.length > 0;
+                var hasRegistries = cat.registries && cat.registries.length > 0;
+                if (!hasResults && !hasRegistries) return;
                 hasAnyResults = true;
 
                 var catColor = colorMap[key] || '#95a5a6';
                 var iconClass = iconMap[cat.icon] || 'fa-search';
                 var badgeClass = (key === 'criminal' || key === 'sex_offender') ? 'badge-caution' : 'badge-clear';
-                var badgeText = cat.results.length + ' found';
+                var badgeText = (cat.results ? cat.results.length : 0) + ' found';
 
                 html += '<div class="result-card" style="border-left:3px solid ' + catColor + '">';
                 html += '<div class="result-avatar" style="background:rgba(' + (key === 'criminal' || key === 'sex_offender' ? '231,76,60' : '52,152,219') + ',0.1)"><i class="fas ' + iconClass + '" style="color:' + catColor + '"></i></div>';
                 html += '<div class="result-info"><h4>' + escapeHtml(cat.label) + ' <span class="result-badge ' + badgeClass + '">' + badgeText + '</span></h4>';
 
-                cat.results.forEach(function(r) {
-                    html += '<div style="margin:8px 0;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">';
-                    if (r.link) {
-                        html += '<a href="' + escapeHtml(r.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:13px;font-weight:600;text-decoration:none">' + escapeHtml(r.title || 'View Source') + '</a>';
-                    } else {
-                        html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtml(r.title || 'Result') + '</div>';
-                    }
-                    if (r.snippet) {
-                        html += '<div style="color:#A0AEC0;font-size:12px;margin-top:4px">' + escapeHtml(r.snippet).substring(0, 200) + '</div>';
-                    }
-                    if (r.source) {
-                        html += '<div style="color:#718096;font-size:11px;margin-top:2px">' + escapeHtml(r.source) + '</div>';
-                    }
+                // Render official registry links for sex offender category
+                if (hasRegistries) {
+                    html += '<div style="margin:8px 0;padding:10px;background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.2);border-radius:8px">';
+                    html += '<div style="color:#E8A0B5;font-size:12px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-shield-alt" style="margin-right:4px"></i> Official Registries — Search Directly</div>';
+                    cat.registries.forEach(function(reg) {
+                        html += '<div style="margin:6px 0;padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:4px;display:flex;align-items:center">';
+                        html += '<i class="fas fa-external-link-alt" style="color:#E8A0B5;margin-right:8px;font-size:11px"></i>';
+                        html += '<div>';
+                        html += '<a href="' + escapeHtml(reg.url) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:13px;font-weight:600;text-decoration:none">' + escapeHtml(reg.label) + '</a>';
+                        html += '<div style="color:#718096;font-size:11px">' + escapeHtml(reg.county) + '</div>';
+                        html += '</div></div>';
+                    });
                     html += '</div>';
-                });
+                }
+
+                if (cat.results) {
+                    cat.results.forEach(function(r) {
+                        html += '<div style="margin:8px 0;padding:8px;background:rgba(255,255,255,0.03);border-radius:6px">';
+                        if (r.link) {
+                            html += '<a href="' + escapeHtml(r.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:13px;font-weight:600;text-decoration:none">' + escapeHtml(r.title || 'View Source') + '</a>';
+                        } else {
+                            html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtml(r.title || 'Result') + '</div>';
+                        }
+                        if (r.snippet) {
+                            html += '<div style="color:#A0AEC0;font-size:12px;margin-top:4px">' + escapeHtml(r.snippet).substring(0, 200) + '</div>';
+                        }
+                        if (r.source) {
+                            html += '<div style="color:#718096;font-size:11px;margin-top:2px">' + escapeHtml(r.source) + '</div>';
+                        }
+                        html += '</div>';
+                    });
+                }
 
                 html += '</div></div>';
             });

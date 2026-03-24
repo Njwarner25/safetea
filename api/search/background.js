@@ -137,15 +137,149 @@ module.exports = async function handler(req, res) {
             return true;
         });
 
+        // Local county sex offender registry links for SafeTea cities
+        const countyRegistries = {
+            'atlanta': {
+                label: 'Georgia Sex Offender Registry',
+                url: 'https://state.sor.gbi.ga.gov/Sort_Public/',
+                county: 'Fulton County / DeKalb County'
+            },
+            'new york': {
+                label: 'New York Sex Offender Registry (DCJS)',
+                url: 'https://www.criminaljustice.ny.gov/SomsPublic/search',
+                county: 'New York County (Manhattan) / Kings County (Brooklyn) / Queens County'
+            },
+            'los angeles': {
+                label: 'California Megan\'s Law Registry',
+                url: 'https://www.meganslaw.ca.gov/Search.aspx',
+                county: 'Los Angeles County'
+            },
+            'chicago': {
+                label: 'Illinois Sex Offender Registry',
+                url: 'https://isp.illinois.gov/Sor',
+                county: 'Cook County'
+            },
+            'houston': {
+                label: 'Texas Sex Offender Registry (DPS)',
+                url: 'https://publicsite.dps.texas.gov/SexOffenderRegistry/Search',
+                county: 'Harris County'
+            },
+            'miami': {
+                label: 'Florida Sexual Offenders & Predators (FDLE)',
+                url: 'https://offender.fdle.state.fl.us/offender/sops/offenderSearch.jsf',
+                county: 'Miami-Dade County'
+            },
+            // Pending cities (pre-loaded for when they launch)
+            'dallas': {
+                label: 'Texas Sex Offender Registry (DPS)',
+                url: 'https://publicsite.dps.texas.gov/SexOffenderRegistry/Search',
+                county: 'Dallas County'
+            },
+            'san francisco': {
+                label: 'California Megan\'s Law Registry',
+                url: 'https://www.meganslaw.ca.gov/Search.aspx',
+                county: 'San Francisco County'
+            },
+            'nashville': {
+                label: 'Tennessee Sex Offender Registry (TBI)',
+                url: 'https://sor.tbi.tn.gov/SearchOffender',
+                county: 'Davidson County'
+            },
+            'phoenix': {
+                label: 'Arizona Sex Offender Registry (DPS)',
+                url: 'https://www.azdps.gov/services/public/sex-offender',
+                county: 'Maricopa County'
+            },
+            'philadelphia': {
+                label: 'Pennsylvania Megan\'s Law Registry (PSP)',
+                url: 'https://www.meganslaw.psp.pa.gov/Search/OffenderSearchDetails',
+                county: 'Philadelphia County'
+            },
+            'seattle': {
+                label: 'Washington Sex Offender Registry (WASPC)',
+                url: 'https://www.waspc.org/sex-offender-information',
+                county: 'King County'
+            },
+            'denver': {
+                label: 'Colorado Sex Offender Registry (CBI)',
+                url: 'https://apps.colorado.gov/apps/dps/sor/',
+                county: 'Denver County'
+            },
+            'charlotte': {
+                label: 'North Carolina Sex Offender Registry (SBI)',
+                url: 'https://sexoffender.ncsbi.gov/',
+                county: 'Mecklenburg County'
+            }
+        };
+
         // Categorize results
         const categories = {
             criminal: { label: 'Criminal Records', icon: 'gavel', results: [] },
-            sex_offender: { label: 'Sex Offender Registry', icon: 'user-shield', results: [] },
+            sex_offender: { label: 'Sex Offender Registry', icon: 'user-shield', results: [], registries: [] },
             court: { label: 'Court & Legal Records', icon: 'balance-scale', results: [] },
             news: { label: 'News & Media', icon: 'newspaper', results: [] },
             social: { label: 'Social Media & Online Presence', icon: 'globe', results: [] },
             other: { label: 'Other Public Records', icon: 'file-alt', results: [] }
         };
+
+        // Always add the national registry link
+        categories.sex_offender.registries.push({
+            label: 'National Sex Offender Public Website (NSOPW)',
+            url: 'https://www.nsopw.gov/Search',
+            county: 'Federal — All States'
+        });
+
+        // Add local county registry based on the search city
+        if (city) {
+            const cityKey = city.trim().toLowerCase();
+            if (countyRegistries[cityKey]) {
+                categories.sex_offender.registries.push(countyRegistries[cityKey]);
+            }
+        }
+        // Also check state to add all matching city registries
+        if (state) {
+            const stateKey = state.trim().toLowerCase();
+            const stateMap = {
+                'ga': 'georgia', 'georgia': 'georgia',
+                'ny': 'new york', 'new york': 'new york',
+                'ca': 'california', 'california': 'california',
+                'il': 'illinois', 'illinois': 'illinois',
+                'tx': 'texas', 'texas': 'texas',
+                'fl': 'florida', 'florida': 'florida',
+                'tn': 'tennessee', 'tennessee': 'tennessee',
+                'az': 'arizona', 'arizona': 'arizona',
+                'pa': 'pennsylvania', 'pennsylvania': 'pennsylvania',
+                'wa': 'washington', 'washington': 'washington',
+                'co': 'colorado', 'colorado': 'colorado',
+                'nc': 'north carolina', 'north carolina': 'north carolina'
+            };
+            const stateFull = stateMap[stateKey];
+            if (stateFull && !city) {
+                // If no city but state provided, add all registries for that state
+                Object.entries(countyRegistries).forEach(([, reg]) => {
+                    const alreadyAdded = categories.sex_offender.registries.some(r => r.url === reg.url);
+                    if (!alreadyAdded) {
+                        const regState = reg.url.toLowerCase();
+                        if (
+                            (stateFull === 'georgia' && regState.includes('ga.gov')) ||
+                            (stateFull === 'new york' && regState.includes('ny.gov')) ||
+                            (stateFull === 'california' && regState.includes('meganslaw.ca.gov')) ||
+                            (stateFull === 'illinois' && regState.includes('illinois.gov')) ||
+                            (stateFull === 'texas' && regState.includes('texas.gov')) ||
+                            (stateFull === 'florida' && regState.includes('fl.us')) ||
+                            (stateFull === 'tennessee' && regState.includes('tn.gov')) ||
+                            (stateFull === 'arizona' && regState.includes('azdps.gov')) ||
+                            (stateFull === 'pennsylvania' && regState.includes('pa.gov')) ||
+                            (stateFull === 'washington' && regState.includes('waspc.org')) ||
+                            (stateFull === 'colorado' && regState.includes('colorado.gov')) ||
+                            (stateFull === 'north carolina' && regState.includes('ncsbi.gov'))
+                        ) {
+                            categories.sex_offender.registries.push(reg);
+                        }
+                    }
+                });
+            }
+        }
 
         uniqueResults.forEach(r => {
             const text = (r.title + ' ' + r.snippet + ' ' + r.link).toLowerCase();

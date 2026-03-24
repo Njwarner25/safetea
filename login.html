@@ -399,24 +399,29 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
-});
+        });
+
+        const ct = res.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') === -1) {
+          throw new Error('Server error — please try again in a moment');
+        }
 
         const data = await res.json();
 
         if (!res.ok) {
           throw new Error(data.error || 'Login failed');
-}
+        }
 
         localStorage.setItem('safetea_token', data.token);
         localStorage.setItem('safetea_user', JSON.stringify(data.user));
 
         showSuccess('Login successful! Redirecting...');
         setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
-} catch (err) {
+      } catch (err) {
         showError(err.message);
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-arrow-right"></i> Log In';
-}
+      }
 }
 
     async function handleRegister(e) {
@@ -437,20 +442,25 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password, display_name, city, state })
-});
+        });
+
+        const ct = res.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') === -1) {
+          throw new Error('Server error — please try again in a moment');
+        }
 
         const data = await res.json();
 
         if (!res.ok) {
           throw new Error(data.error || data.errors?.[0]?.msg || 'Registration failed');
-}
+        }
 
         localStorage.setItem('safetea_token', data.token);
         localStorage.setItem('safetea_user', JSON.stringify(data.user));
 
         showSuccess('Account created! Redirecting...');
         setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
-} catch (err) {
+      } catch (err) {
         showError(err.message);
         btn.disabled = false;
         btn.innerHTML = '<img src="/images/safetea-logo.svg" alt="" style="height:18px"> Create Account';

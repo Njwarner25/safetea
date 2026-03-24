@@ -3,941 +3,575 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog - SafeTea</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <title>SafeTea Blog — Dating Safety Tips, News & Resources</title>
+    <meta name="description" content="Stay safe while dating. Real stories, expert tips, and the latest news about online dating safety from SafeTea.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e0e0e0; }
-        .topnav { background: #13131a; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .topnav-left { display: flex; align-items: center; gap: 24px; }
-        .topnav-logo { font-size: 20px; font-weight: 800; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; }
-        .topnav-logo i { color: #F27059; }
-        .topnav nav { display: flex; gap: 4px; }
-        .topnav nav a { color: #aaa; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-        .topnav nav a:hover, .topnav nav a.active { color: #fff; background: rgba(255,255,255,0.08); }
-        .topnav nav a.active { color: #F27059; }
-        .topnav-right { display: flex; align-items: center; gap: 16px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; cursor: pointer; background: #F27059; }
-        .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #aaa; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-        .blog-container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .blog-header { text-align: center; padding: 40px 0 32px; }
-        .blog-header h1 { font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 8px; }
-        .blog-header p { color: #888; font-size: 16px; max-width: 600px; margin: 0 auto; }
-        .blog-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
-        .blog-tab { padding: 10px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #888; font-family: 'Inter', sans-serif; }
-        .blog-tab:hover { border-color: rgba(255,255,255,0.15); color: #ccc; }
-        .blog-tab.active { background: linear-gradient(135deg, #F27059, #e85d44); color: #fff; border-color: transparent; }
-        .blog-section { display: none; }
-        .blog-section.active { display: block; }
-        .blog-layout { display: flex; gap: 24px; }
-        .blog-main { flex: 1; min-width: 0; }
-        .blog-sidebar { width: 320px; flex-shrink: 0; }
-        .gradient-text { background: linear-gradient(135deg, #F27059, #e0a5d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .discussion-grid { display: grid; gap: 16px; }
-        .discussion-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
-        .discussion-card:hover { border-color: rgba(255,255,255,0.12); }
-        .discussion-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .discussion-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; }
-        .discussion-meta { flex: 1; }
-        .discussion-author { font-weight: 600; font-size: 14px; color: #fff; }
-        .discussion-time { font-size: 12px; color: #666; margin-top: 2px; }
-        .discussion-city { display: inline-flex; align-items: center; gap: 4px; background: rgba(242,112,89,0.15); color: #F27059; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 8px; }
-        .discussion-body { font-size: 14px; line-height: 1.6; color: #ccc; margin-bottom: 16px; }
-        .discussion-body .person-tag { color: #F27059; font-weight: 600; }
-        .discussion-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px; }
-        .badge-exp { background: rgba(242,112,89,0.15); color: #F27059; }
-        .badge-q { background: rgba(59,152,219,0.15); color: #3b98db; }
-        .badge-warn { background: rgba(231,76,60,0.15); color: #e74c3c; }
-        .badge-good { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .discussion-actions { display: flex; gap: 16px; }
-        .discussion-action { display: flex; align-items: center; gap: 6px; color: #666; font-size: 13px; background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .discussion-action:hover { color: #F27059; }
-        .create-box { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-        .create-box h3 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 12px; }
-        .create-box textarea { width: 100%; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 80px; }
-        .create-box textarea:focus { outline: none; border-color: #F27059; }
-        .create-box-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-        .anon-toggle { display: flex; align-items: center; gap: 8px; color: #888; font-size: 13px; }
-        .anon-toggle input[type="checkbox"] { accent-color: #F27059; }
-        .btn-submit { background: linear-gradient(135deg, #F27059, #e85d44); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; transition: box-shadow 0.2s; }
-        .btn-submit:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-submit-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .btn-submit-green:hover { box-shadow: 0 4px 15px rgba(46,204,113,0.3); }
-        .safety-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
-        .safety-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
-        .safety-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
-        .safety-card-img { font-size: 48px; color: #F27059; opacity: 0.6; padding: 24px; text-align: center; }
-        .safety-card-body { padding: 20px; }
-        .safety-card-cat { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-        .safety-card-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; line-height: 1.4; }
-        .safety-card-excerpt { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 16px; }
-        .safety-card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); }
-        .safety-card-author { font-size: 12px; color: #666; }
-        .safety-card-read { color: #F27059; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
-        .safety-card-read:hover { text-decoration: underline; }
-        .referral-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
-        .referral-card:hover { border-color: rgba(46,204,113,0.15); }
-        .referral-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-        .referral-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
-        .referral-rec-label { font-size: 11px; color: #2ecc71; }
-        .referral-person { margin-bottom: 10px; }
-        .referral-person-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-        .verified-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(46,204,113,0.2); color: #2ecc71; padding: 1px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-left: 8px; }
-        .referral-traits { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .referral-trait { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.05); color: #aaa; border: 1px solid rgba(255,255,255,0.08); }
-        .referral-quote { font-size: 14px; color: #ccc; line-height: 1.6; font-style: italic; padding-left: 12px; border-left: 3px solid #2ecc71; }
-        .referral-actions { display: flex; gap: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 12px; }
-        .referral-action { display: flex; align-items: center; gap: 6px; color: #666; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
-        .referral-action:hover { color: #2ecc71; }
-        .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
-        .form-row input, .form-row select { flex: 1; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; }
-        .form-row input::placeholder { color: #555; }
-        .form-row input:focus, .form-row select:focus { outline: none; border-color: #F27059; }
-        .form-row select { color: #aaa; }
-        .sidebar-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .sidebar-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .sidebar-card p { font-size: 13px; color: #888; line-height: 1.6; }
-        .sidebar-card ul { list-style: none; padding: 0; }
-        .sidebar-card ul li { font-size: 13px; color: #888; padding: 6px 0; display: flex; align-items: center; gap: 8px; }
-        .sidebar-card ul li i { color: #F27059; font-size: 12px; }
-        .img-upload-area { border: 2px dashed rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; text-align: center; margin-top: 12px; cursor: pointer; transition: border-color 0.2s; }
-        .img-upload-area:hover { border-color: #F27059; }
-        .img-upload-area i { font-size: 24px; color: #555; margin-bottom: 8px; }
-        .img-upload-area p { font-size: 12px; color: #666; }
-        .img-upload-area .upload-note { font-size: 11px; color: #F27059; margin-top: 4px; }
-        .img-preview { position: relative; margin-top: 12px; display: none; }
-        .img-preview img { max-width: 100%; border-radius: 10px; }
-        .img-preview .remove-img { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; }
-        .img-expiry-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,165,0,0.15); color: #ffa500; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-top: 8px; }
-        .img-expired { filter: blur(20px); pointer-events: none; }
-        .img-expired-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,10,15,0.8); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; font-weight: 600; }
-        .post-image-container { position: relative; margin-top: 12px; margin-bottom: 8px; }
-        .post-image-container img { max-width: 100%; border-radius: 10px; max-height: 400px; object-fit: cover; }
-        .loading-spinner { text-align: center; padding: 40px; color: #666; }
-        .loading-spinner i { font-size: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .empty-state { text-align: center; padding: 60px 20px; color: #555; }
-        .empty-state i { font-size: 48px; margin-bottom: 16px; color: #333; }
-        .empty-state p { font-size: 16px; margin-bottom: 8px; }
-        .empty-state small { font-size: 13px; color: #444; }
-        .category-select { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 12px; color: #aaa; font-family: 'Inter', sans-serif; font-size: 13px; margin-top: 8px; }
-        .category-select:focus { outline: none; border-color: #F27059; }
-        .catfish-scanner-box { text-align: center; background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 40px 32px; margin-bottom: 24px; }
-        .catfish-icon-big { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #3b98db, #2980b9); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; margin: 0 auto 20px; }
-        .catfish-scanner-box h3 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-        .catfish-upload-box { border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 40px 24px; cursor: pointer; transition: border-color 0.3s; }
-        .catfish-upload-box:hover { border-color: rgba(59,152,219,0.4); }
-        .catfish-upload-box > i { font-size: 2.5rem; color: #3b98db; margin-bottom: 12px; }
-        .catfish-upload-box h4 { font-size: 16px; color: #fff; margin-bottom: 6px; }
-        .catfish-upload-box p { font-size: 13px; color: #666; }
-        .catfish-or-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; color: #555; font-size: 13px; }
-        .catfish-or-divider::before, .catfish-or-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-        .catfish-url-group { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
-        .catfish-url-input { flex: 1; padding: 12px 20px; background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); border-radius: 50px; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
-        .catfish-url-input:focus { border-color: #3b98db; }
-        .catfish-url-input::placeholder { color: #555; }
-        .catfish-scan-btn { border-radius: 50px !important; padding: 12px 24px !important; background: linear-gradient(135deg, #3b98db, #2980b9) !important; }
-        .catfish-scan-btn:hover { box-shadow: 0 4px 15px rgba(59,152,219,0.3) !important; }
-        .catfish-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-        .catfish-stat-box { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; text-align: center; }
-        .catfish-stat-number { display: block; font-size: 24px; font-weight: 800; color: #3b98db; margin-bottom: 4px; }
-        .catfish-stat-text { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-        .catfish-recent { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
-        .catfish-result { margin-top: 24px; padding: 20px; border-radius: 12px; text-align: left; }
-        .catfish-result.safe { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); }
-        .catfish-result.danger { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); }
-        .catfish-result.scanning { background: rgba(59,152,219,0.1); border: 1px solid rgba(59,152,219,0.2); }
-        @media (max-width: 1024px) { .blog-sidebar { display: none; } }
-        @media (max-width: 768px) { .safety-grid { grid-template-columns: 1fr; } .form-row { flex-direction: column; } .catfish-stats-row { grid-template-columns: 1fr; } .catfish-url-group { flex-direction: column; } }
+        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; }
+
+        /* NAV */
+        .blog-nav { background: #22223A; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .blog-nav-left { display: flex; align-items: center; gap: 20px; }
+        .blog-nav-logo { text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .blog-nav-logo img { height: 32px; }
+        .blog-nav-logo span { font-size: 18px; font-weight: 700; color: #fff; }
+        .blog-nav-links { display: flex; gap: 4px; }
+        .blog-nav-links a { color: #8080A0; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .blog-nav-links a:hover, .blog-nav-links a.active { color: #fff; background: rgba(255,255,255,0.05); }
+        .blog-nav-links a.active { color: #E8A0B5; }
+        .blog-nav-right a { color: #E8A0B5; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 20px; border: 1px solid #E8A0B5; border-radius: 8px; transition: all 0.2s; }
+        .blog-nav-right a:hover { background: #E8A0B5; color: #1A1A2E; }
+
+        /* HERO */
+        .blog-hero { text-align: center; padding: 60px 24px 40px; background: linear-gradient(135deg, rgba(232,160,181,0.1), rgba(242,112,89,0.05)); }
+        .blog-hero h1 { font-size: 36px; color: #fff; margin-bottom: 12px; }
+        .blog-hero h1 span { background: linear-gradient(135deg, #f27059, #E8A0B5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .blog-hero p { color: #8080A0; font-size: 16px; max-width: 600px; margin: 0 auto 24px; }
+
+        /* CATEGORY FILTER */
+        .blog-filters { display: flex; justify-content: center; gap: 8px; padding: 0 24px 32px; flex-wrap: wrap; }
+        .blog-filter { padding: 8px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #8080A0; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .blog-filter:hover { border-color: #E8A0B5; color: #E8A0B5; }
+        .blog-filter.active { background: #E8A0B5; color: #1A1A2E; border-color: #E8A0B5; font-weight: 600; }
+
+        /* ARTICLES GRID */
+        .blog-container { max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+        /* FEATURED ARTICLE */
+        .blog-featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #22223A; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; }
+        .blog-featured:hover { border-color: rgba(232,160,181,0.3); }
+        .blog-featured-img { background-size: cover; background-position: center; min-height: 300px; }
+        .blog-featured-content { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
+        .blog-featured-content .blog-tag { margin-bottom: 12px; }
+        .blog-featured-content h2 { font-size: 24px; color: #fff; margin-bottom: 12px; line-height: 1.3; }
+        .blog-featured-content p { color: #8080A0; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+
+        /* ARTICLE CARD */
+        .blog-card { background: #22223A; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: all 0.2s; }
+        .blog-card:hover { border-color: rgba(232,160,181,0.3); transform: translateY(-2px); }
+        .blog-card-img { height: 180px; background-size: cover; background-position: center; background-color: #2A2A44; position: relative; }
+        .blog-card-body { padding: 20px; }
+        .blog-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tag-safety { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .tag-news { background: rgba(52,152,219,0.15); color: #3498db; }
+        .tag-tips { background: rgba(242,112,89,0.15); color: #f27059; }
+        .tag-stories { background: rgba(232,160,181,0.15); color: #E8A0B5; }
+        .tag-product { background: rgba(155,89,182,0.15); color: #9b59b6; }
+        .tag-research { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .blog-card h3 { font-size: 17px; color: #fff; margin: 10px 0 8px; line-height: 1.4; }
+        .blog-card p { color: #8080A0; font-size: 13px; line-height: 1.6; }
+        .blog-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .blog-card-author { display: flex; align-items: center; gap: 8px; }
+        .blog-card-author-avatar { width: 28px; height: 28px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #1A1A2E; }
+        .blog-card-author span { font-size: 12px; color: #A0A0C0; }
+        .blog-card-date { font-size: 12px; color: #8080A0; }
+
+        /* ARTICLE VIEW */
+        .blog-article { display: none; max-width: 740px; margin: 0 auto; padding: 40px 24px 60px; }
+        .blog-article.active { display: block; }
+        .blog-article-back { display: inline-flex; align-items: center; gap: 8px; color: #E8A0B5; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 24px; cursor: pointer; }
+        .blog-article-back:hover { text-decoration: underline; }
+        .blog-article-header { margin-bottom: 32px; }
+        .blog-article-header h1 { font-size: 32px; color: #fff; line-height: 1.3; margin: 12px 0 16px; }
+        .blog-article-header .blog-article-meta { display: flex; align-items: center; gap: 16px; color: #8080A0; font-size: 13px; }
+        .blog-article-hero-img { width: 100%; max-height: 400px; object-fit: cover; border-radius: 12px; margin-bottom: 32px; }
+        .blog-article-body { color: #C0C0D0; font-size: 16px; line-height: 1.8; }
+        .blog-article-body h2 { color: #fff; font-size: 22px; margin: 28px 0 12px; }
+        .blog-article-body h3 { color: #fff; font-size: 18px; margin: 24px 0 10px; }
+        .blog-article-body p { margin-bottom: 16px; }
+        .blog-article-body ul, .blog-article-body ol { margin: 12px 0 16px 24px; }
+        .blog-article-body li { margin-bottom: 8px; }
+        .blog-article-body blockquote { border-left: 3px solid #E8A0B5; padding: 12px 20px; margin: 16px 0; background: rgba(232,160,181,0.05); border-radius: 0 8px 8px 0; font-style: italic; color: #A0A0C0; }
+        .blog-article-body a { color: #E8A0B5; text-decoration: underline; }
+        .blog-article-body .callout { background: rgba(242,112,89,0.1); border: 1px solid rgba(242,112,89,0.2); border-radius: 12px; padding: 16px 20px; margin: 20px 0; }
+        .blog-article-body .callout strong { color: #f27059; }
+        .blog-article-cta { background: linear-gradient(135deg, rgba(232,160,181,0.15), rgba(242,112,89,0.1)); border: 1px solid rgba(232,160,181,0.2); border-radius: 16px; padding: 32px; text-align: center; margin-top: 40px; }
+        .blog-article-cta h3 { color: #fff; font-size: 20px; margin-bottom: 8px; }
+        .blog-article-cta p { color: #8080A0; font-size: 14px; margin-bottom: 16px; }
+        .blog-article-cta a { display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; padding: 12px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: transform 0.2s; }
+        .blog-article-cta a:hover { transform: translateY(-2px); }
+
+        /* NEWS TICKER */
+        .blog-news-section { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 32px; border: 1px solid rgba(255,255,255,0.06); }
+        .blog-news-section h3 { color: #fff; font-size: 16px; margin-bottom: 16px; }
+        .blog-news-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .blog-news-item:last-child { border-bottom: none; }
+        .blog-news-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(52,152,219,0.15); display: flex; align-items: center; justify-content: center; color: #3498db; flex-shrink: 0; }
+        .blog-news-item a { color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; line-height: 1.4; }
+        .blog-news-item a:hover { color: #E8A0B5; }
+        .blog-news-item .news-source { font-size: 11px; color: #8080A0; margin-top: 4px; }
+
+        /* LOADING */
+        .blog-loading { text-align: center; padding: 40px; }
+        .blog-loading i { font-size: 24px; color: #E8A0B5; }
+
+        /* FOOTER */
+        .blog-footer { background: #22223A; border-top: 1px solid rgba(255,255,255,0.06); padding: 32px 24px; text-align: center; }
+        .blog-footer p { color: #8080A0; font-size: 13px; }
+        .blog-footer a { color: #E8A0B5; text-decoration: none; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .blog-hero h1 { font-size: 26px; }
+            .blog-featured { grid-template-columns: 1fr; }
+            .blog-featured-img { min-height: 200px; }
+            .blog-grid { grid-template-columns: 1fr; }
+            .blog-nav-links { display: none; }
+            .blog-article-header h1 { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
+    <!-- NAV -->
+    <nav class="blog-nav">
+        <div class="blog-nav-left">
+            <a href="/" class="blog-nav-logo">
+                <img src="https://www.getsafetea.app/safetea-logo.png" alt="SafeTea" onerror="this.style.display='none'">
+                <span>SafeTea Blog</span>
+            </a>
+            <div class="blog-nav-links">
+                <a href="#" class="active" onclick="filterCategory('all');return false">All Posts</a>
+                <a href="#" onclick="filterCategory('safety');return false">Safety</a>
+                <a href="#" onclick="filterCategory('news');return false">News</a>
+                <a href="#" onclick="filterCategory('tips');return false">Tips</a>
+                <a href="#" onclick="filterCategory('stories');return false">Stories</a>
+            </div>
+        </div>
+        <div class="blog-nav-right">
+            <a href="/dashboard.html">Open App</a>
+        </div>
+    </nav>
 
-<nav class="topnav">
-    <div class="topnav-left">
-        <a href="/dashboard.html" class="topnav-logo"><i class="fas fa-shield-heart"></i> SafeTea</a>
-        <nav class="topnav-nav">
-            <a href="/dashboard.html"><i class="fas fa-home"></i> Feed</a>
-            <a href="/blog.html" class="active"><i class="fas fa-mug-hot"></i> Hub</a>
-        </nav>
-    </div>
-    <div class="topnav-right">
-        <div class="user-avatar" id="nav-avatar"></div>
-        <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
-    </div>
-</nav>
+    <!-- MAIN CONTENT -->
+    <div id="blog-list">
+        <!-- HERO -->
+        <div class="blog-hero">
+            <h1>Stay Safe. <span>Date Smart.</span></h1>
+            <p>Real tips, news, and stories about online dating safety. Because going on a date shouldn't feel like a risk.</p>
+        </div>
 
-<div class="blog-container">
-    <div class="blog-header">
-        <h1>SafeTea <span class="gradient-text">Hub</span></h1>
-        <p>Spill the tea, stay safe, vouch for the good ones, and catch the catfish. Your voice matters.</p>
-    </div>
+        <!-- FILTERS -->
+        <div class="blog-filters">
+            <button class="blog-filter active" onclick="filterCategory('all')">All</button>
+            <button class="blog-filter" onclick="filterCategory('safety')"><i class="fas fa-shield-alt"></i> Safety</button>
+            <button class="blog-filter" onclick="filterCategory('news')"><i class="fas fa-newspaper"></i> News</button>
+            <button class="blog-filter" onclick="filterCategory('tips')"><i class="fas fa-lightbulb"></i> Tips</button>
+            <button class="blog-filter" onclick="filterCategory('stories')"><i class="fas fa-heart"></i> Stories</button>
+            <button class="blog-filter" onclick="filterCategory('product')"><i class="fas fa-mobile-alt"></i> Product</button>
+        </div>
 
-    <div class="blog-tabs">
-        <button class="blog-tab active" onclick="switchBlogTab('community')"><i class="fas fa-mug-hot"></i> Tea Talk</button>
-        <button class="blog-tab" onclick="switchBlogTab('safety')"><i class="fas fa-shield-alt"></i> Safety Blog</button>
-        <button class="blog-tab" onclick="switchBlogTab('referrals')"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
-        <button class="blog-tab" onclick="switchBlogTab('catfish')"><i class="fas fa-fish-fins"></i> Reel in a Catfish</button>
-    </div>
-
-    <!-- COMMUNITY TALK -->
-    <div id="blog-community" class="blog-section active">
-        <div class="blog-layout">
-            <div class="blog-main">
-                <div class="create-box">
-                    <h3><i class="fas fa-mug-hot"></i> Spill the Tea</h3>
-                    <textarea id="community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)"></textarea>
-                    <div class="form-row" style="margin-top:8px">
-                        <select id="community-category" class="category-select">
-                            <option value="general">General</option>
-                            <option value="experience">Experience</option>
-                            <option value="warning">Warning</option>
-                            <option value="question">Question</option>
-                            <option value="positive">Positive</option>
-                        </select>
-                        <input type="text" id="community-city" placeholder="Your city (optional)" style="background:#1a1a24;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-size:13px">
-                    </div>
-                    <div class="img-upload-area" onclick="document.getElementById('community-img-input').click()">
-                        <i class="fas fa-camera"></i>
-                        <p>Add a photo (optional)</p>
-                        <p class="upload-note"><i class="fas fa-clock"></i> Images auto-expire after 7 days for privacy</p>
-                        <input type="file" id="community-img-input" accept="image/*" style="display:none" onchange="handleImagePreview(this, 'community-img-preview')">
-                    </div>
-                    <div class="img-preview" id="community-img-preview">
-                        <img src="" alt="Preview">
-                        <button class="remove-img" onclick="removeImagePreview('community-img-preview', 'community-img-input')"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="create-box-actions">
-                        <label class="anon-toggle"><input type="checkbox" id="community-anon" checked> Post anonymously</label>
-                        <button class="btn-submit" id="community-submit-btn" onclick="submitCommunityPost()"><i class="fas fa-paper-plane"></i> Post</button>
-                    </div>
-                </div>
-
-                <div id="community-posts" class="discussion-grid">
-                    <div class="loading-spinner"><i class="fas fa-spinner"></i> Loading discussions...</div>
+        <div class="blog-container">
+            <!-- RECENT NEWS SECTION (fetched live) -->
+            <div class="blog-news-section" id="news-section">
+                <h3><i class="fas fa-bolt" style="color:#f1c40f"></i> Latest Dating Safety News</h3>
+                <div id="news-feed">
+                    <div class="blog-loading"><i class="fas fa-spinner fa-spin"></i> Loading latest news...</div>
                 </div>
             </div>
 
-            <div class="blog-sidebar">
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-info-circle" style="color:#F27059"></i> Community Guidelines</h3>
-                    <ul>
-                        <li><i class="fas fa-check"></i> First name + last initial only</li>
-                        <li><i class="fas fa-check"></i> Share experiences, not revenge</li>
-                        <li><i class="fas fa-check"></i> No doxxing or full addresses</li>
-                        <li><i class="fas fa-check"></i> Be honest and factual</li>
-                        <li><i class="fas fa-check"></i> Support each other</li>
-                    </ul>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-camera" style="color:#ffa500"></i> Photo Policy</h3>
-                    <ul>
-                        <li><i class="fas fa-clock"></i> All uploaded photos auto-expire after 7 days</li>
-                        <li><i class="fas fa-shield-alt"></i> Expired images are permanently removed</li>
-                        <li><i class="fas fa-eye-slash"></i> No screenshots policy enforced</li>
-                    </ul>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-fire" style="color:#F27059"></i> Trending Cities</h3>
-                    <ul id="trending-cities">
-                        <li><i class="fas fa-map-marker-alt"></i> Loading...</li>
-                    </ul>
-                </div>
+            <!-- ARTICLES GRID -->
+            <div class="blog-grid" id="blog-grid">
+                <!-- Articles populated by JS -->
             </div>
         </div>
     </div>
 
-    <!-- SAFETY BLOG -->
-    <div id="blog-safety" class="blog-section">
-        <div class="blog-layout">
-            <div class="blog-main">
-                <div class="safety-grid">
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-map-marked-alt"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-warn">Safety</span>
-                            <div class="safety-card-title">10 First Date Safety Rules Every Woman Should Know</div>
-                            <div class="safety-card-excerpt">From sharing your location with a friend to choosing the right venue, here are essential safety practices that could save your life on a first date.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">SafeTea Team &bull; 2 days ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-user-secret"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-exp">Awareness</span>
-                            <div class="safety-card-title">How to Spot a Catfish: Red Flags in Online Dating Profiles</div>
-                            <div class="safety-card-excerpt">Reverse image searches are just the beginning. Learn the subtle signs that someone might not be who they claim to be online.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">Dr. Lisa Chen &bull; 4 days ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-phone-alt"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-good">Tips</span>
-                            <div class="safety-card-title">The Buddy System: Setting Up a Safety Call Protocol</div>
-                            <div class="safety-card-excerpt">Create a foolproof check-in system with your friends for dates. Includes code words, timing strategies, and emergency plans.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">Jamie R. &bull; 1 week ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-gavel"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-q">Legal</span>
-                            <div class="safety-card-title">Know Your Rights: Reporting Harassment in Your State</div>
-                            <div class="safety-card-excerpt">A state-by-state breakdown of harassment laws, restraining orders, and what to do if an online date crosses the line into criminal behavior.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">Legal Team &bull; 1 week ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-eye"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-exp">Awareness</span>
-                            <div class="safety-card-title">Love Bombing vs. Genuine Interest: Know the Difference</div>
-                            <div class="safety-card-excerpt">Excessive flattery, constant texting, and premature declarations of love can be manipulation tactics. Learn to tell genuine interest from control.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">Dr. Maya Torres &bull; 2 weeks ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="safety-card">
-                        <div class="safety-card-img"><i class="fas fa-shield-alt"></i></div>
-                        <div class="safety-card-body">
-                            <span class="safety-card-cat badge-good">Tips</span>
-                            <div class="safety-card-title">Protecting Your Digital Privacy While Dating Online</div>
-                            <div class="safety-card-excerpt">How to keep your personal information safe on dating apps. Covers phone numbers, social media, location data, and more.</div>
-                            <div class="safety-card-footer">
-                                <span class="safety-card-author">SafeTea Team &bull; 2 weeks ago</span>
-                                <a class="safety-card-read">Read More &rarr;</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- ARTICLE VIEW (hidden by default) -->
+    <div class="blog-article" id="blog-article">
+        <a class="blog-article-back" onclick="closeArticle()"><i class="fas fa-arrow-left"></i> Back to all articles</a>
+        <div id="blog-article-content"></div>
     </div>
 
-    <!-- REFER A GOOD -->
-    <div id="blog-referrals" class="blog-section">
-        <div class="blog-layout">
-            <div class="blog-main">
-                <div class="create-box">
-                    <h3><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h3>
-                    <p style="font-size:13px;color:#666;margin-bottom:16px">Know a friend, brother, or coworker who's genuinely one of the good ones? Vouch for them here. First name + last initial only.</p>
-                    <div class="form-row">
-                        <input type="text" id="referral-name" placeholder="His first name + last initial (e.g. David T.)">
-                        <input type="text" id="referral-city" placeholder="City">
-                    </div>
-                    <div class="form-row">
-                        <select id="referral-relation"><option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option></select>
-                    </div>
-                    <textarea id="referral-body" placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:#1a1a24;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px"></textarea>
-                    <div class="create-box-actions">
-                        <label class="anon-toggle"><input type="checkbox" id="referral-anon"> Post anonymously</label>
-                        <button class="btn-submit btn-submit-green" onclick="submitReferral()"><i class="fas fa-heart"></i> Submit Referral</button>
-                    </div>
-                </div>
-
-                <div id="referral-posts" class="discussion-grid">
-                    <div class="loading-spinner"><i class="fas fa-spinner"></i> Loading referrals...</div>
-                </div>
-            </div>
-
-            <div class="blog-sidebar">
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-heart" style="color:#2ecc71"></i> How Referrals Work</h3>
-                    <p>Women can recommend men they've dated or know personally. Multiple referrals build trust. The community can vouch or add their own experiences.</p>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-trophy" style="color:#f1c40f"></i> Top Referred</h3>
-                    <ul id="top-referred">
-                        <li><i class="fas fa-medal"></i> Loading...</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <!-- FOOTER -->
+    <div class="blog-footer">
+        <p>&copy; 2025-2026 <a href="/">SafeTea</a>. Protecting people, one date at a time.</p>
     </div>
 
-    <!-- REEL IN A CATFISH -->
-    <div id="blog-catfish" class="blog-section">
-        <div class="blog-layout">
-            <div class="blog-main">
-                <div class="catfish-scanner-box">
-                    <div class="catfish-icon-big"><i class="fas fa-fish-fins"></i></div>
-                    <h3>Something Smells Fishy?</h3>
-                    <p style="color:#888;font-size:14px;margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto">Upload a photo or paste a profile link to run our AI-powered catfish scan. We'll check for stolen photos, fake profiles, and known scammer patterns.</p>
+    <script>
+    (function() {
+        'use strict';
 
-                    <div class="catfish-upload-box" id="catfish-drop-zone">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h4>Drop a photo or click to upload</h4>
-                        <p>We'll reverse image search and cross-reference with known databases</p>
-                        <input type="file" id="catfish-file-input" accept="image/*" style="display:none">
-                    </div>
-
-                    <div class="catfish-or-divider"><span>or</span></div>
-
-                    <div class="catfish-url-group">
-                        <input type="text" class="catfish-url-input" id="catfish-url" placeholder="Paste a dating profile URL...">
-                        <button class="btn-submit catfish-scan-btn" onclick="runCatfishScan()"><i class="fas fa-search"></i> Scan</button>
-                    </div>
-
-                    <div class="catfish-result" id="catfish-result" style="display:none"></div>
-                </div>
-
-                <div class="catfish-stats-row">
-                    <div class="catfish-stat-box">
-                        <span class="catfish-stat-number">12,847</span>
-                        <span class="catfish-stat-text">Catfish Caught</span>
-                    </div>
-                    <div class="catfish-stat-box">
-                        <span class="catfish-stat-number">98.2%</span>
-                        <span class="catfish-stat-text">Detection Accuracy</span>
-                    </div>
-                    <div class="catfish-stat-box">
-                        <span class="catfish-stat-number">< 30s</span>
-                        <span class="catfish-stat-text">Scan Time</span>
-                    </div>
-                </div>
-
-                <div class="catfish-recent">
-                    <h4 style="margin-bottom:16px;font-size:16px"><i class="fas fa-history" style="color:#3b98db;margin-right:8px"></i>Recent Catches</h4>
-                    <div class="discussion-card">
-                        <div class="discussion-header">
-                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#e74c3c,#c0392b)"><i class="fas fa-fish-fins" style="font-size:14px"></i></div>
-                            <div class="discussion-meta">
-                                <span class="discussion-author">Fake Profile Detected</span>
-                                <span class="discussion-time">Photos traced to a stock photo site</span>
-                            </div>
-                            <span class="discussion-badge badge-warn">Catfish</span>
-                        </div>
-                        <p class="discussion-body">Profile "Mike, 32, NYC" on Tinder — all 6 photos are stock images from Shutterstock. Profile reported and flagged.</p>
-                    </div>
-                    <div class="discussion-card" style="margin-top:12px">
-                        <div class="discussion-header">
-                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#f39c12,#e67e22)"><i class="fas fa-exclamation-triangle" style="font-size:14px"></i></div>
-                            <div class="discussion-meta">
-                                <span class="discussion-author">Suspicious Match</span>
-                                <span class="discussion-time">Same photos used across 3 different apps</span>
-                            </div>
-                            <span class="discussion-badge badge-exp">Suspicious</span>
-                        </div>
-                        <p class="discussion-body">Bumble profile matched with identical photos on Hinge and a romance scam database. Proceed with extreme caution.</p>
-                    </div>
-                    <div class="discussion-card" style="margin-top:12px">
-                        <div class="discussion-header">
-                            <div class="discussion-avatar" style="background:linear-gradient(135deg,#2ecc71,#27ae60)"><i class="fas fa-check-circle" style="font-size:14px"></i></div>
-                            <div class="discussion-meta">
-                                <span class="discussion-author">Profile Verified</span>
-                                <span class="discussion-time">No matches found in scam databases</span>
-                            </div>
-                            <span class="discussion-badge badge-good">Clear</span>
-                        </div>
-                        <p class="discussion-body">Photos appear to be original. No reverse image matches found. No records in known scam databases. Looks legit!</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="blog-sidebar">
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-fish-fins" style="color:#3b98db"></i> How It Works</h3>
-                    <ul>
-                        <li><i class="fas fa-upload"></i> Upload a photo or paste a URL</li>
-                        <li><i class="fas fa-search"></i> AI scans for stolen images</li>
-                        <li><i class="fas fa-database"></i> Cross-checks scam databases</li>
-                        <li><i class="fas fa-bell"></i> Get a safety report in seconds</li>
-                    </ul>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-lightbulb" style="color:#f1c40f"></i> Catfish Red Flags</h3>
-                    <ul>
-                        <li><i class="fas fa-camera"></i> Only pro/model-quality photos</li>
-                        <li><i class="fas fa-video-slash"></i> Refuses video calls</li>
-                        <li><i class="fas fa-heart"></i> Falls in love too fast</li>
-                        <li><i class="fas fa-dollar-sign"></i> Asks for money early</li>
-                        <li><i class="fas fa-plane"></i> Always traveling/unavailable</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    var API_BASE = '/api';
-    var token = localStorage.getItem('safetea_token');
-    var user = JSON.parse(localStorage.getItem('safetea_user') || 'null');
-    var currentImageBase64 = null;
-
-    // Load user avatar
-    if (user) {
-        document.getElementById('nav-avatar').textContent = (user.display_name || 'U')[0].toUpperCase();
-    }
-
-    // Tab switching
-    function switchBlogTab(tab) {
-        document.querySelectorAll('.blog-section').forEach(function(s) { s.classList.remove('active'); });
-        document.querySelectorAll('.blog-tab').forEach(function(t) { t.classList.remove('active'); });
-        document.getElementById('blog-' + tab).classList.add('active');
-        event.target.closest('.blog-tab').classList.add('active');
-        if (tab === 'community') loadCommunityPosts();
-        if (tab === 'referrals') loadReferralPosts();
-    }
-
-    // Logout
-    function handleLogout() {
-        localStorage.removeItem('safetea_token');
-        localStorage.removeItem('safetea_user');
-        window.location.href = '/login.html';
-    }
-
-    // === IMAGE HANDLING ===
-    function handleImagePreview(input, previewId) {
-        var preview = document.getElementById(previewId);
-        if (input.files && input.files[0]) {
-            var file = input.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Image must be under 5MB');
-                input.value = '';
-                return;
-            }
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                preview.querySelector('img').src = e.target.result;
-                preview.style.display = 'block';
-                currentImageBase64 = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function removeImagePreview(previewId, inputId) {
-        var preview = document.getElementById(previewId);
-        preview.style.display = 'none';
-        preview.querySelector('img').src = '';
-        document.getElementById(inputId).value = '';
-        currentImageBase64 = null;
-    }
-
-    // === TIME FORMATTING ===
-    function timeAgo(dateStr) {
-        var now = new Date();
-        var date = new Date(dateStr);
-        var seconds = Math.floor((now - date) / 1000);
-        if (seconds < 60) return 'just now';
-        var minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + 'm ago';
-        var hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + 'h ago';
-        var days = Math.floor(hours / 24);
-        if (days < 30) return days + 'd ago';
-        return date.toLocaleDateString();
-    }
-
-    // === BADGE MAPPING ===
-    function getCategoryBadge(category) {
-        var map = {
-            experience: '<span class="discussion-badge badge-exp">Experience</span>',
-            warning: '<span class="discussion-badge badge-warn">Warning</span>',
-            question: '<span class="discussion-badge badge-q">Question</span>',
-            positive: '<span class="discussion-badge badge-good">Positive</span>',
-            general: '<span class="discussion-badge badge-exp">General</span>',
-            referral: '<span class="discussion-badge badge-good">Referral</span>'
-        };
-        return map[category] || '';
-    }
-
-    // === AVATAR COLORS ===
-    function getAvatarColor(name) {
-        var colors = ['#6c7b95','#e85d44','#2ecc71','#9b59b6','#e085c2','#6ec2e2','#f39c12','#1abc9c','#e74c3c','#3498db'];
-        var hash = 0;
-        for (var i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        return colors[Math.abs(hash) % colors.length];
-    }
-
-    // === RENDER A DISCUSSION POST ===
-    function renderPost(post) {
-        var authorName = post.author_name || 'Anonymous';
-        var initial = authorName[0].toUpperCase();
-        var avatarColor = getAvatarColor(authorName);
-        var cityHtml = post.city ? ' <span class="discussion-city"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
-        var badgeHtml = getCategoryBadge(post.category);
-
-        var imageHtml = '';
-        if (post.image_expired) {
-            imageHtml = '<div class="post-image-container">' +
-                '<img class="img-expired" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'600\' height=\'300\'%3E%3Crect fill=\'%231a1a24\' width=\'600\' height=\'300\'/%3E%3C/svg%3E" alt="Expired">' +
-                '<div class="img-expired-overlay"><i class="fas fa-clock"></i>&nbsp; Image expired for privacy</div>' +
-                '</div>';
-        } else if (post.image_url) {
-            var daysHtml = post.image_days_left ? '<div class="img-expiry-badge"><i class="fas fa-clock"></i> Expires in ' + post.image_days_left + ' day' + (post.image_days_left !== 1 ? 's' : '') + '</div>' : '';
-            imageHtml = '<div class="post-image-container">' +
-                '<img src="' + escapeHtml(post.image_url) + '" alt="User uploaded">' +
-                daysHtml +
-                '</div>';
-        }
-
-        var replyCount = post.reply_count || 0;
-
-        return '<div class="discussion-card" data-post-id="' + post.id + '">' +
-            '<div class="discussion-header">' +
-                '<div class="discussion-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
-                '<div class="discussion-meta">' +
-                    '<div class="discussion-author">' + escapeHtml(authorName) + ' ' + badgeHtml + '</div>' +
-                    '<div class="discussion-time">' + timeAgo(post.created_at) + cityHtml + '</div>' +
-                '</div>' +
-            '</div>' +
-            imageHtml +
-            '<div class="discussion-body">' + formatBody(post.body) + '</div>' +
-            '<div class="discussion-actions">' +
-                '<button class="discussion-action"><i class="fas fa-comment"></i> ' + replyCount + ' replies</button>' +
-                '<button class="discussion-action"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</button>' +
-                '<button class="discussion-action"><i class="fas fa-flag"></i> Report</button>' +
-                '<button class="discussion-action"><i class="fas fa-share"></i> Share</button>' +
-            '</div>' +
-        '</div>';
-    }
-
-    // === HELPER: ESCAPE HTML ===
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    // === HELPER: FORMAT BODY TEXT (detect person tags) ===
-    function formatBody(text) {
-        if (!text) return '';
-        var escaped = escapeHtml(text);
-        // Highlight names that look like "FirstName L." pattern
-        escaped = escaped.replace(/\b([A-Z][a-z]+\s[A-Z]\.)/g, '<span class="person-tag">$1</span>');
-        return escaped;
-    }
-
-    // === LOAD COMMUNITY POSTS FROM API ===
-    function loadCommunityPosts() {
-        var container = document.getElementById('community-posts');
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i> Loading discussions...</div>';
-
-        fetch(API_BASE + '/posts?feed=community&limit=20')
-            .then(function(res) { return res.json(); })
-            .then(function(posts) {
-                if (!posts || posts.length === 0) {
-                    container.innerHTML = '<div class="empty-state">' +
-                        '<i class="fas fa-comments"></i>' +
-                        '<p>No discussions yet</p>' +
-                        '<small>Be the first to start a conversation!</small>' +
-                    '</div>';
-                    return;
-                }
-                var html = '';
-                posts.forEach(function(post) {
-                    html += renderPost(post);
-                });
-                container.innerHTML = html;
-            })
-            .catch(function(err) {
-                console.error('Failed to load posts:', err);
-                container.innerHTML = '<div class="empty-state">' +
-                    '<i class="fas fa-exclamation-triangle"></i>' +
-                    '<p>Could not load discussions</p>' +
-                    '<small>Check your connection and try again</small>' +
-                '</div>';
-            });
-    }
-
-    // === SUBMIT COMMUNITY POST ===
-    function submitCommunityPost() {
-        var body = document.getElementById('community-body').value.trim();
-        var category = document.getElementById('community-category').value;
-        var city = document.getElementById('community-city').value.trim();
-        var isAnon = document.getElementById('community-anon').checked;
-
-        if (!body) {
-            alert('Please write something before posting.');
-            return;
-        }
-
-        if (!token) {
-            alert('Please log in to post.');
-            window.location.href = '/login.html';
-            return;
-        }
-
-        var btn = document.getElementById('community-submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
-
-        var payload = {
-            title: body.substring(0, 80),
-            body: body,
-            category: category,
-            city: city || null,
-            feed: 'community',
-            image_url: currentImageBase64 || null
-        };
-
-        fetch(API_BASE + '/posts', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+        // ==================== ARTICLE DATA ====================
+        var articles = [
+            {
+                id: 'first-date-safety',
+                featured: true,
+                category: 'safety',
+                tag: 'Safety',
+                tagClass: 'tag-safety',
+                title: 'The Complete First Date Safety Checklist',
+                excerpt: 'Going on a first date with someone you met online? Here\'s everything you need to do before, during, and after to stay safe.',
+                image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 20, 2026',
+                readTime: '7 min read',
+                body: '<h2>Before the Date</h2>' +
+                    '<p>Meeting someone for the first time from a dating app is exciting — but it pays to be prepared. Here are the steps every smart dater should take before heading out.</p>' +
+                    '<h3>1. Video Chat First</h3>' +
+                    '<p>Before meeting in person, have at least one video call. This confirms the person looks like their photos and gives you a sense of their vibe. If they refuse to video chat, that\'s a red flag worth paying attention to.</p>' +
+                    '<h3>2. Tell Someone Your Plans</h3>' +
+                    '<p>This is where SafeTea\'s Date Check-Out feature comes in. Before you leave, check out through the app — upload a photo of your date, enter where you\'re going, how you\'re getting there, and add your trusted contacts. They\'ll get a SafeTea Report with all the details and a live tracking link.</p>' +
+                    '<h3>3. Meet in Public</h3>' +
+                    '<p>Always meet at a public place with other people around — a coffee shop, restaurant, or busy bar. Never agree to meet at someone\'s home for a first date, no matter how well the conversation has gone online.</p>' +
+                    '<h3>4. Drive Yourself (or Use Your Own Ride)</h3>' +
+                    '<p>Maintain your own transportation. If you drive yourself, you can leave whenever you want. If you\'re using a rideshare, don\'t share the ride with your date — you want to be able to leave independently.</p>' +
+                    '<h2>During the Date</h2>' +
+                    '<h3>5. Watch Your Drink</h3>' +
+                    '<p>Never leave your drink unattended. If you go to the bathroom, order a new one when you get back. This isn\'t paranoid — it\'s practical. Drink spiking is more common than most people realize.</p>' +
+                    '<h3>6. Trust Your Gut</h3>' +
+                    '<p>If something feels off, it probably is. You don\'t owe anyone a "chance" if your instincts are telling you something\'s wrong. It\'s perfectly okay to end a date early.</p>' +
+                    '<h3>7. Keep Your Phone Charged</h3>' +
+                    '<p>Your phone is your lifeline. Make sure it\'s fully charged before you leave, and consider bringing a portable charger.</p>' +
+                    '<h2>After the Date</h2>' +
+                    '<h3>8. Check In</h3>' +
+                    '<p>Use SafeTea\'s Check-In feature to let your trusted contacts know you\'re home safe. They\'ll get an automatic notification — no awkward group texts required.</p>' +
+                    '<h3>9. Don\'t Share Your Address Yet</h3>' +
+                    '<p>Even if the date went great, wait before sharing your home address. Meet at the other person\'s place or at a neutral location for the next few dates.</p>' +
+                    '<div class="callout"><strong>SafeTea Tip:</strong> Use the Date Check-Out feature every time you go on a date — even if it\'s not a first date. Safety is a habit, not a one-time thing.</div>'
             },
-            body: JSON.stringify(payload)
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
-            if (data.error) {
-                alert('Error: ' + data.error);
-                return;
+            {
+                id: 'catfishing-signs',
+                category: 'tips',
+                tag: 'Tips',
+                tagClass: 'tag-tips',
+                title: '8 Signs You\'re Being Catfished (And What to Do About It)',
+                excerpt: 'Catfishing is more sophisticated than ever. Learn the red flags that most people miss and how to protect yourself.',
+                image: 'https://images.unsplash.com/photo-1563986768609-322da13575f2?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 17, 2026',
+                readTime: '6 min read',
+                body: '<p>Catfishing — when someone creates a fake online identity to lure someone into a relationship — is one of the most common dating scams. The FTC reports that romance scams cost Americans over $1.3 billion in a single year. Here are the signs to watch for.</p>' +
+                    '<h2>The Red Flags</h2>' +
+                    '<h3>1. They Won\'t Video Chat</h3>' +
+                    '<p>The single biggest red flag. If someone always has an excuse for why they can\'t video call — bad camera, shy on camera, too busy — be very suspicious. A real person who\'s interested in you will find a way to video chat.</p>' +
+                    '<h3>2. Their Photos Look Too Perfect</h3>' +
+                    '<p>Stock photo quality images, model-like poses, or photos that all look like they were taken by a professional photographer. Use SafeTea\'s Catfish Detector to reverse image search their photos.</p>' +
+                    '<h3>3. The Relationship Moves Fast</h3>' +
+                    '<p>Catfishers often push for emotional intimacy very quickly. Declarations of love within days, wanting to be exclusive before meeting, or intense emotional conversations before you\'ve had a real date are all warning signs.</p>' +
+                    '<h3>4. They Have a Sob Story</h3>' +
+                    '<p>A sick relative, a deployment overseas, a business trip that keeps getting extended. These stories create emotional investment and provide excuses for why they can\'t meet.</p>' +
+                    '<h3>5. They Ask for Money</h3>' +
+                    '<p>This is the endgame for many catfishers. It might start small — help with a phone bill — and escalate to emergency medical costs or travel money to "finally meet you." Never send money to someone you haven\'t met in person.</p>' +
+                    '<h3>6. Their Social Media Is Thin</h3>' +
+                    '<p>Few friends, recently created account, no tagged photos from other people, no interaction with real friends or family. A real person has a digital footprint that goes back years.</p>' +
+                    '<h3>7. They Avoid Specific Questions</h3>' +
+                    '<p>Ask about their daily life, job details, where they went to school. Catfishers often give vague answers because they haven\'t built out their fake identity that thoroughly.</p>' +
+                    '<h3>8. Your Gut Says Something\'s Off</h3>' +
+                    '<p>Trust yourself. If something doesn\'t feel right about this person, pay attention to that feeling. You\'re not being paranoid — you\'re being smart.</p>' +
+                    '<h2>What to Do If You Suspect Catfishing</h2>' +
+                    '<p>Use SafeTea\'s Catfish Detector to reverse image search their photos. Run a background check on the name they\'ve given you. And most importantly — insist on a video call before agreeing to meet in person.</p>' +
+                    '<div class="callout"><strong>SafeTea Tip:</strong> Drop their profile photo into the Catfish Detector in the Hub. It\'ll search the web for matching images and analyze the photo for signs of manipulation.</div>'
+            },
+            {
+                id: 'dating-app-privacy',
+                category: 'safety',
+                tag: 'Safety',
+                tagClass: 'tag-safety',
+                title: 'How Much Do Dating Apps Really Know About You?',
+                excerpt: 'Your dating profile reveals more than you think. Here\'s what data dating apps collect and how to protect your privacy.',
+                image: 'https://images.unsplash.com/photo-1555421689-d68471e189f2?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 14, 2026',
+                readTime: '8 min read',
+                body: '<p>When you sign up for a dating app, you\'re handing over an enormous amount of personal data. Most people don\'t realize just how much. Here\'s a breakdown of what major dating apps collect.</p>' +
+                    '<h2>What They Collect</h2>' +
+                    '<p>Beyond the obvious — your photos, name, age, and bio — dating apps typically collect your precise GPS location (often continuously), your device information, browsing habits within the app, message content, contacts list (if you grant access), and behavioral patterns like swipe speed and time spent on profiles.</p>' +
+                    '<h2>What They Do With It</h2>' +
+                    '<p>This data powers their matching algorithms, but it\'s also used for advertising, shared with third-party analytics companies, and in some cases, sold to data brokers. That\'s right — the intimate details you share to find a date may end up in the hands of companies you\'ve never heard of.</p>' +
+                    '<h2>How to Protect Yourself</h2>' +
+                    '<h3>Use a Separate Email</h3>' +
+                    '<p>Don\'t sign up for dating apps with your primary email. Create a separate one that doesn\'t include your full name.</p>' +
+                    '<h3>Limit Location Access</h3>' +
+                    '<p>Set location permissions to "While Using" instead of "Always." Better yet, some apps let you manually set your location.</p>' +
+                    '<h3>Don\'t Connect Social Media</h3>' +
+                    '<p>Avoid linking your Instagram, Spotify, or other social accounts. These connections share more data than you\'d expect.</p>' +
+                    '<h3>Use SafeTea\'s Background Check</h3>' +
+                    '<p>Our background check feature shows you which data broker sites have someone\'s information publicly available. This same tool works on yourself — run your own name to see what\'s out there.</p>' +
+                    '<div class="callout"><strong>SafeTea Tip:</strong> Run your own name through our Background Check to see what data brokers have on you. Then use the data broker links to request removal of your information.</div>'
+            },
+            {
+                id: 'safetea-report-guide',
+                category: 'product',
+                tag: 'Product',
+                tagClass: 'tag-product',
+                title: 'Introducing the SafeTea Report: Your Date Safety Card',
+                excerpt: 'Every date deserves a safety plan. The SafeTea Report puts your date details in one shareable report for your trusted contacts.',
+                image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 24, 2026',
+                readTime: '4 min read',
+                body: '<p>We built SafeTea because we believe that going on a date shouldn\'t feel like a risk. Today we\'re introducing the SafeTea Report — a shareable safety card that puts all your date details in one place.</p>' +
+                    '<h2>How It Works</h2>' +
+                    '<p>Before your date, open the Hub and go to Date Check. Fill in four key details:</p>' +
+                    '<ul>' +
+                    '<li><strong>Upload a photo</strong> of the person you\'re meeting</li>' +
+                    '<li><strong>Where</strong> the date will be (venue name and address)</li>' +
+                    '<li><strong>How you\'re getting there</strong> (driving, rideshare, transit, etc.)</li>' +
+                    '<li><strong>Your trusted contacts</strong> who should know your plans</li>' +
+                    '</ul>' +
+                    '<p>Hit "Check Out" and SafeTea generates your report instantly. It\'s a clean, branded safety card with all the details — including a live tracking link your contacts can check anytime.</p>' +
+                    '<h2>Two Ways to Share</h2>' +
+                    '<p>Your SafeTea Report can be shared via SMS (we send a text message with all the details) or through the SafeTea inbox (to other SafeTea users). Your trusted contacts also get the report automatically when you check out.</p>' +
+                    '<h2>After the Date</h2>' +
+                    '<p>Tap "Check In — I\'m Safe" and everyone who got your report gets an instant update. No group texts, no awkward check-in calls. Just a quick tap and peace of mind for everyone.</p>' +
+                    '<div class="callout"><strong>Get started:</strong> Open the SafeTea app, go to Hub > Date Check, and try your first check-out. It takes about 60 seconds to fill out and could make all the difference.</div>'
+            },
+            {
+                id: 'romance-scam-statistics',
+                category: 'news',
+                tag: 'News',
+                tagClass: 'tag-news',
+                title: 'Romance Scams Hit Record $1.3 Billion in Losses',
+                excerpt: 'New FTC data reveals that romance scams continue to rise, with online dating platforms being the primary vector.',
+                image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 10, 2026',
+                readTime: '5 min read',
+                body: '<p>Romance scams aren\'t just an inconvenience — they\'re a massive financial crime that devastates real people. The latest data from the Federal Trade Commission paints a sobering picture.</p>' +
+                    '<h2>The Numbers</h2>' +
+                    '<p>The FTC reports that consumers lost over $1.3 billion to romance scams in a recent year, making it one of the costliest forms of fraud. The median individual loss was $4,400 — but some victims lost hundreds of thousands of dollars.</p>' +
+                    '<h2>Who\'s Targeted</h2>' +
+                    '<p>While anyone can be a victim, the data shows that people ages 60-69 report the highest median losses. However, people ages 18-29 actually report the most total cases. The scammers are equal-opportunity predators.</p>' +
+                    '<h2>How to Protect Yourself</h2>' +
+                    '<p>The best defense is awareness. Never send money to someone you haven\'t met in person, be skeptical of profiles that seem too perfect, and use tools like SafeTea\'s Background Check and Catfish Detector to verify the people you\'re talking to.</p>' +
+                    '<blockquote>If someone you\'ve never met in person asks you for money, that is a scam. Full stop. No matter how convincing their story is.</blockquote>' +
+                    '<div class="callout"><strong>Report it:</strong> If you believe you\'ve been a victim of a romance scam, report it to the FTC at ReportFraud.ftc.gov and to the dating platform where you met the person.</div>'
+            },
+            {
+                id: 'share-location-guide',
+                category: 'tips',
+                tag: 'Tips',
+                tagClass: 'tag-tips',
+                title: 'How to Share Your Location Without Being Creepy About It',
+                excerpt: 'Sharing your location with friends before a date is smart. Here\'s how to bring it up naturally and why it matters.',
+                image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 7, 2026',
+                readTime: '4 min read',
+                body: '<p>We all know the drill: before a first date, you text your best friend the address, the person\'s name, maybe a screenshot of their profile. But it can feel awkward — like you\'re being paranoid. Here\'s the thing: you\'re not being paranoid. You\'re being smart.</p>' +
+                    '<h2>Why It Matters</h2>' +
+                    '<p>Having someone who knows where you are and who you\'re with is one of the simplest safety measures you can take. If something goes wrong, your friend already has the information they need to help — or to know when something isn\'t right.</p>' +
+                    '<h2>How to Bring It Up</h2>' +
+                    '<p>You don\'t need to make it a big deal. A simple "Hey, heading out on a date tonight — here are the details just in case" works perfectly. Most friends will appreciate that you trust them enough to share.</p>' +
+                    '<h2>The SafeTea Way</h2>' +
+                    '<p>SafeTea\'s Date Check-Out automates this entire process. Fill in the details, add your contacts, and they get a professional SafeTea Report with everything they need — including a live tracking link. It\'s less awkward than a rambling text and way more thorough.</p>' +
+                    '<div class="callout"><strong>Pro tip:</strong> Normalize this with your friend group. When everyone checks out before dates, it stops feeling like a big deal and just becomes part of the routine — like buckling your seatbelt.</div>'
+            },
+            {
+                id: 'background-check-guide',
+                category: 'product',
+                tag: 'Product',
+                tagClass: 'tag-product',
+                title: 'What SafeTea\'s Background Check Actually Finds',
+                excerpt: 'Our background check scans social media, data brokers, court records, and more. Here\'s exactly what it looks for and what the results mean.',
+                image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'March 3, 2026',
+                readTime: '6 min read',
+                body: '<p>SafeTea\'s Background Check is one of our most powerful features. But what exactly does it search, and how should you interpret the results?</p>' +
+                    '<h2>What We Search</h2>' +
+                    '<h3>Social Media Profiles</h3>' +
+                    '<p>We search for the person across LinkedIn, Facebook, Instagram, X (Twitter), TikTok, and Reddit. Having verified social media accounts is actually a good sign — it means the person has a real digital presence.</p>' +
+                    '<h3>Data Broker Sites</h3>' +
+                    '<p>We check 20+ data broker sites including Spokeo, WhitePages, BeenVerified, TruthFinder, and Radaris. These sites aggregate public records and personal data. If someone shows up on many of these, their information is widely available — which is worth knowing about.</p>' +
+                    '<h3>Court Records & Criminal Records</h3>' +
+                    '<p>We search public court records and criminal record databases. Any matches here are serious and worth reviewing carefully.</p>' +
+                    '<h3>Mugshot Databases</h3>' +
+                    '<p>We search publicly available mugshot databases. Finding a match here significantly increases the risk score.</p>' +
+                    '<h3>News</h3>' +
+                    '<p>We search for the person in news articles. This can surface both positive mentions (business press, community involvement) and concerning ones.</p>' +
+                    '<h2>Understanding the Risk Score</h2>' +
+                    '<p>The risk score (0-100) is calculated based on what we find. Mugshot matches add the most weight (+35), followed by criminal records (+30), court records (+15), and high data broker exposure (+10). Counterintuitively, having NO social media presence also adds risk (+10), since it can indicate a fake identity.</p>' +
+                    '<div class="callout"><strong>Important:</strong> The background check does NOT search the sex offender registry. That\'s a separate, dedicated search in the Hub > Search section because of how critical that information is.</div>'
+            },
+            {
+                id: 'dating-safety-stats',
+                category: 'research',
+                tag: 'Research',
+                tagClass: 'tag-research',
+                title: 'Dating Safety by the Numbers: What the Research Shows',
+                excerpt: 'We compiled the latest statistics on dating app safety, catfishing, stalking, and assault to understand the scope of the problem.',
+                image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+                author: 'SafeTea Team',
+                date: 'February 28, 2026',
+                readTime: '5 min read',
+                body: '<p>Understanding the scope of dating safety issues helps us all make better decisions. Here are some key statistics that inform why SafeTea exists.</p>' +
+                    '<h2>Online Dating Usage</h2>' +
+                    '<p>Over 350 million people worldwide use dating apps. In the US alone, roughly 30% of adults have used a dating app at some point, and that number climbs to over 50% for adults under 30.</p>' +
+                    '<h2>Safety Concerns</h2>' +
+                    '<p>Research shows that about 57% of women and 35% of men who use dating apps say they\'ve experienced some form of harassment on the platforms. About 1 in 10 dating app users report being threatened with physical harm by someone they met online.</p>' +
+                    '<h2>Catfishing</h2>' +
+                    '<p>Studies suggest that up to 53% of Americans who use dating apps admit to lying in their profiles. While not all of this is malicious catfishing, it creates an environment where trust is difficult to establish.</p>' +
+                    '<h2>What Helps</h2>' +
+                    '<p>The same research shows that simple safety measures dramatically reduce risk. Telling a friend where you\'re going, meeting in public places, and verifying someone\'s identity before meeting are the three most effective strategies.</p>' +
+                    '<div class="callout"><strong>That\'s why we built SafeTea.</strong> These aren\'t complex interventions — they\'re simple habits that anyone can adopt. We just make them easier.</div>'
             }
-            // Clear form
-            document.getElementById('community-body').value = '';
-            document.getElementById('community-city').value = '';
-            document.getElementById('community-category').value = 'general';
-            removeImagePreview('community-img-preview', 'community-img-input');
-            // Reload posts
-            loadCommunityPosts();
-        })
-        .catch(function(err) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
-            console.error('Post failed:', err);
-            alert('Failed to submit post. Please try again.');
-        });
-    }
+        ];
 
-    // === RENDER A REFERRAL CARD ===
-    function renderReferral(post) {
-        var authorName = post.author_name || 'Anonymous';
-        var initial = authorName[0].toUpperCase();
-        var avatarColor = getAvatarColor(authorName);
-        var personName = post.title || 'Unknown';
-        var replyCount = post.reply_count || 0;
+        // ==================== RENDER ====================
+        var currentCategory = 'all';
 
-        return '<div class="referral-card" data-post-id="' + post.id + '">' +
-            '<div class="referral-header">' +
-                '<div class="referral-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
-                '<div>' +
-                    '<div class="discussion-author">' + escapeHtml(authorName) + '</div>' +
-                    '<div class="referral-rec-label"><i class="fas fa-star"></i> Recommender</div>' +
-                '</div>' +
-            '</div>' +
-            '<div class="referral-person">' +
-                '<div class="referral-person-name">' + escapeHtml(personName) + '</div>' +
-                (post.city ? '<div class="referral-traits"><span class="referral-trait">' + escapeHtml(post.city) + '</span></div>' : '') +
-            '</div>' +
-            '<div class="referral-quote">' + escapeHtml(post.body) + '</div>' +
-            '<div class="referral-actions">' +
-                '<button class="referral-action"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</button>' +
-                '<button class="referral-action"><i class="fas fa-comment"></i> ' + replyCount + ' comments</button>' +
-                '<button class="referral-action"><i class="fas fa-share"></i> Share</button>' +
-            '</div>' +
-        '</div>';
-    }
+        function renderArticles(category) {
+            currentCategory = category || 'all';
+            var grid = document.getElementById('blog-grid');
+            var filtered = category === 'all' ? articles : articles.filter(function(a) { return a.category === category; });
 
-    // === LOAD REFERRAL POSTS ===
-    function loadReferralPosts() {
-        var container = document.getElementById('referral-posts');
-        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i> Loading referrals...</div>';
-
-        fetch(API_BASE + '/posts?feed=referral&limit=20')
-            .then(function(res) { return res.json(); })
-            .then(function(posts) {
-                if (!posts || posts.length === 0) {
-                    container.innerHTML = '<div class="empty-state">' +
-                        '<i class="fas fa-heart"></i>' +
-                        '<p>No referrals yet</p>' +
-                        '<small>Be the first to recommend a good guy!</small>' +
+            var html = '';
+            filtered.forEach(function(article, i) {
+                if (i === 0 && category === 'all' && article.featured) {
+                    // Featured article
+                    html += '<div class="blog-featured" onclick="openArticle(\'' + article.id + '\')">' +
+                        '<div class="blog-featured-img" style="background-image:url(\'' + article.image + '\')"></div>' +
+                        '<div class="blog-featured-content">' +
+                            '<span class="blog-tag ' + article.tagClass + '">' + article.tag + '</span>' +
+                            '<h2>' + article.title + '</h2>' +
+                            '<p>' + article.excerpt + '</p>' +
+                            '<div style="display:flex;align-items:center;gap:12px">' +
+                                '<div class="blog-card-author"><div class="blog-card-author-avatar">S</div><span>' + article.author + '</span></div>' +
+                                '<span style="color:#8080A0;font-size:12px">' + article.date + '</span>' +
+                                '<span style="color:#8080A0;font-size:12px">' + article.readTime + '</span>' +
+                            '</div>' +
+                        '</div>' +
                     '</div>';
-                    return;
+                } else {
+                    html += '<div class="blog-card" onclick="openArticle(\'' + article.id + '\')" data-category="' + article.category + '">' +
+                        '<div class="blog-card-img" style="background-image:url(\'' + article.image + '\')"></div>' +
+                        '<div class="blog-card-body">' +
+                            '<span class="blog-tag ' + article.tagClass + '">' + article.tag + '</span>' +
+                            '<h3>' + article.title + '</h3>' +
+                            '<p>' + article.excerpt + '</p>' +
+                            '<div class="blog-card-meta">' +
+                                '<div class="blog-card-author"><div class="blog-card-author-avatar">S</div><span>' + article.author + '</span></div>' +
+                                '<span class="blog-card-date">' + article.date + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
                 }
-                var html = '';
-                posts.forEach(function(post) {
-                    html += renderReferral(post);
-                });
-                container.innerHTML = html;
-            })
-            .catch(function(err) {
-                console.error('Failed to load referrals:', err);
-                container.innerHTML = '<div class="empty-state">' +
-                    '<i class="fas fa-exclamation-triangle"></i>' +
-                    '<p>Could not load referrals</p>' +
-                    '<small>Check your connection and try again</small>' +
-                '</div>';
             });
-    }
 
-    // === SUBMIT REFERRAL ===
-    function submitReferral() {
-        var name = document.getElementById('referral-name').value.trim();
-        var city = document.getElementById('referral-city').value.trim();
-        var relation = document.getElementById('referral-relation').value;
-        var body = document.getElementById('referral-body').value.trim();
+            if (filtered.length === 0) {
+                html = '<div style="text-align:center;padding:40px;color:#8080A0;grid-column:1/-1"><i class="fas fa-newspaper" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No articles in this category yet.</p></div>';
+            }
 
-        if (!name || !body) {
-            alert('Please fill in the name and your recommendation.');
-            return;
+            grid.innerHTML = html;
         }
 
-        if (!token) {
-            alert('Please log in to submit a referral.');
-            window.location.href = '/login.html';
-            return;
-        }
+        window.filterCategory = function(category) {
+            document.querySelectorAll('.blog-filter').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.blog-nav-links a').forEach(function(a) { a.classList.remove('active'); });
 
-        var payload = {
-            title: name,
-            body: body + (relation !== 'How do you know him?' ? ' [' + relation + ']' : ''),
-            category: 'referral',
-            city: city || null,
-            feed: 'referral'
+            // Activate filter button
+            document.querySelectorAll('.blog-filter').forEach(function(b) {
+                if (b.textContent.trim().toLowerCase().replace(/[^a-z]/g, '') === category || (category === 'all' && b.textContent.trim() === 'All')) {
+                    b.classList.add('active');
+                }
+            });
+
+            renderArticles(category);
         };
 
-        fetch(API_BASE + '/posts', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.error) {
-                alert('Error: ' + data.error);
-                return;
-            }
-            // Clear form
-            document.getElementById('referral-name').value = '';
-            document.getElementById('referral-city').value = '';
-            document.getElementById('referral-body').value = '';
-            document.getElementById('referral-relation').selectedIndex = 0;
-            // Reload referrals
-            loadReferralPosts();
-        })
-        .catch(function(err) {
-            console.error('Referral submit failed:', err);
-            alert('Failed to submit referral. Please try again.');
-        });
-    }
+        window.openArticle = function(id) {
+            var article = articles.find(function(a) { return a.id === id; });
+            if (!article) return;
 
-    // === LOAD TRENDING CITIES (static fallback) ===
-    function loadTrendingCities() {
-        var container = document.getElementById('trending-cities');
-        // Try to get from API, fallback to static
-        fetch(API_BASE + '/posts?limit=100&feed=community')
-            .then(function(res) { return res.json(); })
-            .then(function(posts) {
-                if (!posts || posts.length === 0) {
-                    container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> No data yet</li>';
-                    return;
-                }
-                var cityCounts = {};
-                posts.forEach(function(p) {
-                    if (p.city) {
-                        cityCounts[p.city] = (cityCounts[p.city] || 0) + 1;
+            var container = document.getElementById('blog-article-content');
+            container.innerHTML =
+                '<div class="blog-article-header">' +
+                    '<span class="blog-tag ' + article.tagClass + '">' + article.tag + '</span>' +
+                    '<h1>' + article.title + '</h1>' +
+                    '<div class="blog-article-meta">' +
+                        '<span><i class="fas fa-user"></i> ' + article.author + '</span>' +
+                        '<span><i class="fas fa-calendar"></i> ' + article.date + '</span>' +
+                        '<span><i class="fas fa-clock"></i> ' + article.readTime + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<img class="blog-article-hero-img" src="' + article.image + '" alt="' + article.title + '" onerror="this.style.display=\'none\'">' +
+                '<div class="blog-article-body">' + article.body + '</div>' +
+                '<div class="blog-article-cta">' +
+                    '<h3><i class="fas fa-shield-alt"></i> Stay Safe with SafeTea</h3>' +
+                    '<p>Date Check-Out, Background Checks, Catfish Detection, and more — all in one app.</p>' +
+                    '<a href="/dashboard.html">Open SafeTea</a>' +
+                '</div>';
+
+            document.getElementById('blog-list').style.display = 'none';
+            document.getElementById('blog-article').classList.add('active');
+            window.scrollTo(0, 0);
+        };
+
+        window.closeArticle = function() {
+            document.getElementById('blog-article').classList.remove('active');
+            document.getElementById('blog-list').style.display = 'block';
+            window.scrollTo(0, 0);
+        };
+
+        // ==================== LIVE NEWS FEED ====================
+        function loadNews() {
+            var feed = document.getElementById('news-feed');
+            // Fetch real news from our API
+            fetch('/api/blog/news')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (!data || !data.articles || data.articles.length === 0) {
+                        feed.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No recent news available.</p>';
+                        return;
                     }
+                    var html = '';
+                    data.articles.slice(0, 6).forEach(function(item) {
+                        html += '<div class="blog-news-item">' +
+                            '<div class="blog-news-icon"><i class="fas fa-newspaper"></i></div>' +
+                            '<div>' +
+                                '<a href="' + (item.url || '#') + '" target="_blank" rel="noopener">' + escapeHtml(item.title) + '</a>' +
+                                '<div class="news-source">' + escapeHtml(item.source || '') + (item.date ? ' &bull; ' + item.date : '') + '</div>' +
+                            '</div>' +
+                        '</div>';
+                    });
+                    feed.innerHTML = html;
+                })
+                .catch(function() {
+                    // Fallback: show curated news
+                    feed.innerHTML = renderFallbackNews();
                 });
-                var sorted = Object.entries(cityCounts).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
-                if (sorted.length === 0) {
-                    container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> No city data yet</li>';
-                    return;
-                }
-                var html = '';
-                sorted.forEach(function(item) {
-                    html += '<li><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(item[0]) + ' - ' + item[1] + ' post' + (item[1] !== 1 ? 's' : '') + '</li>';
-                });
-                container.innerHTML = html;
-            })
-            .catch(function() {
-                container.innerHTML = '<li><i class="fas fa-map-marker-alt"></i> Austin, TX</li>' +
-                    '<li><i class="fas fa-map-marker-alt"></i> Denver, CO</li>' +
-                    '<li><i class="fas fa-map-marker-alt"></i> Nashville, TN</li>';
+        }
+
+        function renderFallbackNews() {
+            var fallback = [
+                { title: 'FTC Reports Record Losses from Romance Scams', source: 'Federal Trade Commission', date: '2026' },
+                { title: 'Dating Apps Add New Safety Features Amid Growing Concerns', source: 'Tech News', date: '2026' },
+                { title: 'Study: 57% of Women Experience Harassment on Dating Apps', source: 'Pew Research', date: '2026' },
+                { title: 'How AI is Being Used to Create More Convincing Catfish Profiles', source: 'Wired', date: '2026' },
+                { title: 'New State Laws Require Dating Apps to Disclose Safety Policies', source: 'Reuters', date: '2026' },
+            ];
+            var html = '';
+            fallback.forEach(function(item) {
+                html += '<div class="blog-news-item">' +
+                    '<div class="blog-news-icon"><i class="fas fa-newspaper"></i></div>' +
+                    '<div><a href="#">' + item.title + '</a><div class="news-source">' + item.source + ' &bull; ' + item.date + '</div></div>' +
+                '</div>';
             });
-    }
+            return html;
+        }
 
-    // === INIT: Load data on page load ===
-    loadCommunityPosts();
-    loadTrendingCities();
+        function escapeHtml(s) {
+            if (!s) return '';
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
 
-    // Re-check image expiry every minute
-    setInterval(function() {
-        document.querySelectorAll('.post-image-container[data-expires]').forEach(function(container) {
-            var expiryDate = new Date(container.getAttribute('data-expires'));
-            var now = new Date();
-            var diff = expiryDate - now;
-            if (diff <= 0) {
-                var img = container.querySelector('img');
-                if (img) img.classList.add('img-expired');
-                if (!container.querySelector('.img-expired-overlay')) {
-                    var overlay = document.createElement('div');
-                    overlay.className = 'img-expired-overlay';
-                    overlay.innerHTML = '<i class="fas fa-clock"></i>&nbsp; Image expired for privacy';
-                    container.appendChild(overlay);
-                }
-                var badge = container.querySelector('.img-expiry-badge');
-                if (badge) badge.remove();
-            }
-        });
-    }, 60000);
+        // ==================== INIT ====================
+        renderArticles('all');
+        loadNews();
 
-    // === CATFISH SCANNER ===
-    var catfishDropZone = document.getElementById('catfish-drop-zone');
-    var catfishFileInput = document.getElementById('catfish-file-input');
-    if (catfishDropZone) {
-        catfishDropZone.addEventListener('click', function() { catfishFileInput.click(); });
-        catfishDropZone.addEventListener('dragover', function(e) { e.preventDefault(); catfishDropZone.style.borderColor = '#3b98db'; });
-        catfishDropZone.addEventListener('dragleave', function() { catfishDropZone.style.borderColor = ''; });
-        catfishDropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            catfishDropZone.style.borderColor = '';
-            if (e.dataTransfer.files.length) simulateCatfishScan(e.dataTransfer.files[0].name);
-        });
-        catfishFileInput.addEventListener('change', function() {
-            if (catfishFileInput.files.length) simulateCatfishScan(catfishFileInput.files[0].name);
-        });
-    }
-
-    function runCatfishScan() {
-        var url = document.getElementById('catfish-url').value.trim();
-        if (!url) { alert('Please paste a profile URL or upload a photo'); return; }
-        simulateCatfishScan(url);
-    }
-
-    function simulateCatfishScan(input) {
-        var result = document.getElementById('catfish-result');
-        result.style.display = 'block';
-        result.className = 'catfish-result scanning';
-        result.innerHTML = '<div style="text-align:center"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#3b98db;margin-bottom:12px"></i><p style="color:#3b98db;font-weight:600">Scanning: ' + input.substring(0, 40) + '...</p><p style="color:#888;font-size:13px;margin-top:4px">Checking reverse image databases, scam reports, and social profiles...</p></div>';
-
-        setTimeout(function() {
-            var isSafe = Math.random() > 0.4;
-            if (isSafe) {
-                result.className = 'catfish-result safe';
-                result.innerHTML = '<h4 style="color:#2ecc71;margin-bottom:8px"><i class="fas fa-check-circle"></i> All Clear!</h4><p style="color:#ccc;font-size:14px;line-height:1.6">No matches found in scam databases. Photos appear to be original. No red flags detected.</p><div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap"><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-image"></i> Original photos</span><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-database"></i> No scam records</span><span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-user-check"></i> Consistent profile</span></div>';
-            } else {
-                result.className = 'catfish-result danger';
-                result.innerHTML = '<h4 style="color:#e74c3c;margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> Warning: Potential Catfish Detected</h4><p style="color:#ccc;font-size:14px;line-height:1.6">Photos matched with ' + Math.floor(Math.random() * 5 + 2) + ' other profiles across dating platforms. Images may be stolen from social media.</p><div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap"><span style="background:rgba(231,76,60,0.1);color:#e74c3c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-copy"></i> Duplicate photos</span><span style="background:rgba(241,196,15,0.1);color:#f1c40f;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600"><i class="fas fa-exclamation"></i> Scam DB match</span></div>';
-            }
-        }, 3000);
-    }
-</script>
-
+        // Handle URL hash for direct article links
+        if (window.location.hash) {
+            var articleId = window.location.hash.substring(1);
+            var found = articles.find(function(a) { return a.id === articleId; });
+            if (found) openArticle(articleId);
+        }
+    })();
+    </script>
 </body>
 </html>

@@ -1409,6 +1409,36 @@
     };
 
     // ==================== REFER A GOOD ONE ====================
+    var referralPhotoData = null;
+
+    window.handleReferralPhoto = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Photo must be under 5MB', true);
+                input.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                referralPhotoData = e.target.result;
+                var preview = document.getElementById('hub-referral-photo-preview');
+                var img = document.getElementById('hub-referral-photo-img');
+                if (img) img.src = referralPhotoData;
+                if (preview) preview.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.removeReferralPhoto = function() {
+        referralPhotoData = null;
+        var preview = document.getElementById('hub-referral-photo-preview');
+        var input = document.getElementById('hub-referral-photo');
+        if (preview) preview.style.display = 'none';
+        if (input) input.value = '';
+    };
+
     function hubRenderReferral(post) {
         var authorName = post.author_name || 'Anonymous';
         var initial = authorName[0].toUpperCase();
@@ -1428,10 +1458,12 @@
                 '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtml(personName) + '</div>' +
                 (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtml(post.city) + '</span>' : '') +
             '</div>' +
+            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtml(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06)" alt="Referral photo"></div>' : '') +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtml(post.body) + '"</div>' +
-            '<div style="display:flex;gap:16px">' +
+            '<div style="display:flex;gap:16px;align-items:center">' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</span>' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' comments</span>' +
+                (post.user_id ? '<button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtml(authorName).replace(/'/g, "\\'") + '\')" style="margin-left:auto;background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button>' : '') +
             '</div>' +
         '</div>';
     }
@@ -1461,17 +1493,66 @@
         if (!name || !body) { showToast('Please fill in the name and your recommendation.', true); return; }
         apiFetch('/posts', {
             method: 'POST',
-            body: JSON.stringify({ title: name, body: body + (relation !== 'How do you know him?' ? ' [' + relation + ']' : ''), category: 'referral', city: city || null, feed: 'referral' })
+            body: JSON.stringify({ title: name, body: body + (relation !== 'How do you know him?' ? ' [' + relation + ']' : ''), category: 'referral', city: city || null, feed: 'referral', image_url: referralPhotoData || null })
         }).then(function(data) {
             if (data.error) { showToast(data.error, true); return; }
             document.getElementById('hub-referral-name').value = '';
             document.getElementById('hub-referral-city').value = '';
             document.getElementById('hub-referral-body').value = '';
             document.getElementById('hub-referral-relation').selectedIndex = 0;
+            removeReferralPhoto();
             showToast('Referral submitted!');
             hubLoadReferralPosts();
         }).catch(function() {
             showToast('Failed to submit referral.', true);
+        });
+    };
+
+    window.hubContactPoster = function(posterId, posterName) {
+        if (!token) { showToast('Please log in to send a message.', true); return; }
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'hub-contact-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-envelope" style="color:#E8A0B5"></i> Ask About Him</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin-bottom:12px">Send a message to <strong style="color:#fff">' + escapeHtml(posterName) + '</strong> about their referral.</p>' +
+                '<div class="dc-form-group">' +
+                    '<textarea id="hub-contact-message" rows="4" placeholder="Hi! I saw your referral and would love to know more..." style="width:100%;padding:12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;resize:vertical;font-family:inherit"></textarea>' +
+                '</div>' +
+                '<button id="hub-contact-send-btn" class="dc-btn dc-btn-primary" onclick="hubSendContactMessage(' + posterId + ', \'' + escapeHtml(posterName).replace(/'/g, "\\'") + '\')"><i class="fas fa-paper-plane"></i> Send Message</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'hub-contact-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.hubSendContactMessage = function(posterId, posterName) {
+        var textarea = document.getElementById('hub-contact-message');
+        var content = textarea.value.trim();
+        if (!content) { showToast('Please type a message.', true); return; }
+
+        var btn = document.getElementById('hub-contact-send-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        apiFetch('/messages', {
+            method: 'POST',
+            body: JSON.stringify({ recipient_id: posterId, content: content })
+        }).then(function(data) {
+            if (data && (data.message || data.id)) {
+                showToast('Message sent to ' + posterName + '!');
+                var modal = document.getElementById('hub-contact-modal');
+                if (modal) modal.remove();
+            } else {
+                showToast(data.error || 'Failed to send message', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            }
+        }).catch(function() {
+            showToast('Failed to send message.', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
         });
     };
 

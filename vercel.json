@@ -8,6 +8,8 @@
         { "source": "/api/dates/share", "destination": "/api/dates/share" },
         { "source": "/api/dates/report", "destination": "/api/dates/report" },
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
+        { "source": "/api/subscribe", "destination": "/api/subscribe" },
+        { "source": "/api/webhook-stripe", "destination": "/api/webhook-stripe" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },

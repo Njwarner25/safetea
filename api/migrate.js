@@ -115,7 +115,66 @@ module.exports = async function handler(req, res) {
         try { await sql`CREATE INDEX IF NOT EXISTS idx_nwm_watched ON name_watch_matches(watched_name_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_nwm_post ON name_watch_matches(post_id)`; } catch(e) {}
 
-        return res.status(200).json({ message: 'Migration complete (including Name Watch tables)' });
+        // ============================================================
+        // PHONE AUTH + VERIFICATION TABLES (v2 migration)
+        // ============================================================
+
+        // Phone verification OTPs
+        await sql`CREATE TABLE IF NOT EXISTS phone_verifications (
+            id SERIAL PRIMARY KEY,
+            phone VARCHAR(20) NOT NULL,
+            code VARCHAR(6) NOT NULL,
+            attempts INTEGER DEFAULT 0,
+            used BOOLEAN DEFAULT false,
+            expires_at TIMESTAMP NOT NULL,
+            verified_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // Verification attempt audit log (no PII — only booleans + provider)
+        await sql`CREATE TABLE IF NOT EXISTS verification_attempts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            type VARCHAR(20) NOT NULL,
+            result VARCHAR(20) NOT NULL,
+            provider VARCHAR(50),
+            session_id VARCHAR(255),
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // Community gender fraud reports
+        await sql`CREATE TABLE IF NOT EXISTS gender_reports (
+            id SERIAL PRIMARY KEY,
+            reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reported_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reason TEXT NOT NULL,
+            reviewed BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(reporter_id, reported_user_id)
+        )`;
+
+        // User columns for phone auth + verification
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS age_verified BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS identity_verified BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender_verified BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender_report_count INTEGER DEFAULT 0`; } catch(e) {}
+
+        // Indexes for phone auth
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone ON phone_verifications(phone)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_phone_verifications_expires ON phone_verifications(expires_at)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_verification_attempts_user ON verification_attempts(user_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_gender_reports_reported ON gender_reports(reported_user_id)`; } catch(e) {}
+        try { await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone IS NOT NULL`; } catch(e) {}
+
+        // Make email nullable for phone-only users
+        try { await sql`ALTER TABLE users ALTER COLUMN email DROP NOT NULL`; } catch(e) {}
+
+        return res.status(200).json({
+            message: 'Migration complete (v2: phone auth + verification + Name Watch)'
+        });
     } catch (error) {
         console.error('Migration error:', error);
         return res.status(500).json({ error: 'Migration failed', details: error.message });

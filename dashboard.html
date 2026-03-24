@@ -298,11 +298,11 @@
         .dc-btn-success:hover { background: #27ae60; }
         .dc-btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #A0A0C0; }
         .dc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .dc-active-date { border: 2px solid #FFA500; }
+        .dc-active-date { border: 2px solid #E8A0B5; }
         .dc-status { display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(255,165,0,0.1); border-radius: 10px; margin-bottom: 16px; }
-        .dc-status-dot { width: 10px; height: 10px; border-radius: 50%; background: #FFA500; animation: dcpulse 1.5s infinite; }
+        .dc-status-dot { width: 10px; height: 10px; border-radius: 50%; background: #E8A0B5; animation: dcpulse 1.5s infinite; }
         @keyframes dcpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .dc-timer { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: #FFA500; }
+        .dc-timer { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: #E8A0B5; }
         .dc-history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2A2A44; border-radius: 10px; margin-bottom: 8px; }
         .dc-history-name { font-weight: 600; color: #fff; }
         .dc-history-meta { font-size: 12px; color: #8080A0; }
@@ -472,14 +472,16 @@
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
                 <button class="hub-tab" data-hubsub="datecheck" onclick="switchHubTab('datecheck')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-calendar-check"></i> Date Check</button>
-                <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Catfish Check</button>
+                <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Reel in a Catfish</button>
+                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
+                <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
             </div>
 
             <!-- HUB: OVERVIEW -->
             <div id="hub-overview" class="hub-sub active">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-                    <div onclick="switchHubTab('datecheck')" style="background:linear-gradient(135deg,rgba(242,112,89,0.15),rgba(242,112,89,0.05));border:1px solid rgba(242,112,89,0.25);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-calendar-check" style="font-size:26px;color:#f27059;margin-bottom:10px;display:block"></i>
+                    <div onclick="switchHubTab('datecheck')" style="background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(232,160,181,0.05));border:1px solid rgba(232,160,181,0.25);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-calendar-check" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
                         <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Date Check-In/Out</h4>
                         <p style="color:#8080A0;font-size:12px;line-height:1.5">Share date details via SMS with trusted contacts. Live tracking + safety check-in.</p>
                         <span class="plus-badge" style="display:inline-block;margin-top:8px">SafeTea+</span>
@@ -495,17 +497,29 @@
                         <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Safety Search</h4>
                         <p style="color:#8080A0;font-size:12px;line-height:1.5">Sex offender registry, background checks with social media, mugshots, and data broker exposure.</p>
                     </div>
-                    <div onclick="switchHubTab('catfish')" style="background:linear-gradient(135deg,rgba(255,165,0,0.12),rgba(255,165,0,0.04));border:1px solid rgba(255,165,0,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-fish" style="font-size:26px;color:#FFA500;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Catfish Detector</h4>
+                    <div onclick="switchHubTab('catfish')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-fish" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Reel in a Catfish</h4>
                         <p style="color:#8080A0;font-size:12px;line-height:1.5">Analyze profile photos for catfishing — metadata, editing software, reverse image search.</p>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+                    <div onclick="switchHubTab('teatalk')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(210,130,160,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-mug-hot" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Tea Talk</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Spill the tea — share experiences, ask the community, or give a heads up.</p>
+                    </div>
+                    <div onclick="switchHubTab('referral')" style="background:linear-gradient(135deg,rgba(46,204,113,0.12),rgba(46,204,113,0.04));border:1px solid rgba(46,204,113,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                        <i class="fas fa-hand-holding-heart" style="font-size:26px;color:#2ecc71;margin-bottom:10px;display:block"></i>
+                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Refer a Good One</h4>
+                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Know a genuinely good guy? Vouch for him here and help the community.</p>
                     </div>
                 </div>
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:24px">
                     <h3 style="color:#fff;font-size:16px;margin-bottom:16px"><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> How SafeTea Keeps You Safe</h3>
                     <div style="display:flex;flex-direction:column;gap:14px">
                         <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(242,112,89,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#f27059"></i></div>
+                            <div style="min-width:38px;height:38px;background:rgba(232,160,181,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#E8A0B5"></i></div>
                             <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">1. Check Out Before Your Date</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Enter who, where, and when. Add trusted contacts who get an SMS with all the details.</p></div>
                         </div>
                         <div style="display:flex;gap:14px;align-items:flex-start">
@@ -513,20 +527,13 @@
                             <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">2. Trusted Contacts Get an SMS</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">They receive a text with date info and a live tracking link — no app needed.</p></div>
                         </div>
                         <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(255,165,0,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#FFA500"></i></div>
+                            <div style="min-width:38px;height:38px;background:rgba(180,140,210,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#B48CD2"></i></div>
                             <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">3. Live Tracking Page</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Contacts can check your status anytime — whether you're on the date and if you're overdue.</p></div>
                         </div>
                         <div style="display:flex;gap:14px;align-items:flex-start">
                             <div style="min-width:38px;height:38px;background:rgba(76,175,80,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50"></i></div>
                             <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">4. Check In When Safe</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Tap "Check In" and all your trusted contacts get a confirmation text instantly.</p></div>
                         </div>
-                    </div>
-                </div>
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px">
-                    <h3 style="color:#fff;font-size:16px;margin-bottom:12px"><i class="fas fa-link" style="color:#E8A0B5"></i> Quick Links</h3>
-                    <div style="display:flex;flex-direction:column;gap:8px">
-                        <a href="/blog.html" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;transition:background 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-mug-hot" style="color:#E8A0B5;width:20px;text-align:center"></i> SafeTea Blog</a>
-                        <a onclick="switchTab('feed')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#141428;border-radius:10px;color:#F0D0C0;text-decoration:none;font-size:14px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='rgba(232,160,181,0.1)'" onmouseout="this.style.background='#141428'"><i class="fas fa-users" style="color:#E8A0B5;width:20px;text-align:center"></i> Community Feed</a>
                     </div>
                 </div>
             </div>
@@ -590,7 +597,7 @@
             <div id="hub-datecheck" class="hub-sub" style="display:none">
                 <div class="datecheck-section">
                     <div class="datecheck-header">
-                        <h2><i class="fas fa-calendar-check" style="color:#f27059"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
+                        <h2><i class="fas fa-calendar-check" style="color:#E8A0B5"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
                         <p>Share your date details with trusted contacts. They'll get an SMS with your SafeTea Report and a tracking link.</p>
                     </div>
                     <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
@@ -612,9 +619,9 @@
 
                         <!-- ACTIVE DATE CARD (shown when checked out) -->
                         <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
-                            <h3><i class="fas fa-map-marker-alt" style="color:#FFA500"></i> Active Date</h3>
-                            <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#FFA500;font-weight:500">Currently on date</span></div>
-                            <div id="dc-active-photo" style="text-align:center;margin-bottom:12px;display:none"><img id="dc-active-photo-img" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #FFA500" alt="Date photo"></div>
+                            <h3><i class="fas fa-map-marker-alt" style="color:#B48CD2"></i> Active Date</h3>
+                            <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#B48CD2;font-weight:500">Currently on date</span></div>
+                            <div id="dc-active-photo" style="text-align:center;margin-bottom:12px;display:none"><img id="dc-active-photo-img" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #E8A0B5" alt="Date photo"></div>
                             <div style="margin-bottom:12px">
                                 <div style="color:#fff;font-weight:600;font-size:16px" id="dc-active-name"></div>
                                 <div style="color:#8080A0;font-size:13px" id="dc-active-venue"></div>
@@ -644,7 +651,7 @@
 
                         <!-- CHECK-OUT FORM -->
                         <div id="dc-form" class="datecheck-card">
-                            <h3><i class="fas fa-door-open" style="color:#f27059"></i> Check Out for a Date</h3>
+                            <h3><i class="fas fa-door-open" style="color:#E8A0B5"></i> Check Out for a Date</h3>
 
                             <!-- Photo Upload -->
                             <div class="dc-form-group">
@@ -713,7 +720,7 @@
             <div id="hub-catfish" class="hub-sub" style="display:none">
                 <div class="catfish-section">
                     <div style="margin-bottom:20px">
-                        <h2><i class="fas fa-fish" style="color:#FFA500"></i> Catfish Detector</h2>
+                        <h2><i class="fas fa-fish" style="color:#E8A0B5"></i> Reel in a Catfish</h2>
                         <p style="color:#8080A0;font-size:14px;margin-top:4px">Analyze a profile photo for signs of catfishing — EXIF metadata, editing software, reverse image search.</p>
                     </div>
                     <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
@@ -731,6 +738,68 @@
                         <div id="cf-preview" style="margin-top:12px;display:none"><img id="cf-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid rgba(255,255,255,0.1)"></div>
                         <div id="catfish-results" class="search-results" style="margin-top:16px"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- HUB: TEA TALK (Spill the Tea) -->
+            <div id="hub-teatalk" class="hub-sub" style="display:none">
+                <div style="margin-bottom:20px">
+                    <h2><i class="fas fa-mug-hot" style="color:#E8A0B5"></i> Tea Talk</h2>
+                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Spill the tea, stay safe, and protect each other. Your voice matters.</p>
+                </div>
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
+                    <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-mug-hot" style="color:#E8A0B5"></i> Spill the Tea</h3>
+                    <textarea id="hub-community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
+                    <div style="display:flex;gap:12px;margin-top:8px">
+                        <select id="hub-community-category" style="background:#141428;border:1px solid rgba(255,255,255,0.08);color:#8080A0;padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
+                            <option value="general">General</option>
+                            <option value="experience">Experience</option>
+                            <option value="warning">Warning</option>
+                            <option value="question">Question</option>
+                            <option value="positive">Positive</option>
+                        </select>
+                        <input type="text" id="hub-community-city" placeholder="Your city (optional)" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-size:13px;outline:none">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                        <label style="font-size:13px;color:#8080A0;display:flex;align-items:center;gap:6px"><input type="checkbox" id="hub-community-anon" checked> Post anonymously</label>
+                        <button class="btn-post" id="hub-community-submit" onclick="hubSubmitCommunityPost()"><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                </div>
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px">
+                    <h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-info-circle" style="color:#E8A0B5"></i> Community Guidelines</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> First name + last initial only</span>
+                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Share experiences, not revenge</span>
+                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Be honest and factual</span>
+                    </div>
+                </div>
+                <div id="hub-community-posts">
+                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading discussions...</div>
+                </div>
+            </div>
+
+            <!-- HUB: REFER A GOOD ONE -->
+            <div id="hub-referral" class="hub-sub" style="display:none">
+                <div style="margin-bottom:20px">
+                    <h2><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h2>
+                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Know a genuinely good guy? Vouch for him here. First name + last initial only.</p>
+                </div>
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
+                    <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Submit a Referral</h3>
+                    <div style="display:flex;gap:12px;margin-bottom:12px">
+                        <input type="text" id="hub-referral-name" placeholder="His first name + last initial (e.g. David T.)" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+                        <input type="text" id="hub-referral-city" placeholder="City" style="width:140px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+                    </div>
+                    <select id="hub-referral-relation" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);color:#8080A0;padding:10px 14px;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px">
+                        <option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option>
+                    </select>
+                    <textarea id="hub-referral-body" placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
+                    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+                        <button class="btn-post" style="background:linear-gradient(135deg,#2ecc71,#27ae60)" onclick="hubSubmitReferral()"><i class="fas fa-heart"></i> Submit Referral</button>
+                    </div>
+                </div>
+                <div id="hub-referral-posts">
+                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>
                 </div>
             </div>
         </div>

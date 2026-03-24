@@ -792,7 +792,7 @@
             body: JSON.stringify({ fullName: name, city: city, state: state, age: age || null })
         }).then(function(report) {
             var html = '<h4 style="color:#fff;margin-bottom:16px"><i class="fas fa-file-alt" style="color:#f27059"></i> Background Report: ' + escapeHtml(report.subject) + '</h4>';
-            var rc = report.riskAssessment.level === 'high' ? '#e74c3c' : report.riskAssessment.level === 'medium' ? '#f39c12' : '#2ecc71';
+            var rc = report.riskAssessment.level === 'high' ? '#e74c3c' : report.riskAssessment.level === 'medium' ? '#B48CD2' : '#2ecc71';
             var rl = report.riskAssessment.level === 'high' ? 'High Risk' : report.riskAssessment.level === 'medium' ? 'Moderate' : 'Low Risk';
             html += '<div style="background:rgba(' + (report.riskAssessment.level==='high'?'231,76,60':report.riskAssessment.level==='medium'?'243,156,18':'46,204,113') + ',0.1);border:1px solid '+rc+';border-radius:12px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:16px">';
             html += '<div style="min-width:60px;height:60px;border-radius:50%;border:3px solid '+rc+';display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:'+rc+'">'+report.riskAssessment.score+'</div>';
@@ -1283,6 +1283,8 @@
         if (sub === 'namewatch' && typeof initNameWatch === 'function') initNameWatch();
         if (sub === 'datecheck' && typeof initDateCheck === 'function') initDateCheck();
         if (sub === 'search') initSearchTabs();
+        if (sub === 'teatalk') hubLoadCommunityPosts();
+        if (sub === 'referral') hubLoadReferralPosts();
     };
 
     // ==================== CATFISH CHECK ====================
@@ -1300,7 +1302,7 @@
             method: 'POST',
             body: JSON.stringify({ imageUrl: imageUrl, profileName: profileName, platform: platform })
         }).then(function(data) {
-            var sc = data.catfishScore >= 60 ? '#e74c3c' : data.catfishScore >= 30 ? '#f39c12' : '#2ecc71';
+            var sc = data.catfishScore >= 60 ? '#e74c3c' : data.catfishScore >= 30 ? '#B48CD2' : '#2ecc71';
             var rl = data.riskLevel === 'high_risk' ? 'High Risk' : data.riskLevel === 'medium_risk' ? 'Medium Risk' : data.riskLevel === 'low_risk' ? 'Low Risk' : 'Likely Safe';
             var h = '<div style="text-align:center;margin:16px 0"><div style="width:80px;height:80px;border-radius:50%;border:4px solid '+sc+';display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:'+sc+'">'+data.catfishScore+'</div><div style="color:'+sc+';font-weight:700;font-size:18px;margin-top:8px">'+rl+'</div></div>';
             if (data.redFlags && data.redFlags.length > 0) { h += '<div style="margin-bottom:12px">'; data.redFlags.forEach(function(f){ h += '<div style="padding:6px 12px;background:rgba(231,76,60,0.1);border-radius:6px;color:#e74c3c;font-size:13px;margin-bottom:4px"><i class="fas fa-flag"></i> '+escapeHtml(f)+'</div>'; }); h += '</div>'; }
@@ -1308,6 +1310,168 @@
             results.innerHTML = h;
         }).catch(function(err) {
             results.innerHTML = '<div class="disclaimer" style="border-color:#e74c3c"><i class="fas fa-exclamation-circle" style="color:#e74c3c"></i><span>Catfish check failed: '+escapeHtml(err.message||'Unknown error')+'</span></div>';
+        });
+    };
+
+    // ==================== TEA TALK (Community Posts) ====================
+    function hubFormatBody(text) {
+        if (!text) return '';
+        var escaped = escapeHtml(text);
+        escaped = escaped.replace(/\b([A-Z][a-z]+\s[A-Z]\.)/g, '<span style="color:#E8A0B5;font-weight:600">$1</span>');
+        return escaped;
+    }
+
+    function hubGetCategoryBadge(category) {
+        var map = {
+            experience: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">Experience</span>',
+            warning: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(231,76,60,0.15);color:#e74c3c">Warning</span>',
+            question: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(91,160,208,0.15);color:#5BA0D0">Question</span>',
+            positive: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Positive</span>',
+            general: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">General</span>',
+            referral: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Referral</span>'
+        };
+        return map[category] || '';
+    }
+
+    function hubGetAvatarColor(name) {
+        var colors = ['#6c7b95','#E8A0B5','#2ecc71','#9b59b6','#e085c2','#6ec2e2','#B48CD2','#1abc9c','#e74c3c','#3498db'];
+        var hash = 0;
+        for (var i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function hubRenderPost(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = hubGetAvatarColor(authorName);
+        var cityHtml = post.city ? ' <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
+        var badgeHtml = hubGetCategoryBadge(post.category);
+        var replyCount = post.reply_count || 0;
+
+        return '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
+                '<div style="flex:1">' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtml(authorName) + ' ' + badgeHtml + '</div>' +
+                    '<div style="font-size:12px;color:#666;margin-top:2px">' + getTimeAgo(post.created_at) + cityHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
+            '<div style="display:flex;gap:16px">' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</span>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function hubLoadCommunityPosts() {
+        var container = document.getElementById('hub-community-posts');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading discussions...</div>';
+        apiFetch('/posts?feed=community&limit=20').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-comments" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No discussions yet</p><small>Be the first to start a conversation!</small></div>';
+                return;
+            }
+            var html = '';
+            posts.forEach(function(post) { html += hubRenderPost(post); });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load discussions</div>';
+        });
+    }
+
+    window.hubSubmitCommunityPost = function() {
+        var body = document.getElementById('hub-community-body').value.trim();
+        var category = document.getElementById('hub-community-category').value;
+        var city = document.getElementById('hub-community-city').value.trim();
+        if (!body) { showToast('Please write something before posting.', true); return; }
+        var btn = document.getElementById('hub-community-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        apiFetch('/posts', {
+            method: 'POST',
+            body: JSON.stringify({ title: body.substring(0, 80), body: body, category: category, city: city || null, feed: 'community' })
+        }).then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            if (data.error) { showToast(data.error, true); return; }
+            document.getElementById('hub-community-body').value = '';
+            document.getElementById('hub-community-city').value = '';
+            document.getElementById('hub-community-category').value = 'general';
+            showToast('Post shared!');
+            hubLoadCommunityPosts();
+        }).catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            showToast('Failed to submit post.', true);
+        });
+    };
+
+    // ==================== REFER A GOOD ONE ====================
+    function hubRenderReferral(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = hubGetAvatarColor(authorName);
+        var personName = post.title || 'Unknown';
+        var replyCount = post.reply_count || 0;
+
+        return '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
+                '<div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtml(authorName) + '</div>' +
+                    '<div style="font-size:11px;color:#2ecc71"><i class="fas fa-star"></i> Recommender</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.15);border-radius:10px;padding:14px;margin-bottom:12px">' +
+                '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtml(personName) + '</div>' +
+                (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtml(post.city) + '</span>' : '') +
+            '</div>' +
+            '<div style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtml(post.body) + '"</div>' +
+            '<div style="display:flex;gap:16px">' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</span>' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' comments</span>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function hubLoadReferralPosts() {
+        var container = document.getElementById('hub-referral-posts');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>';
+        apiFetch('/posts?feed=referral&limit=20').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-heart" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No referrals yet</p><small>Be the first to recommend a good guy!</small></div>';
+                return;
+            }
+            var html = '';
+            posts.forEach(function(post) { html += hubRenderReferral(post); });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load referrals</div>';
+        });
+    }
+
+    window.hubSubmitReferral = function() {
+        var name = document.getElementById('hub-referral-name').value.trim();
+        var city = document.getElementById('hub-referral-city').value.trim();
+        var relation = document.getElementById('hub-referral-relation').value;
+        var body = document.getElementById('hub-referral-body').value.trim();
+        if (!name || !body) { showToast('Please fill in the name and your recommendation.', true); return; }
+        apiFetch('/posts', {
+            method: 'POST',
+            body: JSON.stringify({ title: name, body: body + (relation !== 'How do you know him?' ? ' [' + relation + ']' : ''), category: 'referral', city: city || null, feed: 'referral' })
+        }).then(function(data) {
+            if (data.error) { showToast(data.error, true); return; }
+            document.getElementById('hub-referral-name').value = '';
+            document.getElementById('hub-referral-city').value = '';
+            document.getElementById('hub-referral-body').value = '';
+            document.getElementById('hub-referral-relation').selectedIndex = 0;
+            showToast('Referral submitted!');
+            hubLoadReferralPosts();
+        }).catch(function() {
+            showToast('Failed to submit referral.', true);
         });
     };
 

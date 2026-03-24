@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const body = await parseBody(req);
+        const body = req.body || {};
         const email = body.email;
         const password = body.password;
 

@@ -76,6 +76,38 @@ export default function NameWatchScreen() {
               </View>
             </View>
 
+            {/* Before/After Scenario */}
+            <View style={styles.scenarioCard}>
+              <View style={styles.scenarioBefore}>
+                <Text style={styles.scenarioLabel}>{'❌  Without Name Watch'}</Text>
+                <Text style={styles.scenarioTitle}>The frustration of no visibility</Text>
+                <Text style={styles.scenarioText}>
+                  You meet someone on a dating app. He seems genuine. You go on a date, but
+                  something feels off. Two weeks later, a friend tells you she dated him too
+                  — and he told her he was single. Time wasted. Trust broken. No way to have known.
+                </Text>
+                <View style={styles.scenarioBadgeBefore}>
+                  <Text style={styles.scenarioBadgeBeforeText}>No insight. No protection.</Text>
+                </View>
+              </View>
+
+              <View style={styles.scenarioDivider} />
+
+              <View style={styles.scenarioAfter}>
+                <Text style={styles.scenarioLabel}>{'✅  With Name Watch'}</Text>
+                <Text style={styles.scenarioTitle}>Informed decisions, every time</Text>
+                <Text style={styles.scenarioText}>
+                  You meet someone on a dating app. You add his name to Name Watch. Within
+                  hours, you get an alert: 3 members from your city have posted about him
+                  — describing the exact same behavior. You read their experiences, make an
+                  informed choice, and cancel the date. Crisis averted before it started.
+                </Text>
+                <View style={styles.scenarioBadgeAfter}>
+                  <Text style={styles.scenarioBadgeAfterText}>Real insights. Real power.</Text>
+                </View>
+              </View>
+            </View>
+
             {/* Add button */}
             <Pressable style={styles.addBtn} onPress={() => setShowAddModal(true)}>
               <Text style={styles.addBtnText}>+ Add Name to Watch</Text>
@@ -189,6 +221,30 @@ const styles = StyleSheet.create({
   explainerText: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: 20, marginBottom: Spacing.md },
   explainerBullets: { gap: 4 },
   bulletItem: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: 20 },
+
+  // Scenario cards
+  scenarioCard: {
+    backgroundColor: Colors.surface, borderRadius: BorderRadius.lg, padding: Spacing.lg,
+    marginBottom: Spacing.md, borderWidth: 1, borderColor: Colors.borderLight,
+  },
+  scenarioBefore: { marginBottom: Spacing.md },
+  scenarioAfter: {},
+  scenarioDivider: {
+    height: 1, backgroundColor: Colors.border, marginBottom: Spacing.md,
+  },
+  scenarioLabel: { fontSize: FontSize.sm, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  scenarioTitle: { fontSize: FontSize.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  scenarioText: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: 20, marginBottom: Spacing.sm },
+  scenarioBadgeBefore: {
+    backgroundColor: '#FEE2E2', paddingHorizontal: Spacing.sm, paddingVertical: 4,
+    borderRadius: BorderRadius.sm, alignSelf: 'flex-start',
+  },
+  scenarioBadgeBeforeText: { fontSize: FontSize.xs, color: '#DC2626', fontWeight: '600' },
+  scenarioBadgeAfter: {
+    backgroundColor: '#D1FAE5', paddingHorizontal: Spacing.sm, paddingVertical: 4,
+    borderRadius: BorderRadius.sm, alignSelf: 'flex-start',
+  },
+  scenarioBadgeAfterText: { fontSize: FontSize.xs, color: '#059669', fontWeight: '600' },
 
   // Add button
   addBtn: {

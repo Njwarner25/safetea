@@ -95,6 +95,15 @@ export default function RootLayout() {
             headerTintColor: Colors.textPrimary,
           }}
         />
+        <Stack.Screen
+          name="name-watch"
+          options={{
+            headerShown: true,
+            headerTitle: 'Name Watch',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
       </Stack>
     </>
   );

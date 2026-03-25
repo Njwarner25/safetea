@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -631,6 +631,493 @@
                 50% { box-shadow: 0 4px 30px rgba(232,160,181,0.6); }
             }
         }
+        /* ============================================
+           THEME TOGGLE COMPONENT
+           ============================================ */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            margin-right: 4px;
+        }
+        .theme-toggle-track {
+            width: 44px;
+            height: 24px;
+            background: #141428;
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .theme-toggle-knob {
+            width: 18px;
+            height: 18px;
+            background: #E8A0B5;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            transition: transform 0.3s ease, background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #fff;
+        }
+        [data-theme="light"] .theme-toggle-knob {
+            transform: translateX(19px);
+            background: #C4506A;
+        }
+        [data-theme="light"] .theme-toggle-track {
+            background: #E8E8E8;
+            border-color: #C4506A;
+        }
+        .theme-icon-moon, .theme-icon-sun { font-size: 9px; }
+        [data-theme="dark"] .theme-icon-sun { display: none; }
+        [data-theme="light"] .theme-icon-moon { display: none; }
+
+        /* ============================================
+           LIGHT THEME — FULL OVERRIDE
+           Black text, white backgrounds, dark rose borders
+           ============================================ */
+        [data-theme="light"] body {
+            background: #FAFAFA;
+            color: #1A1A1A;
+        }
+        [data-theme="light"] body::before {
+            background:
+                radial-gradient(ellipse 800px 600px at 80% 20%, rgba(196,80,106,0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 600px 600px at 20% 80%, rgba(196,80,106,0.02) 0%, transparent 70%);
+        }
+
+        /* Navigation */
+        [data-theme="light"] .topnav {
+            background: rgba(255,255,255,0.95);
+            border-bottom-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .topnav-nav a { color: #666; }
+        [data-theme="light"] .topnav-nav a:hover,
+        [data-theme="light"] .topnav-nav a.active { color: #C4506A; background: rgba(196,80,106,0.08); }
+        [data-theme="light"] .topnav-nav a.active::after { background: #C4506A; }
+        [data-theme="light"] .topnav-logo img {
+            filter: drop-shadow(0 0 8px rgba(196,80,106,0.15));
+        }
+        [data-theme="light"] .topnav-logo img:hover {
+            filter: drop-shadow(0 0 14px rgba(196,80,106,0.25));
+        }
+        [data-theme="light"] .btn-logout {
+            color: #666;
+            border-color: rgba(0,0,0,0.12);
+        }
+        [data-theme="light"] .btn-logout:hover {
+            color: #000;
+            border-color: rgba(0,0,0,0.25);
+        }
+        [data-theme="light"] .user-avatar {
+            background: #C4506A;
+            box-shadow: 0 0 0 2px rgba(196,80,106,0.2);
+        }
+        [data-theme="light"] .user-avatar:hover {
+            box-shadow: 0 0 0 3px rgba(196,80,106,0.35);
+        }
+
+        /* Welcome banner */
+        [data-theme="light"] .welcome-banner {
+            background: linear-gradient(135deg, rgba(196,80,106,0.06), rgba(196,80,106,0.03));
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .welcome-banner::before {
+            background: radial-gradient(circle, rgba(196,80,106,0.04) 0%, transparent 70%);
+        }
+        [data-theme="light"] .welcome-banner h2 {
+            background: none;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: #000;
+            background-clip: unset;
+            color: #000;
+        }
+        [data-theme="light"] .welcome-banner p { color: #666; }
+        [data-theme="light"] .city-badge {
+            background: rgba(196,80,106,0.08);
+            color: #C4506A;
+        }
+
+        /* Cards — white bg, dark rose outlines */
+        [data-theme="light"] .post-card,
+        [data-theme="light"] .sidebar-card,
+        [data-theme="light"] .alert-card,
+        [data-theme="light"] .search-panel,
+        [data-theme="light"] .create-post,
+        [data-theme="light"] .profile-card,
+        [data-theme="light"] .profile-form,
+        [data-theme="light"] .nw-add-form,
+        [data-theme="light"] .nw-list-item,
+        [data-theme="light"] .nw-match-card,
+        [data-theme="light"] .datecheck-card,
+        [data-theme="light"] .premium-gate-content,
+        [data-theme="light"] .inbox-layout,
+        [data-theme="light"] .dc-share-modal-content {
+            background: #FFFFFF;
+            border-color: #C4506A;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        [data-theme="light"] .post-card:hover,
+        [data-theme="light"] .sidebar-card:hover,
+        [data-theme="light"] .alert-card:hover,
+        [data-theme="light"] .nw-list-item:hover,
+        [data-theme="light"] .nw-match-card:hover {
+            border-color: #A03D55;
+            box-shadow: 0 4px 16px rgba(196,80,106,0.12);
+        }
+
+        /* Text colors */
+        [data-theme="light"] .post-author,
+        [data-theme="light"] .alert-card-title,
+        [data-theme="light"] .convo-name,
+        [data-theme="light"] .thread-header-name,
+        [data-theme="light"] .result-info h4,
+        [data-theme="light"] .search-panel h3,
+        [data-theme="light"] .search-header h2,
+        [data-theme="light"] .alerts-header h2,
+        [data-theme="light"] .inbox-header h2,
+        [data-theme="light"] .nw-header h2,
+        [data-theme="light"] .nw-add-form h3,
+        [data-theme="light"] .nw-list-name,
+        [data-theme="light"] .nw-matches-section h3,
+        [data-theme="light"] .profile-name,
+        [data-theme="light"] .profile-form h3,
+        [data-theme="light"] .datecheck-header h2,
+        [data-theme="light"] .datecheck-card h3,
+        [data-theme="light"] .premium-gate-content h2,
+        [data-theme="light"] .dc-history-name,
+        [data-theme="light"] .sidebar-card h3,
+        [data-theme="light"] .avatar-option-content strong,
+        [data-theme="light"] .avatar-preview-name,
+        [data-theme="light"] .dc-howto li strong,
+        [data-theme="light"] .safetea-report-value {
+            color: #000;
+        }
+        [data-theme="light"] .post-content,
+        [data-theme="light"] .alert-card-body,
+        [data-theme="light"] .nw-match-body,
+        [data-theme="light"] .msg-bubble.received {
+            color: #1A1A1A;
+        }
+        [data-theme="light"] .post-time,
+        [data-theme="light"] .alert-card-meta,
+        [data-theme="light"] .convo-preview,
+        [data-theme="light"] .convo-time,
+        [data-theme="light"] .msg-time,
+        [data-theme="light"] .result-info .result-detail,
+        [data-theme="light"] .search-header p,
+        [data-theme="light"] .search-panel p.desc,
+        [data-theme="light"] .nw-hint,
+        [data-theme="light"] .nw-list-terms,
+        [data-theme="light"] .nw-match-footer,
+        [data-theme="light"] .profile-email,
+        [data-theme="light"] .premium-gate-content p,
+        [data-theme="light"] .premium-gate-price span,
+        [data-theme="light"] .datecheck-header p,
+        [data-theme="light"] .dc-form-group label,
+        [data-theme="light"] .dc-history-meta,
+        [data-theme="light"] .dc-howto li,
+        [data-theme="light"] .loading,
+        [data-theme="light"] .empty-state,
+        [data-theme="light"] .form-group label,
+        [data-theme="light"] .inbox-thread-empty,
+        [data-theme="light"] .avatar-option-content span,
+        [data-theme="light"] .avatar-color-picker label,
+        [data-theme="light"] .stat-item .stat-label,
+        [data-theme="light"] .city-votes,
+        [data-theme="light"] .safetea-report-label,
+        [data-theme="light"] .safetea-report-footer span,
+        [data-theme="light"] .alert-item .alert-meta {
+            color: #666;
+        }
+        [data-theme="light"] .alert-item .alert-title,
+        [data-theme="light"] .city-name {
+            color: #1A1A1A;
+        }
+
+        /* Accent color adjustments */
+        [data-theme="light"] .stat-item .stat-number {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        [data-theme="light"] .sidebar-card h3 i {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        [data-theme="light"] .nw-header h2 i,
+        [data-theme="light"] .nw-add-form h3 i,
+        [data-theme="light"] .nw-matches-section h3 i,
+        [data-theme="light"] .nw-match-icon,
+        [data-theme="light"] .nw-match-label,
+        [data-theme="light"] .search-panel h3 i,
+        [data-theme="light"] .dc-howto h4,
+        [data-theme="light"] .dc-timer,
+        [data-theme="light"] .city-rank,
+        [data-theme="light"] .generated-name-text {
+            color: #C4506A;
+        }
+        [data-theme="light"] .premium-gate-price { color: #C4506A; }
+        [data-theme="light"] .premium-badge,
+        [data-theme="light"] .premium-badge-inline,
+        [data-theme="light"] .profile-role,
+        [data-theme="light"] .nw-badge-matches,
+        [data-theme="light"] .nw-match-type-badge {
+            background: rgba(196,80,106,0.1);
+            color: #C4506A;
+        }
+        [data-theme="light"] .premium-mini-gate {
+            background: rgba(196,80,106,0.06);
+            border-color: #C4506A;
+            color: #C4506A;
+        }
+        [data-theme="light"] .convo-unread { background: #C4506A; }
+        [data-theme="light"] .convo-item.active {
+            background: rgba(196,80,106,0.06);
+            border-left-color: #C4506A;
+        }
+        [data-theme="light"] .nw-match-card.unread { border-left-color: #C4506A; }
+        [data-theme="light"] .dc-status-dot { background: #C4506A; }
+        [data-theme="light"] .post-action:hover { color: #C4506A; }
+        [data-theme="light"] .nw-mark-read:hover { color: #C4506A; }
+        [data-theme="light"] .btn-nw-action:hover { color: #C4506A; border-color: #C4506A; }
+
+        /* Input fields */
+        [data-theme="light"] .create-post textarea,
+        [data-theme="light"] .form-group input,
+        [data-theme="light"] .form-group select,
+        [data-theme="light"] .nw-add-row input,
+        [data-theme="light"] .thread-input input,
+        [data-theme="light"] .avatar-sub-option input[type="text"],
+        [data-theme="light"] .dc-form-group input,
+        [data-theme="light"] .dc-form-group textarea,
+        [data-theme="light"] .dc-form-group select,
+        [data-theme="light"] .post-category-select {
+            background: #F5F5F5;
+            border-color: rgba(0,0,0,0.12);
+            color: #000;
+        }
+        [data-theme="light"] .create-post textarea:focus,
+        [data-theme="light"] .form-group input:focus,
+        [data-theme="light"] .nw-add-row input:focus,
+        [data-theme="light"] .thread-input input:focus,
+        [data-theme="light"] .avatar-sub-option input[type="text"]:focus,
+        [data-theme="light"] .dc-form-group input:focus,
+        [data-theme="light"] .dc-form-group textarea:focus {
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .create-post textarea::placeholder,
+        [data-theme="light"] .nw-add-row input::placeholder { color: #999; }
+
+        /* Stat items and result cards */
+        [data-theme="light"] .stat-item,
+        [data-theme="light"] .result-card,
+        [data-theme="light"] .avatar-option,
+        [data-theme="light"] .dc-history-item {
+            background: #F5F5F5;
+            border-color: rgba(0,0,0,0.06);
+        }
+        [data-theme="light"] .stat-item:hover {
+            border-color: rgba(196,80,106,0.2);
+            background: #F0F0F0;
+        }
+        [data-theme="light"] .result-avatar {
+            background: #EAEAEA;
+        }
+        [data-theme="light"] .result-avatar i { color: #666; }
+
+        /* Search tabs */
+        [data-theme="light"] .search-tab {
+            background: #FFFFFF;
+            border-color: rgba(0,0,0,0.1);
+            color: #666;
+        }
+        [data-theme="light"] .search-tab:hover {
+            color: #000;
+            border-color: rgba(0,0,0,0.2);
+        }
+        [data-theme="light"] .search-tab.active {
+            background: rgba(196,80,106,0.08);
+            color: #C4506A;
+            border-color: #C4506A;
+        }
+
+        /* Hub tabs */
+        [data-theme="light"] .hub-tab {
+            background: #FFFFFF !important;
+            border-color: rgba(0,0,0,0.1) !important;
+            color: #666 !important;
+        }
+        [data-theme="light"] .hub-tab.active {
+            background: rgba(196,80,106,0.08) !important;
+            color: #C4506A !important;
+            border-color: #C4506A !important;
+        }
+
+        /* Buttons — keep gradient, slightly deeper */
+        [data-theme="light"] .btn-post,
+        [data-theme="light"] .btn-search,
+        [data-theme="light"] .btn-nw-add,
+        [data-theme="light"] .btn-save,
+        [data-theme="light"] .btn-upgrade,
+        [data-theme="light"] .btn-upgrade-sm,
+        [data-theme="light"] .dc-btn-primary,
+        [data-theme="light"] .thread-input button {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+        }
+        [data-theme="light"] .btn-post:hover,
+        [data-theme="light"] .btn-search:hover,
+        [data-theme="light"] .btn-nw-add:hover,
+        [data-theme="light"] .btn-upgrade:hover {
+            box-shadow: 0 4px 16px rgba(196,80,106,0.3);
+        }
+        [data-theme="light"] .btn-upload {
+            border-color: rgba(0,0,0,0.1);
+            color: #666;
+        }
+        [data-theme="light"] .btn-upload:hover {
+            color: #C4506A;
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .btn-generate {
+            border-color: rgba(0,0,0,0.1);
+            color: #666;
+        }
+        [data-theme="light"] .btn-generate:hover {
+            color: #C4506A;
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .dc-btn-outline {
+            border-color: rgba(0,0,0,0.15);
+            color: #666;
+        }
+        [data-theme="light"] .post-action { color: #888; }
+
+        /* Inbox */
+        [data-theme="light"] .inbox-conversations {
+            border-right-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .convo-item {
+            border-bottom-color: rgba(0,0,0,0.06);
+        }
+        [data-theme="light"] .convo-item:hover {
+            background: rgba(0,0,0,0.02);
+        }
+        [data-theme="light"] .thread-header {
+            border-bottom-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .thread-input {
+            border-top-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .msg-bubble.sent {
+            background: rgba(196,80,106,0.12);
+            color: #000;
+        }
+        [data-theme="light"] .msg-bubble.received {
+            background: #F5F5F5;
+            color: #1A1A1A;
+        }
+
+        /* Disclaimer */
+        [data-theme="light"] .disclaimer {
+            background: rgba(241,196,15,0.06);
+            border-color: rgba(241,196,15,0.3);
+        }
+
+        /* SafeTea Report card in light mode */
+        [data-theme="light"] .safetea-report {
+            background: linear-gradient(135deg, #FFF 0%, #FFF5F7 100%);
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .safetea-report-header {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+        }
+        [data-theme="light"] .safetea-report-row {
+            border-bottom-color: rgba(0,0,0,0.06);
+        }
+        [data-theme="light"] .safetea-report-icon {
+            background: rgba(196,80,106,0.1);
+            color: #C4506A;
+        }
+        [data-theme="light"] .safetea-report-footer {
+            background: rgba(196,80,106,0.03);
+            border-top-color: rgba(0,0,0,0.06);
+        }
+        [data-theme="light"] .nw-list-icon {
+            background: rgba(196,80,106,0.08);
+            color: #C4506A;
+        }
+        [data-theme="light"] .nw-list-delete:hover {
+            background: rgba(231,76,60,0.08);
+        }
+
+        /* Date check-in styles */
+        [data-theme="light"] .dc-active-date { border-color: #C4506A; }
+        [data-theme="light"] .dc-status {
+            background: rgba(196,80,106,0.06);
+        }
+        [data-theme="light"] .dc-howto {
+            background: rgba(196,80,106,0.04);
+            border-color: #C4506A;
+        }
+        [data-theme="light"] .plus-badge {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+        }
+
+        /* Profile card light overrides */
+        [data-theme="light"] .profile-card::before {
+            background: linear-gradient(135deg, rgba(196,80,106,0.08), rgba(196,80,106,0.04));
+        }
+        [data-theme="light"] .profile-avatar-large {
+            background: #C4506A;
+            box-shadow: 0 4px 20px rgba(196,80,106,0.2);
+        }
+        [data-theme="light"] .avatar-option:hover {
+            border-color: rgba(0,0,0,0.15);
+        }
+        [data-theme="light"] .avatar-option input[type="radio"] { accent-color: #C4506A; }
+        [data-theme="light"] .color-swatch.active {
+            border-color: #000;
+            box-shadow: 0 0 0 2px rgba(196,80,106,0.4);
+        }
+
+        /* Share modal */
+        [data-theme="light"] .dc-share-modal {
+            background: rgba(0,0,0,0.4);
+        }
+
+        /* Mobile tab bar */
+        [data-theme="light"] .mobile-tab-bar {
+            background: rgba(255,255,255,0.95) !important;
+            border-top-color: rgba(0,0,0,0.08);
+        }
+        [data-theme="light"] .mobile-tab-bar a { color: #888; }
+        [data-theme="light"] .mobile-tab-bar a.active { color: #C4506A; }
+        [data-theme="light"] .mobile-tab-bar a.active::after { background: #C4506A; }
+
+        /* FAB */
+        [data-theme="light"] .fab-invite {
+            background: linear-gradient(135deg, #C4506A, #A03D55);
+            box-shadow: 0 4px 20px rgba(196,80,106,0.3);
+        }
+
+        /* Scrollbar */
+        [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(196,80,106,0.15); }
+        [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(196,80,106,0.25); }
+
+        /* Inbox badge stays red in both themes */
+        /* Toast stays green/red in both themes */
+        /* Severity dots stay same colors in both themes */
+
     </style>
 </head>
 <body>
@@ -646,6 +1133,14 @@
             </div>
         </div>
         <div class="topnav-right">
+            <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+                <div class="theme-toggle-track">
+                    <div class="theme-toggle-knob">
+                        <i class="fas fa-moon theme-icon-moon"></i>
+                        <i class="fas fa-sun theme-icon-sun"></i>
+                    </div>
+                </div>
+            </div>
             <div class="user-avatar" id="nav-avatar"></div>
             <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
         </div>
@@ -1526,6 +2021,28 @@
     </script>
 
     <script src="app.js"></script>
+    <script>
+    /* ========== THEME TOGGLE ========== */
+    function toggleTheme() {
+        var html = document.documentElement;
+        if (html.getAttribute('data-theme') === 'dark') {
+            html.setAttribute('data-theme', 'light');
+            try { localStorage.setItem('safetea-theme', 'light'); } catch(e) {}
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            try { localStorage.setItem('safetea-theme', 'dark'); } catch(e) {}
+        }
+    }
+    // Load saved theme on page load
+    (function() {
+        try {
+            var saved = localStorage.getItem('safetea-theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        } catch(e) {}
+    })();
+    </script>
 
 </body>
 </html>

@@ -1003,7 +1003,16 @@
                         <p style="color:#8080A0;font-size:14px;margin-top:4px">Analyze a profile photo for signs of catfishing — EXIF metadata, editing software, reverse image search.</p>
                     </div>
                     <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
-                        <div class="dc-form-group"><label>Image URL *</label><input type="text" id="cf-image-url" placeholder="Paste image URL from dating profile..."></div>
+                        <div class="dc-form-group"><label>Upload Photo *</label>
+                            <div id="cf-upload-area" style="border:2px dashed rgba(232,160,181,0.3);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(20,20,40,0.5)" onclick="document.getElementById('cf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#E8A0B5';this.style.background='rgba(232,160,181,0.08)'" ondragleave="this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(20,20,40,0.5)'" ondrop="event.preventDefault();handleCatfishFileDrop(event);this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(20,20,40,0.5)'">
+                                <i class="fas fa-camera" style="font-size:28px;color:#E8A0B5;display:block;margin-bottom:10px"></i>
+                                <span style="color:#F0D0C0;font-size:14px;font-weight:500">Tap to upload or drag a photo</span>
+                                <span style="display:block;color:#8080A0;font-size:12px;margin-top:4px">JPG, PNG, or WEBP up to 5MB</span>
+                            </div>
+                            <input type="file" id="cf-file-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleCatfishFile(this)">
+                            <input type="hidden" id="cf-image-url" value="">
+                            <input type="hidden" id="cf-image-data" value="">
+                        </div>
                         <div class="dc-form-group"><label>Profile Name (optional)</label><input type="text" id="cf-profile-name" placeholder="Their display name"></div>
                         <div class="dc-form-group"><label>Platform</label>
                             <select id="cf-platform" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px">

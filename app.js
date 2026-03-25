@@ -1319,6 +1319,33 @@
     };
 
     // ==================== CATFISH CHECK ====================
+    var catfishFileData = null;
+
+    window.handleCatfishFile = function(input) {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Photo must be under 5MB', true); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            catfishFileData = e.target.result; // data URL
+            var area = document.getElementById('cf-upload-area');
+            area.innerHTML = '<img src="' + catfishFileData + '" style="max-width:100%;max-height:160px;border-radius:8px;margin-bottom:8px"><br><span style="color:#2ecc71;font-size:13px"><i class="fas fa-check-circle"></i> ' + escapeHtml(file.name) + '</span><br><span style="color:#8080A0;font-size:12px;margin-top:4px;display:inline-block">Tap to change photo</span>';
+            var preview = document.getElementById('cf-preview');
+            if (preview) preview.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.handleCatfishFileDrop = function(e) {
+        var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file || !file.type.startsWith('image/')) { showToast('Drop an image file', true); return; }
+        var input = document.getElementById('cf-file-input');
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleCatfishFile(input);
+    };
+
     window.runCatfishCheck = function() {
         var imageUrl = document.getElementById('cf-image-url').value.trim();
         var profileName = document.getElementById('cf-profile-name').value.trim();
@@ -1326,12 +1353,25 @@
         var results = document.getElementById('catfish-results');
         var preview = document.getElementById('cf-preview');
         var previewImg = document.getElementById('cf-preview-img');
-        if (!imageUrl) { showToast('Image URL is required.', true); return; }
-        if (previewImg) { previewImg.src = imageUrl; if(preview) preview.style.display = 'block'; previewImg.onerror = function(){ if(preview) preview.style.display='none'; }; }
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Analyzing image for catfishing indicators...</div>';
+
+        if (!catfishFileData && !imageUrl) { showToast('Upload a photo to analyze.', true); return; }
+
+        if (!catfishFileData && imageUrl) {
+            if (previewImg) { previewImg.src = imageUrl; if(preview) preview.style.display = 'block'; previewImg.onerror = function(){ if(preview) preview.style.display='none'; }; }
+        }
+
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Analyzing photo for catfishing indicators...</div>';
+
+        var payload = { profileName: profileName, platform: platform };
+        if (catfishFileData) {
+            payload.imageData = catfishFileData;
+        } else {
+            payload.imageUrl = imageUrl;
+        }
+
         apiFetch('/screening/catfish', {
             method: 'POST',
-            body: JSON.stringify({ imageUrl: imageUrl, profileName: profileName, platform: platform })
+            body: JSON.stringify(payload)
         }).then(function(data) {
             var sc = data.catfishScore >= 60 ? '#e74c3c' : data.catfishScore >= 30 ? '#B48CD2' : '#2ecc71';
             var rl = data.riskLevel === 'high_risk' ? 'High Risk' : data.riskLevel === 'medium_risk' ? 'Medium Risk' : data.riskLevel === 'low_risk' ? 'Low Risk' : 'Likely Safe';
@@ -1342,6 +1382,92 @@
         }).catch(function(err) {
             results.innerHTML = '<div class="disclaimer" style="border-color:#e74c3c"><i class="fas fa-exclamation-circle" style="color:#e74c3c"></i><span>Catfish check failed: '+escapeHtml(err.message||'Unknown error')+'</span></div>';
         });
+    };
+
+    // ==================== NAME WATCH ====================
+    window.initNameWatch = function() {
+        var user = JSON.parse(localStorage.getItem('safetea_user') || '{}');
+        var tier = (user.subscription_tier || 'free').toLowerCase();
+        var wall = document.getElementById('nw-upgrade-wall');
+        var content = document.getElementById('nw-content');
+
+        if (tier === 'free') {
+            if (wall) wall.style.display = 'block';
+            if (content) content.style.display = 'none';
+        } else {
+            if (wall) wall.style.display = 'none';
+            if (content) content.style.display = 'block';
+            loadWatchedNames();
+        }
+    };
+
+    function loadWatchedNames() {
+        apiFetch('/namewatch').then(function(data) {
+            var list = document.getElementById('nw-list');
+            if (!list) return;
+            if (!data || !data.names || data.names.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0"><i class="fas fa-eye-slash" style="font-size:24px;display:block;margin-bottom:8px"></i>No names being watched yet. Add one above.</div>';
+                return;
+            }
+            var h = '';
+            data.names.forEach(function(n) {
+                h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px">';
+                h += '<div><i class="fas fa-eye" style="color:#E8A0B5;margin-right:8px"></i><strong style="color:#fff">' + escapeHtml(n.name) + '</strong>';
+                h += '<span style="color:#8080A0;font-size:12px;margin-left:8px">' + (n.match_count || 0) + ' mentions</span></div>';
+                h += '<button onclick="removeWatchedName(' + n.id + ')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;padding:4px 8px"><i class="fas fa-trash"></i></button>';
+                h += '</div>';
+            });
+            list.innerHTML = h;
+
+            // Load matches
+            if (data.matches && data.matches.length > 0) {
+                var mh = '<h4 style="color:#fff;margin-bottom:12px"><i class="fas fa-bell" style="color:#E8A0B5"></i> Recent Mentions</h4>';
+                data.matches.forEach(function(m) {
+                    mh += '<div style="padding:10px 14px;background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.15);border-radius:8px;margin-bottom:6px;font-size:13px">';
+                    mh += '<strong style="color:#E8A0B5">' + escapeHtml(m.matched_name) + '</strong>';
+                    mh += '<span style="color:#8080A0"> mentioned in a post</span>';
+                    mh += '<span style="color:#555;font-size:11px;display:block;margin-top:2px">' + new Date(m.created_at).toLocaleString() + '</span>';
+                    mh += '</div>';
+                });
+                var matchDiv = document.getElementById('nw-matches');
+                if (matchDiv) matchDiv.innerHTML = mh;
+            }
+        }).catch(function() {});
+    }
+
+    window.addWatchedName = function() {
+        var input = document.getElementById('nw-input');
+        var name = input.value.trim();
+        if (!name) { showToast('Enter a name to watch', true); return; }
+        if (name.length < 2) { showToast('Name must be at least 2 characters', true); return; }
+
+        apiFetch('/namewatch', {
+            method: 'POST',
+            body: JSON.stringify({ name: name })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Now watching "' + name + '"');
+                input.value = '';
+                loadWatchedNames();
+            } else {
+                showToast(data.error || 'Failed to add name', true);
+            }
+        }).catch(function() { showToast('Failed to add name', true); });
+    };
+
+    window.removeWatchedName = function(id) {
+        if (!confirm('Stop watching this name?')) return;
+        apiFetch('/namewatch', {
+            method: 'DELETE',
+            body: JSON.stringify({ id: id })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Name removed');
+                loadWatchedNames();
+            } else {
+                showToast(data.error || 'Failed to remove', true);
+            }
+        }).catch(function() { showToast('Failed to remove name', true); });
     };
 
     // ==================== TEA TALK (Community Posts) ====================

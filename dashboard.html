@@ -1170,9 +1170,15 @@
                         <input type="text" id="grow-share-url" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#E8A0B5;font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
                         <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
                     </div>
-                    <div style="display:flex;gap:8px">
-                        <button onclick="shareReferralSMS()" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(46,204,113,0.25)"><i class="fas fa-sms"></i> Text a Friend</button>
-                        <button onclick="shareReferralNative()" style="flex:1;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(155,89,182,0.25)"><i class="fas fa-share-nodes"></i> Share Link</button>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+                        <button onclick="shareReferralSMS()" style="background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-sms" style="font-size:18px"></i>Text</button>
+                        <button onclick="shareReferralEmail()" style="background:linear-gradient(135deg,#5BA0D0,#4A8BBF);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-envelope" style="font-size:18px"></i>Email</button>
+                        <button onclick="shareReferralIG()" style="background:linear-gradient(135deg,#E1306C,#C13584);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-instagram" style="font-size:18px"></i>Instagram</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                        <button onclick="shareReferralTikTok()" style="background:linear-gradient(135deg,#010101,#333);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-tiktok" style="font-size:18px"></i>TikTok</button>
+                        <button onclick="shareReferralFacebook()" style="background:linear-gradient(135deg,#1877F2,#145DBF);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-facebook" style="font-size:18px"></i>Facebook</button>
+                        <button onclick="shareReferralNative()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-share-nodes" style="font-size:18px"></i>More</button>
                     </div>
                 </div>
 
@@ -1390,6 +1396,136 @@
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
+    <script>
+    // ============ REFERRAL / SHARE FUNCTIONS ============
+    var referralShareUrl = 'https://www.getsafetea.app';
+    var referralShareMessage = 'Hey! Check out SafeTea — it helps women stay safe while dating. Join our community and get safety tools for your next date.';
+
+    // Load referral code from API, fall back to landing page
+    (function loadReferralCode() {
+        var token = localStorage.getItem('token');
+        if (!token) {
+            document.getElementById('grow-share-url').value = referralShareUrl;
+            return;
+        }
+        fetch('/api/referral', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success && data.shareUrl) {
+                    referralShareUrl = data.shareUrl;
+                    document.getElementById('grow-share-url').value = data.shareUrl;
+                    if (data.referralCount !== undefined) {
+                        var countEl = document.getElementById('grow-ref-count');
+                        if (countEl) countEl.textContent = data.referralCount;
+                    }
+                } else {
+                    document.getElementById('grow-share-url').value = referralShareUrl;
+                }
+            })
+            .catch(function() {
+                document.getElementById('grow-share-url').value = referralShareUrl;
+            });
+    })();
+
+    function getShareUrl() {
+        return document.getElementById('grow-share-url').value || referralShareUrl;
+    }
+
+    function copyReferralLink() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied!');
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied!');
+        }
+    }
+
+    function shareReferralSMS() {
+        var url = getShareUrl();
+        var msg = referralShareMessage + ' ' + url;
+        window.location.href = 'sms:?body=' + encodeURIComponent(msg);
+    }
+
+    function shareReferralEmail() {
+        var url = getShareUrl();
+        var subject = 'Check out SafeTea — Stay Safe While Dating';
+        var body = referralShareMessage + '\n\n' + url;
+        window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    }
+
+    function shareReferralIG() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied! Paste it in your Instagram Story or DMs');
+                setTimeout(function() {
+                    window.open('https://www.instagram.com/', '_blank');
+                }, 800);
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied! Paste it in Instagram');
+            setTimeout(function() {
+                window.open('https://www.instagram.com/', '_blank');
+            }, 800);
+        }
+    }
+
+    function shareReferralTikTok() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied! Paste it in your TikTok bio or DMs');
+                setTimeout(function() {
+                    window.open('https://www.tiktok.com/', '_blank');
+                }, 800);
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied! Paste it in TikTok');
+            setTimeout(function() {
+                window.open('https://www.tiktok.com/', '_blank');
+            }, 800);
+        }
+    }
+
+    function shareReferralFacebook() {
+        var url = getShareUrl();
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank', 'width=600,height=400');
+    }
+
+    function shareReferralNative() {
+        var url = getShareUrl();
+        if (navigator.share) {
+            navigator.share({
+                title: 'SafeTea — Date Safer',
+                text: referralShareMessage,
+                url: url
+            }).catch(function() {});
+        } else {
+            copyReferralLink();
+        }
+    }
+
+    function showToast(msg) {
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#2ecc71;color:#fff;padding:10px 24px;border-radius:25px;font-size:14px;font-weight:600;z-index:9999;white-space:nowrap;max-width:90vw;text-align:center';
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 2500);
+    }
+    </script>
+
     <script src="app.js"></script>
 
-    </html>
+</body>
+</html>

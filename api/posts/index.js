@@ -1,5 +1,5 @@
-const { authenticate, cors } = require('./_utils/auth');
-const { getOne, getMany, run } = require('./_utils/db');
+const { authenticate, cors } = require('../_utils/auth');
+const { getOne, getMany, run } = require('../_utils/db');
 
 module.exports = async function handler(req, res) {
   cors(res);

@@ -18,6 +18,9 @@ const photoRoutes = require('./routes/photos');
 const removalRequestRoutes = require('./routes/removal-requests');
 const strikeRoutes = require('./routes/strikes');
 const bugRoutes = require('./routes/bugs');
+const verifyRoutes = require('./routes/verify');
+const banRoutes = require('./routes/ban');
+const dateRoutes = require('./routes/dates');
 const suggestionRoutes = require('./routes/suggestions');
 
 const app = express();
@@ -62,6 +65,7 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/verify', verifyRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/alerts', alertRoutes);
@@ -70,6 +74,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/namewatch', namewatchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/ban', banRoutes);
+app.use('/api/dates', dateRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/removal-requests', removalRequestRoutes);
 app.use('/api/strikes', strikeRoutes);

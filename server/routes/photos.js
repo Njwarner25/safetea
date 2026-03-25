@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const { authenticate, requireRole } = require('../middleware/auth');
@@ -71,10 +72,13 @@ router.post('/upload', authenticate, [
     const watermarkedBuffer = embedWatermark(imageBuffer, req.user.id);
     const watermarkedBase64 = watermarkedBuffer.toString('base64');
 
+    // Compute watermark hash
+    const watermarkHash = crypto.createHash('sha256').update(watermarkedBase64).digest('hex');
+
     // Store photo
     const photoId = uuidv4();
     await query(
-      `INSERT INTO photos (id, user_id, data, context, context_id, created_at, is_deleted)
+      `INSERT INTO photos (id, user_id, image_data, context, context_id, created_at, is_deleted)
        VALUES ($1, $2, $3, $4, $5, NOW(), false)`,
       [photoId, req.user.id, watermarkedBase64, context, context_id || null]
     );
@@ -82,9 +86,9 @@ router.post('/upload', authenticate, [
     // Record watermark metadata
     const watermarkId = uuidv4();
     await query(
-      `INSERT INTO photo_watermarks (id, photo_id, user_id, embedded_at)
-       VALUES ($1, $2, $3, NOW())`,
-      [watermarkId, photoId, req.user.id]
+      `INSERT INTO photo_watermarks (id, photo_id, user_id, watermark_hash, created_at)
+       VALUES ($1, $2, $3, $4, NOW())`,
+      [watermarkId, photoId, req.user.id, watermarkHash]
     );
 
     // Return photo record
@@ -112,7 +116,7 @@ router.post('/upload', authenticate, [
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const photo = await getOne(
-      `SELECT id, user_id, data, context, context_id, created_at, is_deleted FROM photos WHERE id = $1`,
+      `SELECT id, user_id, image_data, context, context_id, created_at, is_deleted FROM photos WHERE id = $1`,
       [req.params.id]
     );
 
@@ -128,7 +132,7 @@ router.get('/:id', authenticate, async (req, res) => {
     res.json({
       photo: {
         id: photo.id,
-        data: photo.data,
+        data: photo.image_data,
         context: photo.context,
         context_id: photo.context_id,
         created_at: photo.created_at
@@ -152,9 +156,9 @@ router.delete('/:id', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Photo not found' });
     }
 
-    // Verify ownership or admin role
+    // Authorization check: user can only delete their own photos
     if (photo.user_id !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Cannot delete photos you do not own' });
+      return res.status(403).json({ error: 'You can only delete your own photos' });
     }
 
     // Soft delete
@@ -167,39 +171,6 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Photo deletion error:', err);
     res.status(500).json({ error: 'Failed to delete photo' });
-  }
-});
-
-// GET /api/admin/watermark-check - Extract and verify watermark (admin only)
-router.get('/admin/watermark-check', authenticate, requireRole('admin'), [
-  body('image').notEmpty().isString()
-], async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { image } = req.body;
-
-  try {
-    // Validate and convert base64 to buffer
-    const imageBuffer = validateBase64Image(image);
-    if (!imageBuffer) {
-      return res.status(400).json({ error: 'Invalid image: must be valid base64 PNG/JPEG/WebP under 5MB' });
-    }
-
-    // Extract watermark
-    const watermark = extractWatermark(imageBuffer);
-
-    res.json({
-      watermark_found: watermark.found,
-      user_id: watermark.userId,
-      timestamp: watermark.timestamp,
-      verified: watermark.verified
-    });
-  } catch (err) {
-    console.error('Watermark check error:', err);
-    res.status(500).json({ error: 'Failed to check watermark' });
   }
 });
 

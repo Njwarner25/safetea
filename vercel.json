@@ -36,6 +36,7 @@
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
         { "source": "/api/cities", "destination": "/api/cities" },
+        { "source": "/api/community/name-mentions", "destination": "/api/community/name-mentions" },
         { "source": "/api/community/post", "destination": "/api/community/post" },
         { "source": "/api/community/stats", "destination": "/api/community/stats" },
         { "source": "/api/community", "destination": "/api/community" },

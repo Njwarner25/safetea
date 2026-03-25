@@ -11,6 +11,29 @@
   <style>
     /* ======= LANDING PAGE OVERHAUL STYLES ======= */
 
+    /* --- Mobile nav login/join (hidden on desktop, shown in hamburger menu) --- */
+    .mobile-nav-login, .mobile-nav-join { display: none !important; }
+    @media (max-width: 768px) {
+      .mobile-nav-login, .mobile-nav-join {
+        display: flex !important;
+        margin-top: 8px;
+        padding: 12px 28px !important;
+        border-radius: 10px;
+        font-weight: 600 !important;
+        text-align: center;
+        justify-content: center;
+      }
+      .mobile-nav-login {
+        background: rgba(232,160,181,0.1);
+        border: 1px solid rgba(232,160,181,0.3);
+        color: #E8A0B5 !important;
+      }
+      .mobile-nav-join {
+        background: linear-gradient(135deg, #E8A0B5, #D4768E);
+        color: #fff !important;
+      }
+    }
+
     /* --- Hero enhancement --- */
     .hero { padding: 160px 0 100px; position: relative; overflow: hidden; }
     .hero::before {
@@ -351,6 +374,8 @@
       <a href="#name-watch">Name Watch</a>
       <a href="#pricing">Pricing</a>
       <a href="#join">Join</a>
+      <a href="login.html" class="mobile-nav-login">Log In</a>
+      <a href="#join" class="mobile-nav-join">Join Your City</a>
     </div>
     <div class="nav-actions">
       <a href="login.html" class="btn btn-ghost">Log In</a>
@@ -716,6 +741,88 @@
 (function(){var p=new URLSearchParams(window.location.search);var r=p.get('ref');if(r)localStorage.setItem('safetea_referral_code',r);})();
 function toggleLandingBilling(period){var m=document.getElementById('landing-toggle-monthly'),y=document.getElementById('landing-toggle-yearly'),pp=document.getElementById('landing-plus-price'),pi=document.getElementById('landing-plus-interval'),rp=document.getElementById('landing-pro-price'),ri=document.getElementById('landing-pro-interval');if(period==='monthly'){m.style.background='linear-gradient(135deg,#f27059,#E8A0B5)';m.style.color='#fff';y.style.background='transparent';y.style.color='#8080A0';pp.textContent='$5.99';pi.textContent='per month';rp.textContent='$9.99';ri.textContent='per month'}else{y.style.background='linear-gradient(135deg,#f27059,#E8A0B5)';y.style.color='#fff';m.style.background='transparent';m.style.color='#8080A0';pp.innerHTML='$49.99 <span style="font-size:16px;color:#8080A0;text-decoration:line-through">$71.88</span>';pi.textContent='per year';rp.innerHTML='$89.99 <span style="font-size:16px;color:#8080A0;text-decoration:line-through">$119.88</span>';ri.textContent='per year'}}
 </script>
+
+<!-- LIVE CITIES -->
+<section class="section" id="cities" style="padding:80px 0">
+  <div class="container">
+    <div class="section-content-centered" style="margin-bottom:40px">
+      <h2 style="font-size:2.2rem;font-weight:800;color:#fff;margin-bottom:12px">Live in 8 Cities</h2>
+      <p class="section-body" style="max-width:500px;margin:0 auto;color:#8080A0">SafeTea communities are active and growing. Find yours.</p>
+    </div>
+    <div id="cities-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:800px;margin:0 auto">
+      <div class="city-loading" style="grid-column:1/-1;text-align:center;color:#8080A0;padding:24px"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>
+    </div>
+    <div style="text-align:center;margin-top:32px">
+      <p style="color:#8080A0;font-size:14px;margin-bottom:8px">Don't see your city?</p>
+      <a href="login.html" class="btn btn-primary">Vote to Bring SafeTea to Your City</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  fetch('https://www.getsafetea.app/api/cities')
+    .then(function(r){return r.json()})
+    .then(function(cities){
+      var grid=document.getElementById('cities-grid');
+      if(!cities||!cities.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#8080A0">Coming soon!</div>';return;}
+      var html='';
+      cities.forEach(function(c){
+        html+='<a href="login.html" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 16px;text-align:center;text-decoration:none;transition:all 0.2s;display:block"';
+        html+=' onmouseover="this.style.borderColor=\'rgba(232,160,181,0.4)\';this.style.transform=\'translateY(-2px)\'"';
+        html+=' onmouseout="this.style.borderColor=\'rgba(255,255,255,0.06)\';this.style.transform=\'none\'">';
+        html+='<div style="font-size:32px;margin-bottom:8px">'+(c.emoji||'🏙️')+'</div>';
+        html+='<div style="font-size:15px;font-weight:600;color:#fff">'+c.name+'</div>';
+        html+='<div style="font-size:12px;color:#8080A0;margin-top:4px">'+(c.post_count||0)+' posts</div>';
+        html+='</a>';
+      });
+      grid.innerHTML=html;
+    })
+    .catch(function(){
+      document.getElementById('cities-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:#8080A0">Cities loading failed. <a href="login.html" style="color:#E8A0B5">Join anyway &rarr;</a></div>';
+    });
+})();
+</script>
+
+<!-- COMMUNITY MENTIONS PREVIEW -->
+<section class="section" style="padding:60px 0">
+  <div class="container">
+    <div class="section-content-centered" style="margin-bottom:40px">
+      <h2 style="font-size:2.2rem;font-weight:800;color:#fff;margin-bottom:12px"><i class="fas fa-comments" style="color:#E8A0B5"></i> Community Mentions</h2>
+      <p class="section-body" style="max-width:560px;margin:0 auto;color:#8080A0">Search any name across Tea Talk and Good Guys posts in your city. See what the community is saying before your next date.</p>
+    </div>
+    <div style="max-width:600px;margin:0 auto;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px">
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <div style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#8080A0;font-size:14px">Search a name...</div>
+        <div style="background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#8080A0;font-size:14px;min-width:120px;text-align:center">Select city</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <div style="flex:1;background:rgba(231,76,60,0.15);color:#e74c3c;padding:10px;border-radius:8px;text-align:center;font-size:13px;font-weight:600">Tea Talk</div>
+        <div style="flex:1;background:rgba(46,204,113,0.15);color:#2ecc71;padding:10px;border-radius:8px;text-align:center;font-size:13px;font-weight:600">Good Guys</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff">J</div>
+          <div><div style="font-weight:600;font-size:13px;color:#fff">Jessica</div><div style="font-size:11px;color:#8080A0">2h ago &middot; Wicker Park, Chicago</div></div>
+          <span style="margin-left:auto;background:rgba(231,76,60,0.15);color:#e74c3c;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">Tea Talk</span>
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:#F0D0C0">Heads up about this guy — seemed nice at first but got really pushy after dinner...</div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#8080A0"><span>&hearts; 132</span><span>&#x1F4AC; 25</span></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div style="width:36px;height:36px;border-radius:50%;background:#2ecc71;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff">A</div>
+          <div><div style="font-weight:600;font-size:13px;color:#fff">Alyssa</div><div style="font-size:11px;color:#8080A0">5d ago &middot; Lincoln Park, Chicago</div></div>
+          <span style="margin-left:auto;background:rgba(46,204,113,0.15);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">Good Guys</span>
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:#F0D0C0">Super respectful, communicative, walked me to my car. Felt safe the whole time.</div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#8080A0"><span>&hearts; 48</span><span>&#x1F4AC; 8</span></div>
+      </div>
+      <div style="text-align:center;margin-top:20px">
+        <a href="login.html" class="btn btn-primary" style="display:inline-block">Sign Up to Search Names</a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- FINAL CTA -->
 <section class="section cta-section" id="join">

@@ -171,14 +171,19 @@
         return badges[cat] || '';
     }
 
+    function canModifyPost(post) {
+        return post.user_id === user.id || user.role === 'admin' || user.role === 'moderator';
+    }
+
     function renderPost(post) {
         var time = getTimeAgo(post.created_at);
         var badge = getCategoryBadge(post.category);
         var initial = (post.author_name || '?')[0].toUpperCase();
         var colors = ['#6c7b95', '#8e44ad', '#2980b9', '#16a085', '#d35400'];
         var color = colors[post.id % colors.length];
+        var canMod = canModifyPost(post);
 
-        var html = '<div class="post-card">' +
+        var html = '<div class="post-card" id="post-' + post.id + '">' +
             '<div class="post-header">' +
             '<div class="post-avatar" style="background:' + color + '">' + initial + '</div>' +
             '<div class="post-meta">' +
@@ -190,6 +195,8 @@
             '<button class="post-action">\uD83D\uDCAC ' + (post.reply_count || 0) + ' replies</button>' +
             '<button class="post-action"><i class="fas fa-flag"></i> Report</button>' +
             '<button class="post-action"><i class="fas fa-share"></i> Share</button>' +
+            (canMod ? '<button class="post-action" onclick="editPost(' + post.id + ', \'' + escapeHtml(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'' + escapeHtml(post.feed || 'safety') + '\')"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
+            (canMod ? '<button class="post-action" style="color:#e74c3c" onclick="deletePost(' + post.id + ', \'' + escapeHtml(post.feed || 'safety') + '\')"><i class="fas fa-trash"></i> Delete</button>' : '') +
             '</div></div>';
         return html;
     }
@@ -197,11 +204,12 @@
     function loadPosts() {
         apiFetch('/posts').then(function(data) {
             var feed = document.getElementById('posts-feed');
-            if (!data || !data.posts || data.posts.length === 0) {
+            var posts = Array.isArray(data) ? data : (data && data.posts ? data.posts : []);
+            if (posts.length === 0) {
                 feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:40px;color:#333;display:block;margin-bottom:12px"></i><p>No posts yet. Be the first to share!</p></div>';
                 return;
             }
-            feed.innerHTML = data.posts.map(renderPost).join('');
+            feed.innerHTML = posts.map(renderPost).join('');
         }).catch(function() {
             document.getElementById('posts-feed').innerHTML = '<div class="empty-state"><p>Unable to load posts. Try refreshing.</p></div>';
         });
@@ -242,13 +250,13 @@
                 category: category
             })
         }).then(function(data) {
-            if (data && data.post) {
+            if (data && (data.id || data.post)) {
                 document.getElementById('new-post-content').value = '';
                 window.removeImage();
                 showToast('Post shared!');
                 loadPosts();
             } else {
-                showToast('Failed to create post.', true);
+                showToast((data && data.error) || 'Failed to create post.', true);
             }
         }).catch(function() {
             showToast('Failed to create post.', true);
@@ -1351,8 +1359,9 @@
         var cityHtml = post.city ? ' <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
         var badgeHtml = hubGetCategoryBadge(post.category);
         var replyCount = post.reply_count || 0;
+        var canMod = canModifyPost(post);
 
-        return '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div style="flex:1">' +
@@ -1361,9 +1370,11 @@
                 '</div>' +
             '</div>' +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
-            '<div style="display:flex;gap:16px">' +
+            '<div style="display:flex;gap:16px;align-items:center">' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</span>' +
+                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtml(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'community\')" style="margin-left:auto;background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
+                (canMod ? '<button onclick="deletePost(' + post.id + ', \'community\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i> Delete</button>' : '') +
             '</div>' +
         '</div>';
     }
@@ -1449,8 +1460,9 @@
         var avatarColor = hubGetAvatarColor(authorName);
         var personName = post.title || 'Unknown';
         var replyCount = post.reply_count || 0;
+        var canMod = canModifyPost(post);
 
-        return '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div>' +
@@ -1468,6 +1480,8 @@
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</span>' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' comments</span>' +
                 (post.user_id ? '<button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtml(authorName).replace(/'/g, "\\'") + '\')" style="margin-left:auto;background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button>' : '') +
+                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtml(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'referral\')" style="background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i></button>' : '') +
+                (canMod ? '<button onclick="deletePost(' + post.id + ', \'referral\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
             '</div>' +
         '</div>';
     }
@@ -1557,6 +1571,67 @@
             showToast('Failed to send message.', true);
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        });
+    };
+
+    // ==================== POST EDIT / DELETE ====================
+    function reloadFeed(feed) {
+        if (feed === 'community') hubLoadCommunityPosts();
+        else if (feed === 'referral') hubLoadReferralPosts();
+        else loadPosts();
+    }
+
+    window.deletePost = function(postId, feed) {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        apiFetch('/posts/' + postId, { method: 'DELETE' }).then(function(data) {
+            if (data && data.message) {
+                showToast('Post deleted');
+                reloadFeed(feed);
+            } else {
+                showToast((data && data.error) || 'Failed to delete post', true);
+            }
+        }).catch(function() { showToast('Failed to delete post', true); });
+    };
+
+    window.editPost = function(postId, currentBody, feed) {
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'edit-post-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-pencil-alt" style="color:#E8A0B5"></i> Edit Post</h3>' +
+                '<textarea id="edit-post-body" rows="6" style="width:100%;padding:12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;resize:vertical;font-family:inherit">' + escapeHtml(currentBody) + '</textarea>' +
+                '<button id="edit-post-save-btn" class="dc-btn dc-btn-primary" style="margin-top:12px" onclick="saveEditPost(' + postId + ', \'' + feed + '\')"><i class="fas fa-check"></i> Save Changes</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'edit-post-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.saveEditPost = function(postId, feed) {
+        var body = document.getElementById('edit-post-body').value.trim();
+        if (!body) { showToast('Post cannot be empty', true); return; }
+        var btn = document.getElementById('edit-post-save-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        apiFetch('/posts/' + postId, {
+            method: 'PUT',
+            body: JSON.stringify({ title: body.substring(0, 60), body: body })
+        }).then(function(data) {
+            if (data && data.message) {
+                showToast('Post updated');
+                var modal = document.getElementById('edit-post-modal');
+                if (modal) modal.remove();
+                reloadFeed(feed);
+            } else {
+                showToast((data && data.error) || 'Failed to update post', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+            }
+        }).catch(function() {
+            showToast('Failed to update post', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
         });
     };
 

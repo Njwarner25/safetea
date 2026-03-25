@@ -1,4 +1,4 @@
-const { authenticate, cors, parseBody } = require('./_utils/auth');
+const { authenticate, cors } = require('./_utils/auth');
 const { getOne, getMany, run } = require('./_utils/db');
 
 module.exports = async function handler(req, res) {
@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const body = await parseBody(req);
+    const body = req.body || {};
     const { title, body: postBody, category, city, feed, image_url } = body;
 
     if (!title || !postBody) {

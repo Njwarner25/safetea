@@ -1,4 +1,4 @@
-const { authenticate, cors, parseBody } = require('./_utils/auth');
+const { authenticate, cors } = require('./_utils/auth');
 const { getOne, getMany, run } = require('./_utils/db');
 
 module.exports = async function handler(req, res) {
@@ -49,7 +49,7 @@ module.exports = async function handler(req, res) {
 
   // ========== POST: Send a message ==========
   if (req.method === 'POST') {
-    const body = await parseBody(req);
+    const body = req.body || {};
     const { recipient_id, content } = body;
 
     if (!recipient_id || !content || !content.trim()) {

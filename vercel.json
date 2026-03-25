@@ -13,6 +13,9 @@
             ]
         }
     ],
+    "crons": [
+        { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" }
+    ],
     "rewrites": [
         { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
         { "source": "/api/screening/background", "destination": "/api/screening/background" },
@@ -32,9 +35,16 @@
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
+        { "source": "/api/cities", "destination": "/api/cities" },
+        { "source": "/api/community/post", "destination": "/api/community/post" },
+        { "source": "/api/community/stats", "destination": "/api/community/stats" },
+        { "source": "/api/community", "destination": "/api/community" },
+        { "source": "/api/users/city", "destination": "/api/users/city" },
+        { "source": "/api/migrate-community", "destination": "/api/migrate-community" },
         { "source": "/api/admin/ban", "destination": "/api/admin/ban" },
         { "source": "/api/photos/upload", "destination": "/api/photos/upload" },
         { "source": "/api/photos/extract", "destination": "/api/photos/extract" },
+        { "source": "/api/photos/removal-request", "destination": "/api/photos/removal-request" },
         { "source": "/api/photos", "destination": "/api/photos" },
         { "source": "/api/users/ban", "destination": "/api/users/ban" },
         { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },

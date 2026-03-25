@@ -1583,7 +1583,7 @@
 
     window.deletePost = function(postId, feed) {
         if (!confirm('Are you sure you want to delete this post?')) return;
-        apiFetch('/posts/' + postId, { method: 'DELETE' }).then(function(data) {
+        apiFetch('/posts?id=' + postId, { method: 'DELETE' }).then(function(data) {
             if (data && data.message) {
                 showToast('Post deleted');
                 reloadFeed(feed);
@@ -1614,7 +1614,7 @@
         var btn = document.getElementById('edit-post-save-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        apiFetch('/posts/' + postId, {
+        apiFetch('/posts?id=' + postId, {
             method: 'PUT',
             body: JSON.stringify({ title: body.substring(0, 60), body: body })
         }).then(function(data) {

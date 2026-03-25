@@ -846,10 +846,6 @@
 
             html += '<div class="disclaimer" style="margin-top:16px"><i class="fas fa-info-circle"></i><span>This report uses public web search results. Always meet in public and tell someone where you are going.</span></div>';
             results.innerHTML = html;
-
-            // Show community mentions section after background check completes
-            var cmSection = document.getElementById('community-mentions-section');
-            if (cmSection) cmSection.style.display = 'block';
         }).catch(function(err) {
             results.innerHTML = '<div class="disclaimer" style="border-color:#e74c3c"><i class="fas fa-exclamation-circle" style="color:#e74c3c"></i><span>Background check failed: ' + escapeHtml(err.message||'Unknown error') + '</span></div>';
         });

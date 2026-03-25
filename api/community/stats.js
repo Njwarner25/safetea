@@ -3,8 +3,9 @@ const { authenticate, cors } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   // Handle CORS preflight
+  cors(res, req);
   if (req.method === 'OPTIONS') {
-    return cors(res);
+    return res.status(200).end();
   }
 
   if (req.method !== 'GET') {
@@ -16,13 +17,13 @@ module.exports = async function handler(req, res) {
     // Authenticate user
     const user = await authenticate(req);
     if (!user) {
-      return cors(res, 401, { error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Validate required city parameter
     const city = req.query.city;
     if (!city) {
-      return cors(res, 400, { error: 'Missing required query parameter: city' });
+      return res.status(400).json({ error: 'Missing required query parameter: city' });
     }
 
     // Get city stats
@@ -36,7 +37,7 @@ module.exports = async function handler(req, res) {
       [city]
     );
 
-    return cors(res, 200, {
+    return res.status(200).json({
       post_count: parseInt(stats.post_count),
       user_count: parseInt(stats.user_count),
       tea_talk_count: parseInt(stats.tea_talk_count),
@@ -45,6 +46,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error fetching community stats:', error);
-    return cors(res, 500, { error: 'Failed to fetch community stats' });
+    return res.status(500).json({ error: 'Failed to fetch community stats' });
   }
 };

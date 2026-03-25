@@ -3,8 +3,9 @@ const { authenticate, cors, parseBody } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   // Handle CORS preflight
+  cors(res, req);
   if (req.method === 'OPTIONS') {
-    return cors(res);
+    return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
@@ -16,7 +17,7 @@ module.exports = async function handler(req, res) {
     // Authenticate user
     const user = await authenticate(req);
     if (!user) {
-      return cors(res, 401, { error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Parse request body
@@ -25,17 +26,17 @@ module.exports = async function handler(req, res) {
 
     // Validate category
     if (!category || !['tea-talk', 'good-guys'].includes(category)) {
-      return cors(res, 400, { error: 'Invalid category. Must be tea-talk or good-guys' });
+      return res.status(400).json({ error: 'Invalid category. Must be tea-talk or good-guys' });
     }
 
     // Validate content length
     if (!content || typeof content !== 'string' || content.length < 1 || content.length > 2000) {
-      return cors(res, 400, { error: 'Content must be between 1 and 2000 characters' });
+      return res.status(400).json({ error: 'Content must be between 1 and 2000 characters' });
     }
 
     // Check if user has a city set
     if (!user.city) {
-      return cors(res, 400, { error: 'Please select a city first' });
+      return res.status(400).json({ error: 'Please select a city first' });
     }
 
     // Create the post
@@ -48,7 +49,7 @@ module.exports = async function handler(req, res) {
 
     const post = result.rows[0];
 
-    return cors(res, 201, {
+    return res.status(201).json({
       id: post.id,
       user_id: post.user_id,
       content: post.content,
@@ -59,6 +60,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error creating post:', error);
-    return cors(res, 500, { error: 'Failed to create post' });
+    return res.status(500).json({ error: 'Failed to create post' });
   }
 };

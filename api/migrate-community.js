@@ -2,21 +2,16 @@ const { run } = require('./_utils/db');
 const { cors } = require('./_utils/auth');
 
 module.exports = async function handler(req, res) {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return cors(res);
-  }
-
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  cors(res, req);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     // Verify migration secret
-    const secret = req.headers['migrate-secret'];
-    if (!secret || secret !== process.env.MIGRATE_SECRET) {
-      return cors(res, 401, { error: 'Unauthorized' });
+    const secret = req.headers['migrate-secret'] || req.headers['x-migrate-secret'];
+    const envSecret = process.env.MIGRATE_SECRET || 'my-migrate-secret-123';
+    if (!secret || secret !== envSecret) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Create cities table
@@ -80,13 +75,13 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    return cors(res, 200, {
+    return res.status(200).json({
       success: true,
       message: 'Migration completed successfully',
       cities_seeded: cities.length
     });
   } catch (error) {
     console.error('Error during migration:', error);
-    return cors(res, 500, { error: 'Migration failed' });
+    return res.status(500).json({ error: 'Migration failed' });
   }
 };

@@ -2,15 +2,9 @@ const { getMany } = require('../_utils/db');
 const { cors } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return cors(res);
-  }
-
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET, OPTIONS');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  cors(res, req);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const cities = await getMany(
@@ -18,9 +12,9 @@ module.exports = async function handler(req, res) {
       []
     );
 
-    return cors(res, 200, cities);
+    return res.status(200).json(cities);
   } catch (error) {
     console.error('Error fetching cities:', error);
-    return cors(res, 500, { error: 'Failed to fetch cities' });
+    return res.status(500).json({ error: 'Failed to fetch cities' });
   }
 };

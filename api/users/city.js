@@ -3,8 +3,9 @@ const { authenticate, cors, parseBody } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   // Handle CORS preflight
+  cors(res, req);
   if (req.method === 'OPTIONS') {
-    return cors(res);
+    return res.status(200).end();
   }
 
   if (req.method !== 'PUT') {
@@ -16,7 +17,7 @@ module.exports = async function handler(req, res) {
     // Authenticate user
     const user = await authenticate(req);
     if (!user) {
-      return cors(res, 401, { error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Parse request body
@@ -25,7 +26,7 @@ module.exports = async function handler(req, res) {
 
     // Validate city parameter
     if (!city || typeof city !== 'string') {
-      return cors(res, 400, { error: 'Missing or invalid city parameter' });
+      return res.status(400).json({ error: 'Missing or invalid city parameter' });
     }
 
     // Verify the city exists and is active
@@ -35,7 +36,7 @@ module.exports = async function handler(req, res) {
     );
 
     if (!cityRecord) {
-      return cors(res, 400, { error: 'Invalid or inactive city' });
+      return res.status(400).json({ error: 'Invalid or inactive city' });
     }
 
     // Update user's city
@@ -45,18 +46,18 @@ module.exports = async function handler(req, res) {
     );
 
     if (!result.rows.length) {
-      return cors(res, 500, { error: 'Failed to update city' });
+      return res.status(500).json({ error: 'Failed to update city' });
     }
 
     const updatedUser = result.rows[0];
 
-    return cors(res, 200, {
+    return res.status(200).json({
       success: true,
       city: updatedUser.city,
       city_name: cityRecord.name
     });
   } catch (error) {
     console.error('Error updating user city:', error);
-    return cors(res, 500, { error: 'Failed to update user city' });
+    return res.status(500).json({ error: 'Failed to update user city' });
   }
 };

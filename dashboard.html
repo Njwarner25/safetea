@@ -257,68 +257,96 @@
         .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
         .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
         .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
-        /* Community Tab Styles */
-        .community-section { max-width: 720px; margin: 0 auto; padding: 24px; }
-        .community-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .community-header h2 { font-size: 22px; color: #fff; display: flex; align-items: center; gap: 10px; }
-        .community-city-selector { display: flex; align-items: center; gap: 8px; background: #22223A; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-size: 14px; color: #fff; font-family: 'Inter', sans-serif; }
-        .community-city-selector:hover { border-color: #E8A0B5; }
-        .community-city-selector .city-emoji { font-size: 18px; }
-        .community-city-selector .city-arrow { color: #8080A0; font-size: 11px; margin-left: 4px; }
-        .community-category-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .community-cat-tab { background: #22223A; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); }
-        .community-cat-tab:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-        .community-cat-tab.active { background: rgba(232,160,181,0.15); color: #E8A0B5; border-color: #E8A0B5; }
-        .community-create { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
-        .community-create:hover { border-color: rgba(232,160,181,0.3); }
-        .community-create-avatar { width: 40px; height: 40px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
-        .community-create-placeholder { color: #8080A0; font-size: 14px; flex: 1; }
-        .community-create-btn { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
-        .community-post { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
-        .community-post:hover { border-color: rgba(255,255,255,0.1); }
-        .community-post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .community-post-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
+        /* ========== Community Tab Styles (Matches Nate's Mockups) ========== */
+        .community-section { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
+        /* Community Top Bar */
+        .community-topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 16px; }
+        .community-topbar-left { display: flex; align-items: center; gap: 8px; }
+        .community-topbar-logo { height: 28px; }
+        .community-topbar-right { display: flex; align-items: center; gap: 12px; }
+        .community-topbar-avatar { width: 38px; height: 38px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; cursor: pointer; }
+        .community-topbar-icon { position: relative; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #8080A0; font-size: 16px; }
+        .community-topbar-icon:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .community-topbar-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #E8A0B5; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        /* Community Header */
+        .community-city-label { color: #E8A0B5; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
+        .community-city-label:hover { text-decoration: underline; }
+        .community-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 16px; }
+        /* Category Tabs */
+        .community-category-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .community-cat-tab { padding: 10px 22px; border-radius: 24px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; transition: all 0.2s; border: none; display: flex; align-items: center; gap: 6px; }
+        .community-cat-tab.active-tea { background: #E8A0B5; color: #fff; }
+        .community-cat-tab.inactive { background: #f0f0f0; color: #666; }
+        .community-cat-tab.inactive:hover { background: #e5e5e5; }
+        .community-cat-tab.active-good { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        /* Post Cards */
+        .community-post { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .community-post-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+        .community-post-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: #fff; flex-shrink: 0; }
         .community-post-meta { flex: 1; }
-        .community-post-author { font-weight: 600; font-size: 14px; color: #fff; }
-        .community-post-time { font-size: 12px; color: #8080A0; }
-        .community-post-category { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .cat-tea-talk { background: rgba(231,76,60,0.15); color: #e74c3c; }
-        .cat-good-guys { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .cat-general { background: rgba(52,152,219,0.15); color: #3498db; }
-        .cat-safety-tip { background: rgba(241,196,15,0.15); color: #f1c40f; }
-        .community-post-body { font-size: 14px; line-height: 1.6; color: #F0D0C0; margin-bottom: 16px; }
-        .community-post-actions { display: flex; gap: 20px; }
-        .community-post-action { display: flex; align-items: center; gap: 6px; color: #8080A0; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
+        .community-post-author { font-weight: 700; font-size: 16px; color: #222; display: block; }
+        .community-post-time { font-size: 13px; color: #999; margin-top: 2px; }
+        .community-post-more { background: none; border: none; color: #bbb; font-size: 18px; cursor: pointer; padding: 4px 8px; letter-spacing: 2px; }
+        .community-post-more:hover { color: #888; }
+        .community-post-body { font-size: 15px; line-height: 1.65; color: #333; margin-bottom: 16px; }
+        .community-post-body strong { font-weight: 700; }
+        .community-post-image { width: 100%; border-radius: 12px; margin-bottom: 16px; max-height: 300px; object-fit: cover; }
+        .community-post-actions { display: flex; gap: 24px; align-items: center; }
+        .community-post-action { display: flex; align-items: center; gap: 6px; color: #999; font-size: 14px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
         .community-post-action:hover { color: #E8A0B5; }
-        .community-stats-bar { display: flex; gap: 16px; margin-bottom: 20px; padding: 12px 16px; background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; }
-        .community-stat { text-align: center; flex: 1; }
-        .community-stat-num { font-size: 18px; font-weight: 700; color: #E8A0B5; }
-        .community-stat-label { font-size: 11px; color: #8080A0; margin-top: 2px; }
-        /* City Picker Modal */
-        .city-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
-        .city-modal-overlay.show { display: flex; }
-        .city-modal { background: #22223A; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-        .city-modal h3 { font-size: 18px; color: #fff; margin-bottom: 4px; text-align: center; }
-        .city-modal p { font-size: 13px; color: #8080A0; text-align: center; margin-bottom: 20px; }
-        .city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .city-option { display: flex; align-items: center; gap: 10px; padding: 14px; background: #141428; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; cursor: pointer; transition: all 0.2s; }
-        .city-option:hover { border-color: #E8A0B5; background: rgba(232,160,181,0.05); }
-        .city-option.selected { border-color: #E8A0B5; background: rgba(232,160,181,0.1); }
-        .city-option-emoji { font-size: 24px; }
-        .city-option-name { font-size: 14px; font-weight: 600; color: #fff; }
-        .city-option-count { font-size: 11px; color: #8080A0; }
-        /* Community Post Modal */
-        .post-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+        .community-post-action .liked { color: #e74c3c; }
+        .community-post-action-spacer { flex: 1; }
+        /* Quick Post Bar (bottom) */
+        .community-quickpost { position: fixed; bottom: 60px; left: 0; right: 0; z-index: 50; padding: 10px 16px; background: rgba(255,255,255,0.97); border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; backdrop-filter: blur(10px); }
+        .community-quickpost input { flex: 1; background: #f5f5f5; border: 1px solid #eee; border-radius: 24px; padding: 12px 18px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; color: #333; }
+        .community-quickpost input::placeholder { color: #aaa; }
+        .community-quickpost input:focus { border-color: #E8A0B5; }
+        .community-quickpost-btn { background: #E8A0B5; color: #fff; border: none; padding: 10px 20px; border-radius: 24px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .community-quickpost-btn:hover { background: #D4768E; }
+        /* City Picker - Full Screen */
+        .city-picker-screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #FDF5F7 0%, #F8E8EE 30%, #FDF5F7 100%); z-index: 300; overflow-y: auto; padding: 40px 20px; }
+        .city-picker-screen.show { display: block; }
+        .city-picker-inner { max-width: 500px; margin: 0 auto; }
+        .city-picker-header { text-align: center; margin-bottom: 24px; }
+        .city-picker-header h2 { font-size: 28px; font-weight: 800; color: #222; margin-bottom: 6px; }
+        .city-picker-header p { font-size: 15px; color: #888; }
+        .city-picker-search { width: 100%; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 14px 18px 14px 42px; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; color: #333; margin-bottom: 20px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23aaa' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 14px center; }
+        .city-picker-search:focus { border-color: #E8A0B5; }
+        .city-picker-search::placeholder { color: #bbb; }
+        .city-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+        .city-card { background: #fff; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .city-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
+        .city-card.selected { border-color: #4CAF50; }
+        .city-card-img { width: 100%; height: 110px; object-fit: cover; background: linear-gradient(135deg, #F8E8EE, #E8D0E0); display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .city-card-info { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+        .city-card-name { font-size: 14px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 6px; }
+        .city-card-name .city-emoji { font-size: 16px; }
+        .city-card-arrow { color: #ccc; font-size: 14px; }
+        .city-card-check { color: #4CAF50; font-size: 18px; }
+        .city-picker-continue { display: block; width: 100%; padding: 16px; background: #E8A0B5; color: #fff; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
+        .city-picker-continue:hover { background: #D4768E; }
+        .city-picker-continue:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Post Modal - Updated */
+        .post-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
         .post-modal-overlay.show { display: flex; }
-        .post-modal { background: #22223A; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; width: 90%; max-width: 500px; }
-        .post-modal h3 { font-size: 18px; color: #fff; margin-bottom: 16px; }
-        .post-modal textarea { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 120px; outline: none; margin-bottom: 12px; }
+        .post-modal { background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .post-modal h3 { font-size: 20px; font-weight: 800; color: #222; margin-bottom: 16px; }
+        .post-modal textarea { width: 100%; background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 12px; padding: 14px; color: #333; font-family: 'Inter', sans-serif; font-size: 15px; resize: vertical; min-height: 120px; outline: none; margin-bottom: 12px; box-sizing: border-box; }
         .post-modal textarea:focus { border-color: #E8A0B5; }
-        .post-modal textarea::placeholder { color: #8080A0; }
+        .post-modal textarea::placeholder { color: #aaa; }
+        .post-modal-photo-section { margin-bottom: 12px; }
+        .post-modal-photo-btn { display: inline-flex; align-items: center; gap: 6px; background: #f8f8f8; border: 1px dashed #ddd; border-radius: 10px; padding: 10px 16px; color: #888; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .post-modal-photo-btn:hover { border-color: #E8A0B5; color: #E8A0B5; }
+        .post-modal-photo-btn i { font-size: 16px; }
+        .post-modal-photo-preview { margin-top: 10px; position: relative; display: inline-block; }
+        .post-modal-photo-preview img { max-width: 200px; max-height: 150px; border-radius: 10px; object-fit: cover; }
+        .post-modal-photo-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #e74c3c; color: #fff; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .post-modal-actions { display: flex; justify-content: space-between; align-items: center; }
-        .post-modal-cat { background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
-        .post-modal-submit { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .post-modal-cancel { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-cat { background: #f8f8f8; border: 1px solid #e0e0e0; color: #555; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+        .post-modal-submit { background: #E8A0B5; color: #fff; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-submit:hover { background: #D4768E; }
+        .post-modal-cancel { background: none; border: 1px solid #ddd; color: #888; padding: 12px 20px; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-cancel:hover { border-color: #bbb; color: #555; }
         .mobile-tab-bar { display: none; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
         @media (max-width: 768px) {
@@ -1025,6 +1053,119 @@
             border-color: #C4506A !important;
         }
 
+        /* ===== Hub / Referral — Light Mode Overrides ===== */
+
+        /* All dark boxes (#22223A) inside growreferral → white with rose border */
+        [data-theme="light"] #hub-growreferral > div[style*="background:#22223A"],
+        [data-theme="light"] #hub-growreferral > div > div[style*="background:#22223A"],
+        [data-theme="light"] #hub-growreferral div[style*="background:#22223A"] {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+        }
+        /* All darker boxes (#141428) → soft rose tint with rose border */
+        [data-theme="light"] #hub-growreferral div[style*="background:#141428"],
+        [data-theme="light"] #hub-growreferral input[style*="background:#141428"] {
+            background: #FDF5F7 !important;
+            border-color: #C4506A !important;
+        }
+
+        /* Share URL input */
+        [data-theme="light"] #grow-share-url {
+            background: #FDF5F7 !important;
+            border: 1px solid #C4506A !important;
+            color: #C4506A !important;
+        }
+
+        /* Tier reward boxes */
+        [data-theme="light"] #grow-tier-3,
+        [data-theme="light"] #grow-tier-10,
+        [data-theme="light"] #grow-tier-25 {
+            background: #FDF5F7 !important;
+            border: 1px solid #C4506A !important;
+        }
+        [data-theme="light"] #grow-tier-3 span,
+        [data-theme="light"] #grow-tier-10 span,
+        [data-theme="light"] #grow-tier-25 span,
+        [data-theme="light"] #grow-tier-3 div,
+        [data-theme="light"] #grow-tier-10 div,
+        [data-theme="light"] #grow-tier-25 div {
+            color: #333 !important;
+        }
+
+        /* Active rewards & referrals list */
+        [data-theme="light"] #grow-active-rewards {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+        }
+        [data-theme="light"] #grow-referrals-list {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+        }
+
+        /* Promo banner */
+        [data-theme="light"] #grow-promo-banner {
+            background: linear-gradient(135deg, rgba(196,80,106,0.08), rgba(196,80,106,0.04)) !important;
+            border: 1px solid #C4506A !important;
+        }
+
+        /* Progress bar background */
+        [data-theme="light"] #hub-growreferral div[style*="background:rgba(255,255,255,0.04)"],
+        [data-theme="light"] #hub-growreferral div[style*="background:#1A1A2E"] {
+            background: #F0E0E4 !important;
+        }
+
+        /* All white text → dark in light mode */
+        [data-theme="light"] #hub-growreferral h3[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral div[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral span[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral p[style*="color:rgba(255,255,255"] {
+            color: #222 !important;
+        }
+        /* Gray text → medium gray */
+        [data-theme="light"] #hub-growreferral div[style*="color:#8080A0"],
+        [data-theme="light"] #hub-growreferral p[style*="color:#8080A0"],
+        [data-theme="light"] #hub-growreferral span[style*="color:#8080A0"] {
+            color: #666 !important;
+        }
+
+        /* Hub sub-sections that also use dark bg */
+        [data-theme="light"] .hub-sub > div[style*="background:#22223A"],
+        [data-theme="light"] .hub-sub div[style*="background:#22223A"] {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+        }
+        [data-theme="light"] .hub-sub h3[style*="color:#fff"] {
+            color: #222 !important;
+        }
+
+        /* ===== Feed invite card — light mode ===== */
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"][style*="background:linear-gradient"] {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+        }
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"] span[style*="color:#fff"] {
+            color: #222 !important;
+        }
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"] span[style*="color:#8080A0"] {
+            color: #666 !important;
+        }
+
+        /* ===== Search panels in hub — light mode ===== */
+        [data-theme="light"] #tab-hub .search-panel {
+            background: #FFFFFF !important;
+            border: 1px solid #C4506A !important;
+        }
+        [data-theme="light"] #tab-hub .search-panel h3 { color: #222 !important; }
+        [data-theme="light"] #tab-hub .search-panel input,
+        [data-theme="light"] #tab-hub .search-panel select {
+            background: #FDF5F7 !important;
+            border-color: #C4506A !important;
+            color: #222 !important;
+        }
+
         /* Buttons — keep gradient, slightly deeper */
         [data-theme="light"] .btn-post,
         [data-theme="light"] .btn-search,
@@ -1165,25 +1306,9 @@
         [data-theme="light"] .mobile-tab-bar a { color: #888; }
         [data-theme="light"] .mobile-tab-bar a.active { color: #C4506A; }
         [data-theme="light"] .mobile-tab-bar a.active::after { background: #C4506A; }
-        /* Community light theme */
-        [data-theme="light"] .community-section { color: #333; }
-        [data-theme="light"] .community-header h2 { color: #222; }
-        [data-theme="light"] .community-city-selector { background: #fff; border-color: #ddd; color: #222; }
-        [data-theme="light"] .community-cat-tab { background: #fff; border-color: #ddd; color: #888; }
-        [data-theme="light"] .community-cat-tab.active { background: rgba(196,80,106,0.1); color: #C4506A; border-color: #C4506A; }
-        [data-theme="light"] .community-create { background: #fff; border-color: #eee; }
-        [data-theme="light"] .community-post { background: #fff; border-color: #eee; }
-        [data-theme="light"] .community-post-author { color: #222; }
-        [data-theme="light"] .community-post-body { color: #444; }
-        [data-theme="light"] .community-stats-bar { background: #fff; border-color: #eee; }
-        [data-theme="light"] .community-stat-num { color: #C4506A; }
-        [data-theme="light"] .city-modal { background: #fff; border-color: #ddd; }
-        [data-theme="light"] .city-modal h3 { color: #222; }
-        [data-theme="light"] .city-option { background: #f5f5f5; border-color: #ddd; }
-        [data-theme="light"] .city-option-name { color: #222; }
-        [data-theme="light"] .post-modal { background: #fff; border-color: #ddd; }
-        [data-theme="light"] .post-modal h3 { color: #222; }
-        [data-theme="light"] .post-modal textarea { background: #f5f5f5; border-color: #ddd; color: #222; }
+        /* Community light theme — community is already light-first design, just fine-tune */
+        [data-theme="light"] .community-topbar-icon { background: rgba(0,0,0,0.05); }
+        [data-theme="light"] .community-quickpost { background: rgba(255,255,255,0.97); }
 
         /* FAB */
         [data-theme="light"] .fab-invite {
@@ -1297,46 +1422,76 @@
     </div>
 
     <!-- COMMUNITY TAB -->
-    <div id="tab-community" class="tab-section">
+    <div id="tab-community" class="tab-section" style="background: linear-gradient(180deg, #FDF5F7 0%, #F8E8EE 20%, #FDF5F7 100%); min-height: 100vh;">
         <div class="community-section">
-            <div class="community-header">
-                <h2><i class="fas fa-users" style="color:#E8A0B5"></i> Community</h2>
-                <button class="community-city-selector" id="community-city-btn" onclick="openCityPicker()">
-                    <span class="city-emoji" id="community-city-emoji">🏙️</span>
-                    <span id="community-city-name">Choose City</span>
-                    <i class="fas fa-chevron-down city-arrow"></i>
-                </button>
+            <!-- Top Bar: Logo + Avatar + Icons -->
+            <div class="community-topbar">
+                <div class="community-topbar-left">
+                    <span style="font-size:22px">&#9749;</span>
+                    <span style="font-size:18px;font-weight:700;color:#E8A0B5;font-style:italic;">SafeTea</span>
+                </div>
+                <div class="community-topbar-right">
+                    <div class="community-topbar-avatar" id="comm-user-avatar">N</div>
+                    <div class="community-topbar-icon" onclick="switchTab('profile')">
+                        <i class="fas fa-cog"></i>
+                        <span class="community-topbar-badge" id="comm-settings-badge" style="display:none">0</span>
+                    </div>
+                    <div class="community-topbar-icon" onclick="switchTab('alerts')">
+                        <i class="fas fa-bell"></i>
+                        <span class="community-topbar-badge" id="comm-notif-badge" style="display:none">0</span>
+                    </div>
+                </div>
             </div>
-            <div class="community-stats-bar" id="community-stats-bar">
-                <div class="community-stat"><div class="community-stat-num" id="comm-stat-posts">0</div><div class="community-stat-label">Posts</div></div>
-                <div class="community-stat"><div class="community-stat-num" id="comm-stat-members">0</div><div class="community-stat-label">Members</div></div>
-                <div class="community-stat"><div class="community-stat-num" id="comm-stat-today">0</div><div class="community-stat-label">Today</div></div>
+
+            <!-- City Label + Title -->
+            <div class="community-city-label" onclick="openCityPicker()">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="community-city-name">Choose City</span>
             </div>
+            <h1 class="community-title" id="community-title">Community</h1>
+
+            <!-- Category Tabs: Tea Talk + Good Guys -->
             <div class="community-category-tabs">
-                <button class="community-cat-tab active" data-cat="all" onclick="filterCommunity('all')">All</button>
-                <button class="community-cat-tab" data-cat="tea_talk" onclick="filterCommunity('tea_talk')">🍵 Tea Talk</button>
-                <button class="community-cat-tab" data-cat="good_guys" onclick="filterCommunity('good_guys')">💚 Good Guys</button>
-                <button class="community-cat-tab" data-cat="safety-tip" onclick="filterCommunity('safety-tip')">🛡️ Tips</button>
+                <button class="community-cat-tab active-tea" data-cat="tea_talk" onclick="filterCommunity('tea_talk')">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good_guys" onclick="filterCommunity('good_guys')">&#10004; Good Guys</button>
             </div>
-            <div class="community-create" onclick="openPostModal()">
-                <div class="community-create-avatar" id="community-post-avatar"></div>
-                <span class="community-create-placeholder">Share with your city...</span>
-                <button class="community-create-btn">Post</button>
-            </div>
+
+            <!-- Posts Feed -->
             <div id="community-feed">
-                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Select a city to see posts...</div>
+                <div class="loading" style="text-align:center;padding:40px;color:#999;">
+                    <i class="fas fa-map-marker-alt" style="font-size:28px;color:#E8A0B5;display:block;margin-bottom:12px;"></i>
+                    Select a city to see posts
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Post Bar (fixed at bottom) -->
+        <div class="community-quickpost" id="community-quickpost" style="display:none;">
+            <input type="text" id="community-quickpost-input" placeholder="Share a warning, tip, or experience..." onclick="openPostModal()" readonly>
+            <button class="community-quickpost-btn" onclick="openPostModal()"><i class="fas fa-paper-plane"></i> Post</button>
+        </div>
+
+        <!-- Bottom Category Tabs (fixed) -->
+        <div id="community-bottom-tabs" style="display:none;position:fixed;bottom:120px;left:0;right:0;z-index:49;padding:8px 16px;max-width:720px;margin:0 auto;">
+            <div style="display:flex;gap:8px;">
+                <button class="community-cat-tab active-tea" data-cat="tea_talk" onclick="filterCommunity('tea_talk')" style="font-size:13px;padding:8px 16px;">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good_guys" onclick="filterCommunity('good_guys')" style="font-size:13px;padding:8px 16px;">&#10004; Good Guys</button>
             </div>
         </div>
     </div>
 
-    <!-- City Picker Modal -->
-    <div class="city-modal-overlay" id="city-modal">
-        <div class="city-modal">
-            <h3>Choose Your City</h3>
-            <p>See posts and connect with people in your area</p>
-            <div class="city-grid" id="city-grid">
-                <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+    <!-- City Picker Full Screen -->
+    <div class="city-picker-screen" id="city-picker">
+        <div class="city-picker-inner">
+            <div class="city-picker-header">
+                <h2>Choose Your City</h2>
+                <p>Connect with your local community &#x1F495;</p>
             </div>
+            <input type="text" class="city-picker-search" id="city-search" placeholder="Search cities..." oninput="filterCitySearch(this.value)">
+            <div class="city-picker-grid" id="city-picker-grid">
+                <div style="text-align:center;padding:20px;color:#aaa;grid-column:span 2;"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>
+            </div>
+            <button class="city-picker-continue" id="city-continue-btn" disabled onclick="confirmCitySelection()">Continue</button>
         </div>
     </div>
 
@@ -1345,12 +1500,20 @@
         <div class="post-modal">
             <h3>Share with your community</h3>
             <textarea id="community-post-text" placeholder="What do you want your city to know?"></textarea>
+            <div class="post-modal-photo-section">
+                <label class="post-modal-photo-btn" for="post-photo-input">
+                    <i class="fas fa-camera"></i> Add Photo
+                </label>
+                <input type="file" id="post-photo-input" accept="image/*" style="display:none" onchange="handlePostPhoto(this)">
+                <div class="post-modal-photo-preview" id="post-photo-preview" style="display:none">
+                    <img id="post-photo-preview-img" src="" alt="Preview">
+                    <button class="post-modal-photo-remove" onclick="removePostPhoto()">&times;</button>
+                </div>
+            </div>
             <div class="post-modal-actions">
                 <select class="post-modal-cat" id="community-post-cat">
-                    <option value="tea_talk">🍵 Tea Talk</option>
-                    <option value="good_guys">💚 Good Guys</option>
-                    <option value="safety-tip">🛡️ Safety Tip</option>
-                    <option value="general">💬 General</option>
+                    <option value="tea_talk">&#9749; Tea Talk</option>
+                    <option value="good_guys">&#10004; Good Guys</option>
                 </select>
                 <div style="display:flex;gap:8px">
                     <button class="post-modal-cancel" onclick="closePostModal()">Cancel</button>
@@ -2174,12 +2337,27 @@
     </script>
 
     <script>
-    /* ========== COMMUNITY TAB ========== */
+    /* ========== COMMUNITY TAB (Matching Nate's Mockups) ========== */
     var communityState = {
         cities: [],
         selectedCity: null,
-        currentCategory: 'all',
-        posts: []
+        currentCategory: 'tea_talk',
+        posts: [],
+        pendingCity: null,
+        postPhotoFile: null,
+        postPhotoDataUrl: null
+    };
+
+    // City images - illustrated skyline placeholders (emoji fallback)
+    var cityImages = {
+        'Chicago': { emoji: '&#x1F3D9;', color: '#F0C4D4' },
+        'New York': { emoji: '&#x1F5FD;', color: '#D4E0F0' },
+        'Los Angeles': { emoji: '&#x1F3AC;', color: '#F0D4C4' },
+        'Dallas': { emoji: '&#x1F920;', color: '#D4F0E0' },
+        'Miami': { emoji: '&#x1F334;', color: '#C4E8F0' },
+        'Houston': { emoji: '&#x1F680;', color: '#E8D4F0' },
+        'Atlanta': { emoji: '&#x1F3D7;', color: '#F0D4D4' },
+        'Boston': { emoji: '&#x1F341;', color: '#D4D4F0' }
     };
 
     function loadCities() {
@@ -2187,12 +2365,18 @@
             .then(function(r) { return r.json(); })
             .then(function(cities) {
                 communityState.cities = cities;
-                renderCityGrid(cities);
-                // Auto-select user's city if set
+                renderCityPickerGrid(cities);
+                // Auto-select saved city
                 var userCity = localStorage.getItem('safetea-city');
                 if (userCity) {
                     var city = cities.find(function(c) { return c.id === parseInt(userCity); });
-                    if (city) selectCity(city);
+                    if (city) {
+                        communityState.selectedCity = city;
+                        communityState.pendingCity = city;
+                        updateCommunityHeader(city);
+                        loadCommunityFeed();
+                        showQuickPost();
+                    }
                 }
             })
             .catch(function(err) {
@@ -2200,26 +2384,50 @@
             });
     }
 
-    function renderCityGrid(cities) {
-        var grid = document.getElementById('city-grid');
+    function renderCityPickerGrid(cities) {
+        var grid = document.getElementById('city-picker-grid');
         grid.innerHTML = cities.map(function(city) {
-            var selected = communityState.selectedCity && communityState.selectedCity.id === city.id ? ' selected' : '';
-            return '<div class="city-option' + selected + '" onclick="selectCity(' + JSON.stringify(city).replace(/"/g, '&quot;') + ')">' +
-                '<span class="city-option-emoji">' + (city.emoji || '🏙️') + '</span>' +
-                '<div><div class="city-option-name">' + city.name + '</div>' +
-                '<div class="city-option-count">' + (city.post_count || 0) + ' posts · ' + (city.user_count || 0) + ' members</div></div></div>';
+            var img = cityImages[city.name] || { emoji: '&#x1F3D9;', color: '#F0E0E8' };
+            var isSelected = (communityState.pendingCity && communityState.pendingCity.id === city.id) ||
+                             (communityState.selectedCity && communityState.selectedCity.id === city.id);
+            return '<div class="city-card' + (isSelected ? ' selected' : '') + '" onclick="selectCityCard(' + JSON.stringify(city).replace(/"/g, '&quot;') + ', this)">' +
+                '<div class="city-card-img" style="background:' + img.color + ';font-size:48px;">' + (city.emoji || img.emoji) + '</div>' +
+                '<div class="city-card-info">' +
+                    '<span class="city-card-name"><span class="city-emoji">' + (city.emoji || '&#x1F4CD;') + '</span> ' + escapeHtml(city.name) + '</span>' +
+                    (isSelected ? '<span class="city-card-check"><i class="fas fa-check-circle"></i></span>' : '<span class="city-card-arrow">&rsaquo;</span>') +
+                '</div>' +
+            '</div>';
         }).join('');
     }
 
-    function selectCity(city) {
+    function selectCityCard(city, el) {
+        communityState.pendingCity = city;
+        // Update all cards
+        document.querySelectorAll('.city-card').forEach(function(c) { c.classList.remove('selected'); });
+        if (el) el.classList.add('selected');
+        document.getElementById('city-continue-btn').disabled = false;
+        // Re-render to update check/arrow icons
+        renderCityPickerGrid(communityState.cities);
+    }
+
+    function filterCitySearch(val) {
+        var q = val.toLowerCase();
+        var filtered = communityState.cities.filter(function(c) {
+            return c.name.toLowerCase().indexOf(q) >= 0;
+        });
+        renderCityPickerGrid(filtered);
+    }
+
+    function confirmCitySelection() {
+        var city = communityState.pendingCity;
+        if (!city) return;
         communityState.selectedCity = city;
         localStorage.setItem('safetea-city', city.id);
-        document.getElementById('community-city-emoji').textContent = city.emoji || '🏙️';
-        document.getElementById('community-city-name').textContent = city.name;
+        updateCommunityHeader(city);
         closeCityPicker();
         loadCommunityFeed();
-        loadCommunityStats();
-        // Update user's city on server
+        showQuickPost();
+        // Update on server
         var token = localStorage.getItem('token');
         if (token) {
             fetch('/api/users/city', {
@@ -2230,21 +2438,33 @@
         }
     }
 
+    function updateCommunityHeader(city) {
+        document.getElementById('community-city-name').textContent = city.name;
+        document.getElementById('community-title').textContent = city.name + ' Community';
+    }
+
+    function showQuickPost() {
+        var qp = document.getElementById('community-quickpost');
+        if (qp) qp.style.display = 'flex';
+        var bt = document.getElementById('community-bottom-tabs');
+        if (bt) bt.style.display = 'block';
+    }
+
     function openCityPicker() {
-        document.getElementById('city-modal').classList.add('show');
+        document.getElementById('city-picker').classList.add('show');
         if (communityState.cities.length === 0) loadCities();
-        else renderCityGrid(communityState.cities);
+        else renderCityPickerGrid(communityState.cities);
     }
 
     function closeCityPicker() {
-        document.getElementById('city-modal').classList.remove('show');
+        document.getElementById('city-picker').classList.remove('show');
     }
 
     function loadCommunityFeed() {
         var city = communityState.selectedCity;
         if (!city) return;
         var feed = document.getElementById('community-feed');
-        feed.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>';
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#E8A0B5;"></i></div>';
         var token = localStorage.getItem('token');
         var url = '/api/community?city_id=' + city.id;
         if (communityState.currentCategory !== 'all') {
@@ -2256,13 +2476,15 @@
                 var posts = Array.isArray(data) ? data : (data.posts || []);
                 communityState.posts = posts;
                 if (posts.length === 0) {
-                    feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>No posts yet in ' + city.name + '.<br>Be the first to share!</div>';
+                    feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">' +
+                        '<i class="fas fa-comments" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>' +
+                        'No posts yet in ' + escapeHtml(city.name) + '.<br>Be the first to share!</div>';
                     return;
                 }
                 feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
             })
             .catch(function(err) {
-                feed.innerHTML = '<div class="empty-state">Failed to load posts. Try again.</div>';
+                feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">Failed to load posts. Try again.</div>';
                 console.error(err);
             });
     }
@@ -2272,30 +2494,42 @@
         var colorIndex = (post.user_id || 0) % colors.length;
         var avatarColor = colors[colorIndex];
         var initial = (post.display_name || post.username || 'A').charAt(0).toUpperCase();
-        var catClass = 'cat-general';
-        var catLabel = post.category || 'general';
-        if (catLabel === 'tea_talk' || catLabel === 'warning') { catClass = 'cat-tea-talk'; catLabel = '🍵 Tea Talk'; }
-        else if (catLabel === 'good_guys' || catLabel === 'recommendation' || catLabel === 'good-news') { catClass = 'cat-good-guys'; catLabel = '💚 Good Guys'; }
-        else if (catLabel === 'safety-tip') { catClass = 'cat-safety-tip'; catLabel = '🛡️ Safety Tip'; }
-        else { catLabel = '💬 General'; }
         var timeAgo = getTimeAgo(post.created_at);
+        var neighborhood = post.neighborhood ? ' &middot; ' + escapeHtml(post.neighborhood) : '';
+        var imageHtml = '';
+        if (post.image_url) {
+            imageHtml = '<img class="community-post-image" src="' + escapeHtml(post.image_url) + '" alt="Post image" loading="lazy">';
+        }
         return '<div class="community-post">' +
             '<div class="community-post-header">' +
                 '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
                 '<div class="community-post-meta">' +
                     '<span class="community-post-author">' + escapeHtml(post.display_name || post.username || 'Anonymous') + '</span>' +
-                    ' <span class="community-post-category ' + catClass + '">' + catLabel + '</span>' +
-                    '<div class="community-post-time">' + timeAgo + '</div>' +
+                    '<div class="community-post-time">' + timeAgo + neighborhood + '</div>' +
                 '</div>' +
+                '<button class="community-post-more">&middot;&middot;&middot;</button>' +
             '</div>' +
-            '<div class="community-post-body">' + escapeHtml(post.content) + '</div>' +
-            (post.image_url ? '<img class="post-image" src="' + escapeHtml(post.image_url) + '" alt="Post image">' : '') +
+            '<div class="community-post-body">' + formatPostContent(post.content) + '</div>' +
+            imageHtml +
             '<div class="community-post-actions">' +
                 '<button class="community-post-action"><i class="far fa-heart"></i> ' + (post.like_count || 0) + '</button>' +
                 '<button class="community-post-action"><i class="far fa-comment"></i> ' + (post.comment_count || 0) + '</button>' +
-                '<button class="community-post-action"><i class="fas fa-share"></i></button>' +
+                '<button class="community-post-action"><i class="fas fa-share"></i> ' + (post.share_count || 0) + '</button>' +
+                '<span class="community-post-action-spacer"></span>' +
+                '<button class="community-post-more" style="padding:0">&middot;&middot;&middot;</button>' +
             '</div>' +
         '</div>';
+    }
+
+    function formatPostContent(text) {
+        if (!text) return '';
+        // Escape HTML first
+        var safe = escapeHtml(text);
+        // Bold text between *asterisks*
+        safe = safe.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+        // Bold text between **double asterisks**
+        safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        return safe;
     }
 
     function escapeHtml(text) {
@@ -2317,25 +2551,18 @@
         return then.toLocaleDateString();
     }
 
-    function loadCommunityStats() {
-        var city = communityState.selectedCity;
-        if (!city) return;
-        var token = localStorage.getItem('token');
-        fetch('/api/community/stats?city_id=' + city.id, { headers: { 'Authorization': 'Bearer ' + token } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                document.getElementById('comm-stat-posts').textContent = data.post_count || data.total_posts || 0;
-                document.getElementById('comm-stat-members').textContent = data.user_count || data.total_users || 0;
-                document.getElementById('comm-stat-today').textContent = data.today_posts || 0;
-            })
-            .catch(function() {});
-    }
-
     function filterCommunity(cat) {
         communityState.currentCategory = cat;
-        document.querySelectorAll('.community-cat-tab').forEach(function(t) { t.classList.remove('active'); });
-        var activeTab = document.querySelector('.community-cat-tab[data-cat="' + cat + '"]');
-        if (activeTab) activeTab.classList.add('active');
+        // Update all tab groups (top + bottom)
+        document.querySelectorAll('.community-cat-tab').forEach(function(t) {
+            t.classList.remove('active-tea', 'active-good');
+            t.classList.add('inactive');
+        });
+        document.querySelectorAll('.community-cat-tab[data-cat="' + cat + '"]').forEach(function(t) {
+            t.classList.remove('inactive');
+            if (cat === 'tea_talk') t.classList.add('active-tea');
+            else if (cat === 'good_guys') t.classList.add('active-good');
+        });
         loadCommunityFeed();
     }
 
@@ -2351,6 +2578,34 @@
     function closePostModal() {
         document.getElementById('post-modal').classList.remove('show');
         document.getElementById('community-post-text').value = '';
+        removePostPhoto();
+    }
+
+    // Photo upload handling
+    function handlePostPhoto(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Photo must be under 5MB');
+                return;
+            }
+            communityState.postPhotoFile = file;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                communityState.postPhotoDataUrl = e.target.result;
+                document.getElementById('post-photo-preview-img').src = e.target.result;
+                document.getElementById('post-photo-preview').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removePostPhoto() {
+        communityState.postPhotoFile = null;
+        communityState.postPhotoDataUrl = null;
+        document.getElementById('post-photo-preview').style.display = 'none';
+        document.getElementById('post-photo-preview-img').src = '';
+        document.getElementById('post-photo-input').value = '';
     }
 
     function submitCommunityPost() {
@@ -2363,10 +2618,17 @@
         var btn = document.querySelector('.post-modal-submit');
         btn.textContent = 'Posting...';
         btn.disabled = true;
+
+        var postData = { content: content, category: category, city_id: city.id };
+        // If there's a photo, include as base64
+        if (communityState.postPhotoDataUrl) {
+            postData.image = communityState.postPhotoDataUrl;
+        }
+
         fetch('/api/community/post', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ content: content, category: category, city_id: city.id })
+            body: JSON.stringify(postData)
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -2379,7 +2641,6 @@
             closePostModal();
             showToast('Posted to ' + city.name + '!');
             loadCommunityFeed();
-            loadCommunityStats();
         })
         .catch(function(err) {
             btn.textContent = 'Post';
@@ -2388,10 +2649,7 @@
         });
     }
 
-    // Close modals on overlay click
-    document.getElementById('city-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeCityPicker();
-    });
+    // Close modals on overlay/background click
     document.getElementById('post-modal').addEventListener('click', function(e) {
         if (e.target === this) closePostModal();
     });
@@ -2399,30 +2657,6 @@
     // Load cities on page load
     loadCities();
     </script>
-
-    <script src="app.js"></script>
-    <script>
-    /* ========== THEME TOGGLE ========== */
-    function toggleTheme() {
-        var html = document.documentElement;
-        if (html.getAttribute('data-theme') === 'dark') {
-            html.setAttribute('data-theme', 'light');
-            try { localStorage.setItem('safetea-theme', 'light'); } catch(e) {}
-        } else {
-            html.setAttribute('data-theme', 'dark');
-            try { localStorage.setItem('safetea-theme', 'dark'); } catch(e) {}
-        }
-    }
-    // Load saved theme on page load
-    (function() {
-        try {
-            var saved = localStorage.getItem('safetea-theme');
-            if (saved === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-        } catch(e) {}
-    })();
-    </script>
-
 </body>
 </html>
+     

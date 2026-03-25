@@ -112,6 +112,9 @@
         if (tab === 'profile') loadProfile();
         if (tab === 'inbox') loadInbox();
         if (tab === 'hub') initHub();
+        if (tab === 'community' && typeof loadCommunityFeed === 'function') {
+            if (communityState && communityState.selectedCity) loadCommunityFeed();
+        }
     }
     window.switchTab = switchTab;
 

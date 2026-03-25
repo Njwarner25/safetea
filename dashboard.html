@@ -257,6 +257,68 @@
         .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
         .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
         .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
+        /* Community Tab Styles */
+        .community-section { max-width: 720px; margin: 0 auto; padding: 24px; }
+        .community-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .community-header h2 { font-size: 22px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .community-city-selector { display: flex; align-items: center; gap: 8px; background: #22223A; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-size: 14px; color: #fff; font-family: 'Inter', sans-serif; }
+        .community-city-selector:hover { border-color: #E8A0B5; }
+        .community-city-selector .city-emoji { font-size: 18px; }
+        .community-city-selector .city-arrow { color: #8080A0; font-size: 11px; margin-left: 4px; }
+        .community-category-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .community-cat-tab { background: #22223A; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); }
+        .community-cat-tab:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+        .community-cat-tab.active { background: rgba(232,160,181,0.15); color: #E8A0B5; border-color: #E8A0B5; }
+        .community-create { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
+        .community-create:hover { border-color: rgba(232,160,181,0.3); }
+        .community-create-avatar { width: 40px; height: 40px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
+        .community-create-placeholder { color: #8080A0; font-size: 14px; flex: 1; }
+        .community-create-btn { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
+        .community-post { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
+        .community-post:hover { border-color: rgba(255,255,255,0.1); }
+        .community-post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .community-post-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
+        .community-post-meta { flex: 1; }
+        .community-post-author { font-weight: 600; font-size: 14px; color: #fff; }
+        .community-post-time { font-size: 12px; color: #8080A0; }
+        .community-post-category { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .cat-tea-talk { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .cat-good-guys { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .cat-general { background: rgba(52,152,219,0.15); color: #3498db; }
+        .cat-safety-tip { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .community-post-body { font-size: 14px; line-height: 1.6; color: #F0D0C0; margin-bottom: 16px; }
+        .community-post-actions { display: flex; gap: 20px; }
+        .community-post-action { display: flex; align-items: center; gap: 6px; color: #8080A0; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
+        .community-post-action:hover { color: #E8A0B5; }
+        .community-stats-bar { display: flex; gap: 16px; margin-bottom: 20px; padding: 12px 16px; background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; }
+        .community-stat { text-align: center; flex: 1; }
+        .community-stat-num { font-size: 18px; font-weight: 700; color: #E8A0B5; }
+        .community-stat-label { font-size: 11px; color: #8080A0; margin-top: 2px; }
+        /* City Picker Modal */
+        .city-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+        .city-modal-overlay.show { display: flex; }
+        .city-modal { background: #22223A; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .city-modal h3 { font-size: 18px; color: #fff; margin-bottom: 4px; text-align: center; }
+        .city-modal p { font-size: 13px; color: #8080A0; text-align: center; margin-bottom: 20px; }
+        .city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .city-option { display: flex; align-items: center; gap: 10px; padding: 14px; background: #141428; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .city-option:hover { border-color: #E8A0B5; background: rgba(232,160,181,0.05); }
+        .city-option.selected { border-color: #E8A0B5; background: rgba(232,160,181,0.1); }
+        .city-option-emoji { font-size: 24px; }
+        .city-option-name { font-size: 14px; font-weight: 600; color: #fff; }
+        .city-option-count { font-size: 11px; color: #8080A0; }
+        /* Community Post Modal */
+        .post-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+        .post-modal-overlay.show { display: flex; }
+        .post-modal { background: #22223A; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; width: 90%; max-width: 500px; }
+        .post-modal h3 { font-size: 18px; color: #fff; margin-bottom: 16px; }
+        .post-modal textarea { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 120px; outline: none; margin-bottom: 12px; }
+        .post-modal textarea:focus { border-color: #E8A0B5; }
+        .post-modal textarea::placeholder { color: #8080A0; }
+        .post-modal-actions { display: flex; justify-content: space-between; align-items: center; }
+        .post-modal-cat { background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+        .post-modal-submit { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-cancel { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .mobile-tab-bar { display: none; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
         @media (max-width: 768px) {
@@ -1103,6 +1165,25 @@
         [data-theme="light"] .mobile-tab-bar a { color: #888; }
         [data-theme="light"] .mobile-tab-bar a.active { color: #C4506A; }
         [data-theme="light"] .mobile-tab-bar a.active::after { background: #C4506A; }
+        /* Community light theme */
+        [data-theme="light"] .community-section { color: #333; }
+        [data-theme="light"] .community-header h2 { color: #222; }
+        [data-theme="light"] .community-city-selector { background: #fff; border-color: #ddd; color: #222; }
+        [data-theme="light"] .community-cat-tab { background: #fff; border-color: #ddd; color: #888; }
+        [data-theme="light"] .community-cat-tab.active { background: rgba(196,80,106,0.1); color: #C4506A; border-color: #C4506A; }
+        [data-theme="light"] .community-create { background: #fff; border-color: #eee; }
+        [data-theme="light"] .community-post { background: #fff; border-color: #eee; }
+        [data-theme="light"] .community-post-author { color: #222; }
+        [data-theme="light"] .community-post-body { color: #444; }
+        [data-theme="light"] .community-stats-bar { background: #fff; border-color: #eee; }
+        [data-theme="light"] .community-stat-num { color: #C4506A; }
+        [data-theme="light"] .city-modal { background: #fff; border-color: #ddd; }
+        [data-theme="light"] .city-modal h3 { color: #222; }
+        [data-theme="light"] .city-option { background: #f5f5f5; border-color: #ddd; }
+        [data-theme="light"] .city-option-name { color: #222; }
+        [data-theme="light"] .post-modal { background: #fff; border-color: #ddd; }
+        [data-theme="light"] .post-modal h3 { color: #222; }
+        [data-theme="light"] .post-modal textarea { background: #f5f5f5; border-color: #ddd; color: #222; }
 
         /* FAB */
         [data-theme="light"] .fab-invite {
@@ -1125,10 +1206,10 @@
         <div class="topnav-left">
             <a href="/" class="topnav-logo"><img src="/logo.png" alt="SafeTea"></a>
             <div class="topnav-nav">
-                <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
+                <a class="active" data-tab="feed"><i class="fas fa-home"></i> Home</a>
+                <a data-tab="community"><i class="fas fa-users"></i> Community</a>
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="hub"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
@@ -1210,6 +1291,70 @@
                 <div class="sidebar-card">
                     <h3><i class="fas fa-trophy"></i> City Leaderboard</h3>
                     <div id="cities-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMMUNITY TAB -->
+    <div id="tab-community" class="tab-section">
+        <div class="community-section">
+            <div class="community-header">
+                <h2><i class="fas fa-users" style="color:#E8A0B5"></i> Community</h2>
+                <button class="community-city-selector" id="community-city-btn" onclick="openCityPicker()">
+                    <span class="city-emoji" id="community-city-emoji">🏙️</span>
+                    <span id="community-city-name">Choose City</span>
+                    <i class="fas fa-chevron-down city-arrow"></i>
+                </button>
+            </div>
+            <div class="community-stats-bar" id="community-stats-bar">
+                <div class="community-stat"><div class="community-stat-num" id="comm-stat-posts">0</div><div class="community-stat-label">Posts</div></div>
+                <div class="community-stat"><div class="community-stat-num" id="comm-stat-members">0</div><div class="community-stat-label">Members</div></div>
+                <div class="community-stat"><div class="community-stat-num" id="comm-stat-today">0</div><div class="community-stat-label">Today</div></div>
+            </div>
+            <div class="community-category-tabs">
+                <button class="community-cat-tab active" data-cat="all" onclick="filterCommunity('all')">All</button>
+                <button class="community-cat-tab" data-cat="tea_talk" onclick="filterCommunity('tea_talk')">🍵 Tea Talk</button>
+                <button class="community-cat-tab" data-cat="good_guys" onclick="filterCommunity('good_guys')">💚 Good Guys</button>
+                <button class="community-cat-tab" data-cat="safety-tip" onclick="filterCommunity('safety-tip')">🛡️ Tips</button>
+            </div>
+            <div class="community-create" onclick="openPostModal()">
+                <div class="community-create-avatar" id="community-post-avatar"></div>
+                <span class="community-create-placeholder">Share with your city...</span>
+                <button class="community-create-btn">Post</button>
+            </div>
+            <div id="community-feed">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Select a city to see posts...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- City Picker Modal -->
+    <div class="city-modal-overlay" id="city-modal">
+        <div class="city-modal">
+            <h3>Choose Your City</h3>
+            <p>See posts and connect with people in your area</p>
+            <div class="city-grid" id="city-grid">
+                <div class="loading"><i class="fas fa-spinner fa-spin"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Post Modal -->
+    <div class="post-modal-overlay" id="post-modal">
+        <div class="post-modal">
+            <h3>Share with your community</h3>
+            <textarea id="community-post-text" placeholder="What do you want your city to know?"></textarea>
+            <div class="post-modal-actions">
+                <select class="post-modal-cat" id="community-post-cat">
+                    <option value="tea_talk">🍵 Tea Talk</option>
+                    <option value="good_guys">💚 Good Guys</option>
+                    <option value="safety-tip">🛡️ Safety Tip</option>
+                    <option value="general">💬 General</option>
+                </select>
+                <div style="display:flex;gap:8px">
+                    <button class="post-modal-cancel" onclick="closePostModal()">Cancel</button>
+                    <button class="post-modal-submit" onclick="submitCommunityPost()">Post</button>
                 </div>
             </div>
         </div>
@@ -1884,10 +2029,10 @@
     <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
 
     <div class="mobile-tab-bar">
-        <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
+        <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Home</span></a>
+        <a data-tab="community" onclick="switchTab('community')"><i class="fas fa-users"></i><span>Community</span></a>
         <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
-        <a data-tab="hub" onclick="switchTab('hub')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
@@ -2018,6 +2163,233 @@
         document.body.appendChild(t);
         setTimeout(function() { t.remove(); }, 2500);
     }
+    </script>
+
+    <script>
+    /* ========== COMMUNITY TAB ========== */
+    var communityState = {
+        cities: [],
+        selectedCity: null,
+        currentCategory: 'all',
+        posts: []
+    };
+
+    function loadCities() {
+        fetch('/api/cities')
+            .then(function(r) { return r.json(); })
+            .then(function(cities) {
+                communityState.cities = cities;
+                renderCityGrid(cities);
+                // Auto-select user's city if set
+                var userCity = localStorage.getItem('safetea-city');
+                if (userCity) {
+                    var city = cities.find(function(c) { return c.id === parseInt(userCity); });
+                    if (city) selectCity(city);
+                }
+            })
+            .catch(function(err) {
+                console.error('Failed to load cities:', err);
+            });
+    }
+
+    function renderCityGrid(cities) {
+        var grid = document.getElementById('city-grid');
+        grid.innerHTML = cities.map(function(city) {
+            var selected = communityState.selectedCity && communityState.selectedCity.id === city.id ? ' selected' : '';
+            return '<div class="city-option' + selected + '" onclick="selectCity(' + JSON.stringify(city).replace(/"/g, '&quot;') + ')">' +
+                '<span class="city-option-emoji">' + (city.emoji || '🏙️') + '</span>' +
+                '<div><div class="city-option-name">' + city.name + '</div>' +
+                '<div class="city-option-count">' + (city.post_count || 0) + ' posts · ' + (city.user_count || 0) + ' members</div></div></div>';
+        }).join('');
+    }
+
+    function selectCity(city) {
+        communityState.selectedCity = city;
+        localStorage.setItem('safetea-city', city.id);
+        document.getElementById('community-city-emoji').textContent = city.emoji || '🏙️';
+        document.getElementById('community-city-name').textContent = city.name;
+        closeCityPicker();
+        loadCommunityFeed();
+        loadCommunityStats();
+        // Update user's city on server
+        var token = localStorage.getItem('token');
+        if (token) {
+            fetch('/api/users/city', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ city_id: city.id })
+            }).catch(function() {});
+        }
+    }
+
+    function openCityPicker() {
+        document.getElementById('city-modal').classList.add('show');
+        if (communityState.cities.length === 0) loadCities();
+        else renderCityGrid(communityState.cities);
+    }
+
+    function closeCityPicker() {
+        document.getElementById('city-modal').classList.remove('show');
+    }
+
+    function loadCommunityFeed() {
+        var city = communityState.selectedCity;
+        if (!city) return;
+        var feed = document.getElementById('community-feed');
+        feed.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>';
+        var token = localStorage.getItem('token');
+        var url = '/api/community?city_id=' + city.id;
+        if (communityState.currentCategory !== 'all') {
+            url += '&category=' + communityState.currentCategory;
+        }
+        fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var posts = Array.isArray(data) ? data : (data.posts || []);
+                communityState.posts = posts;
+                if (posts.length === 0) {
+                    feed.innerHTML = '<div class="empty-state"><i class="fas fa-comments" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>No posts yet in ' + city.name + '.<br>Be the first to share!</div>';
+                    return;
+                }
+                feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
+            })
+            .catch(function(err) {
+                feed.innerHTML = '<div class="empty-state">Failed to load posts. Try again.</div>';
+                console.error(err);
+            });
+    }
+
+    function renderCommunityPost(post) {
+        var colors = ['#E8A0B5','#9b59b6','#3498db','#2ecc71','#e67e22','#1abc9c','#e74c3c','#f39c12'];
+        var colorIndex = (post.user_id || 0) % colors.length;
+        var avatarColor = colors[colorIndex];
+        var initial = (post.display_name || post.username || 'A').charAt(0).toUpperCase();
+        var catClass = 'cat-general';
+        var catLabel = post.category || 'general';
+        if (catLabel === 'tea_talk' || catLabel === 'warning') { catClass = 'cat-tea-talk'; catLabel = '🍵 Tea Talk'; }
+        else if (catLabel === 'good_guys' || catLabel === 'recommendation' || catLabel === 'good-news') { catClass = 'cat-good-guys'; catLabel = '💚 Good Guys'; }
+        else if (catLabel === 'safety-tip') { catClass = 'cat-safety-tip'; catLabel = '🛡️ Safety Tip'; }
+        else { catLabel = '💬 General'; }
+        var timeAgo = getTimeAgo(post.created_at);
+        return '<div class="community-post">' +
+            '<div class="community-post-header">' +
+                '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div class="community-post-meta">' +
+                    '<span class="community-post-author">' + escapeHtml(post.display_name || post.username || 'Anonymous') + '</span>' +
+                    ' <span class="community-post-category ' + catClass + '">' + catLabel + '</span>' +
+                    '<div class="community-post-time">' + timeAgo + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="community-post-body">' + escapeHtml(post.content) + '</div>' +
+            (post.image_url ? '<img class="post-image" src="' + escapeHtml(post.image_url) + '" alt="Post image">' : '') +
+            '<div class="community-post-actions">' +
+                '<button class="community-post-action"><i class="far fa-heart"></i> ' + (post.like_count || 0) + '</button>' +
+                '<button class="community-post-action"><i class="far fa-comment"></i> ' + (post.comment_count || 0) + '</button>' +
+                '<button class="community-post-action"><i class="fas fa-share"></i></button>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getTimeAgo(dateStr) {
+        if (!dateStr) return '';
+        var now = new Date();
+        var then = new Date(dateStr);
+        var diff = Math.floor((now - then) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+        return then.toLocaleDateString();
+    }
+
+    function loadCommunityStats() {
+        var city = communityState.selectedCity;
+        if (!city) return;
+        var token = localStorage.getItem('token');
+        fetch('/api/community/stats?city_id=' + city.id, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('comm-stat-posts').textContent = data.post_count || data.total_posts || 0;
+                document.getElementById('comm-stat-members').textContent = data.user_count || data.total_users || 0;
+                document.getElementById('comm-stat-today').textContent = data.today_posts || 0;
+            })
+            .catch(function() {});
+    }
+
+    function filterCommunity(cat) {
+        communityState.currentCategory = cat;
+        document.querySelectorAll('.community-cat-tab').forEach(function(t) { t.classList.remove('active'); });
+        var activeTab = document.querySelector('.community-cat-tab[data-cat="' + cat + '"]');
+        if (activeTab) activeTab.classList.add('active');
+        loadCommunityFeed();
+    }
+
+    function openPostModal() {
+        if (!communityState.selectedCity) {
+            openCityPicker();
+            return;
+        }
+        document.getElementById('post-modal').classList.add('show');
+        document.getElementById('community-post-text').focus();
+    }
+
+    function closePostModal() {
+        document.getElementById('post-modal').classList.remove('show');
+        document.getElementById('community-post-text').value = '';
+    }
+
+    function submitCommunityPost() {
+        var content = document.getElementById('community-post-text').value.trim();
+        if (!content) return;
+        var category = document.getElementById('community-post-cat').value;
+        var token = localStorage.getItem('token');
+        var city = communityState.selectedCity;
+        if (!token || !city) return;
+        var btn = document.querySelector('.post-modal-submit');
+        btn.textContent = 'Posting...';
+        btn.disabled = true;
+        fetch('/api/community/post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ content: content, category: category, city_id: city.id })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.textContent = 'Post';
+            btn.disabled = false;
+            if (data.error) {
+                showToast(data.error);
+                return;
+            }
+            closePostModal();
+            showToast('Posted to ' + city.name + '!');
+            loadCommunityFeed();
+            loadCommunityStats();
+        })
+        .catch(function(err) {
+            btn.textContent = 'Post';
+            btn.disabled = false;
+            showToast('Failed to post. Try again.');
+        });
+    }
+
+    // Close modals on overlay click
+    document.getElementById('city-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeCityPicker();
+    });
+    document.getElementById('post-modal').addEventListener('click', function(e) {
+        if (e.target === this) closePostModal();
+    });
+
+    // Load cities on page load
+    loadCities();
     </script>
 
     <script src="app.js"></script>

@@ -846,9 +846,131 @@
 
             html += '<div class="disclaimer" style="margin-top:16px"><i class="fas fa-info-circle"></i><span>This report uses public web search results. Always meet in public and tell someone where you are going.</span></div>';
             results.innerHTML = html;
+
+            // Show community mentions section after background check completes
+            var cmSection = document.getElementById('community-mentions-section');
+            if (cmSection) cmSection.style.display = 'block';
         }).catch(function(err) {
             results.innerHTML = '<div class="disclaimer" style="border-color:#e74c3c"><i class="fas fa-exclamation-circle" style="color:#e74c3c"></i><span>Background check failed: ' + escapeHtml(err.message||'Unknown error') + '</span></div>';
         });
+    };
+
+    // ==================== COMMUNITY MENTIONS ====================
+    window.loadCommunityMentions = function() {
+        var name = document.getElementById('bg-name').value.trim();
+        var city = document.getElementById('bg-city').value.trim();
+        var state = document.getElementById('bg-state').value.trim();
+        var cmResults = document.getElementById('community-mentions-results');
+
+        // If name was cleared after search, try to get it from the results header
+        if (!name) {
+            var h4 = document.querySelector('#background-results h4');
+            if (h4) {
+                var match = h4.textContent.match(/Background Report:\s*(.+)/);
+                if (match) name = match[1].trim();
+            }
+        }
+
+        if (!name) {
+            cmResults.innerHTML = '<div style="color:#e74c3c;font-size:13px">Enter a name in the Background Check form first.</div>';
+            return;
+        }
+
+        cmResults.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching community posts for <strong>' + escapeHtml(name) + '</strong>...</div>';
+
+        var params = 'fullName=' + encodeURIComponent(name) + '&city=' + encodeURIComponent(city || 'all');
+        if (state) params += '&state=' + encodeURIComponent(state);
+
+        apiFetch('/community/name-mentions?' + params).then(function(data) {
+            if (!data.posts || data.posts.length === 0) {
+                cmResults.innerHTML = '<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:10px;padding:14px;color:#2ecc71;font-size:13px"><i class="fas fa-check-circle"></i> No community mentions found for <strong>' + escapeHtml(name) + '</strong>' + (city ? ' in ' + escapeHtml(city) : '') + '.</div>';
+                return;
+            }
+
+            var teaTalk = data.posts.filter(function(p) { return p.category === 'tea-talk'; });
+            var goodGuys = data.posts.filter(function(p) { return p.category === 'good-guys'; });
+
+            var html = '<div style="background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.3);border-radius:10px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">';
+            html += '<div><div style="color:#f1c40f;font-weight:600;font-size:13px">Community mention summary</div>';
+            html += '<div style="color:#8080A0;font-size:12px;margin-top:2px">' + escapeHtml(name) + ' appears in ' + data.totalMentions + ' mention' + (data.totalMentions === 1 ? '' : 's') + (city ? ' in ' + escapeHtml(city) : '') + '.</div></div>';
+            html += '<div style="background:#22223A;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:#fff">' + data.totalMentions + ' mention' + (data.totalMentions === 1 ? '' : 's') + '</div>';
+            html += '</div>';
+
+            // Tab buttons
+            html += '<div style="display:flex;gap:8px;margin-bottom:16px">';
+            html += '<button onclick="filterMentions(\'tea-talk\')" id="cm-tab-tea-talk" style="flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-family:Inter,sans-serif;font-size:13px;font-weight:600;background:rgba(231,76,60,0.15);color:#e74c3c">Tea Talk (' + teaTalk.length + ')</button>';
+            html += '<button onclick="filterMentions(\'good-guys\')" id="cm-tab-good-guys" style="flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-family:Inter,sans-serif;font-size:13px;font-weight:600;background:rgba(255,255,255,0.05);color:#8080A0">Good Guys (' + goodGuys.length + ')</button>';
+            html += '</div>';
+
+            // Posts container
+            html += '<div id="cm-posts">';
+            html += renderMentionPosts(teaTalk.length > 0 ? teaTalk : goodGuys);
+            html += '</div>';
+
+            cmResults.innerHTML = html;
+
+            // Store posts for tab switching
+            window._cmTeaTalk = teaTalk;
+            window._cmGoodGuys = goodGuys;
+        }).catch(function(err) {
+            cmResults.innerHTML = '<div style="color:#e74c3c;font-size:13px"><i class="fas fa-exclamation-circle"></i> Failed to load community mentions: ' + escapeHtml(err.message || 'Unknown error') + '</div>';
+        });
+    };
+
+    function renderMentionPosts(posts) {
+        if (posts.length === 0) return '<div style="text-align:center;color:#8080A0;padding:16px;font-size:13px">No posts found under this category.</div>';
+        var html = '';
+        posts.forEach(function(post) {
+            var isGood = post.category === 'good-guys';
+            var avatarBg = isGood ? '#2ecc71' : '#E8A0B5';
+            var badgeBg = isGood ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)';
+            var badgeColor = isGood ? '#2ecc71' : '#e74c3c';
+            var badgeLabel = isGood ? 'Good Guys' : 'Tea Talk';
+            var timeAgo = post.createdAt;
+            if (post.createdAt && post.createdAt.includes('T')) {
+                var diff = Date.now() - new Date(post.createdAt).getTime();
+                var mins = Math.floor(diff / 60000);
+                if (mins < 60) timeAgo = mins + 'm ago';
+                else if (mins < 1440) timeAgo = Math.floor(mins / 60) + 'h ago';
+                else timeAgo = Math.floor(mins / 1440) + 'd ago';
+            }
+
+            html += '<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">';
+            html += '<div style="display:flex;align-items:center;gap:10px">';
+            html += '<div style="width:36px;height:36px;border-radius:50%;background:' + avatarBg + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff">' + escapeHtml(post.authorInitial || '?') + '</div>';
+            html += '<div><div style="font-weight:600;font-size:13px;color:#fff">' + escapeHtml(post.authorName || 'Anonymous') + '</div>';
+            html += '<div style="font-size:11px;color:#8080A0">' + escapeHtml(timeAgo) + (post.neighborhood ? ' &middot; ' + escapeHtml(post.neighborhood) : '') + (post.city ? ', ' + escapeHtml(post.city) : '') + '</div></div></div>';
+            html += '<span style="background:' + badgeBg + ';color:' + badgeColor + ';font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px">' + badgeLabel + '</span>';
+            html += '</div>';
+            html += '<div style="font-size:13px;line-height:1.6;color:#F0D0C0">' + escapeHtml(post.content) + '</div>';
+            html += '<div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#8080A0">';
+            html += '<span>&hearts; ' + (post.likesCount || 0) + '</span>';
+            html += '<span>&#x1F4AC; ' + (post.commentsCount || 0) + '</span>';
+            html += '</div></div>';
+        });
+        return html;
+    }
+
+    window.filterMentions = function(category) {
+        var postsContainer = document.getElementById('cm-posts');
+        var teaTab = document.getElementById('cm-tab-tea-talk');
+        var goodTab = document.getElementById('cm-tab-good-guys');
+        if (!postsContainer) return;
+
+        if (category === 'tea-talk') {
+            teaTab.style.background = 'rgba(231,76,60,0.15)';
+            teaTab.style.color = '#e74c3c';
+            goodTab.style.background = 'rgba(255,255,255,0.05)';
+            goodTab.style.color = '#8080A0';
+            postsContainer.innerHTML = renderMentionPosts(window._cmTeaTalk || []);
+        } else {
+            goodTab.style.background = 'rgba(46,204,113,0.15)';
+            goodTab.style.color = '#2ecc71';
+            teaTab.style.background = 'rgba(255,255,255,0.05)';
+            teaTab.style.color = '#8080A0';
+            postsContainer.innerHTML = renderMentionPosts(window._cmGoodGuys || []);
+        }
     };
 
     // ==================== LOGOUT ====================

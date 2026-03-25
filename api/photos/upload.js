@@ -78,6 +78,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('Photo upload error:', err);
-    return res.status(500).json({ error: 'Failed to upload photo', details: err.message });
+    return res.status(500).json({ error: 'Failed to upload photo', details: 'See server logs' });
   }
 };

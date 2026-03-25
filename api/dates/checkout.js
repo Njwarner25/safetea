@@ -34,8 +34,9 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Generate a unique share code (6 chars, alphanumeric)
-    const shareCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // SECURITY: Use crypto.randomBytes for unpredictable share codes (12 chars)
+    const crypto = require('crypto');
+    const shareCode = crypto.randomBytes(9).toString('base64url').substring(0, 12).toUpperCase();
 
     try {
       const checkout = await getOne(
@@ -145,7 +146,7 @@ module.exports = async function handler(req, res) {
       });
     } catch (err) {
       console.error('Checkout error:', err);
-      return res.status(500).json({ error: 'Failed to create checkout', details: err.message });
+      return res.status(500).json({ error: 'Failed to create checkout', details: 'See server logs' });
     }
   }
 
@@ -163,7 +164,7 @@ module.exports = async function handler(req, res) {
       );
       return res.status(200).json({ success: true, checkouts });
     } catch (err) {
-      return res.status(500).json({ error: 'Failed to fetch checkouts', details: err.message });
+      return res.status(500).json({ error: 'Failed to fetch checkouts', details: 'See server logs' });
     }
   }
 

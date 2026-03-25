@@ -85,6 +85,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('Watermark extract error:', err);
-    return res.status(500).json({ error: 'Failed to analyze image', details: err.message });
+    return res.status(500).json({ error: 'Failed to analyze image', details: 'See server logs' });
   }
 };

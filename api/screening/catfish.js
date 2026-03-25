@@ -351,6 +351,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(response);
   } catch (err) {
     console.error('Catfish scan error:', err);
-    return res.status(500).json({ error: 'Internal server error', details: err.message });
+    return res.status(500).json({ error: 'Internal server error', details: 'See server logs' });
   }
 };

@@ -77,7 +77,7 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('Share error:', err);
-    return res.status(500).json({ error: 'Failed to share', details: err.message });
+    return res.status(500).json({ error: 'Failed to share', details: 'See server logs' });
   }
 };
 

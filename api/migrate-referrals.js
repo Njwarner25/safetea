@@ -1,11 +1,16 @@
 const { sql } = require('@vercel/postgres');
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // SECURITY: Migration endpoints should not have permissive CORS
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.getsafetea.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Migrate-Secret');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // SECURITY: Require MIGRATE_SECRET — no fallback
+  if (!process.env.MIGRATE_SECRET) {
+    return res.status(500).json({ error: 'Migration not configured' });
+  }
   const secret = req.headers['x-migrate-secret'] || req.query.secret;
   if (secret !== process.env.MIGRATE_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -77,6 +82,7 @@ module.exports = async function handler(req, res) {
     });
   } catch (error) {
     console.error('Referral migration error:', error);
-    return res.status(500).json({ error: 'Migration failed', details: error.message });
+    console.error('Referral migration error:', error);
+    return res.status(500).json({ error: 'Migration failed' });
   }
 };

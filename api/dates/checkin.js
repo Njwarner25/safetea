@@ -89,6 +89,6 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('Checkin error:', err);
-    return res.status(500).json({ error: 'Failed to check in', details: err.message });
+    return res.status(500).json({ error: 'Failed to check in', details: 'See server logs' });
   }
 };

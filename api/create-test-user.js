@@ -6,6 +6,10 @@ module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // SECURITY: Require MIGRATE_SECRET — no fallback
+  if (!process.env.MIGRATE_SECRET) {
+    return res.status(500).json({ error: 'Not configured' });
+  }
   const secret = req.query.secret;
   if (secret !== process.env.MIGRATE_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -53,6 +57,7 @@ module.exports = async function handler(req, res) {
       loginUrl: 'https://www.getsafetea.app/login.html'
     });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error('Create test user error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -5,7 +5,12 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const secret = req.query.secret || '';
-  if (secret !== (process.env.MIGRATE_SECRET || 'my-migrate-secret-123')) {
+  // SECURITY: MIGRATE_SECRET must be set in environment — no fallback
+  if (!process.env.MIGRATE_SECRET) {
+    console.error('CRITICAL: MIGRATE_SECRET is not set. Rejecting migration.');
+    return res.status(500).json({ error: 'Migration not configured' });
+  }
+  if (secret !== process.env.MIGRATE_SECRET) {
     return res.status(401).json({ error: 'Invalid secret' });
   }
 

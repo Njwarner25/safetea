@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
         },
       });
     } catch (err) {
-      return res.status(500).json({ error: 'Failed to fetch report', details: err.message });
+      return res.status(500).json({ error: 'Failed to fetch report', details: 'See server logs' });
     }
   }
 
@@ -189,7 +189,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid shareMethod. Use "sms" or "inbox"' });
     } catch (err) {
       console.error('Report share error:', err);
-      return res.status(500).json({ error: 'Failed to share report', details: err.message });
+      return res.status(500).json({ error: 'Failed to share report', details: 'See server logs' });
     }
   }
 

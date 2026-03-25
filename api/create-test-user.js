@@ -20,16 +20,14 @@ module.exports = async function handler(req, res) {
     // Check if user already exists
     const existing = await getOne('SELECT id, email, role FROM users WHERE email = $1', [email]);
     if (existing) {
-      // Update to full access and reset password
-      const hash = await bcrypt.hash(password, 10);
+      // Update to full access if needed
       await run(
-        'UPDATE users SET role = $1, subscription_tier = $2, password_hash = $3, updated_at = NOW() WHERE id = $4',
-        [role, 'premium', hash, existing.id]
+        'UPDATE users SET role = $1, subscription_tier = $2, updated_at = NOW() WHERE id = $3',
+        [role, 'premium', existing.id]
       );
       return res.status(200).json({
-        message: 'User updated — password reset + full access',
+        message: 'User already exists — upgraded to full access',
         email: existing.email,
-        password,
         userId: existing.id,
         role,
         subscription: 'premium'

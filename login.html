@@ -372,6 +372,13 @@
       document.getElementById('success-msg').style.display = 'none';
     }
 
+    // Capture referral code from URL
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var ref = params.get('ref');
+      if (ref) localStorage.setItem('safetea_referral_code', ref);
+    })();
+
     function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
       const icon = btn.querySelector('i');
@@ -441,7 +448,7 @@
         const res = await fetch(API_BASE + '/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, display_name, city, state })
+          body: JSON.stringify({ email, password, display_name, city, state, referralCode: localStorage.getItem('safetea_referral_code') || undefined })
         });
 
         const ct = res.headers.get('content-type') || '';

@@ -9,7 +9,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; }
-        .topnav { background: #22223A; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .topnav { background: rgba(34,34,58,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .topnav-left { display: flex; align-items: center; gap: 24px; }
         .topnav-logo { text-decoration: none; display: flex; align-items: center; }
         .topnav-logo img { height: 36px; width: auto; }
@@ -333,6 +333,284 @@
         .safetea-report-footer span { font-size: 11px; color: #8080A0; }
         .dc-share-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .dc-share-modal-content { background: #22223A; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+
+        /* ======= UI OVERHAUL POLISH ======= */
+        /* Enhanced topnav */
+        .topnav-logo img {
+            filter: drop-shadow(0 0 12px rgba(232,160,181,0.2));
+            transition: filter 0.3s;
+        }
+        .topnav-logo img:hover {
+            filter: drop-shadow(0 0 20px rgba(232,160,181,0.35));
+        }
+        .topnav-nav a {
+            position: relative;
+            transition: all 0.2s;
+        }
+        .topnav-nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background: #E8A0B5;
+            border-radius: 1px;
+        }
+        .user-avatar {
+            transition: all 0.2s;
+            box-shadow: 0 0 0 2px rgba(232,160,181,0.2);
+        }
+        .user-avatar:hover {
+            box-shadow: 0 0 0 3px rgba(232,160,181,0.4);
+            transform: scale(1.05);
+        }
+
+        /* Enhanced welcome banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(242,112,89,0.12), rgba(232,160,181,0.12), rgba(155,89,182,0.08));
+            border: 1px solid rgba(232,160,181,0.15);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(232,160,181,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .welcome-banner h2 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #fff, #F5E0D5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced post cards */
+        .post-card {
+            background: #22223A;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.25s ease;
+        }
+        .post-card:hover {
+            border-color: rgba(232,160,181,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Enhanced sidebar cards */
+        .sidebar-card {
+            background: #22223A;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.25s ease;
+        }
+        .sidebar-card:hover {
+            border-color: rgba(255,255,255,0.08);
+        }
+        .sidebar-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-card h3 i {
+            background: linear-gradient(135deg, #f27059, #E8A0B5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced stat items */
+        .stat-item {
+            text-align: center;
+            padding: 14px;
+            background: #141428;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
+            transition: all 0.2s;
+        }
+        .stat-item:hover {
+            border-color: rgba(232,160,181,0.1);
+            background: rgba(20,20,40,0.8);
+        }
+        .stat-item .stat-number {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f27059, #E8A0B5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced create post */
+        .create-post {
+            background: #22223A;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s;
+        }
+        .create-post:focus-within {
+            border-color: rgba(232,160,181,0.2);
+        }
+
+        /* Enhanced buttons */
+        .btn-post {
+            background: linear-gradient(135deg, #f27059, #E8A0B5);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-post:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(232,160,181,0.3);
+        }
+
+        /* Hub sub-tabs enhanced */
+        .hub-tab {
+            transition: all 0.2s ease !important;
+        }
+        .hub-tab.active {
+            box-shadow: 0 2px 8px rgba(232,160,181,0.2) !important;
+        }
+
+        /* Enhanced alert cards */
+        .alert-card {
+            transition: all 0.25s ease;
+        }
+        .alert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        /* Enhanced search panels */
+        .search-panel {
+            transition: all 0.2s ease;
+        }
+
+        /* Toast enhancement */
+        .toast {
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(232,160,181,0.15); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(232,160,181,0.25); }
+
+        /* Enhanced badge animations */
+        .post-badge, .nw-list-badge, .premium-badge {
+            transition: all 0.2s;
+        }
+
+        /* Enhanced inbox layout */
+        .inbox-layout {
+            border-radius: 14px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+        }
+
+        /* Enhanced profile card */
+        .profile-card {
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(242,112,89,0.15), rgba(232,160,181,0.15));
+            pointer-events: none;
+        }
+        .profile-avatar-large {
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 20px rgba(232,160,181,0.3);
+        }
+
+        /* Premium gate enhancement */
+        .premium-gate-content {
+            position: relative;
+            overflow: hidden;
+        }
+        .premium-gate-content::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(232,160,181,0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Subtle page background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 800px 600px at 80% 20%, rgba(232,160,181,0.03) 0%, transparent 70%),
+                radial-gradient(ellipse 600px 600px at 20% 80%, rgba(155,89,182,0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body > * { position: relative; z-index: 1; }
+
+        /* Enhanced mobile tab bar */
+        @media (max-width: 768px) {
+            .mobile-tab-bar {
+                background: rgba(34,34,58,0.95) !important;
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+            }
+            .mobile-tab-bar a.active {
+                position: relative;
+            }
+            .mobile-tab-bar a.active::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 20px;
+                height: 2px;
+                background: #E8A0B5;
+                border-radius: 1px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -475,6 +753,7 @@
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Reel in a Catfish</button>
                 <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
+                <button class="hub-tab" data-hubsub="growreferral" onclick="switchHubTab('growreferral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-gift"></i> Invite &amp; Earn</button>
             </div>
 
             <!-- HUB: OVERVIEW -->
@@ -812,6 +1091,111 @@
                     <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>
                 </div>
             </div>
+
+            <!-- HUB: INVITE & EARN (Growth Referral) -->
+            <div id="hub-growreferral" class="hub-sub" style="display:none">
+                <!-- Promo banner -->
+                <div id="grow-promo-banner" style="background:linear-gradient(135deg,rgba(242,112,89,0.12),rgba(232,160,181,0.12));border:1px solid rgba(232,160,181,0.2);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+                    <i class="fas fa-clock" style="color:#E8A0B5;font-size:18px"></i>
+                    <div>
+                        <div style="font-size:14px;font-weight:600;color:#fff">Limited-Time Promo</div>
+                        <div id="grow-promo-countdown" style="font-size:12px;color:#8080A0">Ends June 22, 2026</div>
+                    </div>
+                </div>
+
+                <!-- Share code card -->
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:20px">
+                    <h3 style="font-size:16px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:10px"><i class="fas fa-gift" style="color:#E8A0B5"></i> Your Invite Link</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Share your unique link. When friends sign up, you earn free premium time.</p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px">
+                        <input type="text" id="grow-share-url" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#E8A0B5;font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
+                        <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="shareReferralSMS()" style="flex:1;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:#2ecc71;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sms"></i> Text a Friend</button>
+                        <button onclick="shareReferralNative()" style="flex:1;background:rgba(155,89,182,0.1);border:1px solid rgba(155,89,182,0.2);color:#9b59b6;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-nodes"></i> Share</button>
+                    </div>
+                </div>
+
+                <!-- Referral count -->
+                <div style="text-align:center;margin-bottom:20px">
+                    <div id="grow-ref-count" style="font-size:42px;font-weight:800;background:linear-gradient(135deg,#f27059,#E8A0B5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</div>
+                    <div style="font-size:13px;color:#8080A0">friends joined through your link</div>
+                </div>
+
+                <!-- Progress tracker - 3 tiers -->
+                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:20px">
+                    <h3 style="font-size:15px;color:#fff;margin-bottom:16px"><i class="fas fa-trophy" style="color:#E8A0B5"></i> Reward Tiers</h3>
+
+                    <!-- Tier 1: 3 referrals -->
+                    <div id="grow-tier-3" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(232,160,181,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i id="grow-tier-3-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:14px;font-weight:600;color:#fff">3 Friends</div>
+                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea+</div>
+                        </div>
+                        <button id="grow-claim-3" onclick="claimGrowReward(3)" style="display:none;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-3" style="font-size:12px;font-weight:600;color:#8080A0"></span>
+                    </div>
+
+                    <!-- Tier 2: 10 referrals -->
+                    <div id="grow-tier-10" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i id="grow-tier-10-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:14px;font-weight:600;color:#fff">10 Friends</div>
+                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea Pro</div>
+                        </div>
+                        <button id="grow-claim-10" onclick="claimGrowReward(10)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-10" style="font-size:12px;font-weight:600;color:#8080A0"></span>
+                    </div>
+
+                    <!-- Tier 3: 25 referrals -->
+                    <div id="grow-tier-25" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;border:1px solid rgba(255,255,255,0.04)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i id="grow-tier-25-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:14px;font-weight:600;color:#fff">25 Friends</div>
+                            <div style="font-size:12px;color:#8080A0">90 days free SafeTea Pro</div>
+                        </div>
+                        <button id="grow-claim-25" onclick="claimGrowReward(25)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-25" style="font-size:12px;font-weight:600;color:#8080A0"></span>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div style="margin-top:16px">
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8080A0;margin-bottom:6px">
+                            <span>Progress</span>
+                            <span id="grow-progress-text">0 / 25</span>
+                        </div>
+                        <div style="height:6px;background:#141428;border-radius:3px;overflow:hidden">
+                            <div id="grow-progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#f27059,#E8A0B5);border-radius:3px;transition:width 0.5s ease"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active rewards -->
+                <div id="grow-active-rewards" style="display:none;background:#22223A;border:1px solid rgba(46,204,113,0.15);border-radius:14px;padding:20px;margin-bottom:20px">
+                    <h3 style="font-size:15px;color:#2ecc71;margin-bottom:12px"><i class="fas fa-check-circle"></i> Active Rewards</h3>
+                    <div id="grow-rewards-list"></div>
+                </div>
+
+                <!-- Referrals list -->
+                <div id="grow-referrals-list" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px">
+                    <h3 style="font-size:15px;color:#fff;margin-bottom:12px"><i class="fas fa-users" style="color:#E8A0B5"></i> Your Referrals</h3>
+                    <div id="grow-friends-list" style="color:#8080A0;font-size:13px">No referrals yet. Share your link to get started!</div>
+                </div>
+
+                <!-- Lifetime cap -->
+                <div style="text-align:center;margin-top:16px">
+                    <span id="grow-lifetime-cap" style="font-size:12px;color:#8080A0"><i class="fas fa-info-circle"></i> 0 / 180 free days used</span>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -916,6 +1300,21 @@
                     </div>
                 </div>
                 <button class="btn-save" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+
+            <!-- Help & Contact -->
+            <div class="profile-form" style="margin-top:24px">
+                <h3><i class="fas fa-life-ring" style="color:#E8A0B5"></i> Help & Contact</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                    <a href="mailto:support@getsafetea.app" style="display:flex;align-items:center;gap:12px;padding:14px;background:#141428;border:1px solid rgba(255,255,255,0.06);border-radius:10px;text-decoration:none;color:#fff;font-size:14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                        <i class="fas fa-headset" style="color:#E8A0B5;font-size:18px;width:24px;text-align:center"></i>
+                        <div><div style="font-weight:600">Customer Support</div><div style="color:#8080A0;font-size:12px;margin-top:2px">support@getsafetea.app</div></div>
+                    </a>
+                    <a href="mailto:info@getsafetea.app" style="display:flex;align-items:center;gap:12px;padding:14px;background:#141428;border:1px solid rgba(255,255,255,0.06);border-radius:10px;text-decoration:none;color:#fff;font-size:14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
+                        <i class="fas fa-envelope" style="color:#3498db;font-size:18px;width:24px;text-align:center"></i>
+                        <div><div style="font-weight:600">General Inquiries</div><div style="color:#8080A0;font-size:12px;margin-top:2px">info@getsafetea.app</div></div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

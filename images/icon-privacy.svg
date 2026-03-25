@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="privGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A0B5"/>
+      <stop offset="100%" stop-color="#D4768E"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#22223A" stroke="url(#privGrad)" stroke-width="2"/>
+  <!-- Lock body -->
+  <rect x="42" y="56" width="36" height="28" rx="6" fill="url(#privGrad)" opacity="0.15" stroke="url(#privGrad)" stroke-width="2"/>
+  <!-- Lock shackle -->
+  <path d="M48 56V46c0-6.6 5.4-12 12-12s12 5.4 12 12v10" fill="none" stroke="url(#privGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Keyhole -->
+  <circle cx="60" cy="68" r="4" fill="#E8A0B5" opacity="0.8"/>
+  <rect x="58.5" y="70" width="3" height="6" rx="1.5" fill="#E8A0B5" opacity="0.8"/>
+  <!-- Sparkles -->
+  <circle cx="32" cy="40" r="2" fill="#E8A0B5" opacity="0.4"/>
+  <circle cx="88" cy="36" r="1.5" fill="#D4768E" opacity="0.5"/>
+  <circle cx="84" cy="88" r="2" fill="#E8A0B5" opacity="0.3"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="alertGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2ecc71"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#22223A" stroke="url(#alertGrad)" stroke-width="2"/>
+  <!-- Bell -->
+  <path d="M60 30c-10 0-18 8-18 18v10c0 4-3 6-6 8h48c-3-2-6-4-6-8V48c0-10-8-18-18-18z" fill="url(#alertGrad)" opacity="0.15" stroke="url(#alertGrad)" stroke-width="2"/>
+  <!-- Bell top -->
+  <line x1="60" y1="24" x2="60" y2="30" stroke="#2ecc71" stroke-width="2" stroke-linecap="round"/>
+  <!-- Clapper -->
+  <path d="M54 68c0 3.3 2.7 6 6 6s6-2.7 6-6" stroke="#2ecc71" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Alert waves -->
+  <path d="M82 42c3 3 5 7 5 12" stroke="#2ecc71" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M86 38c4 4 7 10 7 16" stroke="#2ecc71" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.3"/>
+  <!-- Dot -->
+  <circle cx="74" cy="38" r="6" fill="#2ecc71" opacity="0.9"/>
+  <circle cx="74" cy="38" r="3" fill="#fff" opacity="0.8"/>
+</svg>

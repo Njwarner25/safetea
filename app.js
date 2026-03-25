@@ -967,6 +967,26 @@
                 showToast('Checked out! SafeTea Report generated.');
                 showActiveDate(data.checkout);
                 renderSafeTeaReport(data.report);
+                // Auto-prompt to share with trusted contacts via native SMS
+                if (contacts.length > 0) {
+                    setTimeout(function() {
+                        var c = data.checkout;
+                        var trackUrl = 'https://www.getsafetea.app/date-status?code=' + (c.shareCode || c.share_code || '');
+                        var msg = 'SafeTea Report\n━━━━━━━━━━━━━━━━━\n';
+                        msg += (c.dateName || c.date_name) + ' shared their date details with you.\n\n';
+                        msg += 'Meeting: ' + (c.dateName || c.date_name) + '\n';
+                        if (c.venueName || c.venue_name) msg += 'Where: ' + (c.venueName || c.venue_name) + '\n';
+                        if (c.venueAddress || c.venue_address) msg += 'Address: ' + (c.venueAddress || c.venue_address) + '\n';
+                        var ts = c.scheduledTime || c.scheduled_time;
+                        if (ts) msg += 'When: ' + new Date(ts).toLocaleString() + '\n';
+                        if (c.transportation) msg += 'Getting there: ' + c.transportation + '\n';
+                        msg += '\nTrack live: ' + trackUrl;
+                        msg += '\n━━━━━━━━━━━━━━━━━\nSent via SafeTea';
+                        var phones = contacts.map(function(ct) { return ct.phone; }).join(',');
+                        window.open('sms:' + phones + '?body=' + encodeURIComponent(msg), '_blank');
+                        showToast('Opening messaging app to share with your contacts...');
+                    }, 800);
+                }
                 // Show report automatically
                 var reportDiv = document.getElementById('dc-report');
                 if (reportDiv) reportDiv.style.display = 'block';
@@ -1101,37 +1121,28 @@
 
     window.shareReportSMS = function() {
         if (!activeCheckout) { showToast('No active date to share', true); return; }
-        // Show SMS share modal
-        var modal = document.createElement('div');
-        modal.className = 'dc-share-modal';
-        modal.id = 'dc-share-modal';
-        modal.innerHTML =
-            '<div class="dc-share-modal-content">' +
-                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-sms" style="color:#E8A0B5"></i> Share Report via SMS</h3>' +
-                '<div class="dc-form-group"><label>Recipient Phone Number</label><input type="tel" id="dc-share-phone" placeholder="+1 (630) 675-8076" style="width:100%;padding:10px 12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px"></div>' +
-                '<button class="dc-btn dc-btn-primary" onclick="sendReportSMS()"><i class="fas fa-paper-plane"></i> Send SafeTea Report</button>' +
-                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'dc-share-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
-            '</div>';
-        document.body.appendChild(modal);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    };
+        // Build SMS body from active checkout data
+        var c = activeCheckout;
+        var name = c.dateName || c.date_name || 'Someone';
+        var venue = c.venueName || c.venue_name || '';
+        var address = c.venueAddress || c.venue_address || '';
+        var transport = c.transportation || '';
+        var timeStr = c.scheduledTime || c.scheduled_time;
+        var dateTime = timeStr ? new Date(timeStr).toLocaleString() : '';
+        var trackUrl = 'https://www.getsafetea.app/date-status?code=' + (c.shareCode || c.share_code || '');
 
-    window.sendReportSMS = function() {
-        var phone = document.getElementById('dc-share-phone').value.trim();
-        if (!phone) { showToast('Enter a phone number', true); return; }
+        var msg = 'SafeTea Report\n━━━━━━━━━━━━━━━━━\n';
+        msg += 'Meeting: ' + name + '\n';
+        if (venue) msg += 'Where: ' + venue + '\n';
+        if (address) msg += 'Address: ' + address + '\n';
+        if (dateTime) msg += 'When: ' + dateTime + '\n';
+        if (transport) msg += 'Getting there: ' + transport + '\n';
+        msg += '\nTrack live: ' + trackUrl;
+        msg += '\n━━━━━━━━━━━━━━━━━\nSent via SafeTea';
 
-        apiFetch('/dates/report', {
-            method: 'POST',
-            body: JSON.stringify({ checkoutId: activeCheckout.id, shareMethod: 'sms', recipientPhone: phone })
-        }).then(function(data) {
-            if (data && data.success) {
-                showToast('SafeTea Report sent via SMS!');
-                var modal = document.getElementById('dc-share-modal');
-                if (modal) modal.remove();
-            } else {
-                showToast(data.error || 'Failed to send SMS', true);
-            }
-        }).catch(function() { showToast('Failed to send SMS', true); });
+        // Open native SMS app with pre-filled message
+        window.open('sms:?body=' + encodeURIComponent(msg), '_blank');
+        showToast('Opening messaging app...');
     };
 
     window.shareReportInbox = function() {
@@ -1195,7 +1206,14 @@
             body: JSON.stringify({ checkoutId: activeCheckout.id, safetyRating: 5 })
         }).then(function(data) {
             if (data && data.success) {
-                showToast('Checked in safely! Your contacts have been notified.');
+                showToast('Checked in safely!');
+                // Prompt native SMS to notify contacts you're safe
+                if (data.contacts && data.contacts.length > 0) {
+                    var name = activeCheckout.dateName || activeCheckout.date_name || 'their date';
+                    var msg = 'SafeTea Check-In\n━━━━━━━━━━━━━━━━━\nGood news! I just checked in safely from my date with ' + name + '.\n\nSent via SafeTea';
+                    var phones = data.contacts.map(function(ct) { return ct.contact_phone || ct.phone; }).join(',');
+                    window.open('sms:' + phones + '?body=' + encodeURIComponent(msg), '_blank');
+                }
                 if (dcTimerInterval) clearInterval(dcTimerInterval);
                 activeCheckout = null;
                 document.getElementById('dc-active').style.display = 'none';
@@ -1297,6 +1315,7 @@
         if (sub === 'search') initSearchTabs();
         if (sub === 'teatalk') hubLoadCommunityPosts();
         if (sub === 'referral') hubLoadReferralPosts();
+        if (sub === 'growreferral') loadGrowReferral();
     };
 
     // ==================== CATFISH CHECK ====================
@@ -1583,7 +1602,7 @@
 
     window.deletePost = function(postId, feed) {
         if (!confirm('Are you sure you want to delete this post?')) return;
-        apiFetch('/posts?id=' + postId, { method: 'DELETE' }).then(function(data) {
+        apiFetch('/posts/' + postId, { method: 'DELETE' }).then(function(data) {
             if (data && data.message) {
                 showToast('Post deleted');
                 reloadFeed(feed);
@@ -1614,7 +1633,7 @@
         var btn = document.getElementById('edit-post-save-btn');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        apiFetch('/posts?id=' + postId, {
+        apiFetch('/posts/' + postId, {
             method: 'PUT',
             body: JSON.stringify({ title: body.substring(0, 60), body: body })
         }).then(function(data) {
@@ -1650,4 +1669,183 @@
             localStorage.setItem('safetea_user', JSON.stringify(user));
         }
     }).catch(function() {});
+
+    // ==================== INVITE & EARN (Growth Referral) ====================
+    window.loadGrowReferral = function() {
+        apiFetch('/referral').then(function(data) {
+            if (!data) return;
+            renderGrowReferral(data);
+        }).catch(function(err) {
+            console.error('Error loading referral data:', err);
+        });
+    };
+
+    function renderGrowReferral(data) {
+        // Share URL
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && data.shareUrl) urlEl.value = data.shareUrl;
+
+        // Referral count
+        var countEl = document.getElementById('grow-ref-count');
+        if (countEl) countEl.textContent = data.count || 0;
+
+        // Promo banner
+        var promoBanner = document.getElementById('grow-promo-banner');
+        var countdown = document.getElementById('grow-promo-countdown');
+        if (data.promoActive === false && promoBanner) {
+            promoBanner.style.background = 'rgba(128,128,160,0.08)';
+            promoBanner.style.borderColor = 'rgba(128,128,160,0.15)';
+            if (countdown) countdown.textContent = 'Promo has ended';
+        } else if (countdown && data.promoEndDate) {
+            var end = new Date(data.promoEndDate);
+            var now = new Date();
+            var days = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+            countdown.textContent = days + ' days remaining — ends ' + end.toLocaleDateString();
+        }
+
+        // Progress bar
+        var count = data.count || 0;
+        var progressBar = document.getElementById('grow-progress-bar');
+        var progressText = document.getElementById('grow-progress-text');
+        if (progressBar) progressBar.style.width = Math.min(100, (count / 25) * 100) + '%';
+        if (progressText) progressText.textContent = count + ' / 25';
+
+        // Tier statuses
+        var tiers = data.tiers || [
+            { threshold: 3, label: '30 days SafeTea+' },
+            { threshold: 10, label: '30 days SafeTea Pro' },
+            { threshold: 25, label: '90 days SafeTea Pro' }
+        ];
+        var claimedThresholds = {};
+        if (data.rewards) {
+            data.rewards.forEach(function(r) { claimedThresholds[r.threshold] = true; });
+        }
+        tiers.forEach(function(tier) {
+            var iconEl = document.getElementById('grow-tier-' + tier.threshold + '-icon');
+            var claimBtn = document.getElementById('grow-claim-' + tier.threshold);
+            var statusEl = document.getElementById('grow-status-' + tier.threshold);
+            if (claimedThresholds[tier.threshold]) {
+                if (iconEl) { iconEl.className = 'fas fa-check'; iconEl.style.color = '#2ecc71'; }
+                if (claimBtn) claimBtn.style.display = 'none';
+                if (statusEl) { statusEl.textContent = 'Claimed'; statusEl.style.color = '#2ecc71'; }
+            } else if (count >= tier.threshold && data.promoActive !== false) {
+                if (iconEl) { iconEl.className = 'fas fa-unlock'; iconEl.style.color = '#E8A0B5'; }
+                if (claimBtn) claimBtn.style.display = 'inline-block';
+                if (statusEl) statusEl.textContent = '';
+            } else {
+                if (iconEl) { iconEl.className = 'fas fa-lock'; iconEl.style.color = '#8080A0'; }
+                if (claimBtn) claimBtn.style.display = 'none';
+                var needed = tier.threshold - count;
+                if (statusEl) { statusEl.textContent = needed + ' more needed'; statusEl.style.color = '#8080A0'; }
+            }
+        });
+
+        // Active rewards
+        var rewardsContainer = document.getElementById('grow-active-rewards');
+        var rewardsList = document.getElementById('grow-rewards-list');
+        if (data.activeRewards && data.activeRewards.length > 0 && rewardsContainer && rewardsList) {
+            rewardsContainer.style.display = 'block';
+            rewardsList.innerHTML = data.activeRewards.map(function(r) {
+                var exp = new Date(r.expires_at);
+                var daysLeft = Math.max(0, Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24)));
+                return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+                    + '<i class="fas fa-crown" style="color:#2ecc71"></i>'
+                    + '<div style="flex:1"><div style="font-size:13px;color:#fff;font-weight:500">' + (r.label || r.tier) + '</div>'
+                    + '<div style="font-size:11px;color:#8080A0">' + daysLeft + ' days remaining</div></div></div>';
+            }).join('');
+        } else if (rewardsContainer) {
+            rewardsContainer.style.display = 'none';
+        }
+
+        // Referrals list
+        var friendsList = document.getElementById('grow-friends-list');
+        if (data.referrals && data.referrals.length > 0 && friendsList) {
+            friendsList.innerHTML = data.referrals.map(function(r) {
+                var joinDate = new Date(r.created_at).toLocaleDateString();
+                var initial = (r.display_name || 'U').charAt(0).toUpperCase();
+                return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+                    + '<div style="width:32px;height:32px;border-radius:50%;background:rgba(232,160,181,0.15);color:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">' + initial + '</div>'
+                    + '<div style="flex:1"><div style="font-size:13px;color:#fff">' + (r.display_name || 'Anonymous') + '</div>'
+                    + '<div style="font-size:11px;color:#8080A0">Joined ' + joinDate + '</div></div></div>';
+            }).join('');
+        } else if (friendsList) {
+            friendsList.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0;font-size:13px">No referrals yet. Share your link to get started!</div>';
+        }
+
+        // Lifetime cap
+        var capEl = document.getElementById('grow-lifetime-cap');
+        if (capEl) {
+            var used = data.daysUsed || 0;
+            capEl.innerHTML = '<i class="fas fa-info-circle"></i> ' + used + ' / 180 free days used';
+        }
+    }
+
+    window.claimGrowReward = function(threshold) {
+        var btn = document.getElementById('grow-claim-' + threshold);
+        if (btn) { btn.disabled = true; btn.textContent = 'Claiming...'; }
+        apiFetch('/referral', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'claim', threshold: threshold })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Reward claimed! Enjoy your free premium time.');
+                loadGrowReferral();
+                // Refresh user data to pick up tier upgrade
+                apiFetch('/auth/me').then(function(d) {
+                    if (d && d.user) {
+                        user = Object.assign(user, d.user);
+                        localStorage.setItem('safetea_user', JSON.stringify(user));
+                    }
+                }).catch(function() {});
+            } else {
+                showToast(data && data.error ? data.error : 'Could not claim reward', true);
+                if (btn) { btn.disabled = false; btn.textContent = 'Claim'; }
+            }
+        }).catch(function() {
+            showToast('Error claiming reward', true);
+            if (btn) { btn.disabled = false; btn.textContent = 'Claim'; }
+        });
+    };
+
+    window.copyReferralLink = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value && urlEl.value !== 'Loading...') {
+            navigator.clipboard.writeText(urlEl.value).then(function() {
+                showToast('Link copied!');
+            }).catch(function() {
+                urlEl.select();
+                document.execCommand('copy');
+                showToast('Link copied!');
+            });
+        }
+    };
+
+    window.shareReferralSMS = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value) {
+            var msg = 'Hey! Check out SafeTea — it helps women stay safe while dating. Join my community: ' + urlEl.value;
+            window.open('sms:?body=' + encodeURIComponent(msg), '_blank');
+        }
+    };
+
+    window.shareReferralNative = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value && navigator.share) {
+            navigator.share({
+                title: 'SafeTea - Date Smarter. Stay Safer.',
+                text: 'Join SafeTea — a private community where women protect each other in the dating world.',
+                url: urlEl.value
+            }).catch(function() {});
+        } else {
+            copyReferralLink();
+        }
+    };
+
+    // Capture referral code from URL on page load
+    (function() {
+        var p = new URLSearchParams(window.location.search);
+        var ref = p.get('ref');
+        if (ref) localStorage.setItem('safetea_referral_code', ref);
+    })();
 })();

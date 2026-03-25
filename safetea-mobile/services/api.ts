@@ -106,6 +106,29 @@ class ApiClient {
   async search(query: string, cityId: string) {
     return this.request('/search?q=' + encodeURIComponent(query) + '&city=' + cityId);
   }
+
+  // Background Check
+  async backgroundCheck(fullName: string, city?: string, state?: string, age?: number) {
+    return this.request<any>('/screening/background', {
+      method: 'POST',
+      body: JSON.stringify({ fullName, city, state, age }),
+    });
+  }
+
+  // Community Name Mentions
+  async getNameMentions(fullName: string, city: string, state?: string) {
+    const params = new URLSearchParams({ fullName, city });
+    if (state) params.set('state', state);
+    return this.request<any>('/community/name-mentions?' + params.toString());
+  }
+
+  // Sex Offender Check
+  async sexOffenderCheck(fullName: string, state?: string, city?: string, cityId?: string) {
+    return this.request<any>('/screening/sex-offender', {
+      method: 'POST',
+      body: JSON.stringify({ fullName, state, city, cityId }),
+    });
+  }
 }
 
 export const api = new ApiClient();

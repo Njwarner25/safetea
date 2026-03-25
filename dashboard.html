@@ -611,6 +611,26 @@
                 border-radius: 1px;
             }
         }
+        /* Floating invite FAB — mobile only */
+        .fab-invite { display: none; }
+        @media (max-width: 768px) {
+            .fab-invite {
+                display: flex; position: fixed; bottom: 74px; right: 16px; z-index: 99;
+                background: linear-gradient(135deg, #E8A0B5, #9b59b6);
+                color: #fff; border: none; border-radius: 50px; padding: 12px 20px;
+                font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
+                align-items: center; gap: 8px; cursor: pointer;
+                box-shadow: 0 4px 20px rgba(232,160,181,0.4);
+                animation: fab-pulse 2s ease-in-out infinite;
+                transition: transform 0.2s;
+            }
+            .fab-invite:active { transform: scale(0.95); }
+            .fab-invite i { font-size: 16px; }
+            @keyframes fab-pulse {
+                0%, 100% { box-shadow: 0 4px 20px rgba(232,160,181,0.4); }
+                50% { box-shadow: 0 4px 30px rgba(232,160,181,0.6); }
+            }
+        }
     </style>
 </head>
 <body>
@@ -640,6 +660,16 @@
                     <p>Stay informed. Stay safe. Your community has your back.</p>
                     <div class="city-badge" id="city-badge"><i class="fas fa-map-marker-alt"></i> <span id="user-city">Loading...</span></div>
                 </div>
+                <!-- INVITE FRIENDS CARD — Feed tab -->
+                <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(155,89,182,0.08));border:1px solid rgba(232,160,181,0.25);border-radius:14px;padding:16px 20px;margin-bottom:20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.5)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(232,160,181,0.25)';this.style.transform='none'">
+                    <div style="min-width:42px;height:42px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-plus" style="font-size:18px;color:#fff"></i></div>
+                    <div style="flex:1">
+                        <span style="color:#fff;font-size:14px;font-weight:600">Invite Friends to SafeTea</span>
+                        <span style="color:#8080A0;font-size:12px;display:block;margin-top:2px">Get free Premium when 3 friends join</span>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap">Share Now</div>
+                </div>
+
                 <div class="create-post">
                     <div class="create-post-input">
                         <div class="post-avatar" id="post-avatar" style="background:#E8A0B5"></div>
@@ -747,17 +777,30 @@
             <!-- Hub Sub-Navigation -->
             <div class="hub-tabs" style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
                 <button class="hub-tab active" data-hubsub="overview" onclick="switchHubTab('overview')" style="background:#E8A0B5;color:#1A1A2E;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Overview</button>
-                <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
-                <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
+                <button class="hub-tab" data-hubsub="growreferral" onclick="switchHubTab('growreferral')" style="background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(155,89,182,0.15));color:#E8A0B5;border:1px solid rgba(232,160,181,0.3);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-gift"></i> Invite &amp; Earn</button>
                 <button class="hub-tab" data-hubsub="datecheck" onclick="switchHubTab('datecheck')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-calendar-check"></i> Date Check</button>
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Reel in a Catfish</button>
+                <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
+                <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
                 <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
-                <button class="hub-tab" data-hubsub="growreferral" onclick="switchHubTab('growreferral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-gift"></i> Invite &amp; Earn</button>
             </div>
 
             <!-- HUB: OVERVIEW -->
             <div id="hub-overview" class="hub-sub active">
+                <!-- INVITE & EARN BANNER — prominent at top -->
+                <div onclick="switchHubTab('growreferral')" style="background:linear-gradient(135deg,#E8A0B5 0%,#D4768E 50%,#9b59b6 100%);border-radius:16px;padding:24px;margin-bottom:20px;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(232,160,181,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                    <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
+                    <div style="position:absolute;bottom:-30px;right:40px;width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:50%"></div>
+                    <div style="display:flex;align-items:center;gap:16px;position:relative;z-index:1">
+                        <div style="min-width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-gift" style="font-size:22px;color:#fff"></i></div>
+                        <div style="flex:1">
+                            <h3 style="color:#fff;font-size:17px;font-weight:700;margin-bottom:4px">Invite Friends, Get Premium Free</h3>
+                            <p style="color:rgba(255,255,255,0.85);font-size:13px;line-height:1.4">Share SafeTea and earn up to 90 days of free Pro access. Tap to start sharing.</p>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.6);font-size:18px"></i>
+                    </div>
+                </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
                     <div onclick="switchHubTab('datecheck')" style="background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(232,160,181,0.05));border:1px solid rgba(232,160,181,0.25);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
                         <i class="fas fa-calendar-check" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
@@ -1103,26 +1146,33 @@
 
             <!-- HUB: INVITE & EARN (Growth Referral) -->
             <div id="hub-growreferral" class="hub-sub" style="display:none">
+                <!-- Hero invite header -->
+                <div style="text-align:center;padding:20px 16px 24px">
+                    <div style="width:64px;height:64px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-heart" style="font-size:28px;color:#fff"></i></div>
+                    <h2 style="font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">Help Your Friends Date Safer</h2>
+                    <p style="font-size:14px;color:#8080A0;line-height:1.5;max-width:340px;margin:0 auto">Every invite makes someone's next date a little safer — and earns you free Premium.</p>
+                </div>
+
                 <!-- Promo banner -->
                 <div id="grow-promo-banner" style="background:linear-gradient(135deg,rgba(242,112,89,0.12),rgba(232,160,181,0.12));border:1px solid rgba(232,160,181,0.2);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-                    <i class="fas fa-clock" style="color:#E8A0B5;font-size:18px"></i>
-                    <div>
-                        <div style="font-size:14px;font-weight:600;color:#fff">Limited-Time Promo</div>
-                        <div id="grow-promo-countdown" style="font-size:12px;color:#8080A0">Ends June 22, 2026</div>
+                    <i class="fas fa-fire" style="color:#f27059;font-size:18px"></i>
+                    <div style="flex:1">
+                        <div style="font-size:14px;font-weight:600;color:#fff">Limited-Time: Double Rewards</div>
+                        <div id="grow-promo-countdown" style="font-size:12px;color:#8080A0">Promo ends June 22, 2026 — invite now before it's gone</div>
                     </div>
                 </div>
 
                 <!-- Share code card -->
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:20px">
-                    <h3 style="font-size:16px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:10px"><i class="fas fa-gift" style="color:#E8A0B5"></i> Your Invite Link</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Share your unique link. When friends sign up, you earn free premium time.</p>
+                    <h3 style="font-size:16px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:10px"><i class="fas fa-paper-plane" style="color:#E8A0B5"></i> Send Your Invite</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Text your link to friends. When they sign up, you both win — they get safety tools, you get free Premium.</p>
                     <div style="display:flex;gap:8px;margin-bottom:12px">
                         <input type="text" id="grow-share-url" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#E8A0B5;font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
                         <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
                     </div>
                     <div style="display:flex;gap:8px">
-                        <button onclick="shareReferralSMS()" style="flex:1;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:#2ecc71;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sms"></i> Text a Friend</button>
-                        <button onclick="shareReferralNative()" style="flex:1;background:rgba(155,89,182,0.1);border:1px solid rgba(155,89,182,0.2);color:#9b59b6;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-nodes"></i> Share</button>
+                        <button onclick="shareReferralSMS()" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(46,204,113,0.25)"><i class="fas fa-sms"></i> Text a Friend</button>
+                        <button onclick="shareReferralNative()" style="flex:1;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(155,89,182,0.25)"><i class="fas fa-share-nodes"></i> Share Link</button>
                     </div>
                 </div>
 
@@ -1329,6 +1379,8 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
 
     <div class="mobile-tab-bar">
         <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>

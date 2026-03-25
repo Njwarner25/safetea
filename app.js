@@ -17,6 +17,19 @@
         return;
     }
 
+    // Refresh user data from server (picks up tier changes, role updates, etc.)
+    apiFetch('/users/profile').then(function(data) {
+        if (data && data.user) {
+            for (var k in data.user) {
+                if (data.user[k] !== undefined) user[k] = data.user[k];
+            }
+            localStorage.setItem('safetea_user', JSON.stringify(user));
+            // Re-init gated features with fresh tier
+            if (typeof initNameWatch === 'function') initNameWatch();
+            if (typeof initDateCheck === 'function') initDateCheck();
+        }
+    }).catch(function() {});
+
     // ==================== UTILITIES ====================
     function escapeHtml(s) {
         if (!s) return '';

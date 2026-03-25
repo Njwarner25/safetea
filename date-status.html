@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeTea Date Check</title>
-    <meta name="description" content="SafeTea Date Check — live safety tracking for your loved one's date">
+    <title>SafeTea Date Report</title>
+    <meta name="description" content="SafeTea Date Report — live safety tracking for your loved one's date">
     <meta name="theme-color" content="#1A1A2E">
     <link rel="icon" href="/safetea-logo.png" type="image/png">
     <style>
@@ -17,6 +17,7 @@
         @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}
         .loading-screen h2{color:#E8A0B5;font-size:18px;margin-bottom:8px}
         .loading-screen p{color:#8080B0;font-size:14px}
+
         .error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center}
         .error-screen .icon{font-size:48px;margin-bottom:16px}
         .error-screen h2{color:#EF4444;font-size:20px;margin-bottom:8px}
@@ -31,23 +32,36 @@
         .header h1{font-size:16px;font-weight:600;color:#E8A0B5;flex:1}
         .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
         .status-active{background:rgba(46,204,113,0.15);color:#2ecc71}
-        .status-active::before{content:'';width:8px;height:8px;border-radius:50%;background:#2ecc71;animation:blink 1.5s ease infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
         .status-safe{background:rgba(46,204,113,0.15);color:#2ecc71}
         .status-overdue{background:rgba(239,68,68,0.15);color:#EF4444;animation:urgentPulse 2s ease infinite}
         @keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
         .timer-bar{background:#22223A;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05)}
         .timer-label{font-size:12px;color:#8080B0;text-transform:uppercase;letter-spacing:1px}
         .timer-value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}
         .timer-value.overdue{color:#EF4444}
 
-        .map-section{position:relative;height:220px;background:#22223A;overflow:hidden}
+        .map-section{position:relative;height:260px;background:#22223A;overflow:hidden}
         .map-section iframe{width:100%;height:100%;border:0;filter:saturate(0.8) brightness(0.9)}
-        .map-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,26,46,0.9));padding:12px 20px;display:flex;align-items:center;gap:8px}
-        .map-pin{font-size:20px}
+        .map-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,26,46,0.9));padding:12px 20px}
+        .map-legend{display:flex;gap:16px;align-items:center;margin-bottom:6px}
+        .map-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#ccc}
+        .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .legend-venue{background:#E8A0B5}
+        .legend-user{background:#2ecc71;animation:blink 1.5s ease infinite}
         .map-address{font-size:13px;color:#ccc;flex:1;line-height:1.4}
-        .map-nav-btn{background:rgba(232,160,181,0.2);color:#E8A0B5;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
+
+        .live-location-banner{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:12px 14px;display:none;align-items:center;gap:10px;margin:12px 20px 0}
+        .live-location-banner.active{display:flex}
+        .live-dot{width:10px;height:10px;border-radius:50%;background:#2ecc71;animation:blink 1.5s ease infinite;flex-shrink:0}
+        .live-info{flex:1}
+        .live-info .live-title{font-size:13px;font-weight:600;color:#2ecc71}
+        .live-info .live-detail{font-size:12px;color:#8080B0;margin-top:2px}
+        .no-location-banner{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;display:none;align-items:center;gap:10px;margin:12px 20px 0}
+        .no-location-banner.active{display:flex}
+        .no-location-banner .icon{font-size:18px;flex-shrink:0}
+        .no-location-banner .text{font-size:13px;color:#8080B0;line-height:1.4}
 
         .cards{padding:16px 20px}
         .card{background:#22223A;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.04)}
@@ -67,43 +81,28 @@
         .action-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;border:none;cursor:pointer;width:100%;transition:transform 0.1s,opacity 0.15s}
         .action-btn:active{transform:scale(0.98);opacity:0.9}
         .btn-directions{background:linear-gradient(135deg,#5BA0D0,#4A8BBF);color:#fff}
-        .btn-share-location{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
-        .btn-call{background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff}
+        .btn-call-user{background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff}
         .btn-emergency{background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.25)}
+        .btn-location{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
 
         .footer{text-align:center;padding:24px 20px;color:#6060A0;font-size:12px;line-height:1.6}
         .footer a{color:#E8A0B5;text-decoration:none}
-
-        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:flex-end;justify-content:center}
-        .modal-overlay.active{display:flex}
-        .modal{background:#22223A;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease}
-        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .modal h3{font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;text-align:center}
-        .modal p{font-size:14px;color:#8080B0;text-align:center;margin-bottom:20px;line-height:1.5}
-        .modal .action-btn{margin-bottom:8px}
-        .modal-close{background:rgba(255,255,255,0.08);color:#A0A0C0;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:500;width:100%;cursor:pointer;margin-top:4px}
-
-        .location-indicator{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:8px;margin-bottom:12px}
-        .location-indicator.active{display:flex}
-        .location-dot{width:10px;height:10px;border-radius:50%;background:#2ecc71;animation:blink 1.5s ease infinite;flex-shrink:0}
-        .location-text{font-size:13px;color:#2ecc71;flex:1}
-        .location-time{font-size:11px;color:#8080B0}
     </style>
 </head>
 <body>
-    <!-- Loading State -->
+    <!-- Loading -->
     <div id="loadingScreen" class="loading-screen">
         <img src="/safetea-logo.png" alt="SafeTea" class="logo" onerror="this.style.background='#E8A0B5';this.alt='ST'">
-        <h2>Loading Date Check...</h2>
-        <p>Fetching safety details</p>
+        <h2>Loading SafeTea Report...</h2>
+        <p>Fetching date safety details</p>
     </div>
 
-    <!-- Error State -->
+    <!-- Error -->
     <div id="errorScreen" class="error-screen" style="display:none">
         <div class="icon">&#9888;&#65039;</div>
-        <h2 id="errorTitle">Date Check Not Found</h2>
+        <h2 id="errorTitle">Report Not Found</h2>
         <p id="errorMessage">This share code is invalid or has expired. Ask your friend to resend the SafeTea Report link.</p>
-        <a href="https://www.getsafetea.app" class="action-btn btn-call" style="margin-top:20px;max-width:240px">Visit SafeTea</a>
+        <a href="https://www.getsafetea.app" class="action-btn btn-call-user" style="margin-top:20px;max-width:240px">Visit SafeTea</a>
     </div>
 
     <!-- Main Page -->
@@ -111,7 +110,7 @@
         <div class="header">
             <div class="header-row">
                 <img src="/safetea-logo.png" alt="SafeTea" class="logo" onerror="this.style.background='#E8A0B5';this.style.borderRadius='50%';this.alt='ST'">
-                <h1>SafeTea Date Check</h1>
+                <h1>SafeTea Report</h1>
                 <span id="statusBadge" class="status-badge status-active">Active</span>
             </div>
         </div>
@@ -121,22 +120,35 @@
             <div id="timerValue" class="timer-value">0:00:00</div>
         </div>
 
+        <!-- Map — shows venue pin + user's live location pin -->
         <div class="map-section" id="mapSection">
             <iframe id="mapFrame" src="about:blank" loading="lazy" referrerpolicy="no-referrer"></iframe>
             <div class="map-overlay">
-                <span class="map-pin">&#128205;</span>
-                <span class="map-address" id="mapAddress">Loading...</span>
-                <a id="directionsBtn" class="map-nav-btn" href="#" target="_blank" rel="noopener">Directions</a>
+                <div class="map-legend" id="mapLegend" style="display:none">
+                    <div class="map-legend-item"><span class="legend-dot legend-venue"></span> Venue</div>
+                    <div class="map-legend-item" id="legendUser" style="display:none"><span class="legend-dot legend-user"></span> Their location</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:20px">&#128205;</span>
+                    <span class="map-address" id="mapAddress">Loading...</span>
+                </div>
             </div>
         </div>
 
-        <div class="cards">
-            <div id="locationIndicator" class="location-indicator">
-                <span class="location-dot"></span>
-                <span class="location-text">Live location shared</span>
-                <span class="location-time" id="locationTime"></span>
+        <!-- Live location indicator -->
+        <div id="liveLocationBanner" class="live-location-banner">
+            <span class="live-dot"></span>
+            <div class="live-info">
+                <div class="live-title" id="liveTitle">Live location active</div>
+                <div class="live-detail" id="liveDetail">Updated just now</div>
             </div>
+        </div>
+        <div id="noLocationBanner" class="no-location-banner">
+            <span class="icon">&#128205;</span>
+            <span class="text">Location sharing hasn't started yet. They'll share their live location from the SafeTea app once they're on their way.</span>
+        </div>
 
+        <div class="cards">
             <div class="card">
                 <div class="card-title">Meeting</div>
                 <div class="date-person">
@@ -170,9 +182,9 @@
         </div>
 
         <div class="actions">
-            <button class="action-btn btn-share-location" onclick="shareMyLocation()">
-                &#128225; Share My Location with Them
-            </button>
+            <a id="userLocationBtn" class="action-btn btn-location" href="#" target="_blank" rel="noopener" style="display:none">
+                &#127758; View Their Live Location in Maps
+            </a>
             <a id="directionsAction" class="action-btn btn-directions" href="#" target="_blank" rel="noopener">
                 &#128506; Get Directions to Venue
             </a>
@@ -182,45 +194,37 @@
         </div>
 
         <div class="footer">
-            <p>This is a private SafeTea Date Check page.<br>
-            Only people with the share link can see this.<br><br>
+            <p>This is a private SafeTea Date Report.<br>
+            Only people with the share link can see this.<br>
+            Auto-refreshes every 30 seconds.<br><br>
             <a href="https://www.getsafetea.app">Learn about SafeTea</a></p>
         </div>
     </div>
 
-    <!-- Share Location Modal -->
-    <div id="shareModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
-        <div class="modal">
-            <h3>Share Your Location</h3>
-            <p>Your phone will ask for GPS permission. Your current location will be sent via text or your phone's share sheet so they know where you are.</p>
-            <button class="action-btn btn-share-location" onclick="doShareLocation()">
-                &#127758; Allow Location &amp; Share
-            </button>
-            <button class="modal-close" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
-
     <script>
-        let dateData = null;
-        let timerInterval = null;
-        let checkoutTime = null;
+        var dateData = null;
+        var userLocation = null;
+        var timerInterval = null;
+        var checkoutTime = null;
 
-        const params = new URLSearchParams(window.location.search);
-        const shareCode = params.get('code') || '';
+        var params = new URLSearchParams(window.location.search);
+        var shareCode = params.get('code') || '';
 
+        // ============ LOAD DATE STATUS ============
         async function loadDateStatus() {
             if (!shareCode) {
                 showError('No Share Code', 'This link is missing a share code. Ask your friend to resend the SafeTea Report link.');
                 return;
             }
             try {
-                const res = await fetch('/api/dates/status?code=' + encodeURIComponent(shareCode));
-                const data = await res.json();
+                var res = await fetch('/api/dates/status?code=' + encodeURIComponent(shareCode));
+                var data = await res.json();
                 if (!res.ok || !data.success) {
-                    showError('Date Check Not Found', data.error || 'This share code is invalid or has expired.');
+                    showError('Report Not Found', data.error || 'This share code is invalid or has expired.');
                     return;
                 }
                 dateData = data.date;
+                userLocation = data.date.userLocation || null;
                 renderPage();
             } catch (err) {
                 showError('Connection Error', 'Could not reach SafeTea servers. Check your connection and try again.');
@@ -243,12 +247,22 @@
             });
         }
 
+        function timeAgo(isoString) {
+            if (!isoString) return '';
+            var diff = Math.floor((new Date() - new Date(isoString)) / 1000);
+            if (diff < 30) return 'just now';
+            if (diff < 60) return diff + 's ago';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            return Math.floor(diff / 3600) + 'h ago';
+        }
+
+        // ============ RENDER ============
         function renderPage() {
             var d = dateData;
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('mainPage').classList.add('active');
 
-            // Status
+            // Status badge
             var badge = document.getElementById('statusBadge');
             if (d.status === 'checked_in') {
                 badge.className = 'status-badge status-safe';
@@ -261,7 +275,7 @@
                 badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:4px;animation:blink 1.5s ease infinite"></span> On Date';
             }
 
-            // Person
+            // Person info
             document.getElementById('dateName').textContent = d.dateName || 'Unknown';
             document.getElementById('dateWith').textContent = (d.userName || 'A SafeTea user') + ' is meeting them';
             if (d.datePhotoUrl) {
@@ -285,13 +299,15 @@
                 document.getElementById('checkedInTime').textContent = formatTime(d.checkedInAt);
             }
 
-            // Map
-            loadMap(d);
-
             // Directions
             var dirUrl = getDirectionsUrl(d);
-            document.getElementById('directionsBtn').href = dirUrl;
             document.getElementById('directionsAction').href = dirUrl;
+
+            // Map — with user location if available
+            loadMap(d);
+
+            // Live location banners
+            updateLocationBanner();
 
             // Timer
             checkoutTime = new Date(d.checkedOutAt);
@@ -305,35 +321,92 @@
             return '#';
         }
 
-        function loadMap(d) {
-            var mapUrl;
-            if (d.venueLat && d.venueLng) {
-                var lat = parseFloat(d.venueLat), lng = parseFloat(d.venueLng);
-                mapUrl = 'https://www.openstreetmap.org/export/embed.html?bbox=' +
-                    (lng-0.005) + ',' + (lat-0.003) + ',' + (lng+0.005) + ',' + (lat+0.003) +
-                    '&layer=mapnik&marker=' + lat + ',' + lng;
-            } else if (d.venueAddress) {
-                // Geocode address to coordinates via Nominatim
-                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(d.venueAddress))
-                    .then(function(r){ return r.json(); })
-                    .then(function(results){
-                        if (results && results.length > 0) {
-                            var lat = parseFloat(results[0].lat), lng = parseFloat(results[0].lon);
-                            document.getElementById('mapFrame').src =
-                                'https://www.openstreetmap.org/export/embed.html?bbox=' +
-                                (lng-0.005) + ',' + (lat-0.003) + ',' + (lng+0.005) + ',' + (lat+0.003) +
-                                '&layer=mapnik&marker=' + lat + ',' + lng;
-                            // Update directions link with resolved coordinates
-                            var gUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
-                            document.getElementById('directionsBtn').href = gUrl;
-                            document.getElementById('directionsAction').href = gUrl;
-                        }
-                    }).catch(function(){});
-                return;
+        function updateLocationBanner() {
+            var liveBanner = document.getElementById('liveLocationBanner');
+            var noBanner = document.getElementById('noLocationBanner');
+            var locBtn = document.getElementById('userLocationBtn');
+            var legendUser = document.getElementById('legendUser');
+
+            if (userLocation) {
+                liveBanner.classList.add('active');
+                noBanner.classList.remove('active');
+                legendUser.style.display = 'flex';
+
+                var acc = userLocation.accuracy ? ' (~' + userLocation.accuracy + 'm accuracy)' : '';
+                document.getElementById('liveTitle').textContent = 'Live location active' + acc;
+                document.getElementById('liveDetail').textContent = 'Updated ' + timeAgo(userLocation.updatedAt);
+
+                // Show "View in Maps" button
+                locBtn.style.display = 'flex';
+                locBtn.href = 'https://www.google.com/maps?q=' + userLocation.lat + ',' + userLocation.lng;
+            } else {
+                liveBanner.classList.remove('active');
+                noBanner.classList.add('active');
+                locBtn.style.display = 'none';
+                legendUser.style.display = 'none';
             }
-            if (mapUrl) document.getElementById('mapFrame').src = mapUrl;
         }
 
+        // ============ MAP ============
+        function loadMap(d) {
+            document.getElementById('mapLegend').style.display = 'flex';
+
+            // Determine bounds: venue + user location
+            var venueLat = d.venueLat ? parseFloat(d.venueLat) : null;
+            var venueLng = d.venueLng ? parseFloat(d.venueLng) : null;
+            var uLat = userLocation ? userLocation.lat : null;
+            var uLng = userLocation ? userLocation.lng : null;
+
+            // If we have venue coordinates, use them
+            if (venueLat && venueLng) {
+                setMapView(venueLat, venueLng);
+            } else if (d.venueAddress) {
+                // Geocode address
+                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(d.venueAddress))
+                    .then(function(r) { return r.json(); })
+                    .then(function(results) {
+                        if (results && results.length > 0) {
+                            var lat = parseFloat(results[0].lat);
+                            var lng = parseFloat(results[0].lon);
+                            setMapView(lat, lng);
+                            // Update directions with resolved coords
+                            var gUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
+                            document.getElementById('directionsAction').href = gUrl;
+                        }
+                    }).catch(function() {});
+            } else if (uLat && uLng) {
+                // No venue coords, but we have user location — show that
+                setMapView(uLat, uLng);
+            }
+        }
+
+        function setMapView(lat, lng) {
+            // If user location is available, try to show both markers
+            var uLat = userLocation ? userLocation.lat : null;
+            var uLng = userLocation ? userLocation.lng : null;
+
+            if (uLat && uLng && (Math.abs(uLat - lat) > 0.0001 || Math.abs(uLng - lng) > 0.0001)) {
+                // Show both: compute a bbox that fits both points
+                var minLat = Math.min(lat, uLat) - 0.004;
+                var maxLat = Math.max(lat, uLat) + 0.004;
+                var minLng = Math.min(lng, uLng) - 0.006;
+                var maxLng = Math.max(lng, uLng) + 0.006;
+                // OpenStreetMap embed only supports one marker, so show venue marker
+                // The user location is shown via the banner + button
+                document.getElementById('mapFrame').src =
+                    'https://www.openstreetmap.org/export/embed.html?bbox=' +
+                    minLng + ',' + minLat + ',' + maxLng + ',' + maxLat +
+                    '&layer=mapnik&marker=' + lat + ',' + lng;
+            } else {
+                // Single point view
+                document.getElementById('mapFrame').src =
+                    'https://www.openstreetmap.org/export/embed.html?bbox=' +
+                    (lng - 0.005) + ',' + (lat - 0.003) + ',' + (lng + 0.005) + ',' + (lat + 0.003) +
+                    '&layer=mapnik&marker=' + lat + ',' + lng;
+            }
+        }
+
+        // ============ TIMER ============
         function startTimer() {
             function update() {
                 var now = new Date();
@@ -352,90 +425,48 @@
                 var h = Math.floor(totalSec / 3600);
                 var m = Math.floor((totalSec % 3600) / 60);
                 var s = totalSec % 60;
-                timerEl.textContent = h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                timerEl.textContent = h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
             }
             update();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(update, 1000);
         }
 
-        // ============ LOCATION SHARING ============
-        function shareMyLocation() {
-            document.getElementById('shareModal').classList.add('active');
-        }
-        function closeModal() {
-            document.getElementById('shareModal').classList.remove('active');
-        }
-
-        function doShareLocation() {
-            closeModal();
-            if (!navigator.geolocation) {
-                alert('Location is not supported on this device.');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    var lat = pos.coords.latitude.toFixed(6);
-                    var lng = pos.coords.longitude.toFixed(6);
-                    var accuracy = Math.round(pos.coords.accuracy);
-                    var mapsUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
-                    var timestamp = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-                    var message =
-                        'SafeTea Location Update\n' +
-                        'I am currently here:\n' +
-                        mapsUrl + '\n' +
-                        'Accuracy: ~' + accuracy + 'm\n' +
-                        'Time: ' + timestamp + '\n\n' +
-                        'Sent via SafeTea Date Check';
-
-                    // Try native share (mobile)
-                    if (navigator.share) {
-                        navigator.share({
-                            title: 'My Location - SafeTea',
-                            text: message,
-                            url: mapsUrl
-                        }).catch(function() {
-                            // Fallback to SMS
-                            window.location.href = 'sms:?body=' + encodeURIComponent(message);
-                        });
-                    } else {
-                        // Desktop: open SMS
-                        window.location.href = 'sms:?body=' + encodeURIComponent(message);
-                    }
-
-                    // Show indicator
-                    document.getElementById('locationIndicator').classList.add('active');
-                    document.getElementById('locationTime').textContent = timestamp;
-                },
-                function(err) {
-                    if (err.code === 1) {
-                        alert('Location permission denied. Please allow location access in your browser settings and try again.');
-                    } else {
-                        alert('Could not get your location. Make sure Location Services are turned on and try again.');
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-            );
-        }
-
+        // ============ ACTIONS ============
         function callEmergency() {
             if (confirm('This will dial 911. Are you sure?')) {
                 window.location.href = 'tel:911';
             }
         }
 
-        // Auto-refresh every 30s
+        // ============ AUTO-REFRESH (every 30s) ============
         setInterval(function() {
             fetch('/api/dates/status?code=' + encodeURIComponent(shareCode))
-                .then(function(r){ return r.json(); })
+                .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.success && dateData) {
                         var oldStatus = dateData.status;
+                        var oldLoc = userLocation;
                         dateData = data.date;
-                        if (oldStatus !== dateData.status) renderPage();
+                        userLocation = data.date.userLocation || null;
+
+                        // Re-render if status changed
+                        if (oldStatus !== dateData.status) {
+                            renderPage();
+                        } else {
+                            // Just update location banner + map if location changed
+                            var locChanged = (!oldLoc && userLocation) ||
+                                (oldLoc && userLocation && (oldLoc.lat !== userLocation.lat || oldLoc.lng !== userLocation.lng));
+                            if (locChanged) {
+                                updateLocationBanner();
+                                loadMap(dateData);
+                            } else if (userLocation) {
+                                // Update time ago text
+                                document.getElementById('liveDetail').textContent = 'Updated ' + timeAgo(userLocation.updatedAt);
+                            }
+                        }
                     }
-                }).catch(function(){});
+                }).catch(function() {});
         }, 30000);
 
         // Start

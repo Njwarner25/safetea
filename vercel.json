@@ -7,6 +7,8 @@
         { "source": "/api/dates/status", "destination": "/api/dates/status" },
         { "source": "/api/dates/share", "destination": "/api/dates/share" },
         { "source": "/api/dates/report", "destination": "/api/dates/report" },
+        { "source": "/api/dates/location", "destination": "/api/dates/location" },
+        { "source": "/api/migrate-locations", "destination": "/api/migrate-locations" },
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
         { "source": "/api/subscribe", "destination": "/api/subscribe" },
         { "source": "/api/webhook-stripe", "destination": "/api/webhook-stripe" },

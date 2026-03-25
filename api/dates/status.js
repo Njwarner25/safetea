@@ -40,6 +40,26 @@ module.exports = async function handler(req, res) {
       isOverdue = now > returnTime;
     }
 
+    // Fetch user's live location if available
+    let userLocation = null;
+    try {
+      const loc = await getOne(
+        `SELECT lat, lng, accuracy, updated_at FROM date_locations WHERE checkout_id = $1`,
+        [checkout.id]
+      );
+      if (loc) {
+        userLocation = {
+          lat: parseFloat(loc.lat),
+          lng: parseFloat(loc.lng),
+          accuracy: loc.accuracy ? parseInt(loc.accuracy) : null,
+          updatedAt: loc.updated_at,
+        };
+      }
+    } catch (locErr) {
+      // Non-critical — continue without location
+      console.error('Location fetch warning:', locErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       date: {
@@ -57,6 +77,7 @@ module.exports = async function handler(req, res) {
         checkedOutAt: checkout.created_at,
         minutesSinceCheckout: minutesSince,
         isOverdue,
+        userLocation,
       },
     });
   } catch (err) {

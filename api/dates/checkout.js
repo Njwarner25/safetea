@@ -99,44 +99,24 @@ module.exports = async function handler(req, res) {
         contactsNotified: savedContacts.length,
       };
 
-      // Send SMS to trusted contacts with SafeTea Report summary
-      const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-      const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-      const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+      // Build pre-formatted share message (user sends via native share / SMS)
+      const dateTime = new Date(scheduledTime).toLocaleString('en-US', { timeZone: 'America/Chicago' });
+      const transportLine = transportation ? `Getting there: ${transportLabels[transportation] || transportation}${transportDetails ? ' (' + transportDetails + ')' : ''}` : '';
 
-      if (twilioSid && twilioAuth && twilioPhone && savedContacts.length > 0) {
-        const twilio = require('twilio')(twilioSid, twilioAuth);
-        const dateTime = new Date(scheduledTime).toLocaleString('en-US', { timeZone: 'America/Chicago' });
-        const transportLine = transportation ? `Getting there: ${transportLabels[transportation] || transportation}${transportDetails ? ' (' + transportDetails + ')' : ''}` : '';
-
-        const message =
-          `SafeTea Report\n` +
-          `━━━━━━━━━━━━━━━━━\n` +
-          `${user.display_name || 'A SafeTea user'} is going on a date.\n\n` +
-          `Meeting: ${dateName}\n` +
-          `Where: ${venueName}${venueAddress ? '\nAddress: ' + venueAddress : ''}\n` +
-          `When: ${dateTime}\n` +
-          `${transportLine ? transportLine + '\n' : ''}` +
-          `${estimatedReturn ? 'Expected back: ' + new Date(estimatedReturn).toLocaleString('en-US', { timeZone: 'America/Chicago' }) + '\n' : ''}` +
-          `${notes ? 'Notes: ' + notes + '\n' : ''}` +
-          `\nTrack live: ${report.trackingUrl}\n` +
-          `\nIf they don't check in, you'll be notified.\n` +
-          `━━━━━━━━━━━━━━━━━\n` +
-          `Sent via SafeTea`;
-
-        for (const contact of savedContacts) {
-          try {
-            await twilio.messages.create({
-              body: message,
-              from: twilioPhone,
-              to: contact.contact_phone,
-            });
-            await run('UPDATE date_trusted_contacts SET notified = true WHERE id = $1', [contact.id]);
-          } catch (smsErr) {
-            console.error(`SMS failed to ${contact.contact_phone}:`, smsErr.message);
-          }
-        }
-      }
+      const shareMessage =
+        `SafeTea Report\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `${user.display_name || 'A SafeTea user'} is going on a date.\n\n` +
+        `Meeting: ${dateName}\n` +
+        `Where: ${venueName}${venueAddress ? '\nAddress: ' + venueAddress : ''}\n` +
+        `When: ${dateTime}\n` +
+        `${transportLine ? transportLine + '\n' : ''}` +
+        `${estimatedReturn ? 'Expected back: ' + new Date(estimatedReturn).toLocaleString('en-US', { timeZone: 'America/Chicago' }) + '\n' : ''}` +
+        `${notes ? 'Notes: ' + notes + '\n' : ''}` +
+        `\nTrack live: ${report.trackingUrl}\n` +
+        `\nIf they don't check in, please reach out.\n` +
+        `━━━━━━━━━━━━━━━━━\n` +
+        `Sent via SafeTea`;
 
       return res.status(201).json({
         success: true,
@@ -156,10 +136,12 @@ module.exports = async function handler(req, res) {
           createdAt: checkout.created_at,
         },
         report,
-        shareUrl: `https://www.getsafetea.app/date-status?code=${shareCode}`,
-        smsMessage: savedContacts.length > 0
-          ? `SafeTea Report sent to ${savedContacts.length} trusted contact(s) via SMS`
-          : 'No trusted contacts provided (SMS not sent)',
+        shareUrl: report.trackingUrl,
+        shareMessage,
+        contacts: savedContacts.map(c => ({
+          name: c.contact_name,
+          phone: c.contact_phone,
+        })),
       });
     } catch (err) {
       console.error('Checkout error:', err);

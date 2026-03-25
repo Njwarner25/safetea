@@ -85,6 +85,7 @@ module.exports = async function handler(req, res) {
         safetyRating: updated.safety_rating,
         contactsNotified: contacts.length,
       },
+      contacts: contacts.map(c => ({ name: c.contact_name, phone: c.contact_phone })),
     });
   } catch (err) {
     console.error('Checkin error:', err);

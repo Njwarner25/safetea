@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTea Feature Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: #1A1A2E; color: #fff; padding: 20px; max-width: 480px; margin: 0 auto; }
+        h1 { font-size: 22px; color: #E8A0B5; margin-bottom: 20px; text-align: center; }
+        h2 { font-size: 16px; color: #E8A0B5; margin: 24px 0 12px; border-bottom: 1px solid rgba(232,160,181,0.2); padding-bottom: 8px; }
+        .card { background: #22223A; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .card p { color: #A0A0C0; font-size: 14px; margin-bottom: 12px; line-height: 1.5; }
+        .status { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 6px; margin-bottom: 8px; }
+        .pass { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .fail { background: rgba(239,68,68,0.15); color: #EF4444; }
+        .blocked { background: rgba(245,158,11,0.15); color: #F59E0B; }
+        .info { background: rgba(91,160,208,0.15); color: #5BA0D0; }
+        .btn { display: block; width: 100%; padding: 14px; border-radius: 10px; text-align: center; font-size: 15px; font-weight: 600; text-decoration: none; margin-top: 8px; border: none; cursor: pointer; }
+        .btn-pink { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; }
+        .btn-blue { background: linear-gradient(135deg, #5BA0D0, #4A8BBF); color: #fff; }
+        .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; }
+        .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: #fff; }
+        .btn-orange { background: linear-gradient(135deg, #F59E0B, #D97706); color: #fff; }
+        .label { font-size: 11px; color: #6060A0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .value { font-size: 14px; color: #fff; word-break: break-all; }
+        .divider { height: 1px; background: rgba(255,255,255,0.05); margin: 16px 0; }
+        .code-block { background: #141428; border-radius: 8px; padding: 12px; margin-top: 8px; font-family: monospace; font-size: 13px; color: #5BA0D0; word-break: break-all; }
+        .summary { background: #1E1E36; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(232,160,181,0.15); }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+        .summary-label { color: #A0A0C0; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>SafeTea Feature Test</h1>
+
+    <!-- Summary -->
+    <div class="summary">
+        <div class="summary-row">
+            <span class="summary-label">1. Date Check Report</span>
+            <span class="status pass">API PASS</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">2. ID Verification</span>
+            <span class="status pass">PASS</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">3. Watermark</span>
+            <span class="status blocked">DEPLOY NEEDED</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">4. Ban Feature</span>
+            <span class="status blocked">DEPLOY NEEDED</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">5. Referral Link</span>
+            <span class="status blocked">DEPLOY NEEDED</span>
+        </div>
+    </div>
+
+    <!-- 1. Date Check Report SMS -->
+    <h2>1. Date Check Report &rarr; SMS</h2>
+    <div class="card">
+        <span class="status pass">API: PASS</span>
+        <span class="status fail">SMS: CARRIER BLOCKED</span>
+        <p>The Vercel API successfully created the date checkout (ID: 2, code: WKLOWD) and called Twilio, but A2P 10DLC carrier filtering silently blocked delivery to 630-675-8076.</p>
+        <p><strong>Workaround:</strong> Use your phone's native SMS app instead:</p>
+        <a class="btn btn-pink" href="sms:+16306758076?body=SafeTea%20Date%20Alert%0ASafeTea%20Admin%20is%20meeting%20Test%20Person%0AWhere%3A%20Coffee%20House%20Downtown%20(456%20Michigan%20Ave%2C%20Chicago%20IL%2060611)%0AWhen%3A%20Mar%2025%2C%202026%0AExpected%20return%3A%202%20hours%0ATransportation%3A%20uber%0A%0ATrack%20status%3A%20https%3A%2F%2Fwww.getsafetea.app%2Fdate-status%3Fcode%3DWKLOWD%0A%0ASent%20via%20SafeTea">
+            Send Date Report via SMS
+        </a>
+        <div class="divider"></div>
+        <div class="label">Date Status Link (for contacts)</div>
+        <a class="btn btn-blue" href="https://www.getsafetea.app/api/dates/status?code=WKLOWD">
+            View Date Status API
+        </a>
+        <div class="divider"></div>
+        <p style="font-size:12px;color:#F59E0B">SMS Fix: Register for A2P 10DLC with Twilio ($15 + carrier fees) to enable programmatic SMS delivery.</p>
+    </div>
+
+    <!-- 2. ID Verification -->
+    <h2>2. ID Verification</h2>
+    <div class="card">
+        <span class="status pass">PASS</span>
+        <p>All 3 verification steps tested successfully on Vercel:</p>
+        <p>
+            &#10003; Age verification (DOB &rarr; 18+ check)<br>
+            &#10003; Identity verification (Yoti &rarr; auto-pass in dev)<br>
+            &#10003; Gender verification (women/trans/NB gate)<br>
+            Final status: <strong style="color:#2ecc71">verified: true</strong>
+        </p>
+        <div class="label" style="margin-top:12px">Endpoint</div>
+        <div class="value" style="color:#5BA0D0;font-size:13px">GET /api/auth/verify/status (returns 401 without token = endpoint is live)</div>
+    </div>
+
+    <!-- 3. Watermark -->
+    <h2>3. Watermark Feature</h2>
+    <div class="card">
+        <span class="status blocked">NEEDS RAILWAY DEPLOY</span>
+        <p>The watermark code exists on Railway but has a DB column bug (<code>data</code> vs <code>image_data</code>). Patched file created at <code>server-patches/routes/photos.js</code>.</p>
+        <p>The patch commit was pushed to the safetea-landing repo and auto-deployed to Vercel, but Vercel uses serverless functions (not Express routes). The fix only works on Railway.</p>
+        <p>Once Railway deploys, upload a photo via the Catfish tool to test watermark embedding + extraction.</p>
+    </div>
+
+    <!-- 4. Ban Feature -->
+    <h2>4. Ban Feature</h2>
+    <div class="card">
+        <span class="status blocked">NEEDS VERCEL DEPLOY</span>
+        <span class="status info">FILE READY</span>
+        <p>Vercel serverless function created at <code>api/admin/ban.js</code>. Supports:</p>
+        <p>
+            &#8226; POST /api/admin/ban &mdash; Ban user (temp/permanent)<br>
+            &#8226; POST /api/admin/ban {action: 'unban'} &mdash; Unban<br>
+            &#8226; GET /api/admin/ban?user_id=X &mdash; Check status<br>
+            &#8226; Guards: can't ban self, can't ban admins, reason required
+        </p>
+        <p>Run <code>deploy-vercel-features.sh</code> to push this live.</p>
+    </div>
+
+    <!-- 5. Referral Link -->
+    <h2>5. Referral Link</h2>
+    <div class="card">
+        <span class="status blocked">NEEDS VERCEL DEPLOY</span>
+        <span class="status info">FILES READY</span>
+        <p>Referral API files exist (<code>api/referral/index.js</code> + <code>api/referral/track.js</code>) but haven't been deployed to Vercel yet. Currently /api/referral returns 404.</p>
+        <p>Once deployed, the Invite & Earn hub tab will show your referral code and referral links will work:</p>
+        <div class="label">Format</div>
+        <div class="value" style="color:#E8A0B5">https://www.getsafetea.app/?ref=ST-XXXXXX</div>
+        <div class="divider"></div>
+        <p style="font-size:12px;color:#A0A0C0">Reward tiers: 3 refs = 30d SafeTea+, 10 = 30d Pro, 25 = 90d Pro. 180-day lifetime cap. Promo ends June 22, 2026.</p>
+    </div>
+
+    <!-- Deploy Instructions -->
+    <h2>Deploy Script</h2>
+    <div class="card">
+        <p>To unblock ban + referral testing on Vercel, run from Git Bash:</p>
+        <div class="code-block">
+            cd "SafeTea HQ/1-operations/phone-auth-deploy"<br>
+            bash deploy-vercel-features.sh
+        </div>
+        <p style="margin-top:12px">This pushes <code>api/admin/ban.js</code>, <code>api/referral/index.js</code>, and <code>api/referral/track.js</code> to the safetea-landing repo. Vercel auto-deploys in ~60 seconds.</p>
+        <div class="divider"></div>
+        <p>To unblock watermark testing on Railway, run:</p>
+        <div class="code-block">
+            cd "SafeTea HQ/1-operations/phone-auth-deploy"<br>
+            bash deploy-railway-patches.sh
+        </div>
+    </div>
+
+    <!-- SMS Fix Info -->
+    <h2>SMS Delivery Fix</h2>
+    <div class="card">
+        <span class="status fail">ACTION NEEDED</span>
+        <p>Twilio SMS to US numbers is being silently blocked by A2P 10DLC carrier filtering. The API returns success but messages never arrive.</p>
+        <p><strong>Options to fix:</strong></p>
+        <p>
+            1. <strong>Register for A2P 10DLC</strong> ($15 + carrier fees) via Twilio Console &rarr; Messaging &rarr; Compliance<br>
+            2. <strong>Use Toll-Free number</strong> ($2/mo, faster approval, better deliverability)<br>
+            3. <strong>Keep native SMS workaround</strong> (sms: protocol opens user's phone app)
+        </p>
+        <p style="font-size:12px;color:#6060A0;margin-top:8px">Option 2 (toll-free) is recommended for testing. Option 1 is needed for production at scale.</p>
+    </div>
+
+    <p style="text-align:center;color:#6060A0;font-size:12px;margin-top:24px">SafeTea Feature Test Page &bull; March 25, 2026 &bull; Updated 2:51 AM CT</p>
+</body>
+</html>

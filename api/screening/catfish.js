@@ -254,29 +254,42 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
 
     const body = await parseBody(req);
-    const { imageUrl, profileName, platform } = body;
+    const { imageUrl, imageData, profileName, platform } = body;
 
-    if (!imageUrl) {
-      return res.status(400).json({ error: 'imageUrl is required' });
+    if (!imageUrl && !imageData) {
+      return res.status(400).json({ error: 'Upload a photo or provide an image URL' });
     }
 
-    // Validate URL
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(imageUrl);
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        throw new Error('Invalid protocol');
-      }
-    } catch (e) {
-      return res.status(400).json({ error: 'Invalid image URL' });
-    }
-
-    // Step 1: Fetch and analyze the image
+    // Step 1: Get image buffer from upload or URL
     let imageBuffer;
-    try {
-      imageBuffer = await fetchImage(imageUrl);
-    } catch (e) {
-      return res.status(400).json({ error: `Could not fetch image: ${e.message}` });
+
+    if (imageData) {
+      // Base64 data URL from file upload (e.g. "data:image/jpeg;base64,/9j/...")
+      try {
+        const base64Match = imageData.match(/^data:image\/\w+;base64,(.+)$/);
+        if (!base64Match) throw new Error('Invalid image data format');
+        imageBuffer = Buffer.from(base64Match[1], 'base64');
+        if (imageBuffer.length > 5 * 1024 * 1024) throw new Error('Image too large (max 5MB)');
+      } catch (e) {
+        return res.status(400).json({ error: `Invalid image upload: ${e.message}` });
+      }
+    } else {
+      // Fetch from URL
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(imageUrl);
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+          throw new Error('Invalid protocol');
+        }
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid image URL' });
+      }
+
+      try {
+        imageBuffer = await fetchImage(imageUrl);
+      } catch (e) {
+        return res.status(400).json({ error: `Could not fetch image: ${e.message}` });
+      }
     }
 
     const imageAnalysis = analyzeImageBuffer(imageBuffer);

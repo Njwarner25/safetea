@@ -15,6 +15,7 @@
         { "source": "/api/migrate-referrals", "destination": "/api/migrate-referrals" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
+        { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
         { "source": "/api/users/ban", "destination": "/api/users/ban" },
         { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },
         { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },

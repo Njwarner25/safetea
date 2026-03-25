@@ -1452,8 +1452,8 @@
 
             <!-- Category Tabs: Tea Talk + Good Guys -->
             <div class="community-category-tabs">
-                <button class="community-cat-tab active-tea" data-cat="tea_talk" onclick="filterCommunity('tea_talk')">&#9749; Tea Talk</button>
-                <button class="community-cat-tab inactive" data-cat="good_guys" onclick="filterCommunity('good_guys')">&#10004; Good Guys</button>
+                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')">&#10004; Good Guys</button>
             </div>
 
             <!-- Posts Feed -->
@@ -1474,8 +1474,8 @@
         <!-- Bottom Category Tabs (fixed) -->
         <div id="community-bottom-tabs" style="display:none;position:fixed;bottom:120px;left:0;right:0;z-index:49;padding:8px 16px;max-width:720px;margin:0 auto;">
             <div style="display:flex;gap:8px;">
-                <button class="community-cat-tab active-tea" data-cat="tea_talk" onclick="filterCommunity('tea_talk')" style="font-size:13px;padding:8px 16px;">&#9749; Tea Talk</button>
-                <button class="community-cat-tab inactive" data-cat="good_guys" onclick="filterCommunity('good_guys')" style="font-size:13px;padding:8px 16px;">&#10004; Good Guys</button>
+                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')" style="font-size:13px;padding:8px 16px;">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')" style="font-size:13px;padding:8px 16px;">&#10004; Good Guys</button>
             </div>
         </div>
     </div>
@@ -1512,8 +1512,8 @@
             </div>
             <div class="post-modal-actions">
                 <select class="post-modal-cat" id="community-post-cat">
-                    <option value="tea_talk">&#9749; Tea Talk</option>
-                    <option value="good_guys">&#10004; Good Guys</option>
+                    <option value="tea-talk">&#9749; Tea Talk</option>
+                    <option value="good-guys">&#10004; Good Guys</option>
                 </select>
                 <div style="display:flex;gap:8px">
                     <button class="post-modal-cancel" onclick="closePostModal()">Cancel</button>
@@ -2341,7 +2341,7 @@
     var communityState = {
         cities: [],
         selectedCity: null,
-        currentCategory: 'tea_talk',
+        currentCategory: 'tea-talk',
         posts: [],
         pendingCity: null,
         postPhotoFile: null,
@@ -2465,10 +2465,11 @@
         if (!city) return;
         var feed = document.getElementById('community-feed');
         feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#E8A0B5;"></i></div>';
-        var token = localStorage.getItem('token');
-        var url = '/api/community?city_id=' + city.id;
-        if (communityState.currentCategory !== 'all') {
-            url += '&category=' + communityState.currentCategory;
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var url = '/api/community?city=' + encodeURIComponent(city.name);
+        // Tea Talk = main feed (no category filter), Good Guys = filtered
+        if (communityState.currentCategory === 'good-guys') {
+            url += '&category=good-guys';
         }
         fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
             .then(function(r) { return r.json(); })
@@ -2560,8 +2561,8 @@
         });
         document.querySelectorAll('.community-cat-tab[data-cat="' + cat + '"]').forEach(function(t) {
             t.classList.remove('inactive');
-            if (cat === 'tea_talk') t.classList.add('active-tea');
-            else if (cat === 'good_guys') t.classList.add('active-good');
+            if (cat === 'tea-talk') t.classList.add('active-tea');
+            else if (cat === 'good-guys') t.classList.add('active-good');
         });
         loadCommunityFeed();
     }
@@ -2612,14 +2613,14 @@
         var content = document.getElementById('community-post-text').value.trim();
         if (!content) return;
         var category = document.getElementById('community-post-cat').value;
-        var token = localStorage.getItem('token');
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
         var city = communityState.selectedCity;
         if (!token || !city) return;
         var btn = document.querySelector('.post-modal-submit');
         btn.textContent = 'Posting...';
         btn.disabled = true;
 
-        var postData = { content: content, category: category, city_id: city.id };
+        var postData = { content: content, category: category, city: city.name };
         // If there's a photo, include as base64
         if (communityState.postPhotoDataUrl) {
             postData.image = communityState.postPhotoDataUrl;

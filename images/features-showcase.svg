@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" fill="none">
+  <defs>
+    <linearGradient id="fsGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A0B5"/>
+      <stop offset="100%" stop-color="#D4768E"/>
+    </linearGradient>
+    <linearGradient id="fsGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b59b6"/>
+      <stop offset="100%" stop-color="#E8A0B5"/>
+    </linearGradient>
+    <linearGradient id="fsGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2ecc71"/>
+      <stop offset="100%" stop-color="#27ae60"/>
+    </linearGradient>
+    <filter id="fsShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <filter id="fsGlow">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+  </defs>
+
+  <!-- Background glow orbs -->
+  <ellipse cx="200" cy="200" rx="200" ry="180" fill="#E8A0B5" opacity="0.03" filter="url(#fsGlow)"/>
+  <ellipse cx="500" cy="250" rx="150" ry="150" fill="#9b59b6" opacity="0.03" filter="url(#fsGlow)"/>
+
+  <!-- Card 1: Date Check-In -->
+  <g transform="translate(30, 40)" filter="url(#fsShadow)">
+    <rect width="200" height="150" rx="16" fill="#22223A" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="30" cy="30" r="14" fill="#2ecc71" opacity="0.15"/>
+    <path d="M24 30l4 4 8-8" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <text x="52" y="34" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">Date Check-In</text>
+    <rect x="16" y="52" width="168" height="1" fill="rgba(255,255,255,0.06)"/>
+    <!-- Location pin -->
+    <circle cx="32" cy="74" r="4" fill="#2ecc71" opacity="0.5"/>
+    <rect x="42" y="70" width="100" height="4" rx="2" fill="#fff" opacity="0.2"/>
+    <rect x="42" y="78" width="70" height="3" rx="1.5" fill="#fff" opacity="0.1"/>
+    <!-- Timer -->
+    <circle cx="32" cy="98" r="4" fill="#E8A0B5" opacity="0.5"/>
+    <rect x="42" y="94" width="80" height="4" rx="2" fill="#fff" opacity="0.2"/>
+    <rect x="42" y="102" width="60" height="3" rx="1.5" fill="#fff" opacity="0.1"/>
+    <!-- Status bar -->
+    <rect x="16" y="120" width="168" height="16" rx="8" fill="#2ecc71" opacity="0.1"/>
+    <rect x="16" y="120" width="120" height="16" rx="8" fill="#2ecc71" opacity="0.25"/>
+    <text x="50" y="131" fill="#2ecc71" font-family="Inter,sans-serif" font-size="8" font-weight="600">Active — 42min</text>
+  </g>
+
+  <!-- Card 2: Community Feed -->
+  <g transform="translate(250, 20)" filter="url(#fsShadow)">
+    <rect width="200" height="180" rx="16" fill="#22223A" stroke="rgba(232,160,181,0.15)" stroke-width="1.5"/>
+    <rect x="0" y="0" width="200" height="40" rx="16" fill="#E8A0B5" opacity="0.05"/>
+    <rect x="0" y="28" width="200" height="12" fill="#E8A0B5" opacity="0.05"/>
+    <text x="16" y="28" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="13" font-weight="600">Community Feed</text>
+    <!-- Post 1 -->
+    <g transform="translate(12, 50)">
+      <circle cx="10" cy="10" r="10" fill="#E8A0B5" opacity="0.2"/>
+      <text x="10" y="14" text-anchor="middle" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="8" font-weight="700">A</text>
+      <rect x="26" y="4" width="80" height="4" rx="2" fill="#fff" opacity="0.3"/>
+      <rect x="26" y="12" width="140" height="3" rx="1.5" fill="#fff" opacity="0.12"/>
+    </g>
+    <!-- Post 2 -->
+    <g transform="translate(12, 80)">
+      <circle cx="10" cy="10" r="10" fill="#9b59b6" opacity="0.2"/>
+      <text x="10" y="14" text-anchor="middle" fill="#9b59b6" font-family="Inter,sans-serif" font-size="8" font-weight="700">S</text>
+      <rect x="26" y="4" width="60" height="4" rx="2" fill="#fff" opacity="0.3"/>
+      <rect x="26" y="12" width="148" height="3" rx="1.5" fill="#fff" opacity="0.12"/>
+    </g>
+    <!-- Post 3 -->
+    <g transform="translate(12, 110)">
+      <circle cx="10" cy="10" r="10" fill="#f27059" opacity="0.2"/>
+      <text x="10" y="14" text-anchor="middle" fill="#f27059" font-family="Inter,sans-serif" font-size="8" font-weight="700">M</text>
+      <rect x="26" y="4" width="90" height="4" rx="2" fill="#fff" opacity="0.3"/>
+      <rect x="26" y="12" width="130" height="3" rx="1.5" fill="#fff" opacity="0.12"/>
+    </g>
+    <!-- CTA button -->
+    <rect x="12" y="142" width="176" height="26" rx="13" fill="url(#fsGrad1)" opacity="0.15"/>
+    <text x="100" y="159" text-anchor="middle" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="10" font-weight="600">View Community</text>
+  </g>
+
+  <!-- Card 3: SafeTea Report -->
+  <g transform="translate(470, 50)" filter="url(#fsShadow)">
+    <rect width="200" height="160" rx="16" fill="#22223A" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="30" cy="30" r="14" fill="url(#fsGrad1)" opacity="0.15"/>
+    <rect x="20" y="22" width="20" height="16" rx="3" fill="none" stroke="#E8A0B5" stroke-width="1.5"/>
+    <rect x="24" y="28" width="6" height="1.5" rx="0.75" fill="#E8A0B5" opacity="0.6"/>
+    <rect x="24" y="31" width="10" height="1.5" rx="0.75" fill="#E8A0B5" opacity="0.4"/>
+    <text x="52" y="34" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">SafeTea Report</text>
+    <rect x="16" y="52" width="168" height="1" fill="rgba(255,255,255,0.06)"/>
+    <!-- Report lines -->
+    <rect x="16" y="64" width="130" height="4" rx="2" fill="#fff" opacity="0.15"/>
+    <rect x="16" y="76" width="168" height="3" rx="1.5" fill="#fff" opacity="0.08"/>
+    <rect x="16" y="86" width="150" height="3" rx="1.5" fill="#fff" opacity="0.08"/>
+    <rect x="16" y="96" width="120" height="3" rx="1.5" fill="#fff" opacity="0.08"/>
+    <!-- Verified badge -->
+    <rect x="16" y="116" width="168" height="30" rx="8" fill="#2ecc71" opacity="0.08"/>
+    <circle cx="36" cy="131" r="8" fill="#2ecc71" opacity="0.2"/>
+    <path d="M32 131l3 3 5-5" stroke="#2ecc71" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <text x="50" y="134" fill="#2ecc71" font-family="Inter,sans-serif" font-size="9" font-weight="600">Report Verified</text>
+  </g>
+
+  <!-- Card 4: Name Watch -->
+  <g transform="translate(80, 220)" filter="url(#fsShadow)">
+    <rect width="200" height="140" rx="16" fill="#22223A" stroke="rgba(155,89,182,0.2)" stroke-width="1.5"/>
+    <circle cx="30" cy="28" r="14" fill="#9b59b6" opacity="0.15"/>
+    <!-- Eye icon -->
+    <path d="M22 28c0 0 3.5-5 8-5s8 5 8 5-3.5 5-8 5-8-5-8-5z" fill="none" stroke="#9b59b6" stroke-width="1.5"/>
+    <circle cx="30" cy="28" r="2.5" fill="#9b59b6" opacity="0.8"/>
+    <text x="52" y="32" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">Name Watch</text>
+    <!-- Name items -->
+    <rect x="12" y="50" width="176" height="24" rx="6" fill="#1A1A2E"/>
+    <circle cx="28" cy="62" r="4" fill="#E8A0B5" opacity="0.4"/>
+    <rect x="38" y="58" width="60" height="4" rx="2" fill="#fff" opacity="0.25"/>
+    <rect x="130" y="57" width="46" height="10" rx="5" fill="#E8A0B5" opacity="0.15"/>
+    <text x="153" y="65" text-anchor="middle" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="7" font-weight="600">2 matches</text>
+
+    <rect x="12" y="80" width="176" height="24" rx="6" fill="#1A1A2E"/>
+    <circle cx="28" cy="92" r="4" fill="#2ecc71" opacity="0.4"/>
+    <rect x="38" y="88" width="50" height="4" rx="2" fill="#fff" opacity="0.25"/>
+    <rect x="130" y="87" width="46" height="10" rx="5" fill="#2ecc71" opacity="0.15"/>
+    <text x="153" y="95" text-anchor="middle" fill="#2ecc71" font-family="Inter,sans-serif" font-size="7" font-weight="600">No matches</text>
+    <!-- Alert dot -->
+    <circle cx="186" cy="14" r="8" fill="#E8A0B5"/>
+    <text x="186" y="18" text-anchor="middle" fill="#1A1A2E" font-family="Inter,sans-serif" font-size="9" font-weight="700">!</text>
+  </g>
+
+  <!-- Card 5: Catfish Detection -->
+  <g transform="translate(400, 240)" filter="url(#fsShadow)">
+    <rect width="200" height="130" rx="16" fill="#22223A" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <circle cx="30" cy="28" r="14" fill="#f27059" opacity="0.15"/>
+    <circle cx="30" cy="25" r="5" fill="none" stroke="#f27059" stroke-width="1.5"/>
+    <path d="M24 34c0-3.3 2.7-6 6-6s6 2.7 6 6" fill="none" stroke="#f27059" stroke-width="1.5"/>
+    <text x="52" y="32" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">Catfish Scanner</text>
+    <rect x="16" y="52" width="168" height="1" fill="rgba(255,255,255,0.06)"/>
+    <!-- Scan result -->
+    <rect x="16" y="64" width="168" height="50" rx="10" fill="#2ecc71" opacity="0.06" stroke="#2ecc71" stroke-width="1" opacity="0.2"/>
+    <circle cx="44" cy="89" r="14" fill="#2ecc71" opacity="0.1"/>
+    <path d="M38 89l4 4 8-8" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <text x="66" y="82" fill="#2ecc71" font-family="Inter,sans-serif" font-size="10" font-weight="700">98% Real</text>
+    <text x="66" y="96" fill="#8080A0" font-family="Inter,sans-serif" font-size="8">Photo verified</text>
+  </g>
+
+  <!-- Floating connection lines -->
+  <path d="M230 120Q300 180 250 260" stroke="#E8A0B5" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.15" fill="none"/>
+  <path d="M450 180Q420 220 400 250" stroke="#9b59b6" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.15" fill="none"/>
+
+  <!-- Decorative dots -->
+  <circle cx="15" cy="15" r="2" fill="#E8A0B5" opacity="0.2"/>
+  <circle cx="690" cy="390" r="3" fill="#9b59b6" opacity="0.2"/>
+  <circle cx="350" cy="390" r="2" fill="#f27059" opacity="0.2"/>
+</svg>

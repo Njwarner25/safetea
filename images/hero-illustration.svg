@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" fill="none">
+  <defs>
+    <linearGradient id="heroGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8A0B5"/>
+      <stop offset="100%" stop-color="#D4768E"/>
+    </linearGradient>
+    <linearGradient id="heroGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f27059"/>
+      <stop offset="100%" stop-color="#E8A0B5"/>
+    </linearGradient>
+    <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A1A2E"/>
+      <stop offset="100%" stop-color="#141428"/>
+    </linearGradient>
+    <filter id="heroGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+  </defs>
+
+  <!-- Background glow orbs -->
+  <ellipse cx="300" cy="250" rx="280" ry="220" fill="#E8A0B5" opacity="0.03" filter="url(#softGlow)"/>
+  <ellipse cx="180" cy="180" rx="120" ry="120" fill="#9b59b6" opacity="0.04" filter="url(#softGlow)"/>
+  <ellipse cx="440" cy="320" rx="100" ry="100" fill="#f27059" opacity="0.04" filter="url(#softGlow)"/>
+
+  <!-- Phone frame -->
+  <g filter="url(#heroGlow)">
+    <rect x="220" y="40" width="160" height="320" rx="24" fill="#22223A" stroke="url(#heroGrad1)" stroke-width="2"/>
+    <!-- Notch -->
+    <rect x="268" y="44" width="64" height="6" rx="3" fill="#141428"/>
+    <!-- Screen -->
+    <rect x="228" y="58" width="144" height="294" rx="4" fill="url(#screenGrad)"/>
+    <!-- App header bar -->
+    <rect x="228" y="58" width="144" height="36" rx="4" fill="#1A1A2E"/>
+    <circle cx="246" cy="76" r="10" fill="#E8A0B5" opacity="0.3"/>
+    <text x="262" y="80" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="11" font-weight="600">SafeTea</text>
+    <!-- Feed cards -->
+    <rect x="236" y="102" width="128" height="52" rx="8" fill="#22223A" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <circle cx="250" cy="118" r="6" fill="#2ecc71" opacity="0.7"/>
+    <rect x="260" y="113" width="60" height="4" rx="2" fill="#fff" opacity="0.3"/>
+    <rect x="260" y="121" width="90" height="3" rx="1.5" fill="#fff" opacity="0.15"/>
+    <rect x="260" y="128" width="70" height="3" rx="1.5" fill="#fff" opacity="0.1"/>
+    <rect x="236" y="140" width="30" height="8" rx="4" fill="#E8A0B5" opacity="0.2"/>
+
+    <rect x="236" y="162" width="128" height="52" rx="8" fill="#22223A" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <circle cx="250" cy="178" r="6" fill="#9b59b6" opacity="0.7"/>
+    <rect x="260" y="173" width="50" height="4" rx="2" fill="#fff" opacity="0.3"/>
+    <rect x="260" y="181" width="96" height="3" rx="1.5" fill="#fff" opacity="0.15"/>
+    <rect x="260" y="188" width="80" height="3" rx="1.5" fill="#fff" opacity="0.1"/>
+    <rect x="236" y="200" width="30" height="8" rx="4" fill="#f27059" opacity="0.2"/>
+
+    <rect x="236" y="222" width="128" height="52" rx="8" fill="#22223A" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    <circle cx="250" cy="238" r="6" fill="#E8A0B5" opacity="0.7"/>
+    <rect x="260" y="233" width="70" height="4" rx="2" fill="#fff" opacity="0.3"/>
+    <rect x="260" y="241" width="85" height="3" rx="1.5" fill="#fff" opacity="0.15"/>
+    <rect x="260" y="248" width="60" height="3" rx="1.5" fill="#fff" opacity="0.1"/>
+
+    <!-- Bottom nav -->
+    <rect x="228" y="316" width="144" height="36" rx="4" fill="#1A1A2E"/>
+    <circle cx="258" cy="334" r="4" fill="#8080A0" opacity="0.5"/>
+    <circle cx="288" cy="334" r="4" fill="#E8A0B5" opacity="0.8"/>
+    <circle cx="318" cy="334" r="4" fill="#8080A0" opacity="0.5"/>
+    <circle cx="348" cy="334" r="4" fill="#8080A0" opacity="0.5"/>
+  </g>
+
+  <!-- Floating notification card - left -->
+  <g transform="translate(60, 120)">
+    <rect width="150" height="64" rx="12" fill="#22223A" stroke="#2ecc71" stroke-width="1.5" opacity="0.95"/>
+    <circle cx="24" cy="32" r="12" fill="#2ecc71" opacity="0.2"/>
+    <path d="M18 32l4 4 8-8" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <rect x="42" y="20" width="80" height="4" rx="2" fill="#fff" opacity="0.4"/>
+    <rect x="42" y="28" width="96" height="3" rx="1.5" fill="#2ecc71" opacity="0.3"/>
+    <rect x="42" y="36" width="64" height="3" rx="1.5" fill="#fff" opacity="0.15"/>
+    <text x="42" y="52" fill="#2ecc71" font-family="Inter,sans-serif" font-size="8" opacity="0.7">Checked in safely</text>
+  </g>
+
+  <!-- Floating notification card - right -->
+  <g transform="translate(400, 180)">
+    <rect width="150" height="64" rx="12" fill="#22223A" stroke="#E8A0B5" stroke-width="1.5" opacity="0.95"/>
+    <circle cx="24" cy="32" r="12" fill="#E8A0B5" opacity="0.2"/>
+    <path d="M19 28c0-3 2.5-5.4 5.5-2.7C27 22.6 29.5 25 29.5 28c0 4.2-5.5 7.5-5.5 7.5S19 32.2 19 28z" fill="#E8A0B5" opacity="0.7"/>
+    <rect x="42" y="20" width="70" height="4" rx="2" fill="#fff" opacity="0.4"/>
+    <rect x="42" y="28" width="96" height="3" rx="1.5" fill="#E8A0B5" opacity="0.3"/>
+    <rect x="42" y="36" width="80" height="3" rx="1.5" fill="#fff" opacity="0.15"/>
+    <text x="42" y="52" fill="#E8A0B5" font-family="Inter,sans-serif" font-size="8" opacity="0.7">SafeTea Report shared</text>
+  </g>
+
+  <!-- Shield badge - top right -->
+  <g transform="translate(420, 60)">
+    <circle cx="30" cy="30" r="28" fill="#22223A" stroke="url(#heroGrad1)" stroke-width="2" opacity="0.9"/>
+    <path d="M30 14L18 20v12c0 9.9 6.7 19.2 12 21.5 5.3-2.3 12-11.6 12-21.5V20L30 14z" fill="url(#heroGrad1)" opacity="0.2" stroke="url(#heroGrad1)" stroke-width="1.5"/>
+    <path d="M24 30l4 4 8-8" stroke="#E8A0B5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Decorative elements -->
+  <circle cx="100" cy="400" r="3" fill="#E8A0B5" opacity="0.3"/>
+  <circle cx="500" cy="420" r="4" fill="#f27059" opacity="0.3"/>
+  <circle cx="520" cy="100" r="2.5" fill="#9b59b6" opacity="0.3"/>
+  <circle cx="80" cy="300" r="2" fill="#2ecc71" opacity="0.3"/>
+  <circle cx="150" cy="60" r="3" fill="#f39c12" opacity="0.2"/>
+
+  <!-- Connection dots -->
+  <circle cx="180" cy="250" r="3" fill="#E8A0B5" opacity="0.15"/>
+  <circle cx="420" cy="300" r="3" fill="#E8A0B5" opacity="0.15"/>
+  <path d="M183 250Q300 220 417 300" stroke="#E8A0B5" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.1" fill="none"/>
+</svg>

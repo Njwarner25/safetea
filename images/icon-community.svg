@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="commGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b59b6"/>
+      <stop offset="100%" stop-color="#E8A0B5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#22223A" stroke="url(#commGrad)" stroke-width="2"/>
+  <!-- Center person -->
+  <circle cx="60" cy="42" r="8" fill="url(#commGrad)" opacity="0.8"/>
+  <path d="M46 64c0-7.7 6.3-14 14-14s14 6.3 14 14" stroke="url(#commGrad)" stroke-width="2.5" fill="url(#commGrad)" opacity="0.15"/>
+  <!-- Left person -->
+  <circle cx="36" cy="54" r="6" fill="#9b59b6" opacity="0.5"/>
+  <path d="M26 72c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#9b59b6" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- Right person -->
+  <circle cx="84" cy="54" r="6" fill="#E8A0B5" opacity="0.5"/>
+  <path d="M74 72c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#E8A0B5" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- Connection lines -->
+  <path d="M44 48l-6 4M76 48l6 4" stroke="url(#commGrad)" stroke-width="1" stroke-dasharray="2 2" opacity="0.4"/>
+  <!-- Hearts -->
+  <path d="M56 78c0-2 2-3.6 4-2 2-1.6 4 0 4 2 0 2.8-4 5-4 5s-4-2.2-4-5z" fill="#E8A0B5" opacity="0.6"/>
+</svg>

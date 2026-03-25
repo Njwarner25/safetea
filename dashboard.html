@@ -1,345 +1,772 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard - SafeTea</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --pink: #E8A0B5;
+            --pink-dark: #D4768E;
+            --red: #EF4444;
+            --red-soft: #F27059;
+            --green: #2ecc71;
+            --blue: #5BA0D0;
+            --purple: #9b59b6;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #1A1A2E;
+            --bg-secondary: #22223A;
+            --bg-tertiary: #141428;
+            --bg-card: #22223A;
+            --bg-input: #2A2A44;
+            --bg-nav: rgba(34,34,58,0.95);
+            --border: rgba(255,255,255,0.06);
+            --border-light: rgba(255,255,255,0.08);
+            --border-pink: rgba(232,160,181,0.25);
+            --text-primary: #FFFFFF;
+            --text-secondary: #F0D0C0;
+            --text-muted: #8080A0;
+            --text-inverse: #1A1A2E;
+            --shadow: rgba(0,0,0,0.3);
+            --card-hover: rgba(232,160,181,0.08);
+            --overlay: rgba(0,0,0,0.7);
+        }
+        [data-theme="light"] {
+            --bg-primary: #F8F8FC;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F0F0F6;
+            --bg-card: #FFFFFF;
+            --bg-input: #F5F5FA;
+            --bg-nav: rgba(255,255,255,0.95);
+            --border: rgba(0,0,0,0.06);
+            --border-light: rgba(0,0,0,0.08);
+            --border-pink: rgba(232,160,181,0.35);
+            --text-primary: #1A1A2E;
+            --text-secondary: #333350;
+            --text-muted: #8080A0;
+            --text-inverse: #FFFFFF;
+            --shadow: rgba(0,0,0,0.08);
+            --card-hover: rgba(232,160,181,0.06);
+            --overlay: rgba(0,0,0,0.4);
+        }
+
+        /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; }
-        .topnav { background: #22223A; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .topnav-left { display: flex; align-items: center; gap: 24px; }
-        .topnav-logo { text-decoration: none; display: flex; align-items: center; }
-        .topnav-logo img { height: 36px; width: auto; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ===== TOP NAV ===== */
+        .topnav {
+            background: var(--bg-nav);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 20px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .topnav-left { display: flex; align-items: center; gap: 16px; }
+        .topnav-logo { text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .topnav-logo img { height: 28px; width: auto; }
+        .topnav-logo span { font-weight: 800; font-size: 18px; color: var(--pink); }
         .topnav-nav { display: flex; gap: 4px; }
-        .topnav-nav a { color: #8080A0; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; }
-        .topnav-nav a:hover, .topnav-nav a.active { color: #fff; background: rgba(255,255,255,0.05); }
-        .topnav-nav a.active { color: #E8A0B5; }
-        .topnav-right { display: flex; align-items: center; gap: 16px; }
-        .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; cursor: pointer; background: #E8A0B5; }
-        .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-        .dashboard { display: flex; min-height: calc(100vh - 64px); }
-        .main-content { flex: 1; max-width: 720px; margin: 0 auto; padding: 24px; }
-        .sidebar-right { width: 340px; padding: 24px; border-left: 1px solid rgba(255,255,255,0.06); }
-        .welcome-banner { background: linear-gradient(135deg, rgba(232,160,181,0.15), rgba(232,160,181,0.05)); border: 1px solid rgba(232,160,181,0.2); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-        .welcome-banner h2 { font-size: 18px; color: #fff; margin-bottom: 4px; }
-        .welcome-banner p { color: #8080A0; font-size: 14px; }
-        .city-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(232,160,181,0.2); color: #E8A0B5; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+        .topnav-nav a {
+            color: var(--text-muted); text-decoration: none; padding: 8px 14px;
+            border-radius: 8px; font-size: 13px; font-weight: 500;
+            transition: all 0.2s; cursor: pointer; position: relative;
+        }
+        .topnav-nav a:hover { color: var(--text-primary); background: var(--card-hover); }
+        .topnav-nav a.active { color: var(--pink); }
+        .topnav-nav a.active::after {
+            content: ''; position: absolute; bottom: -4px; left: 50%;
+            transform: translateX(-50%); width: 20px; height: 2px;
+            background: var(--pink); border-radius: 1px;
+        }
+        .topnav-right { display: flex; align-items: center; gap: 12px; }
+        .topnav-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+            background: transparent; border: none; font-size: 16px;
+        }
+        .topnav-icon:hover { color: var(--text-primary); background: var(--card-hover); }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; color: #fff;
+            cursor: pointer; background: var(--pink);
+            box-shadow: 0 0 0 2px rgba(232,160,181,0.2);
+            transition: all 0.2s;
+        }
+        .user-avatar:hover { box-shadow: 0 0 0 3px rgba(232,160,181,0.4); transform: scale(1.05); }
+        .btn-logout {
+            background: none; border: 1px solid var(--border-light);
+            color: var(--text-muted); padding: 8px 14px; border-radius: 8px;
+            font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
+        }
+        .btn-logout:hover { color: var(--text-primary); border-color: var(--border-pink); }
+        #theme-toggle {
+            background: none; border: none; cursor: pointer;
+            font-size: 18px; color: var(--text-muted); padding: 6px;
+            border-radius: 8px; transition: all 0.2s;
+        }
+        #theme-toggle:hover { color: var(--pink); background: var(--card-hover); }
+
+        /* ===== TAB SECTIONS ===== */
         .tab-section { display: none; }
         .tab-section.active { display: block; }
-        .create-post { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .dashboard { display: flex; min-height: calc(100vh - 56px); }
+        .main-content { flex: 1; max-width: 720px; margin: 0 auto; padding: 20px; }
+        .sidebar-right { width: 320px; padding: 20px; border-left: 1px solid var(--border); }
+
+        /* ===== FEED TAB ===== */
+        .welcome-banner {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; margin-bottom: 20px;
+            position: relative; overflow: hidden;
+        }
+        .welcome-banner h2 { font-size: 18px; color: var(--text-primary); margin-bottom: 4px; }
+        .welcome-banner p { color: var(--text-muted); font-size: 14px; }
+        .city-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(232,160,181,0.15); color: var(--pink);
+            padding: 4px 12px; border-radius: 20px; font-size: 12px;
+            font-weight: 600; margin-top: 12px;
+        }
+
+        /* Create Post */
+        .create-post {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        .create-post:focus-within { border-color: var(--border-pink); }
         .create-post-input { display: flex; gap: 12px; align-items: flex-start; }
-        .create-post textarea { flex: 1; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; resize: vertical; min-height: 80px; outline: none; }
-        .create-post textarea:focus { border-color: #E8A0B5; }
-        .create-post textarea::placeholder { color: #8080A0; }
+        .create-post textarea {
+            flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-light);
+            border-radius: 10px; padding: 14px; color: var(--text-primary);
+            font-family: 'Inter', sans-serif; font-size: 14px;
+            resize: vertical; min-height: 80px; outline: none;
+        }
+        .create-post textarea:focus { border-color: var(--pink); }
+        .create-post textarea::placeholder { color: var(--text-muted); }
         .create-post-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-        .post-category-select { background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
         .post-toolbar { display: flex; gap: 8px; align-items: center; }
-        .btn-upload { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
-        .btn-upload:hover { color: #E8A0B5; border-color: #E8A0B5; }
-        .btn-post { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
-        .btn-post:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
+        .post-category-select {
+            background: var(--bg-tertiary); border: 1px solid var(--border-light);
+            color: var(--text-muted); padding: 8px 12px; border-radius: 8px;
+            font-size: 13px; font-family: 'Inter', sans-serif; outline: none;
+        }
+        .btn-upload {
+            background: none; border: 1px solid var(--border-light);
+            color: var(--text-muted); padding: 8px 12px; border-radius: 8px;
+            font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-upload:hover { color: var(--pink); border-color: var(--pink); }
+        .btn-post {
+            background: linear-gradient(135deg, var(--red-soft), var(--pink));
+            color: #fff; border: none; padding: 10px 24px; border-radius: 10px;
+            font-weight: 600; font-size: 14px; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .btn-post:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,160,181,0.3); }
         .image-preview { margin-top: 12px; position: relative; display: none; }
-        .image-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        .image-preview .remove-image { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; }
-        .post-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
-        .post-card:hover { border-color: rgba(255,255,255,0.1); }
+        .image-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); }
+        .image-preview .remove-image {
+            position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7);
+            color: #fff; border: none; border-radius: 50%;
+            width: 28px; height: 28px; cursor: pointer; font-size: 14px;
+        }
+
+        /* Post Cards */
+        .post-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; margin-bottom: 16px;
+            transition: all 0.25s ease;
+        }
+        .post-card:hover { border-color: var(--border-pink); box-shadow: 0 4px 20px var(--shadow); }
         .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .post-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
+        .post-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0;
+        }
         .post-meta { flex: 1; }
-        .post-author { font-weight: 600; font-size: 14px; color: #fff; }
-        .post-time { font-size: 12px; color: #8080A0; }
-        .post-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+        .post-author { font-weight: 600; font-size: 14px; color: var(--text-primary); }
+        .post-time { font-size: 12px; color: var(--text-muted); }
+        .post-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: 20px; font-size: 11px;
+            font-weight: 600; margin-left: 8px;
+        }
         .badge-warning { background: rgba(231,76,60,0.15); color: #e74c3c; }
         .badge-alert { background: rgba(241,196,15,0.15); color: #f1c40f; }
         .badge-verified { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .badge-question { background: rgba(52,152,219,0.15); color: #3498db; }
-        .post-content { font-size: 14px; line-height: 1.6; color: #F0D0C0; margin-bottom: 16px; }
-        .post-image { max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }
+        .post-content { font-size: 14px; line-height: 1.6; color: var(--text-secondary); margin-bottom: 16px; }
+        .post-image { max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); }
         .post-actions { display: flex; gap: 20px; }
-        .post-action { display: flex; align-items: center; gap: 6px; color: #8080A0; font-size: 13px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
-        .post-action:hover { color: #E8A0B5; }
-        .sidebar-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .sidebar-card h3 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .sidebar-card h3 i { color: #E8A0B5; }
-        .alert-item { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .post-action {
+            display: flex; align-items: center; gap: 6px; color: var(--text-muted);
+            font-size: 13px; cursor: pointer; background: none; border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .post-action:hover { color: var(--pink); }
+
+        /* Sidebar */
+        .sidebar-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; margin-bottom: 16px;
+        }
+        .sidebar-card h3 {
+            font-size: 14px; font-weight: 600; color: var(--text-primary);
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-card h3 i { color: var(--pink); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-item {
+            text-align: center; padding: 14px; background: var(--bg-tertiary);
+            border-radius: 10px; border: 1px solid var(--border);
+        }
+        .stat-item .stat-number { font-size: 20px; font-weight: 700; color: var(--pink); }
+        .stat-item .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        .alert-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
         .alert-item:last-child { border-bottom: none; }
-        .alert-item .alert-title { font-size: 13px; font-weight: 500; color: #F5E0D5; display: flex; align-items: center; }
-        .alert-item .alert-meta { font-size: 11px; color: #8080A0; margin-top: 4px; }
+        .alert-item .alert-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); display: flex; align-items: center; }
+        .alert-item .alert-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
         .severity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
         .severity-high { background: #e74c3c; }
         .severity-medium { background: #f1c40f; }
         .severity-low { background: #2ecc71; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-item { text-align: center; padding: 12px; background: #141428; border-radius: 8px; }
-        .stat-item .stat-number { font-size: 20px; font-weight: 700; color: #E8A0B5; }
-        .stat-item .stat-label { font-size: 11px; color: #8080A0; margin-top: 4px; }
-        .loading { text-align: center; padding: 40px; color: #8080A0; }
-        .empty-state { text-align: center; padding: 40px; color: #8080A0; }
-        .city-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .city-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
         .city-row:last-child { border-bottom: none; }
-        .city-rank { color: #E8A0B5; font-weight: 700; font-size: 13px; }
-        .city-name { font-size: 13px; color: #F5E0D5; margin-left: 10px; }
-        .city-votes { font-size: 12px; color: #8080A0; }
-        .search-section { max-width: 720px; margin: 0 auto; padding: 24px; }
-        .search-header { margin-bottom: 24px; }
-        .search-header h2 { font-size: 22px; color: #fff; margin-bottom: 8px; }
-        .search-header p { color: #8080A0; font-size: 14px; }
-        .search-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-        .search-tab { background: #22223A; border: 1px solid rgba(255,255,255,0.08); color: #8080A0; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; transition: all 0.2s; }
-        .search-tab:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-        .search-tab.active { background: rgba(232,160,181,0.15); color: #E8A0B5; border-color: #E8A0B5; }
-        .search-panel { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; display: none; }
+        .city-rank { color: var(--pink); font-weight: 700; font-size: 13px; }
+        .city-name { font-size: 13px; color: var(--text-secondary); margin-left: 10px; }
+        .city-votes { font-size: 12px; color: var(--text-muted); }
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
+
+        /* ===== ALERTS TAB ===== */
+        .alerts-section { max-width: 720px; margin: 0 auto; padding: 24px; }
+        .alerts-header { margin-bottom: 24px; }
+        .alerts-header h2 { font-size: 22px; color: var(--text-primary); }
+
+        /* ===== INBOX TAB ===== */
+        .inbox-section { max-width: 900px; margin: 0 auto; padding: 24px; }
+        .inbox-header { margin-bottom: 20px; }
+        .inbox-header h2 { font-size: 22px; color: var(--text-primary); }
+        .inbox-layout {
+            display: flex; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; min-height: 500px; overflow: hidden;
+        }
+        .inbox-conversations {
+            width: 320px; border-right: 1px solid var(--border);
+            overflow-y: auto; max-height: 600px;
+        }
+        .inbox-thread { flex: 1; display: flex; flex-direction: column; }
+        .inbox-thread-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .premium-gate {
+            text-align: center; padding: 60px 24px; max-width: 400px; margin: 0 auto;
+        }
+        .premium-gate-content { position: relative; overflow: hidden; }
+        .premium-gate-price { font-size: 32px; font-weight: 800; color: var(--pink); margin: 16px 0; }
+        .premium-gate-price span { font-size: 16px; font-weight: 400; color: var(--text-muted); }
+        .btn-upgrade {
+            background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+            color: #fff; border: none; padding: 14px 28px; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        .inbox-badge {
+            background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+            padding: 2px 6px; border-radius: 10px; margin-left: 4px;
+        }
+
+        /* ===== HUB TAB ===== */
+        .hub-container { max-width: 720px; margin: 0 auto; padding: 20px; }
+        .hub-header { margin-bottom: 20px; }
+        .hub-header h2 {
+            font-size: 20px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .hub-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+        /* Start Safe Date Hero Card */
+        .safe-date-hero {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px; margin-bottom: 20px;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .safe-date-hero::before {
+            content: ''; position: absolute; top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(232,160,181,0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .safe-date-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: rgba(239,68,68,0.1); display: flex;
+            align-items: center; justify-content: center;
+            margin: 0 auto 16px; position: relative;
+        }
+        .safe-date-icon i { font-size: 24px; color: var(--red); }
+        .safe-date-hero h2 {
+            font-size: 24px; font-weight: 800; color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .safe-date-hero p {
+            font-size: 14px; color: var(--text-muted); max-width: 300px;
+            margin: 0 auto 20px; line-height: 1.5;
+        }
+        .btn-safe-date {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: #fff; border: none; padding: 14px 32px; border-radius: 12px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            font-family: 'Inter', sans-serif; width: 100%; max-width: 320px;
+            transition: all 0.2s; box-shadow: 0 4px 16px rgba(239,68,68,0.25);
+        }
+        .btn-safe-date:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(239,68,68,0.35); }
+        .date-status {
+            display: flex; align-items: center; gap: 8px;
+            justify-content: center; margin-top: 16px; font-size: 13px;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+        }
+        .status-dot.active { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+        /* Date Timer */
+        .date-timer-section {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; margin-bottom: 20px;
+        }
+        .timer-header {
+            font-size: 14px; font-weight: 600; color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .timer-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+        .timer-options { display: flex; gap: 8px; margin-bottom: 14px; }
+        .timer-btn {
+            padding: 8px 20px; border-radius: 8px; font-size: 13px;
+            font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all 0.2s; border: 1px solid var(--border-light);
+            background: var(--bg-tertiary); color: var(--text-muted);
+        }
+        .timer-btn.active {
+            background: var(--pink); color: #fff; border-color: var(--pink);
+        }
+        .timer-btn:hover:not(.active) { border-color: var(--pink); color: var(--pink); }
+        .btn-start-timer {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: #fff; border: none; padding: 12px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Inter', sans-serif; width: 100%;
+            transition: all 0.2s;
+        }
+
+        /* Quick Tools Grid */
+        .quick-tools-label {
+            font-size: 15px; font-weight: 600; color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+        .quick-tools {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            margin-bottom: 20px;
+        }
+        .tool-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px; cursor: pointer;
+            transition: all 0.2s; text-align: center;
+        }
+        .tool-card:hover { transform: translateY(-2px); border-color: var(--border-pink); box-shadow: 0 4px 20px var(--shadow); }
+        .tool-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 10px; font-size: 20px;
+        }
+        .tool-icon.pink { background: rgba(232,160,181,0.12); color: var(--pink); }
+        .tool-icon.blue { background: rgba(91,160,208,0.12); color: var(--blue); }
+        .tool-icon.green { background: rgba(46,204,113,0.12); color: var(--green); }
+        .tool-icon.purple { background: rgba(155,89,182,0.12); color: var(--purple); }
+        .tool-card h4 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+        /* ===== HUB SUB TABS ===== */
+        .hub-sub { display: none; }
+        .hub-sub.active { display: block; }
+        .hub-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .hub-tab {
+            background: var(--bg-card); color: var(--text-muted);
+            border: 1px solid var(--border-light); padding: 9px 16px;
+            border-radius: 10px; font-size: 12px; font-weight: 500;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .hub-tab.active {
+            background: var(--pink); color: var(--text-inverse);
+            border-color: var(--pink); font-weight: 600;
+        }
+        .hub-tab:hover:not(.active) { color: var(--pink); border-color: var(--pink); }
+
+        /* ===== SEARCH SECTION ===== */
+        .search-section { max-width: 720px; margin: 0 auto; }
+        .search-header { margin-bottom: 20px; }
+        .search-header h2 { font-size: 20px; color: var(--text-primary); margin-bottom: 6px; }
+        .search-header p { color: var(--text-muted); font-size: 14px; }
+        .search-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .search-tab {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            color: var(--text-muted); padding: 10px 18px; border-radius: 8px;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 500; transition: all 0.2s;
+        }
+        .search-tab:hover { color: var(--text-primary); border-color: var(--border-pink); }
+        .search-tab.active { background: rgba(232,160,181,0.15); color: var(--pink); border-color: var(--pink); }
+        .search-panel {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; display: none;
+        }
         .search-panel.active { display: block; }
-        .search-panel h3 { font-size: 16px; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .search-panel h3 i { color: #E8A0B5; }
-        .search-panel p.desc { color: #8080A0; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+        .search-panel h3 { font-size: 16px; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .search-panel h3 i { color: var(--pink); }
+        .search-panel p.desc { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
         .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
         .form-group { flex: 1; }
-        .form-group label { display: block; font-size: 12px; color: #8080A0; margin-bottom: 6px; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
-        .form-group input:focus { border-color: #E8A0B5; }
-        .btn-search { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; }
-        .btn-search:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
-        .search-results { margin-top: 24px; }
-        .result-card { background: #141428; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
-        .result-avatar { width: 60px; height: 60px; border-radius: 8px; background: #22223A; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .result-avatar i { font-size: 24px; color: #8080A0; }
-        .result-info { flex: 1; }
-        .result-info h4 { font-size: 14px; color: #fff; margin-bottom: 4px; }
-        .result-info .result-detail { font-size: 12px; color: #8080A0; margin-bottom: 2px; }
-        .result-badge { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .badge-danger { background: rgba(231,76,60,0.15); color: #e74c3c; }
-        .badge-caution { background: rgba(241,196,15,0.15); color: #f1c40f; }
-        .badge-clear { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .disclaimer { background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #f1c40f; line-height: 1.5; display: flex; gap: 10px; align-items: flex-start; }
-        .disclaimer i { flex-shrink: 0; margin-top: 2px; }
-        .alerts-section { max-width: 720px; margin: 0 auto; padding: 24px; }
-        .alerts-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .alerts-header h2 { font-size: 22px; color: #fff; }
-        .alert-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 16px; transition: border-color 0.2s; }
-        .alert-card:hover { border-color: rgba(255,255,255,0.12); }
-        .alert-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .alert-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .alert-icon.high { background: rgba(231,76,60,0.15); color: #e74c3c; }
-        .alert-icon.medium { background: rgba(241,196,15,0.15); color: #f1c40f; }
-        .alert-icon.low { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .alert-card-title { font-size: 15px; font-weight: 600; color: #fff; }
-        .alert-card-meta { font-size: 12px; color: #8080A0; }
-        .alert-card-body { font-size: 14px; color: #F0D0C0; line-height: 1.5; }
-        .profile-section { max-width: 600px; margin: 0 auto; padding: 24px; }
-        .profile-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 32px; text-align: center; margin-bottom: 24px; }
-        .profile-avatar-large { width: 80px; height: 80px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; }
-        .profile-name { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-        .profile-email { font-size: 14px; color: #8080A0; margin-bottom: 8px; }
-        .profile-role { display: inline-flex; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(232,160,181,0.15); color: #E8A0B5; }
-        .profile-form { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
-        .profile-form h3 { font-size: 16px; color: #fff; margin-bottom: 20px; }
-        .btn-save { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
-        .toast { position: fixed; bottom: 24px; right: 24px; background: #2ecc71; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .toast.error { background: #e74c3c; }
-        .toast.show { display: flex; align-items: center; gap: 8px; }
-        /* Inbox badge */
-        .inbox-badge { background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; margin-left: 4px; vertical-align: top; }
-        /* Inbox section */
-        .inbox-section { max-width: 960px; margin: 0 auto; padding: 24px; min-height: calc(100vh - 64px); }
-        .inbox-header { margin-bottom: 24px; }
-        .inbox-header h2 { font-size: 22px; color: #fff; }
-        .inbox-layout { display: flex; gap: 0; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; min-height: 500px; background: #22223A; }
-        .inbox-conversations { width: 320px; border-right: 1px solid rgba(255,255,255,0.06); overflow-y: auto; max-height: 600px; }
-        .inbox-thread { flex: 1; display: flex; flex-direction: column; }
-        .inbox-thread-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #8080A0; text-align: center; padding: 40px; }
-        .convo-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
-        .convo-item:hover { background: rgba(255,255,255,0.03); }
-        .convo-item.active { background: rgba(232,160,181,0.08); border-left: 3px solid #E8A0B5; }
-        .convo-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
-        .convo-info { flex: 1; min-width: 0; }
-        .convo-name { font-size: 14px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .convo-preview { font-size: 12px; color: #8080A0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .convo-time { font-size: 11px; color: #8080A0; flex-shrink: 0; }
-        .convo-unread { background: #E8A0B5; color: #fff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .thread-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; }
-        .thread-header-name { font-size: 15px; font-weight: 600; color: #fff; }
-        .thread-messages { flex: 1; overflow-y: auto; padding: 20px; max-height: 440px; }
-        .msg-bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; margin-bottom: 8px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-        .msg-bubble.sent { background: rgba(232,160,181,0.2); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
-        .msg-bubble.received { background: #141428; color: #F0D0C0; margin-right: auto; border-bottom-left-radius: 4px; }
-        .msg-time { font-size: 10px; color: #8080A0; margin-top: 2px; }
-        .msg-time.sent { text-align: right; }
-        .thread-input { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .thread-input input { flex: 1; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 10px 16px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
-        .thread-input input:focus { border-color: #E8A0B5; }
-        .thread-input button { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-        /* Premium gate */
-        .premium-gate { display: flex; align-items: center; justify-content: center; min-height: 400px; }
-        .premium-gate-content { text-align: center; max-width: 400px; padding: 48px 32px; background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; }
-        .premium-gate-content h2 { font-size: 24px; color: #fff; margin-bottom: 12px; }
-        .premium-gate-content p { color: #8080A0; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-        .premium-gate-price { font-size: 36px; font-weight: 800; color: #E8A0B5; margin-bottom: 24px; }
-        .premium-gate-price span { font-size: 16px; font-weight: 400; color: #8080A0; }
-        .btn-upgrade { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-upgrade:hover { box-shadow: 0 4px 20px rgba(232,160,181,0.4); }
-        /* Premium badge */
-        .premium-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(232,160,181,0.15); color: #E8A0B5; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px; }
-        .premium-badge-inline { display: inline-flex; align-items: center; gap: 4px; background: rgba(232,160,181,0.15); color: #E8A0B5; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-        .premium-mini-gate { background: rgba(232,160,181,0.08); border: 1px solid rgba(232,160,181,0.2); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #E8A0B5; display: flex; align-items: center; gap: 12px; }
-        .btn-upgrade-sm { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
-        /* Avatar customization */
-        .avatar-preview-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
-        .avatar-preview-large { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #fff; background: #E8A0B5; flex-shrink: 0; }
-        .avatar-preview-name { font-size: 16px; font-weight: 600; color: #fff; }
-        .avatar-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-        .avatar-option { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #141428; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: border-color 0.2s; }
-        .avatar-option:hover { border-color: rgba(255,255,255,0.12); }
-        .avatar-option input[type="radio"] { accent-color: #E8A0B5; }
-        .avatar-option-content { display: flex; flex-direction: column; }
-        .avatar-option-content strong { font-size: 14px; color: #fff; }
-        .avatar-option-content span { font-size: 12px; color: #8080A0; }
-        .avatar-sub-option { padding: 8px 16px 8px 44px; }
-        .avatar-sub-option input[type="text"] { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
-        .avatar-sub-option input[type="text"]:focus { border-color: #E8A0B5; }
-        .generated-name-row { display: flex; align-items: center; gap: 12px; }
-        .generated-name-text { font-size: 15px; font-weight: 600; color: #E8A0B5; }
-        .btn-generate { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 4px; }
-        .btn-generate:hover { color: #E8A0B5; border-color: #E8A0B5; }
-        .avatar-color-picker { margin-top: 12px; }
-        .avatar-color-picker label { display: block; font-size: 12px; color: #8080A0; margin-bottom: 8px; font-weight: 500; }
-        .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
-        .color-swatch { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
-        .color-swatch:hover { transform: scale(1.15); }
-        .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(232,160,181,0.5); }
-        .profile-tier { margin-top: 8px; }
-        /* Name Watch */
-        .nw-section { max-width: 720px; margin: 0 auto; padding: 24px; }
-        .nw-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .nw-header h2 { font-size: 22px; color: #fff; display: flex; align-items: center; gap: 10px; }
-        .nw-header h2 i { color: #E8A0B5; }
-        .nw-add-form { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-        .nw-add-form h3 { font-size: 15px; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .nw-add-form h3 i { color: #E8A0B5; }
-        .nw-add-row { display: flex; gap: 12px; }
-        .nw-add-row input { flex: 1; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
-        .nw-add-row input:focus { border-color: #E8A0B5; }
-        .nw-add-row input::placeholder { color: #8080A0; }
-        .btn-nw-add { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
-        .btn-nw-add:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
-        .nw-hint { font-size: 12px; color: #8080A0; margin-top: 8px; }
-        .nw-list { margin-bottom: 24px; }
-        .nw-list-item { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
-        .nw-list-item:hover { border-color: rgba(255,255,255,0.12); }
-        .nw-list-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(232,160,181,0.1); display: flex; align-items: center; justify-content: center; color: #E8A0B5; font-size: 18px; flex-shrink: 0; }
-        .nw-list-info { flex: 1; min-width: 0; }
-        .nw-list-name { font-size: 15px; font-weight: 600; color: #fff; }
-        .nw-list-terms { font-size: 12px; color: #8080A0; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .nw-list-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-        .nw-badge-matches { background: rgba(232,160,181,0.15); color: #E8A0B5; }
-        .nw-badge-none { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .nw-list-delete { background: none; border: none; color: #8080A0; cursor: pointer; font-size: 16px; padding: 8px; border-radius: 8px; transition: all 0.2s; flex-shrink: 0; }
-        .nw-list-delete:hover { color: #e74c3c; background: rgba(231,76,60,0.1); }
-        .nw-matches-section { margin-top: 32px; }
-        .nw-matches-section h3 { font-size: 16px; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .nw-matches-section h3 i { color: #E8A0B5; }
-        .nw-match-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; transition: border-color 0.2s; }
-        .nw-match-card:hover { border-color: rgba(255,255,255,0.12); }
-        .nw-match-card.unread { border-left: 3px solid #E8A0B5; }
-        .nw-match-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .nw-match-icon { color: #E8A0B5; font-size: 14px; }
-        .nw-match-label { font-size: 13px; font-weight: 600; color: #E8A0B5; }
-        .nw-match-type-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(232,160,181,0.1); color: #E8A0B5; font-weight: 500; margin-left: auto; }
-        .nw-match-body { font-size: 14px; color: #F0D0C0; line-height: 1.5; margin-bottom: 8px; }
-        .nw-match-footer { font-size: 12px; color: #8080A0; display: flex; align-items: center; gap: 12px; }
-        .nw-match-footer i { font-size: 11px; }
-        .nw-mark-read { background: none; border: none; color: #8080A0; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-left: auto; }
-        .nw-mark-read:hover { color: #E8A0B5; }
-        .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
-        .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
-        .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
-        .mobile-tab-bar { display: none; }
-        @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
-        @media (max-width: 768px) {
-            .topnav-nav { display: none; }
-            .main-content, .search-section, .alerts-section, .profile-section, .inbox-section { padding: 16px 16px 80px; }
-            .inbox-layout { flex-direction: column; }
-            .inbox-conversations { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
-            .mobile-tab-bar {
-                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-                background: #22223A; border-top: 1px solid rgba(255,255,255,0.06);
-                justify-content: space-around; align-items: center; height: 60px; padding: 0 8px;
-            }
-            .mobile-tab-bar a {
-                display: flex; flex-direction: column; align-items: center; gap: 2px;
-                color: #8080A0; text-decoration: none; font-size: 10px; font-weight: 500;
-                padding: 6px 0; cursor: pointer; transition: color 0.2s; flex: 1;
-            }
-            .mobile-tab-bar a i { font-size: 18px; }
-            .mobile-tab-bar a.active { color: #E8A0B5; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; background: var(--bg-input);
+            border: 1px solid var(--border-light); border-radius: 10px;
+            color: var(--text-primary); font-size: 14px; font-family: inherit;
+            outline: none; transition: border-color 0.2s;
         }
-        /* Date Check-In/Check-Out Styles */
-        .datecheck-section { max-width: 700px; margin: 0 auto; padding: 24px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--pink); }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-muted); }
+        .disclaimer {
+            display: flex; gap: 8px; align-items: flex-start;
+            background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.2);
+            border-radius: 8px; padding: 12px; margin-bottom: 16px;
+            font-size: 12px; color: var(--text-muted);
+        }
+        .disclaimer i { color: #f1c40f; flex-shrink: 0; margin-top: 2px; }
+        .btn-search {
+            background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+            color: #fff; border: none; padding: 12px 24px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Inter', sans-serif; width: 100%;
+        }
+        .search-results { margin-top: 16px; }
+
+        /* ===== DATE CHECK ===== */
+        .datecheck-section { max-width: 700px; margin: 0 auto; }
         .datecheck-header { text-align: center; margin-bottom: 24px; }
-        .datecheck-header h2 { font-size: 22px; color: #fff; }
-        .datecheck-header p { color: #8080A0; font-size: 14px; margin-top: 8px; }
-        .plus-badge { display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; }
-        .datecheck-card { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06); }
-        .datecheck-card h3 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 16px; }
+        .datecheck-header h2 { font-size: 20px; color: var(--text-primary); }
+        .datecheck-header p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+        .plus-badge {
+            display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5);
+            color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px;
+            border-radius: 10px; margin-left: 8px; vertical-align: middle;
+            text-transform: uppercase;
+        }
+        .datecheck-card {
+            background: var(--bg-card); border-radius: 16px; padding: 24px;
+            margin-bottom: 20px; border: 1px solid var(--border);
+        }
+        .datecheck-card h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
         .dc-form-group { margin-bottom: 14px; }
-        .dc-form-group label { display: block; font-size: 13px; color: #A0A0C0; margin-bottom: 5px; font-weight: 500; }
-        .dc-form-group input, .dc-form-group textarea, .dc-form-group select { width: 100%; padding: 10px 12px; background: #2A2A44; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; }
-        .dc-form-group input:focus, .dc-form-group textarea:focus { outline: none; border-color: #E8A0B5; }
+        .dc-form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+        .dc-form-group input, .dc-form-group textarea, .dc-form-group select {
+            width: 100%; padding: 10px 12px; background: var(--bg-input);
+            border: 1px solid var(--border-light); border-radius: 10px;
+            color: var(--text-primary); font-size: 14px; font-family: inherit;
+            outline: none;
+        }
+        .dc-form-group input:focus, .dc-form-group textarea:focus { border-color: var(--pink); }
         .dc-form-row { display: flex; gap: 12px; }
         .dc-form-row .dc-form-group { flex: 1; }
-        .dc-btn { padding: 12px 20px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; transition: all 0.2s; }
+        .dc-btn {
+            padding: 12px 20px; border: none; border-radius: 12px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: inherit; width: 100%; transition: all 0.2s;
+        }
         .dc-btn-primary { background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; }
         .dc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(242,112,89,0.3); }
-        .dc-btn-success { background: #2ecc71; color: #fff; }
+        .dc-btn-success { background: var(--green); color: #fff; }
         .dc-btn-success:hover { background: #27ae60; }
-        .dc-btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #A0A0C0; }
+        .dc-btn-outline { background: transparent; border: 1px solid var(--border-light); color: var(--text-muted); }
         .dc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .dc-active-date { border: 2px solid #FFA500; }
-        .dc-status { display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(255,165,0,0.1); border-radius: 10px; margin-bottom: 16px; }
-        .dc-status-dot { width: 10px; height: 10px; border-radius: 50%; background: #FFA500; animation: dcpulse 1.5s infinite; }
-        @keyframes dcpulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .dc-timer { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: #FFA500; }
-        .dc-history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2A2A44; border-radius: 10px; margin-bottom: 8px; }
-        .dc-history-name { font-weight: 600; color: #fff; }
-        .dc-history-meta { font-size: 12px; color: #8080A0; }
+        .dc-active-date { border: 2px solid var(--pink); }
+        .dc-status { display: flex; align-items: center; gap: 8px; padding: 12px; background: rgba(255,165,0,0.08); border-radius: 10px; margin-bottom: 16px; }
+        .dc-status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--pink); animation: pulse 1.5s infinite; }
+        .dc-timer { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--pink); }
+        .dc-history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-input); border-radius: 10px; margin-bottom: 8px; }
+        .dc-history-name { font-weight: 600; color: var(--text-primary); }
+        .dc-history-meta { font-size: 12px; color: var(--text-muted); }
         .dc-history-status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; }
         .dc-status-safe { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .dc-contact-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .dc-contact-row input { flex: 1; }
         .dc-contact-remove { background: none; border: none; color: #FF6B6B; cursor: pointer; font-size: 16px; padding: 4px 8px; }
-        .dc-howto { background: rgba(232,160,181,0.08); border: 1px solid rgba(232,160,181,0.2); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .dc-howto h4 { color: #E8A0B5; font-size: 14px; margin-bottom: 12px; }
+        .dc-howto {
+            background: rgba(232,160,181,0.06); border: 1px solid var(--border-pink);
+            border-radius: 12px; padding: 20px; margin-bottom: 20px;
+        }
+        .dc-howto h4 { color: var(--pink); font-size: 14px; margin-bottom: 12px; }
         .dc-howto ol { padding-left: 20px; }
-        .dc-howto li { color: #A0A0C0; font-size: 13px; margin-bottom: 8px; line-height: 1.5; }
-        .dc-howto li strong { color: #fff; }
+        .dc-howto li { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; line-height: 1.5; }
+        .dc-howto li strong { color: var(--text-primary); }
+        .safetea-report { background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); border: 2px solid var(--pink); border-radius: 16px; overflow: hidden; }
+        .safetea-report-header { background: linear-gradient(135deg, #f27059, #E8A0B5); padding: 20px; text-align: center; }
+        .safetea-report-header h3 { color: #fff; font-size: 18px; margin: 0; }
+        .safetea-report-header p { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 4px; }
+        .safetea-report-body { padding: 20px; }
+        .safetea-report-photo { text-align: center; margin-bottom: 16px; }
+        .safetea-report-photo img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--pink); }
+        .safetea-report-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .safetea-report-row:last-child { border-bottom: none; }
+        .safetea-report-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(232,160,181,0.15); display: flex; align-items: center; justify-content: center; color: var(--pink); font-size: 14px; flex-shrink: 0; }
+        .safetea-report-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .safetea-report-value { font-size: 14px; color: var(--text-primary); font-weight: 500; margin-top: 2px; }
+        .safetea-report-footer { text-align: center; padding: 12px 20px; background: rgba(232,160,181,0.04); border-top: 1px solid var(--border); }
+        .safetea-report-footer span { font-size: 11px; color: var(--text-muted); }
+        .dc-share-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--overlay); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .dc-share-modal-content { background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+        #dc-photo-upload:hover { border-color: var(--pink) !important; }
+
+        /* ===== NAME WATCH ===== */
+        .nw-section { max-width: 700px; margin: 0 auto; }
+        .nw-header { margin-bottom: 20px; }
+        .nw-header h2 { font-size: 20px; color: var(--text-primary); }
+        .nw-list-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .nw-list-badge { background: rgba(232,160,181,0.15); color: var(--pink); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .nw-mark-read { background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; margin-left: auto; }
+        .nw-mark-read:hover { color: var(--pink); }
+        .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
+        .btn-nw-action { background: none; border: 1px solid var(--border-light); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
+        .btn-nw-action:hover { color: var(--pink); border-color: var(--pink); }
+
+        /* ===== PROFILE TAB ===== */
+        .profile-section { max-width: 600px; margin: 0 auto; padding: 24px; }
+        .profile-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 32px; text-align: center;
+            margin-bottom: 24px; position: relative; overflow: hidden;
+        }
+        .profile-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 80px;
+            background: linear-gradient(135deg, rgba(242,112,89,0.12), rgba(232,160,181,0.12));
+            pointer-events: none;
+        }
+        .profile-avatar-large {
+            width: 72px; height: 72px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 700; color: #fff;
+            margin: 0 auto 12px; position: relative; z-index: 1;
+            box-shadow: 0 4px 20px rgba(232,160,181,0.3);
+        }
+        .profile-name { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .profile-email { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .profile-role { font-size: 12px; color: var(--text-muted); margin-top: 4px; text-transform: capitalize; }
+        .profile-tier { margin-top: 12px; }
+        .premium-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, #f27059, #E8A0B5);
+            color: #fff; padding: 4px 14px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .premium-badge-inline {
+            display: inline-flex; align-items: center; gap: 4px;
+            color: #E8A0B5; font-size: 12px; font-weight: 600;
+        }
+        .profile-form {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 24px; margin-bottom: 20px;
+        }
+        .profile-form h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
+        .avatar-preview-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .avatar-preview-large {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 700; color: #fff;
+        }
+        .avatar-preview-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .avatar-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .avatar-option {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: var(--bg-tertiary); border: 1px solid var(--border);
+            border-radius: 10px; cursor: pointer; transition: border-color 0.2s;
+        }
+        .avatar-option:hover { border-color: var(--border-pink); }
+        .avatar-option input[type="radio"] { accent-color: var(--pink); }
+        .avatar-option-content { flex: 1; }
+        .avatar-option-content strong { display: block; font-size: 13px; color: var(--text-primary); }
+        .avatar-option-content span { font-size: 11px; color: var(--text-muted); }
+        .avatar-sub-option { padding: 12px 12px 12px 40px; }
+        .avatar-sub-option input {
+            width: 100%; padding: 8px 12px; background: var(--bg-input);
+            border: 1px solid var(--border-light); border-radius: 8px;
+            color: var(--text-primary); font-size: 13px; outline: none;
+        }
+        .generated-name-row { display: flex; align-items: center; gap: 8px; }
+        .generated-name-text { font-size: 14px; font-weight: 600; color: var(--pink); flex: 1; }
+        .btn-generate {
+            background: rgba(232,160,181,0.15); border: 1px solid var(--border-pink);
+            color: var(--pink); padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
+        }
+        .avatar-color-picker { margin-top: 12px; }
+        .avatar-color-picker label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: block; }
+        .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-save {
+            background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+            color: #fff; border: none; padding: 12px 24px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-family: 'Inter', sans-serif; width: 100%;
+        }
+        .btn-upgrade-sm {
+            background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+            color: #fff; border: none; padding: 8px 16px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            font-family: 'Inter', sans-serif; margin-left: 8px;
+        }
+        .premium-mini-gate {
+            background: rgba(232,160,181,0.06); border: 1px solid var(--border-pink);
+            border-radius: 8px; padding: 12px; color: var(--text-muted);
+            font-size: 13px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);
+            padding: 14px 24px; border-radius: 12px; font-size: 14px;
+            font-weight: 500; z-index: 9999; opacity: 0; transition: opacity 0.3s;
+            box-shadow: 0 8px 32px var(--shadow); pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        /* ===== FLOATING INVITE FAB ===== */
+        .fab-invite { display: none; }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(232,160,181,0.15); border-radius: 3px; }
+
+        /* ===== MOBILE TAB BAR ===== */
+        .mobile-tab-bar { display: none; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar-right { display: none; }
+            .inbox-conversations { width: 240px; }
+        }
+        @media (max-width: 768px) {
+            .topnav-nav { display: none; }
+            .btn-logout { display: none; }
+            .main-content, .search-section, .alerts-section, .profile-section,
+            .inbox-section, .hub-container, .datecheck-section, .nw-section { padding: 16px 16px 80px; }
+            .inbox-layout { flex-direction: column; }
+            .inbox-conversations { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
+            .mobile-tab-bar {
+                display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+                background: var(--bg-nav); backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-top: 1px solid var(--border);
+                justify-content: space-around; align-items: center;
+                height: 60px; padding: 0 8px;
+            }
+            .mobile-tab-bar a {
+                display: flex; flex-direction: column; align-items: center; gap: 2px;
+                color: var(--text-muted); text-decoration: none; font-size: 10px;
+                font-weight: 500; padding: 6px 0; cursor: pointer;
+                transition: color 0.2s; flex: 1; position: relative;
+            }
+            .mobile-tab-bar a i, .mobile-tab-bar a img { font-size: 18px; height: 18px; }
+            .mobile-tab-bar a.active { color: var(--pink); }
+            .mobile-tab-bar a.active::after {
+                content: ''; position: absolute; top: 0; left: 50%;
+                transform: translateX(-50%); width: 20px; height: 2px;
+                background: var(--pink); border-radius: 1px;
+            }
+            .fab-invite {
+                display: flex; position: fixed; bottom: 74px; right: 16px; z-index: 99;
+                background: linear-gradient(135deg, #E8A0B5, #9b59b6);
+                color: #fff; border: none; border-radius: 50px; padding: 12px 20px;
+                font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
+                align-items: center; gap: 8px; cursor: pointer;
+                box-shadow: 0 4px 20px rgba(232,160,181,0.4);
+                animation: fab-pulse 2s ease-in-out infinite;
+            }
+            .fab-invite:active { transform: scale(0.95); }
+            @keyframes fab-pulse {
+                0%, 100% { box-shadow: 0 4px 20px rgba(232,160,181,0.4); }
+                50% { box-shadow: 0 4px 30px rgba(232,160,181,0.6); }
+            }
+            .safe-date-hero h2 { font-size: 22px; }
+            .hub-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .hub-tab { white-space: nowrap; flex-shrink: 0; }
+            .form-row { flex-direction: column; }
+            .dc-form-row { flex-direction: column; }
+        }
+
+        /* ===== CATFISH SECTION ===== */
+        .catfish-section { max-width: 700px; margin: 0 auto; }
+
+        /* ===== OVERDUE ACTIVE DATE OVERLAY ===== */
+        .overdue-banner {
+            background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(232,160,181,0.08));
+            border: 1px solid rgba(239,68,68,0.25); border-radius: 16px;
+            padding: 24px; text-align: center; margin-bottom: 20px;
+        }
+        .overdue-banner h2 { font-size: 28px; font-weight: 900; color: var(--red); }
+        .overdue-banner p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
     </style>
 </head>
 <body>
+    <!-- TOP NAVIGATION -->
     <nav class="topnav">
         <div class="topnav-left">
-            <a href="/" class="topnav-logo"><img src="/logo.png" alt="SafeTea"></a>
+            <a href="/" class="topnav-logo">
+                <img src="/logo.png" alt="SafeTea">
+                <span>SafeTea</span>
+            </a>
             <div class="topnav-nav">
                 <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="search"><i class="fas fa-search"></i> Search</a>
-                <a data-tab="namewatch"><i class="fas fa-eye"></i> Name Watch <span id="nw-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="datecheck"><i class="fas fa-calendar-check"></i> Date Check</a>
-                <a href="/blog.html"><i class="fas fa-mug-hot"></i> Hub</a>
+                <a data-tab="hub"><img src="logo.png" alt="" style="height:18px;vertical-align:middle"> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
         <div class="topnav-right">
+            <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="topnav-icon" onclick="switchTab('inbox')" title="Messages">
+                <i class="fas fa-comment-dots"></i>
+            </button>
             <div class="user-avatar" id="nav-avatar"></div>
             <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
         </div>
     </nav>
 
-    <!-- FEED TAB -->
+    <!-- ===== FEED TAB ===== -->
     <div id="tab-feed" class="tab-section active">
         <div class="dashboard">
             <div class="main-content">
@@ -347,6 +774,15 @@
                     <h2 id="welcome-name">Welcome back!</h2>
                     <p>Stay informed. Stay safe. Your community has your back.</p>
                     <div class="city-badge" id="city-badge"><i class="fas fa-map-marker-alt"></i> <span id="user-city">Loading...</span></div>
+                </div>
+                <!-- Invite Friends Card -->
+                <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(155,89,182,0.08));border:1px solid var(--border-pink);border-radius:14px;padding:16px 20px;margin-bottom:20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.5)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='';this.style.transform='none'">
+                    <div style="min-width:42px;height:42px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-plus" style="font-size:18px;color:#fff"></i></div>
+                    <div style="flex:1">
+                        <span style="color:var(--text-primary);font-size:14px;font-weight:600">Invite Friends to SafeTea</span>
+                        <span style="color:var(--text-muted);font-size:12px;display:block;margin-top:2px">Get free Premium when 3 friends join</span>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap">Share Now</div>
                 </div>
                 <div class="create-post">
                     <div class="create-post-input">
@@ -398,11 +834,11 @@
         </div>
     </div>
 
-    <!-- ALERTS TAB -->
+    <!-- ===== ALERTS TAB ===== -->
     <div id="tab-alerts" class="tab-section">
         <div class="alerts-section">
             <div class="alerts-header">
-                <h2><i class="fas fa-bell" style="color:#E8A0B5"></i> Alerts in Your Area</h2>
+                <h2><i class="fas fa-bell" style="color:var(--pink)"></i> Alerts in Your Area</h2>
             </div>
             <div id="alerts-full-list">
                 <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading alerts...</div>
@@ -410,23 +846,21 @@
         </div>
     </div>
 
-    <!-- INBOX TAB -->
+    <!-- ===== INBOX TAB ===== -->
     <div id="tab-inbox" class="tab-section">
         <div class="inbox-section">
-            <!-- Premium gate overlay (shown for non-premium users) -->
             <div id="inbox-gate" class="premium-gate" style="display:none">
                 <div class="premium-gate-content">
-                    <i class="fas fa-lock" style="font-size:48px;color:#E8A0B5;margin-bottom:16px"></i>
-                    <h2>Unlock Inbox</h2>
-                    <p>Direct messaging is available on the Premium plan. Connect with referrers, ask questions, and build your network.</p>
+                    <i class="fas fa-lock" style="font-size:48px;color:var(--pink);margin-bottom:16px"></i>
+                    <h2 style="color:var(--text-primary)">Unlock Inbox</h2>
+                    <p style="color:var(--text-muted)">Direct messaging is available on the Premium plan. Connect with referrers, ask questions, and build your network.</p>
                     <div class="premium-gate-price">$5.99<span>/mo</span></div>
                     <button class="btn-upgrade" onclick="showUpgradePrompt()"><i class="fas fa-crown"></i> Upgrade to Premium</button>
                 </div>
             </div>
-            <!-- Inbox content (shown for premium users) -->
             <div id="inbox-content" style="display:none">
                 <div class="inbox-header">
-                    <h2><i class="fas fa-envelope" style="color:#E8A0B5"></i> Inbox</h2>
+                    <h2><i class="fas fa-envelope" style="color:var(--pink)"></i> Inbox</h2>
                 </div>
                 <div class="inbox-layout">
                     <div class="inbox-conversations" id="inbox-conversations">
@@ -434,8 +868,8 @@
                     </div>
                     <div class="inbox-thread" id="inbox-thread">
                         <div class="inbox-thread-empty">
-                            <i class="fas fa-comments" style="font-size:48px;color:#8080A0;margin-bottom:12px"></i>
-                            <p>Select a conversation to view messages</p>
+                            <i class="fas fa-comments" style="font-size:48px;color:var(--text-muted);margin-bottom:12px"></i>
+                            <p style="color:var(--text-muted)">Select a conversation to view messages</p>
                         </div>
                     </div>
                 </div>
@@ -443,152 +877,430 @@
         </div>
     </div>
 
-    <!-- SEARCH TAB -->
-    <div id="tab-search" class="tab-section">
-        <div class="search-section">
-            <div class="search-header">
-                <h2><img src="logo.png" alt="SafeTea" style="height:24px;vertical-align:middle"> Safety Search Tools</h2>
-                <p>Look up important safety information before meeting someone new.</p>
-            </div>
-            <div class="search-tabs">
-                <button class="search-tab active" data-search="offender"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Search</button>
-                <button class="search-tab" data-search="background"><i class="fas fa-file-alt"></i> Background Check</button>
+    <!-- ===== HUB TAB ===== -->
+    <div id="tab-hub" class="tab-section">
+        <div class="hub-container">
+            <div class="hub-header">
+                <h2><img src="logo.png" alt="SafeTea" style="height:28px;vertical-align:middle"> SafeTea Hub</h2>
+                <p>Your command center for all SafeTea safety tools.</p>
             </div>
 
-            <!-- Sex Offender Search Panel -->
-            <div id="search-offender" class="search-panel active">
-                <h3><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Sex Offender Registry Search</h3>
-                <p class="desc">Search the national sex offender registry to check if someone is listed. Results are pulled from public records databases.</p>
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>This search uses publicly available registry data. Always verify results with your local law enforcement. Information may not be 100% current.</span>
+            <!-- Hub Sub-Navigation -->
+            <div class="hub-tabs">
+                <button class="hub-tab active" data-hubsub="overview" onclick="switchHubTab('overview')"><i class="fas fa-home"></i> Overview</button>
+                <button class="hub-tab" data-hubsub="growreferral" onclick="switchHubTab('growreferral')"><i class="fas fa-gift"></i> Invite &amp; Earn</button>
+                <button class="hub-tab" data-hubsub="datecheck" onclick="switchHubTab('datecheck')"><i class="fas fa-calendar-check"></i> Date Check</button>
+                <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')"><i class="fas fa-fish"></i> Reel in a Catfish</button>
+                <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')"><i class="fas fa-search"></i> Safety Search</button>
+                <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')"><i class="fas fa-eye"></i> Name Watch</button>
+                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')"><i class="fas fa-mug-hot"></i> Tea Talk</button>
+                <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
+            </div>
+
+            <!-- HUB: OVERVIEW -->
+            <div id="hub-overview" class="hub-sub active">
+                <!-- Start Safe Date Hero -->
+                <div class="safe-date-hero">
+                    <div class="safe-date-icon"><i class="fas fa-exclamation"></i></div>
+                    <h2>Start Safe Date</h2>
+                    <p>Check in with trusted contacts &amp; share your live location if needed.</p>
+                    <button class="btn-safe-date" onclick="switchHubTab('datecheck')"><i class="fas fa-shield-alt"></i> Start Safe Date</button>
+                    <div class="date-status">
+                        <span class="status-dot" id="hub-status-dot"></span>
+                        <span style="color:var(--text-muted);font-size:13px" id="hub-status-text">Status: Not Active</span>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" id="so-first-name" placeholder="Enter first name">
+
+                <!-- Date Timer Quick Access -->
+                <div class="date-timer-section">
+                    <div class="timer-header">Date Timer</div>
+                    <div class="timer-sub">Set check-in timer</div>
+                    <div class="timer-options">
+                        <button class="timer-btn" onclick="selectTimer(this, 60)">1 hr</button>
+                        <button class="timer-btn active" onclick="selectTimer(this, 120)">2 hr</button>
+                        <button class="timer-btn" onclick="selectTimer(this, 0)">Custom</button>
                     </div>
-                    <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" id="so-last-name" placeholder="Enter last name">
+                    <button class="btn-start-timer" onclick="switchHubTab('datecheck')"><i class="fas fa-play"></i> Start</button>
+                </div>
+
+                <!-- Quick Tools -->
+                <div class="quick-tools-label">Quick Tools</div>
+                <div class="quick-tools">
+                    <div class="tool-card" onclick="switchHubTab('search')">
+                        <div class="tool-icon pink"><i class="fas fa-search"></i></div>
+                        <h4>Safety Search</h4>
+                    </div>
+                    <div class="tool-card" onclick="switchHubTab('catfish')">
+                        <div class="tool-icon purple"><i class="fas fa-fish"></i></div>
+                        <h4>Reel in Catfish</h4>
+                    </div>
+                    <div class="tool-card" onclick="switchHubTab('namewatch')">
+                        <div class="tool-icon blue"><i class="fas fa-eye"></i></div>
+                        <h4>Name Watch</h4>
+                    </div>
+                    <div class="tool-card" onclick="switchHubTab('teatalk')">
+                        <div class="tool-icon green"><i class="fas fa-mug-hot"></i></div>
+                        <h4>Tea Talk</h4>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="so-city" placeholder="City (optional)">
+
+                <!-- How SafeTea Keeps You Safe -->
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px">
+                    <h3 style="color:var(--text-primary);font-size:16px;margin-bottom:16px"><i class="fas fa-shield-alt" style="color:var(--pink)"></i> How SafeTea Keeps You Safe</h3>
+                    <div style="display:flex;flex-direction:column;gap:14px">
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(232,160,181,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:var(--pink)"></i></div>
+                            <div><h4 style="color:var(--text-primary);font-size:13px;margin-bottom:3px">1. Check Out Before Your Date</h4><p style="color:var(--text-muted);font-size:12px;line-height:1.4">Enter who, where, and when. Add trusted contacts who get an SMS with all the details.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(90,160,210,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-sms" style="color:var(--blue)"></i></div>
+                            <div><h4 style="color:var(--text-primary);font-size:13px;margin-bottom:3px">2. Trusted Contacts Get an SMS</h4><p style="color:var(--text-muted);font-size:12px;line-height:1.4">They receive a text with date info and a live tracking link — no app needed.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(180,140,210,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#B48CD2"></i></div>
+                            <div><h4 style="color:var(--text-primary);font-size:13px;margin-bottom:3px">3. Live Tracking Page</h4><p style="color:var(--text-muted);font-size:12px;line-height:1.4">Contacts can check your status anytime — whether you're on the date and if you're overdue.</p></div>
+                        </div>
+                        <div style="display:flex;gap:14px;align-items:flex-start">
+                            <div style="min-width:38px;height:38px;background:rgba(76,175,80,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50"></i></div>
+                            <div><h4 style="color:var(--text-primary);font-size:13px;margin-bottom:3px">4. Check In When Safe</h4><p style="color:var(--text-muted);font-size:12px;line-height:1.4">Tap "Check In" and all your trusted contacts get a confirmation text instantly.</p></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <select id="so-state">
-                            <option value="">Select state</option>
-                            <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
-                            <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
-                            <option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option>
-                            <option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option>
-                            <option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option>
-                            <option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option>
-                            <option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option>
-                            <option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option>
-                            <option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option>
-                            <option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option>
-                            <option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option>
-                            <option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option>
-                            <option>Wisconsin</option><option>Wyoming</option>
+                </div>
+            </div>
+
+            <!-- HUB: SEARCH -->
+            <div id="hub-search" class="hub-sub" style="display:none">
+                <div class="search-section">
+                    <div class="search-header">
+                        <h2><img src="logo.png" alt="SafeTea" style="height:24px;vertical-align:middle"> Safety Search Tools</h2>
+                        <p>Look up important safety information before meeting someone new.</p>
+                    </div>
+                    <div class="search-tabs">
+                        <button class="search-tab active" data-search="offender"><img src="logo.png" alt="" style="height:18px;vertical-align:middle"> Sex Offender Search</button>
+                        <button class="search-tab" data-search="background"><i class="fas fa-file-alt"></i> Background Check</button>
+                    </div>
+                    <div id="search-offender" class="search-panel active">
+                        <h3><img src="logo.png" alt="" style="height:18px;vertical-align:middle"> Sex Offender Registry Search</h3>
+                        <p class="desc">Search the national sex offender registry to check if someone is listed.</p>
+                        <div class="disclaimer"><i class="fas fa-exclamation-triangle"></i><span>This search uses publicly available registry data. Always verify with local law enforcement.</span></div>
+                        <div class="form-row"><div class="form-group"><label>First Name</label><input type="text" id="so-first-name" placeholder="Enter first name"></div><div class="form-group"><label>Last Name</label><input type="text" id="so-last-name" placeholder="Enter last name"></div></div>
+                        <div class="form-row"><div class="form-group"><label>City</label><input type="text" id="so-city" placeholder="City (optional)"></div><div class="form-group"><label>State</label><select id="so-state"><option value="">Select state</option><option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option></select></div></div>
+                        <button class="btn-search" onclick="searchOffenders()"><i class="fas fa-search"></i> Search Registry</button>
+                        <div id="offender-results" class="search-results"></div>
+                    </div>
+                    <div id="search-background" class="search-panel">
+                        <h3><i class="fas fa-file-alt"></i> Background Check</h3>
+                        <p class="desc">Run a real background check — searches social media profiles, criminal records, mugshot databases, court records, data broker sites, and news mentions.</p>
+                        <div class="disclaimer"><i class="fas fa-exclamation-triangle"></i><span>Background checks use public records and web search. This is not a substitute for professional due diligence.</span></div>
+                        <div class="form-row"><div class="form-group"><label>Full Name</label><input type="text" id="bg-name" placeholder="Enter full name"></div></div>
+                        <div class="form-row"><div class="form-group"><label>City</label><input type="text" id="bg-city" placeholder="City"></div><div class="form-group"><label>State</label><input type="text" id="bg-state" placeholder="State"></div></div>
+                        <div class="form-row"><div class="form-group"><label>Approximate Age (optional)</label><input type="number" id="bg-age" placeholder="Age"></div></div>
+                        <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
+                        <div id="background-results" class="search-results"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: NAME WATCH -->
+            <div id="hub-namewatch" class="hub-sub" style="display:none">
+                <div class="nw-section">
+                    <div class="nw-header">
+                        <h2><i class="fas fa-eye" style="color:var(--pink)"></i> Name Watch <span class="plus-badge">SafeTea+</span></h2>
+                        <p style="color:var(--text-muted);font-size:14px;margin-top:4px">Monitor names across SafeTea posts. Get alerts when someone is mentioned.</p>
+                    </div>
+                    <div id="nw-upgrade-wall" style="display:none;text-align:center;padding:40px 20px;background:var(--bg-card);border-radius:12px;border:1px solid var(--border)">
+                        <h3 style="color:var(--pink)"><i class="fas fa-lock"></i> SafeTea+ Feature</h3>
+                        <p style="color:var(--text-muted);margin:12px 0 20px">Name Watch is available with SafeTea+. Upgrade to monitor names and get real-time alerts.</p>
+                        <button class="btn-post" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto;display:block">Upgrade to SafeTea+</button>
+                    </div>
+                    <div id="nw-content" style="display:none">
+                        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+                            <div style="display:flex;gap:8px"><input type="text" id="nw-input" placeholder="Enter a name to watch..." style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;outline:none"><button class="btn-post" onclick="addWatchedName()" style="padding:10px 20px"><i class="fas fa-plus"></i> Watch</button></div>
+                        </div>
+                        <div id="nw-list"></div>
+                        <div id="nw-matches" style="margin-top:16px"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: DATE CHECK -->
+            <div id="hub-datecheck" class="hub-sub" style="display:none">
+                <div class="datecheck-section">
+                    <div class="datecheck-header">
+                        <h2><i class="fas fa-calendar-check" style="color:var(--pink)"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
+                        <p>Share your date details with trusted contacts. They'll get an SMS with your SafeTea Report and a tracking link.</p>
+                    </div>
+                    <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
+                        <h3><i class="fas fa-lock" style="color:var(--pink)"></i> SafeTea+ Feature</h3>
+                        <p style="color:var(--text-muted);margin-bottom:20px">Date Check-In/Check-Out is a SafeTea+ feature. Upgrade to share your date details with trusted contacts via SMS.</p>
+                        <button class="dc-btn dc-btn-primary" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto">Upgrade to SafeTea+</button>
+                    </div>
+                    <div id="dc-premium-content" style="display:none">
+                        <div class="dc-howto">
+                            <h4><i class="fas fa-info-circle"></i> How It Works</h4>
+                            <ol>
+                                <li><strong>Check Out</strong> — Upload a photo of your date, enter the location, how you're getting there, and add trusted contacts.</li>
+                                <li><strong>SafeTea Report</strong> — A shareable safety report is generated with all your date details.</li>
+                                <li><strong>Share It</strong> — Send the report via SMS or through the SafeTea inbox to your trusted contacts.</li>
+                                <li><strong>Live Tracking</strong> — Your contacts can see your status in real time. If you're overdue, they'll know.</li>
+                                <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation.</li>
+                            </ol>
+                        </div>
+                        <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
+                            <h3><i class="fas fa-map-marker-alt" style="color:#B48CD2"></i> Active Date</h3>
+                            <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#B48CD2;font-weight:500">Currently on date</span></div>
+                            <div id="dc-active-photo" style="text-align:center;margin-bottom:12px;display:none"><img id="dc-active-photo-img" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--pink)" alt="Date photo"></div>
+                            <div style="margin-bottom:12px">
+                                <div style="color:var(--text-primary);font-weight:600;font-size:16px" id="dc-active-name"></div>
+                                <div style="color:var(--text-muted);font-size:13px" id="dc-active-venue"></div>
+                                <div style="color:var(--text-muted);font-size:13px" id="dc-active-transport"></div>
+                                <div style="color:var(--text-muted);font-size:13px" id="dc-active-time"></div>
+                            </div>
+                            <div style="text-align:center;margin:16px 0">
+                                <div class="dc-timer" id="dc-timer">0m 0s</div>
+                                <div style="font-size:11px;color:var(--text-muted)">Time since check-out</div>
+                            </div>
+                            <button class="dc-btn dc-btn-success" onclick="dateCheckIn()"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
+                            <div style="display:flex;gap:8px;margin-top:8px">
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="viewSafeTeaReport()"><i class="fas fa-file-alt"></i> View Report</button>
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Link</button>
+                            </div>
+                        </div>
+                        <div id="dc-report" class="datecheck-card" style="display:none">
+                            <div id="dc-report-content"></div>
+                            <div style="margin-top:16px;display:flex;gap:8px">
+                                <button class="dc-btn dc-btn-primary" style="flex:1" onclick="shareReportSMS()"><i class="fas fa-sms"></i> Share via SMS</button>
+                                <button class="dc-btn dc-btn-outline" style="flex:1" onclick="shareReportInbox()"><i class="fas fa-envelope"></i> Send to Inbox</button>
+                            </div>
+                            <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="closeReport()"><i class="fas fa-times"></i> Close Report</button>
+                        </div>
+                        <div id="dc-form" class="datecheck-card">
+                            <h3><i class="fas fa-door-open" style="color:var(--pink)"></i> Check Out for a Date</h3>
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-camera"></i> Upload a Photo of Your Date *</label>
+                                <div id="dc-photo-upload" style="border:2px dashed var(--border-light);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s" onclick="document.getElementById('dc-photo-file').click()">
+                                    <div id="dc-photo-preview" style="display:none;margin-bottom:8px"><img id="dc-photo-preview-img" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid var(--pink)" alt="Preview"></div>
+                                    <div id="dc-photo-placeholder"><i class="fas fa-cloud-upload-alt" style="font-size:28px;color:var(--text-muted);display:block;margin-bottom:8px"></i><span style="color:var(--text-muted);font-size:13px">Tap to upload a photo (screenshot from their profile, etc.)</span></div>
+                                    <input type="file" id="dc-photo-file" accept="image/*" style="display:none" onchange="handleDatePhotoUpload(this)">
+                                </div>
+                                <div class="dc-form-group" style="margin-top:8px"><input type="text" id="dc-photo-url" placeholder="Or paste an image URL instead"></div>
+                            </div>
+                            <div class="dc-form-group"><label><i class="fas fa-user"></i> Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
+                            <div class="dc-form-group"><label><i class="fas fa-map-marker-alt"></i> Where will the date be? *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park name..."></div>
+                            <div class="dc-form-group"><label>Full Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago, IL"></div>
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-car"></i> How are you getting there? *</label>
+                                <select id="dc-transportation">
+                                    <option value="">Select transportation...</option>
+                                    <option value="driving">Driving myself</option>
+                                    <option value="rideshare">Rideshare (Uber/Lyft)</option>
+                                    <option value="public_transit">Public transit</option>
+                                    <option value="walking">Walking</option>
+                                    <option value="biking">Biking</option>
+                                    <option value="taxi">Taxi</option>
+                                    <option value="friend_drop">Friend dropping me off</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="dc-form-group" id="dc-transport-details-wrap" style="display:none">
+                                <label>Transportation Details</label>
+                                <input type="text" id="dc-transport-details" placeholder="e.g. license plate, ride details, bus route...">
+                            </div>
+                            <div class="dc-form-row">
+                                <div class="dc-form-group"><label><i class="fas fa-clock"></i> Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div>
+                                <div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div>
+                            </div>
+                            <div class="dc-form-group"><label><i class="fas fa-sticky-note"></i> Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
+                            <div class="dc-form-group">
+                                <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll receive your SafeTea Report)</label>
+                                <div id="dc-contacts-list"><div class="dc-contact-row"><input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button></div></div>
+                                <button class="dc-btn dc-btn-outline" style="margin-top:8px;width:auto;padding:6px 16px;font-size:12px" onclick="addContactRow()"><i class="fas fa-plus"></i> Add Contact</button>
+                            </div>
+                            <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out &amp; Generate SafeTea Report</button>
+                        </div>
+                        <div class="datecheck-card"><h3><i class="fas fa-history" style="color:var(--text-muted)"></i> Recent Dates</h3><div id="dc-history"><p style="color:var(--text-muted);font-size:13px;text-align:center;padding:12px">No date history yet.</p></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: CATFISH CHECK -->
+            <div id="hub-catfish" class="hub-sub" style="display:none">
+                <div class="catfish-section">
+                    <div style="margin-bottom:20px">
+                        <h2 style="color:var(--text-primary)"><i class="fas fa-fish" style="color:var(--pink)"></i> Reel in a Catfish</h2>
+                        <p style="color:var(--text-muted);font-size:14px;margin-top:4px">Analyze a profile photo for signs of catfishing — EXIF metadata, editing software, reverse image search.</p>
+                    </div>
+                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px">
+                        <div class="dc-form-group"><label>Upload Photo *</label>
+                            <div id="cf-upload-area" style="border:2px dashed var(--border-pink);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(20,20,40,0.3)" onclick="document.getElementById('cf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--pink)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();handleCatfishFileDrop(event)">
+                                <i class="fas fa-camera" style="font-size:28px;color:var(--pink);display:block;margin-bottom:10px"></i>
+                                <span style="color:var(--text-secondary);font-size:14px;font-weight:500">Tap to upload or drag a photo</span>
+                                <span style="display:block;color:var(--text-muted);font-size:12px;margin-top:4px">JPG, PNG, or WEBP up to 5MB</span>
+                            </div>
+                            <input type="file" id="cf-file-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleCatfishFile(this)">
+                            <input type="hidden" id="cf-image-url" value="">
+                            <input type="hidden" id="cf-image-data" value="">
+                        </div>
+                        <div class="dc-form-group"><label>Profile Name (optional)</label><input type="text" id="cf-profile-name" placeholder="Their display name"></div>
+                        <div class="dc-form-group"><label>Platform</label>
+                            <select id="cf-platform" style="width:100%;background:var(--bg-input);border:1px solid var(--border-light);color:var(--text-primary);padding:10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px">
+                                <option value="">Select platform</option>
+                                <option>Tinder</option><option>Hinge</option><option>Bumble</option>
+                                <option>OkCupid</option><option>Match</option><option>Instagram</option>
+                                <option>Facebook</option><option>Other</option>
+                            </select>
+                        </div>
+                        <button class="btn-search" onclick="runCatfishCheck()"><i class="fas fa-fish"></i> Analyze Photo</button>
+                        <div id="cf-preview" style="margin-top:12px;display:none"><img id="cf-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--border)"></div>
+                        <div id="catfish-results" class="search-results" style="margin-top:16px"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HUB: TEA TALK -->
+            <div id="hub-teatalk" class="hub-sub" style="display:none">
+                <div style="margin-bottom:20px">
+                    <h2 style="color:var(--text-primary)"><i class="fas fa-mug-hot" style="color:var(--pink)"></i> Tea Talk</h2>
+                    <p style="color:var(--text-muted);font-size:14px;margin-top:4px">Spill the tea, stay safe, and protect each other. Your voice matters.</p>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+                    <h3 style="color:var(--text-primary);font-size:15px;margin-bottom:12px"><i class="fas fa-mug-hot" style="color:var(--pink)"></i> Spill the Tea</h3>
+                    <textarea id="hub-community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)" style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:10px;padding:14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
+                    <div style="display:flex;gap:12px;margin-top:8px">
+                        <select id="hub-community-category" style="background:var(--bg-tertiary);border:1px solid var(--border-light);color:var(--text-muted);padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
+                            <option value="general">General</option>
+                            <option value="experience">Experience</option>
+                            <option value="warning">Warning</option>
+                            <option value="question">Question</option>
+                            <option value="positive">Positive</option>
                         </select>
+                        <input type="text" id="hub-community-city" placeholder="Your city (optional)" style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:8px;padding:8px 12px;color:var(--text-primary);font-size:13px;outline:none">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+                        <label style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px"><input type="checkbox" id="hub-community-anon" checked> Post anonymously</label>
+                        <button class="btn-post" id="hub-community-submit" onclick="hubSubmitCommunityPost()"><i class="fas fa-paper-plane"></i> Post</button>
                     </div>
                 </div>
-                <button class="btn-search" onclick="searchOffenders()"><i class="fas fa-search"></i> Search Registry</button>
-                <div id="offender-results" class="search-results"></div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+                    <h4 style="color:var(--text-primary);font-size:14px;margin-bottom:8px"><i class="fas fa-info-circle" style="color:var(--pink)"></i> Community Guidelines</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <span style="font-size:11px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> First name + last initial only</span>
+                        <span style="font-size:11px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Share experiences, not revenge</span>
+                        <span style="font-size:11px;color:var(--text-muted);background:var(--bg-tertiary);padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Be honest and factual</span>
+                    </div>
+                </div>
+                <div id="hub-community-posts">
+                    <div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading discussions...</div>
+                </div>
             </div>
 
-            <!-- Background Check Panel -->
-            <div id="search-background" class="search-panel">
-                <h3><i class="fas fa-file-alt"></i> Background Check</h3>
-                <p class="desc">Run a basic background check before meeting someone from a dating app. Includes criminal records, identity verification, and public records.</p>
-                <div class="disclaimer">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>Background checks use public records and may not include all information. This is not a substitute for professional due diligence. Results are for personal safety purposes only.</span>
+            <!-- HUB: REFER A GOOD ONE -->
+            <div id="hub-referral" class="hub-sub" style="display:none">
+                <div style="margin-bottom:20px">
+                    <h2 style="color:var(--text-primary)"><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h2>
+                    <p style="color:var(--text-muted);font-size:14px;margin-top:4px">Know a genuinely good guy? Vouch for him here. First name + last initial only.</p>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="bg-name" placeholder="Enter full name">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+                    <h3 style="color:var(--text-primary);font-size:15px;margin-bottom:12px"><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Submit a Referral</h3>
+                    <div style="display:flex;gap:12px;margin-bottom:12px">
+                        <input type="text" id="hub-referral-name" placeholder="His first name + last initial (e.g. David T.)" style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;outline:none">
+                        <input type="text" id="hub-referral-city" placeholder="City" style="width:140px;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;outline:none">
+                    </div>
+                    <select id="hub-referral-relation" style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-light);color:var(--text-muted);padding:10px 14px;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px">
+                        <option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option>
+                    </select>
+                    <textarea id="hub-referral-body" placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:10px;padding:14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
+                    <div style="margin-top:12px">
+                        <label for="hub-referral-photo" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:var(--bg-tertiary);border:1px dashed var(--border-light);border-radius:8px;color:var(--text-muted);font-size:13px;cursor:pointer">
+                            <i class="fas fa-camera"></i> Add a photo <span style="font-size:11px">(optional)</span>
+                        </label>
+                        <input type="file" id="hub-referral-photo" accept="image/*" onchange="handleReferralPhoto(this)" style="display:none">
+                        <div id="hub-referral-photo-preview" style="display:none;margin-top:10px;position:relative">
+                            <img id="hub-referral-photo-img" style="max-width:200px;max-height:200px;border-radius:10px;border:2px solid rgba(46,204,113,0.3);object-fit:cover">
+                            <button onclick="removeReferralPhoto()" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center">&times;</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+                        <button class="btn-post" style="background:linear-gradient(135deg,#2ecc71,#27ae60)" onclick="hubSubmitReferral()"><i class="fas fa-heart"></i> Submit Referral</button>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="bg-city" placeholder="City">
-                    </div>
-                    <div class="form-group">
-                        <label>State</label>
-                        <input type="text" id="bg-state" placeholder="State">
-                    </div>
+                <div id="hub-referral-posts">
+                    <div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Approximate Age (optional)</label>
-                        <input type="number" id="bg-age" placeholder="Age">
-                    </div>
-                </div>
-                <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
-                <div id="background-results" class="search-results"></div>
             </div>
+
+            <!-- HUB: INVITE & EARN -->
+            <div id="hub-growreferral" class="hub-sub" style="display:none">
+                <div style="text-align:center;padding:20px 16px 24px">
+                    <div style="width:64px;height:64px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-heart" style="font-size:28px;color:#fff"></i></div>
+                    <h2 style="font-size:22px;font-weight:800;color:var(--text-primary);margin-bottom:6px">Help Your Friends Date Safer</h2>
+                    <p style="font-size:14px;color:var(--text-muted);line-height:1.5;max-width:340px;margin:0 auto">Every invite makes someone's next date a little safer — and earns you free Premium.</p>
+                </div>
+                <div id="grow-promo-banner" style="background:linear-gradient(135deg,rgba(242,112,89,0.12),rgba(232,160,181,0.12));border:1px solid var(--border-pink);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+                    <i class="fas fa-fire" style="color:#f27059;font-size:18px"></i>
+                    <div style="flex:1">
+                        <div style="font-size:14px;font-weight:600;color:var(--text-primary)">Limited-Time: Double Rewards</div>
+                        <div id="grow-promo-countdown" style="font-size:12px;color:var(--text-muted)">Promo ends June 22, 2026 — invite now before it's gone</div>
+                    </div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px">
+                    <h3 style="font-size:16px;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;gap:10px"><i class="fas fa-paper-plane" style="color:var(--pink)"></i> Send Your Invite</h3>
+                    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Text your link to friends. When they sign up, you both win — they get safety tools, you get free Premium.</p>
+                    <div style="display:flex;gap:8px;margin-bottom:12px">
+                        <input type="text" id="grow-share-url" readonly style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:8px;padding:10px 14px;color:var(--pink);font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
+                        <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="shareReferralSMS()" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sms"></i> Text a Friend</button>
+                        <button onclick="shareReferralNative()" style="flex:1;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-nodes"></i> Share Link</button>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-bottom:20px">
+                    <div id="grow-ref-count" style="font-size:42px;font-weight:800;background:linear-gradient(135deg,#f27059,#E8A0B5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">0</div>
+                    <div style="font-size:13px;color:var(--text-muted)">friends joined through your link</div>
+                </div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px">
+                    <h3 style="font-size:15px;color:var(--text-primary);margin-bottom:16px"><i class="fas fa-trophy" style="color:var(--pink)"></i> Reward Tiers</h3>
+                    <div id="grow-tier-3" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-tertiary);border-radius:10px;margin-bottom:10px;border:1px solid var(--border)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(232,160,181,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i id="grow-tier-3-icon" class="fas fa-lock" style="color:var(--text-muted);font-size:16px"></i></div>
+                        <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">3 Friends</div><div style="font-size:12px;color:var(--text-muted)">30 days free SafeTea+</div></div>
+                        <button id="grow-claim-3" onclick="claimGrowReward(3)" style="display:none;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-3" style="font-size:12px;font-weight:600;color:var(--text-muted)"></span>
+                    </div>
+                    <div id="grow-tier-10" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-tertiary);border-radius:10px;margin-bottom:10px;border:1px solid var(--border)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i id="grow-tier-10-icon" class="fas fa-lock" style="color:var(--text-muted);font-size:16px"></i></div>
+                        <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">10 Friends</div><div style="font-size:12px;color:var(--text-muted)">30 days free SafeTea Pro</div></div>
+                        <button id="grow-claim-10" onclick="claimGrowReward(10)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-10" style="font-size:12px;font-weight:600;color:var(--text-muted)"></span>
+                    </div>
+                    <div id="grow-tier-25" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border)">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i id="grow-tier-25-icon" class="fas fa-lock" style="color:var(--text-muted);font-size:16px"></i></div>
+                        <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-primary)">25 Friends</div><div style="font-size:12px;color:var(--text-muted)">90 days free SafeTea Pro</div></div>
+                        <button id="grow-claim-25" onclick="claimGrowReward(25)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
+                        <span id="grow-status-25" style="font-size:12px;font-weight:600;color:var(--text-muted)"></span>
+                    </div>
+                    <div style="margin-top:16px">
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:6px"><span>Progress</span><span id="grow-progress-text">0 / 25</span></div>
+                        <div style="height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden"><div id="grow-progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#f27059,#E8A0B5);border-radius:3px;transition:width 0.5s ease"></div></div>
+                    </div>
+                </div>
+                <div id="grow-active-rewards" style="display:none;background:var(--bg-card);border:1px solid rgba(46,204,113,0.15);border-radius:14px;padding:20px;margin-bottom:20px">
+                    <h3 style="font-size:15px;color:#2ecc71;margin-bottom:12px"><i class="fas fa-check-circle"></i> Active Rewards</h3>
+                    <div id="grow-rewards-list"></div>
+                </div>
+                <div id="grow-referrals-list" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px">
+                    <h3 style="font-size:15px;color:var(--text-primary);margin-bottom:12px"><i class="fas fa-users" style="color:var(--pink)"></i> Your Referrals</h3>
+                    <div id="grow-friends-list" style="color:var(--text-muted);font-size:13px">No referrals yet. Share your link to get started!</div>
+                </div>
+                <div style="text-align:center;margin-top:16px">
+                    <span id="grow-lifetime-cap" style="font-size:12px;color:var(--text-muted)"><i class="fas fa-info-circle"></i> 0 / 180 free days used</span>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- NAME WATCH TAB -->
-    <div id="tab-namewatch" class="tab-section">
-        <div class="nw-section">
-            <div class="nw-header">
-                <h2><i class="fas fa-eye"></i> Name Watch</h2>
-            </div>
-
-            <!-- Pro gate (shown to non-Pro users) -->
-            <div id="nw-pro-gate" style="display:none">
-                <div class="premium-gate">
-                    <div class="premium-gate-content">
-                        <h2><i class="fas fa-eye" style="color:#E8A0B5;margin-right:8px"></i> Name Watch</h2>
-                        <p>Monitor names of people you're dating. Get instant alerts when anyone in your city posts about them.</p>
-                        <div class="premium-gate-price">$9.99<span>/mo</span></div>
-                        <button class="btn-upgrade" onclick="window.location.href='/login.html'"><i class="fas fa-crown"></i> Upgrade to Pro</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pro content (shown to Pro users) -->
-            <div id="nw-pro-content" style="display:none">
-                <!-- Add Name Form -->
-                <div class="nw-add-form">
-                    <h3><i class="fas fa-plus-circle"></i> Add a Name to Watch</h3>
-                    <div class="nw-add-row">
-                        <input type="text" id="nw-name-input" placeholder="Enter a name (e.g., Jake Morrison, Tyler R.)">
-                        <button class="btn-nw-add" onclick="addWatchedName()"><i class="fas fa-plus"></i> Watch</button>
-                    </div>
-                    <p class="nw-hint"><i class="fas fa-lock" style="margin-right:4px"></i> Your watch list is completely private — only you can see it. We'll auto-generate search terms including initials and partial matches.</p>
-                </div>
-
-                <!-- Watched Names List -->
-                <div class="nw-list" id="nw-watched-list">
-                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your watch list...</div>
-                </div>
-
-                <!-- Matches Section -->
-                <div class="nw-matches-section">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                        <h3 style="margin-bottom:0"><i class="fas fa-bell"></i> Match Alerts</h3>
-                        <button class="btn-nw-action" onclick="markAllMatchesRead()"><i class="fas fa-check-double"></i> Mark All Read</button>
-                    </div>
-                    <div id="nw-matches-list">
-                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading matches...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PROFILE TAB -->
+    <!-- ===== PROFILE TAB ===== -->
     <div id="tab-profile" class="tab-section">
         <div class="profile-section">
             <div class="profile-card">
@@ -600,165 +1312,93 @@
                     <span class="premium-badge"><i class="fas fa-crown"></i> Premium</span>
                 </div>
             </div>
-
-            <!-- Avatar Customization Section -->
             <div class="profile-form" style="margin-bottom:24px">
-                <h3><i class="fas fa-palette" style="color:#E8A0B5"></i> Your Avatar</h3>
+                <h3><i class="fas fa-palette" style="color:var(--pink)"></i> Your Avatar</h3>
                 <div class="avatar-preview-row">
                     <div class="avatar-preview-large" id="avatar-preview">?</div>
                     <div class="avatar-preview-name" id="avatar-preview-name">Anonymous</div>
                 </div>
                 <div class="avatar-options">
-                    <label class="avatar-option">
-                        <input type="radio" name="avatar-type" value="initial" checked onchange="onAvatarTypeChange(this.value)">
-                        <div class="avatar-option-content">
-                            <strong>Keep Anonymous</strong>
-                            <span>Initial + color (default)</span>
-                        </div>
-                    </label>
-                    <label class="avatar-option">
-                        <input type="radio" name="avatar-type" value="custom" onchange="onAvatarTypeChange(this.value)">
-                        <div class="avatar-option-content">
-                            <strong>Custom Display Name</strong>
-                            <span>Choose your own name</span>
-                        </div>
-                    </label>
-                    <div id="custom-name-input" class="avatar-sub-option" style="display:none">
-                        <input type="text" id="edit-custom-name" placeholder="Enter display name" maxlength="30">
-                    </div>
-                    <label class="avatar-option">
-                        <input type="radio" name="avatar-type" value="generated" onchange="onAvatarTypeChange(this.value)">
-                        <div class="avatar-option-content">
-                            <strong>Generate Random Name</strong>
-                            <span>Fun, anonymous pseudonym</span>
-                        </div>
-                    </label>
-                    <div id="generated-name-input" class="avatar-sub-option" style="display:none">
-                        <div class="generated-name-row">
-                            <span id="generated-name-display" class="generated-name-text">Click generate...</span>
-                            <button class="btn-generate" onclick="generateRandomName()"><i class="fas fa-sync-alt"></i> New</button>
-                        </div>
-                    </div>
-                    <label class="avatar-option">
-                        <input type="radio" name="avatar-type" value="upload" onchange="onAvatarTypeChange(this.value)">
-                        <div class="avatar-option-content">
-                            <strong>Upload Avatar Photo</strong>
-                            <span class="premium-badge-inline"><i class="fas fa-crown"></i> $5.99</span>
-                        </div>
-                    </label>
+                    <label class="avatar-option"><input type="radio" name="avatar-type" value="initial" checked onchange="onAvatarTypeChange(this.value)"><div class="avatar-option-content"><strong>Keep Anonymous</strong><span>Initial + color (default)</span></div></label>
+                    <label class="avatar-option"><input type="radio" name="avatar-type" value="custom" onchange="onAvatarTypeChange(this.value)"><div class="avatar-option-content"><strong>Custom Display Name</strong><span>Choose your own name</span></div></label>
+                    <div id="custom-name-input" class="avatar-sub-option" style="display:none"><input type="text" id="edit-custom-name" placeholder="Enter display name" maxlength="30"></div>
+                    <label class="avatar-option"><input type="radio" name="avatar-type" value="generated" onchange="onAvatarTypeChange(this.value)"><div class="avatar-option-content"><strong>Generate Random Name</strong><span>Fun, anonymous pseudonym</span></div></label>
+                    <div id="generated-name-input" class="avatar-sub-option" style="display:none"><div class="generated-name-row"><span id="generated-name-display" class="generated-name-text">Click generate...</span><button class="btn-generate" onclick="generateRandomName()"><i class="fas fa-sync-alt"></i> New</button></div></div>
+                    <label class="avatar-option"><input type="radio" name="avatar-type" value="upload" onchange="onAvatarTypeChange(this.value)"><div class="avatar-option-content"><strong>Upload Avatar Photo</strong><span class="premium-badge-inline"><i class="fas fa-crown"></i> $5.99</span></div></label>
                     <div id="upload-avatar-input" class="avatar-sub-option" style="display:none">
-                        <div id="upload-avatar-gate" style="display:none">
-                            <div class="premium-mini-gate">
-                                <i class="fas fa-lock"></i> Upgrade to Premium to upload a photo
-                                <button class="btn-upgrade-sm" onclick="showUpgradePrompt()">Upgrade</button>
-                            </div>
-                        </div>
-                        <div id="upload-avatar-form" style="display:none">
-                            <button class="btn-upload" onclick="document.getElementById('avatar-file-input').click()"><i class="fas fa-camera"></i> Choose Photo</button>
-                            <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
-                            <div id="avatar-upload-preview" style="display:none">
-                                <img id="avatar-preview-img" src="" alt="Avatar preview" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-top:8px">
-                            </div>
-                        </div>
+                        <div id="upload-avatar-gate" style="display:none"><div class="premium-mini-gate"><i class="fas fa-lock"></i> Upgrade to Premium to upload a photo<button class="btn-upgrade-sm" onclick="showUpgradePrompt()">Upgrade</button></div></div>
+                        <div id="upload-avatar-form" style="display:none"><button class="btn-upload" onclick="document.getElementById('avatar-file-input').click()"><i class="fas fa-camera"></i> Choose Photo</button><input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)"><div id="avatar-upload-preview" style="display:none"><img id="avatar-preview-img" src="" alt="Avatar preview" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-top:8px"></div></div>
                     </div>
                 </div>
-                <div class="avatar-color-picker">
-                    <label>Color</label>
-                    <div class="color-swatches" id="color-swatches"></div>
-                </div>
+                <div class="avatar-color-picker"><label>Color</label><div class="color-swatches" id="color-swatches"></div></div>
                 <button class="btn-save" onclick="saveAvatar()" style="margin-top:16px"><i class="fas fa-palette"></i> Save Avatar</button>
             </div>
-
-            <!-- Edit Profile Section -->
             <div class="profile-form">
                 <h3>Edit Profile</h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Display Name</label>
-                        <input type="text" id="edit-name" placeholder="Your display name">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>City</label>
-                        <input type="text" id="edit-city" placeholder="Your city">
-                    </div>
-                    <div class="form-group">
-                        <label>Bio</label>
-                        <input type="text" id="edit-bio" placeholder="Short bio (optional)">
-                    </div>
-                </div>
+                <div class="form-row"><div class="form-group"><label>Display Name</label><input type="text" id="edit-name" placeholder="Your display name"></div></div>
+                <div class="form-row"><div class="form-group"><label>City</label><input type="text" id="edit-city" placeholder="Your city"></div><div class="form-group"><label>Bio</label><input type="text" id="edit-bio" placeholder="Short bio (optional)"></div></div>
                 <button class="btn-save" onclick="saveProfile()"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+            <div class="profile-form" style="margin-top:24px">
+                <h3><i class="fas fa-life-ring" style="color:var(--pink)"></i> Help &amp; Contact</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                    <a href="mailto:support@getsafetea.app" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);font-size:14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.3)'" onmouseout="this.style.borderColor=''">
+                        <i class="fas fa-headset" style="color:var(--pink);font-size:18px;width:24px;text-align:center"></i>
+                        <div><div style="font-weight:600">Customer Support</div><div style="color:var(--text-muted);font-size:12px;margin-top:2px">support@getsafetea.app</div></div>
+                    </a>
+                    <a href="mailto:info@getsafetea.app" style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);font-size:14px;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.3)'" onmouseout="this.style.borderColor=''">
+                        <i class="fas fa-envelope" style="color:#3498db;font-size:18px;width:24px;text-align:center"></i>
+                        <div><div style="font-weight:600">General Inquiries</div><div style="color:var(--text-muted);font-size:12px;margin-top:2px">info@getsafetea.app</div></div>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
+    <!-- FAB -->
+    <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
+
+    <!-- MOBILE TAB BAR -->
     <div class="mobile-tab-bar">
         <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
         <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
-        <a data-tab="search" onclick="switchTab('search')"><i class="fas fa-search"></i><span>Search</span></a>
-        <a data-tab="namewatch" onclick="switchTab('namewatch')"><i class="fas fa-eye"></i><span>Watch</span></a>
+        <a data-tab="hub" onclick="switchTab('hub')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
+    <!-- THEME TOGGLE SCRIPT -->
+    <script>
+    function toggleTheme() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('safetea-theme', next);
+        var icon = document.querySelector('#theme-toggle i');
+        icon.className = next === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+    // Load saved theme
+    (function() {
+        var saved = localStorage.getItem('safetea-theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+            var icon = document.querySelector('#theme-toggle i');
+            if (icon) icon.className = saved === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+    })();
+    // Timer selection helper
+    function selectTimer(btn, mins) {
+        document.querySelectorAll('.timer-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+    }
+    </script>
+
+    <!-- APP JS -->
     <script src="app.js"></script>
 
-    <!-- DATE CHECK-IN/CHECK-OUT TAB -->
-    <div id="tab-datecheck" class="tab-section">
-        <div class="datecheck-section">
-            <div class="datecheck-header">
-                <h2><i class="fas fa-calendar-check" style="color:#f27059"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
-                <p>Share your date details with trusted contacts. They'll get an SMS with the info and a tracking link.</p>
-            </div>
-            <div id="dc-upgrade-wall" class="datecheck-card" style="display:none;text-align:center;padding:40px 20px">
-                <h3><i class="fas fa-lock" style="color:#E8A0B5"></i> SafeTea+ Feature</h3>
-                <p style="color:#8080A0;margin-bottom:20px">Date Check-In/Check-Out is a SafeTea+ feature. Upgrade to share your date details with trusted contacts via SMS and get safety tracking.</p>
-                <button class="dc-btn dc-btn-primary" onclick="showUpgradePrompt()" style="max-width:250px;margin:0 auto">Upgrade to SafeTea+</button>
-            </div>
-            <div id="dc-premium-content" style="display:none">
-                <div class="dc-howto">
-                    <h4><i class="fas fa-info-circle"></i> How It Works</h4>
-                    <ol>
-                        <li><strong>Check Out</strong> — Before your date, fill in who you're meeting, where, and when. Add your trusted contacts (mom, friend, roommate).</li>
-                        <li><strong>SMS Alert</strong> — Your contacts receive a text with the date details and a live tracking link.</li>
-                        <li><strong>Live Tracking</strong> — Your contacts can see your status in real time via the tracking link. If you're overdue, they'll know.</li>
-                        <li><strong>Check In</strong> — After your date, tap "Check In — I'm Safe" and everyone gets a confirmation text.</li>
-                    </ol>
-                </div>
-                <div id="dc-active" class="datecheck-card dc-active-date" style="display:none">
-                    <h3><i class="fas fa-map-marker-alt" style="color:#FFA500"></i> Active Date</h3>
-                    <div class="dc-status"><div class="dc-status-dot"></div><span style="color:#FFA500;font-weight:500">Currently on date</span></div>
-                    <div style="margin-bottom:12px">
-                        <div style="color:#fff;font-weight:600;font-size:16px" id="dc-active-name"></div>
-                        <div style="color:#8080A0;font-size:13px" id="dc-active-venue"></div>
-                        <div style="color:#8080A0;font-size:13px" id="dc-active-time"></div>
-                    </div>
-                    <div style="text-align:center;margin:16px 0">
-                        <div class="dc-timer" id="dc-timer">0m 0s</div>
-                        <div style="font-size:11px;color:#8080A0">Time since check-out</div>
-                    </div>
-                    <button class="dc-btn dc-btn-success" onclick="dateCheckIn()"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
-                    <button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="shareDateLink()"><i class="fas fa-share-alt"></i> Share Tracking Link</button>
-                </div>
-                <div id="dc-form" class="datecheck-card">
-                    <h3><i class="fas fa-door-open" style="color:#f27059"></i> Check Out for a Date</h3>
-                    <div class="dc-form-group"><label>Who are you meeting? *</label><input type="text" id="dc-date-name" placeholder="Their name (e.g. John from Hinge)"></div>
-                    <div class="dc-form-row"><div class="dc-form-group"><label>Venue / Location *</label><input type="text" id="dc-venue-name" placeholder="Restaurant, bar, park..."></div><div class="dc-form-group"><label>Address</label><input type="text" id="dc-venue-address" placeholder="123 Main St, Chicago"></div></div>
-                    <div class="dc-form-row"><div class="dc-form-group"><label>Date &amp; Time *</label><input type="datetime-local" id="dc-scheduled-time"></div><div class="dc-form-group"><label>Expected Back By</label><input type="datetime-local" id="dc-return-time"></div></div>
-                    <div class="dc-form-group"><label>Notes (optional)</label><textarea id="dc-notes" rows="2" placeholder="Met on Hinge, first date, seems nice..."></textarea></div>
-                    <div class="dc-form-group">
-                        <label><i class="fas fa-user-friends"></i> Trusted Contacts (they'll get an SMS)</label>
-                        <div id="dc-contacts-list"><div class="dc-contact-row"><input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button></div></div>
-                        <button class="dc-btn dc-btn-outline" style="margin-top:8px;width:auto;padding:6px 16px;font-size:12px" onclick="addContactRow()"><i class="fas fa-plus"></i> Add Contact</button>
-                    </div>
-                    <button class="dc-btn dc-btn-primary" onclick="dateCheckOut()" id="dc-checkout-btn"><i class="fas fa-door-open"></i> Check Out</button>
-                </div>
-                <div class="datecheck-card"><h3><i class="fas fa-history" style="color:#A0A0C0"></i> Recent Dates</h3><div id="dc-history"><p style="color:#666;font-size:13px;text-align:center;padding:12px">No date history yet.</p></div></div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

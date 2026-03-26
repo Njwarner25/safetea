@@ -11,7 +11,6 @@ async function createDiditSession(userId) {
     workflow_id: workflowId,
     vendor_data: String(userId),
     callback: 'https://www.getsafetea.app/api/auth/verify/callback',
-    callback_method: 'POST',
     language: 'en'
   });
 

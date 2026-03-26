@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -257,6 +257,95 @@
         .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
         .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
         .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
+        /* ========== Community Tab Styles (Matches Nate's Mockups) ========== */
+        .community-section { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
+        /* Community Top Bar */
+        .community-topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 16px; }
+        .community-topbar-left { display: flex; align-items: center; gap: 8px; }
+        .community-topbar-logo { height: 28px; }
+        .community-topbar-right { display: flex; align-items: center; gap: 12px; }
+        .community-topbar-avatar { width: 38px; height: 38px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; cursor: pointer; }
+        .community-topbar-icon { position: relative; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #8080A0; font-size: 16px; }
+        .community-topbar-icon:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .community-topbar-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #E8A0B5; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        /* Community Header */
+        .community-city-label { color: #E8A0B5; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
+        .community-city-label:hover { text-decoration: underline; }
+        .community-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 16px; }
+        /* Category Tabs */
+        .community-category-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .community-cat-tab { padding: 10px 22px; border-radius: 24px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; transition: all 0.2s; border: none; display: flex; align-items: center; gap: 6px; }
+        .community-cat-tab.active-tea { background: #E8A0B5; color: #fff; }
+        .community-cat-tab.inactive { background: #f0f0f0; color: #666; }
+        .community-cat-tab.inactive:hover { background: #e5e5e5; }
+        .community-cat-tab.active-good { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        /* Post Cards */
+        .community-post { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .community-post-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+        .community-post-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: #fff; flex-shrink: 0; }
+        .community-post-meta { flex: 1; }
+        .community-post-author { font-weight: 700; font-size: 16px; color: #222; display: block; }
+        .community-post-time { font-size: 13px; color: #999; margin-top: 2px; }
+        .community-post-more { background: none; border: none; color: #bbb; font-size: 18px; cursor: pointer; padding: 4px 8px; letter-spacing: 2px; }
+        .community-post-more:hover { color: #888; }
+        .community-post-body { font-size: 15px; line-height: 1.65; color: #333; margin-bottom: 16px; }
+        .community-post-body strong { font-weight: 700; }
+        .community-post-image { width: 100%; border-radius: 12px; margin-bottom: 16px; max-height: 300px; object-fit: cover; }
+        .community-post-actions { display: flex; gap: 24px; align-items: center; }
+        .community-post-action { display: flex; align-items: center; gap: 6px; color: #999; font-size: 14px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
+        .community-post-action:hover { color: #E8A0B5; }
+        .community-post-action .liked { color: #e74c3c; }
+        .community-post-action-spacer { flex: 1; }
+        /* Quick Post Bar (bottom) */
+        .community-quickpost { position: fixed; bottom: 60px; left: 0; right: 0; z-index: 50; padding: 10px 16px; background: rgba(255,255,255,0.97); border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; backdrop-filter: blur(10px); }
+        .community-quickpost input { flex: 1; background: #f5f5f5; border: 1px solid #eee; border-radius: 24px; padding: 12px 18px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; color: #333; }
+        .community-quickpost input::placeholder { color: #aaa; }
+        .community-quickpost input:focus { border-color: #E8A0B5; }
+        .community-quickpost-btn { background: #E8A0B5; color: #fff; border: none; padding: 10px 20px; border-radius: 24px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .community-quickpost-btn:hover { background: #D4768E; }
+        /* City Picker - Full Screen */
+        .city-picker-screen { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #FDF5F7 0%, #F8E8EE 30%, #FDF5F7 100%); z-index: 300; overflow-y: auto; padding: 40px 20px; }
+        .city-picker-screen.show { display: block; }
+        .city-picker-inner { max-width: 500px; margin: 0 auto; }
+        .city-picker-header { text-align: center; margin-bottom: 24px; }
+        .city-picker-header h2 { font-size: 28px; font-weight: 800; color: #222; margin-bottom: 6px; }
+        .city-picker-header p { font-size: 15px; color: #888; }
+        .city-picker-search { width: 100%; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 14px 18px 14px 42px; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; color: #333; margin-bottom: 20px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23aaa' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 14px center; }
+        .city-picker-search:focus { border-color: #E8A0B5; }
+        .city-picker-search::placeholder { color: #bbb; }
+        .city-picker-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+        .city-card { background: #fff; border-radius: 18px; overflow: hidden; cursor: pointer; transition: all 0.25s; border: 2px solid transparent; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .city-card:hover { box-shadow: 0 6px 24px rgba(232,160,181,0.2); transform: translateY(-2px); }
+        .city-card.selected { border-color: #E8A0B5; box-shadow: 0 4px 20px rgba(232,160,181,0.25); }
+        .city-card-img { width: 100%; height: 140px; object-fit: cover; background: linear-gradient(135deg, #FDF5F7, #F0D8E4); display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .city-card-info { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.95); }
+        .city-card-name { font-size: 16px; font-weight: 600; color: #4a2d3a; font-family: 'Georgia', serif; font-style: italic; letter-spacing: 0.3px; }
+        .city-card-arrow { color: #ddd; font-size: 16px; }
+        .city-card-check { color: #E8A0B5; font-size: 20px; }
+        .city-picker-continue { display: block; width: 100%; padding: 16px; background: #E8A0B5; color: #fff; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 8px; }
+        .city-picker-continue:hover { background: #D4768E; }
+        .city-picker-continue:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Post Modal - Updated */
+        .post-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+        .post-modal-overlay.show { display: flex; }
+        .post-modal { background: #fff; border-radius: 20px; padding: 24px; width: 90%; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .post-modal h3 { font-size: 20px; font-weight: 800; color: #222; margin-bottom: 16px; }
+        .post-modal textarea { width: 100%; background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 12px; padding: 14px; color: #333; font-family: 'Inter', sans-serif; font-size: 15px; resize: vertical; min-height: 120px; outline: none; margin-bottom: 12px; box-sizing: border-box; }
+        .post-modal textarea:focus { border-color: #E8A0B5; }
+        .post-modal textarea::placeholder { color: #aaa; }
+        .post-modal-photo-section { margin-bottom: 12px; }
+        .post-modal-photo-btn { display: inline-flex; align-items: center; gap: 6px; background: #f8f8f8; border: 1px dashed #ddd; border-radius: 10px; padding: 10px 16px; color: #888; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+        .post-modal-photo-btn:hover { border-color: #E8A0B5; color: #E8A0B5; }
+        .post-modal-photo-btn i { font-size: 16px; }
+        .post-modal-photo-preview { margin-top: 10px; position: relative; display: inline-block; }
+        .post-modal-photo-preview img { max-width: 200px; max-height: 150px; border-radius: 10px; object-fit: cover; }
+        .post-modal-photo-remove { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #e74c3c; color: #fff; border: none; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .post-modal-actions { display: flex; justify-content: space-between; align-items: center; }
+        .post-modal-cat { background: #f8f8f8; border: 1px solid #e0e0e0; color: #555; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+        .post-modal-submit { background: #E8A0B5; color: #fff; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-submit:hover { background: #D4768E; }
+        .post-modal-cancel { background: none; border: 1px solid #ddd; color: #888; padding: 12px 20px; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .post-modal-cancel:hover { border-color: #bbb; color: #555; }
         .mobile-tab-bar { display: none; }
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
         @media (max-width: 768px) {
@@ -631,6 +720,889 @@
                 50% { box-shadow: 0 4px 30px rgba(232,160,181,0.6); }
             }
         }
+        /* ============================================
+           THEME TOGGLE COMPONENT
+           ============================================ */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            margin-right: 4px;
+        }
+        .theme-toggle-track {
+            width: 44px;
+            height: 24px;
+            background: #141428;
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .theme-toggle-knob {
+            width: 18px;
+            height: 18px;
+            background: #E8A0B5;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            transition: transform 0.3s ease, background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #fff;
+        }
+        [data-theme="light"] .theme-toggle-knob {
+            transform: translateX(19px);
+            background: #C4506A;
+        }
+        [data-theme="light"] .theme-toggle-track {
+            background: #E8E8E8;
+            border-color: #C4506A;
+        }
+        .theme-icon-moon, .theme-icon-sun { font-size: 9px; }
+        [data-theme="dark"] .theme-icon-sun { display: none; }
+        [data-theme="light"] .theme-icon-moon { display: none; }
+
+        /* ============================================
+           LIGHT THEME — FULL OVERRIDE
+           Soft feminine premium UI with token-based palette
+           ============================================ */
+        [data-theme="light"] {
+            --st-bg: #fffafc;
+            --st-surface: #ffffff;
+            --st-surface-soft: #fdf1f6;
+            --st-surface-muted: #f9f4f7;
+            --st-border: #f3c7d7;
+            --st-text: #1f1720;
+            --st-text-soft: #5f4b57;
+            --st-primary: #d96a8a;
+            --st-primary-dark: #b95473;
+            --st-success-soft: #eaf8f0;
+            --st-success-text: #1f6b46;
+        }
+        [data-theme="light"] body {
+            background: var(--st-bg);
+            color: var(--st-text);
+        }
+        [data-theme="light"] body::before {
+            background:
+                radial-gradient(ellipse 800px 600px at 80% 20%, rgba(217,106,138,0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 600px 600px at 20% 80%, rgba(217,106,138,0.02) 0%, transparent 70%);
+        }
+
+        /* Navigation */
+        [data-theme="light"] .topnav {
+            background: rgba(255,255,255,0.96);
+            border-bottom-color: var(--st-border);
+        }
+        [data-theme="light"] .topnav-nav a { color: var(--st-text-soft); }
+        [data-theme="light"] .topnav-nav a:hover,
+        [data-theme="light"] .topnav-nav a.active { color: var(--st-primary-dark); background: rgba(217,106,138,0.08); }
+        [data-theme="light"] .topnav-nav a.active::after { background: var(--st-primary); }
+        [data-theme="light"] .topnav-logo img {
+            filter: drop-shadow(0 0 8px rgba(217,106,138,0.15));
+        }
+        [data-theme="light"] .topnav-logo img:hover {
+            filter: drop-shadow(0 0 14px rgba(217,106,138,0.25));
+        }
+        [data-theme="light"] .btn-logout {
+            color: var(--st-text-soft);
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .btn-logout:hover {
+            color: var(--st-text);
+            border-color: var(--st-primary);
+        }
+        [data-theme="light"] .user-avatar {
+            background: var(--st-primary);
+            box-shadow: 0 0 0 2px rgba(217,106,138,0.2);
+        }
+        [data-theme="light"] .user-avatar:hover {
+            box-shadow: 0 0 0 3px rgba(217,106,138,0.35);
+        }
+
+        /* Welcome banner */
+        [data-theme="light"] .welcome-banner {
+            background: var(--st-surface-soft);
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .welcome-banner::before {
+            background: radial-gradient(circle, rgba(217,106,138,0.04) 0%, transparent 70%);
+        }
+        [data-theme="light"] .welcome-banner h2 {
+            background: none;
+            -webkit-background-clip: unset;
+            -webkit-text-fill-color: var(--st-text);
+            background-clip: unset;
+            color: var(--st-text);
+        }
+        [data-theme="light"] .welcome-banner p { color: var(--st-text-soft); }
+        [data-theme="light"] .city-badge {
+            background: var(--st-surface-soft);
+            color: var(--st-primary);
+        }
+
+        /* Cards — white bg, soft rose border */
+        [data-theme="light"] .post-card,
+        [data-theme="light"] .sidebar-card,
+        [data-theme="light"] .alert-card,
+        [data-theme="light"] .search-panel,
+        [data-theme="light"] .create-post,
+        [data-theme="light"] .profile-card,
+        [data-theme="light"] .profile-form,
+        [data-theme="light"] .nw-add-form,
+        [data-theme="light"] .nw-list-item,
+        [data-theme="light"] .nw-match-card,
+        [data-theme="light"] .datecheck-card,
+        [data-theme="light"] .premium-gate-content,
+        [data-theme="light"] .inbox-layout,
+        [data-theme="light"] .dc-share-modal-content {
+            background: var(--st-surface);
+            border-color: var(--st-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        [data-theme="light"] .post-card:hover,
+        [data-theme="light"] .sidebar-card:hover,
+        [data-theme="light"] .alert-card:hover,
+        [data-theme="light"] .nw-list-item:hover,
+        [data-theme="light"] .nw-match-card:hover {
+            border-color: var(--st-primary);
+            box-shadow: 0 4px 16px rgba(217,106,138,0.1);
+        }
+
+        /* Text colors — primary (headings, titles) */
+        [data-theme="light"] .post-author,
+        [data-theme="light"] .alert-card-title,
+        [data-theme="light"] .convo-name,
+        [data-theme="light"] .thread-header-name,
+        [data-theme="light"] .result-info h4,
+        [data-theme="light"] .search-panel h3,
+        [data-theme="light"] .search-header h2,
+        [data-theme="light"] .alerts-header h2,
+        [data-theme="light"] .inbox-header h2,
+        [data-theme="light"] .nw-header h2,
+        [data-theme="light"] .nw-add-form h3,
+        [data-theme="light"] .nw-list-name,
+        [data-theme="light"] .nw-matches-section h3,
+        [data-theme="light"] .profile-name,
+        [data-theme="light"] .profile-form h3,
+        [data-theme="light"] .datecheck-header h2,
+        [data-theme="light"] .datecheck-card h3,
+        [data-theme="light"] .premium-gate-content h2,
+        [data-theme="light"] .dc-history-name,
+        [data-theme="light"] .sidebar-card h3,
+        [data-theme="light"] .avatar-option-content strong,
+        [data-theme="light"] .avatar-preview-name,
+        [data-theme="light"] .dc-howto li strong,
+        [data-theme="light"] .safetea-report-value {
+            color: var(--st-text);
+        }
+        /* Text colors — body content */
+        [data-theme="light"] .post-content,
+        [data-theme="light"] .alert-card-body,
+        [data-theme="light"] .nw-match-body,
+        [data-theme="light"] .msg-bubble.received {
+            color: var(--st-text);
+        }
+        /* Text colors — secondary (meta, labels, descriptions) */
+        [data-theme="light"] .post-time,
+        [data-theme="light"] .alert-card-meta,
+        [data-theme="light"] .convo-preview,
+        [data-theme="light"] .convo-time,
+        [data-theme="light"] .msg-time,
+        [data-theme="light"] .result-info .result-detail,
+        [data-theme="light"] .search-header p,
+        [data-theme="light"] .search-panel p.desc,
+        [data-theme="light"] .nw-hint,
+        [data-theme="light"] .nw-list-terms,
+        [data-theme="light"] .nw-match-footer,
+        [data-theme="light"] .profile-email,
+        [data-theme="light"] .premium-gate-content p,
+        [data-theme="light"] .premium-gate-price span,
+        [data-theme="light"] .datecheck-header p,
+        [data-theme="light"] .dc-form-group label,
+        [data-theme="light"] .dc-history-meta,
+        [data-theme="light"] .dc-howto li,
+        [data-theme="light"] .loading,
+        [data-theme="light"] .empty-state,
+        [data-theme="light"] .form-group label,
+        [data-theme="light"] .inbox-thread-empty,
+        [data-theme="light"] .avatar-option-content span,
+        [data-theme="light"] .avatar-color-picker label,
+        [data-theme="light"] .stat-item .stat-label,
+        [data-theme="light"] .city-votes,
+        [data-theme="light"] .safetea-report-label,
+        [data-theme="light"] .safetea-report-footer span,
+        [data-theme="light"] .alert-item .alert-meta {
+            color: var(--st-text-soft);
+        }
+        [data-theme="light"] .alert-item .alert-title,
+        [data-theme="light"] .city-name {
+            color: var(--st-text);
+        }
+
+        /* Accent color adjustments */
+        [data-theme="light"] .stat-item .stat-number {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        [data-theme="light"] .sidebar-card h3 i {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        [data-theme="light"] .nw-header h2 i,
+        [data-theme="light"] .nw-add-form h3 i,
+        [data-theme="light"] .nw-matches-section h3 i,
+        [data-theme="light"] .nw-match-icon,
+        [data-theme="light"] .nw-match-label,
+        [data-theme="light"] .search-panel h3 i,
+        [data-theme="light"] .dc-howto h4,
+        [data-theme="light"] .dc-timer,
+        [data-theme="light"] .city-rank,
+        [data-theme="light"] .generated-name-text {
+            color: var(--st-primary);
+        }
+        [data-theme="light"] .premium-gate-price { color: var(--st-primary); }
+        [data-theme="light"] .premium-badge,
+        [data-theme="light"] .premium-badge-inline,
+        [data-theme="light"] .profile-role,
+        [data-theme="light"] .nw-badge-matches,
+        [data-theme="light"] .nw-match-type-badge {
+            background: var(--st-surface-soft);
+            color: var(--st-primary);
+        }
+        [data-theme="light"] .premium-mini-gate {
+            background: var(--st-surface-soft);
+            border-color: var(--st-border);
+            color: var(--st-primary);
+        }
+        [data-theme="light"] .convo-unread { background: var(--st-primary); }
+        [data-theme="light"] .convo-item.active {
+            background: var(--st-surface-soft);
+            border-left-color: var(--st-primary);
+        }
+        [data-theme="light"] .nw-match-card.unread { border-left-color: var(--st-primary); }
+        [data-theme="light"] .dc-status-dot { background: var(--st-primary); }
+        [data-theme="light"] .post-action:hover { color: var(--st-primary); }
+        [data-theme="light"] .nw-mark-read:hover { color: var(--st-primary); }
+        [data-theme="light"] .btn-nw-action:hover { color: var(--st-primary); border-color: var(--st-primary); }
+
+        /* Input fields */
+        [data-theme="light"] .create-post textarea,
+        [data-theme="light"] .form-group input,
+        [data-theme="light"] .form-group select,
+        [data-theme="light"] .nw-add-row input,
+        [data-theme="light"] .thread-input input,
+        [data-theme="light"] .avatar-sub-option input[type="text"],
+        [data-theme="light"] .dc-form-group input,
+        [data-theme="light"] .dc-form-group textarea,
+        [data-theme="light"] .dc-form-group select,
+        [data-theme="light"] .post-category-select {
+            background: var(--st-surface-muted);
+            border-color: var(--st-border);
+            color: var(--st-text);
+        }
+        [data-theme="light"] .create-post textarea:focus,
+        [data-theme="light"] .form-group input:focus,
+        [data-theme="light"] .nw-add-row input:focus,
+        [data-theme="light"] .thread-input input:focus,
+        [data-theme="light"] .avatar-sub-option input[type="text"]:focus,
+        [data-theme="light"] .dc-form-group input:focus,
+        [data-theme="light"] .dc-form-group textarea:focus {
+            border-color: var(--st-primary);
+        }
+        [data-theme="light"] .create-post textarea::placeholder,
+        [data-theme="light"] .nw-add-row input::placeholder { color: var(--st-text-soft); }
+
+        /* Stat items and result cards */
+        [data-theme="light"] .stat-item,
+        [data-theme="light"] .result-card,
+        [data-theme="light"] .avatar-option,
+        [data-theme="light"] .dc-history-item {
+            background: var(--st-surface-muted);
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .stat-item:hover {
+            border-color: var(--st-primary);
+            background: var(--st-surface-soft);
+        }
+        [data-theme="light"] .result-avatar {
+            background: var(--st-surface-soft);
+        }
+        [data-theme="light"] .result-avatar i { color: var(--st-text-soft); }
+
+        /* Search tabs */
+        [data-theme="light"] .search-tab {
+            background: var(--st-surface);
+            border-color: var(--st-border);
+            color: var(--st-text-soft);
+        }
+        [data-theme="light"] .search-tab:hover {
+            color: var(--st-text);
+            border-color: var(--st-primary);
+        }
+        [data-theme="light"] .search-tab.active {
+            background: var(--st-surface-soft);
+            color: var(--st-primary);
+            border-color: var(--st-primary);
+        }
+
+        /* Hub tabs */
+        [data-theme="light"] .hub-tab {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] .hub-tab.active {
+            background: var(--st-surface-soft) !important;
+            color: var(--st-primary) !important;
+            border-color: var(--st-primary) !important;
+        }
+
+        /* ===== Hub / Referral — Light Mode Overrides ===== */
+
+        /* All dark boxes (#22223A) inside growreferral → white with soft border */
+        [data-theme="light"] #hub-growreferral > div[style*="background:#22223A"],
+        [data-theme="light"] #hub-growreferral > div > div[style*="background:#22223A"],
+        [data-theme="light"] #hub-growreferral div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        /* All darker boxes (#141428) → soft pink surface */
+        [data-theme="light"] #hub-growreferral div[style*="background:#141428"],
+        [data-theme="light"] #hub-growreferral input[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+        }
+
+        /* Share URL input */
+        [data-theme="light"] #grow-share-url {
+            background: var(--st-surface-soft) !important;
+            border: 1px solid var(--st-border) !important;
+            color: var(--st-primary) !important;
+        }
+
+        /* Tier reward boxes */
+        [data-theme="light"] #grow-tier-3,
+        [data-theme="light"] #grow-tier-10,
+        [data-theme="light"] #grow-tier-25 {
+            background: var(--st-surface-soft) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #grow-tier-3 span,
+        [data-theme="light"] #grow-tier-10 span,
+        [data-theme="light"] #grow-tier-25 span,
+        [data-theme="light"] #grow-tier-3 div,
+        [data-theme="light"] #grow-tier-10 div,
+        [data-theme="light"] #grow-tier-25 div {
+            color: var(--st-text) !important;
+        }
+
+        /* Active rewards & referrals list */
+        [data-theme="light"] #grow-active-rewards {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #grow-referrals-list {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+
+        /* Promo banner */
+        [data-theme="light"] #grow-promo-banner {
+            background: var(--st-surface-soft) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+
+        /* Progress bar background */
+        [data-theme="light"] #hub-growreferral div[style*="background:rgba(255,255,255,0.04)"],
+        [data-theme="light"] #hub-growreferral div[style*="background:#1A1A2E"] {
+            background: var(--st-surface-soft) !important;
+        }
+
+        /* All white text → dark in light mode */
+        [data-theme="light"] #hub-growreferral h3[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral div[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral span[style*="color:#fff"],
+        [data-theme="light"] #hub-growreferral p[style*="color:rgba(255,255,255"] {
+            color: var(--st-text) !important;
+        }
+        /* Gray text → readable secondary */
+        [data-theme="light"] #hub-growreferral div[style*="color:#8080A0"],
+        [data-theme="light"] #hub-growreferral p[style*="color:#8080A0"],
+        [data-theme="light"] #hub-growreferral span[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* Hub sub-sections that also use dark bg */
+        [data-theme="light"] .hub-sub > div[style*="background:#22223A"],
+        [data-theme="light"] .hub-sub div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        [data-theme="light"] .hub-sub h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+
+        /* ===== COMPREHENSIVE HUB OVERVIEW CARD OVERRIDES ===== */
+        /* Hub overview grid cards — remove dark-mode translucent backgrounds */
+        [data-theme="light"] #hub-overview > div[style*="display:grid"] > div[onclick] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        /* All h4 headings inside hub overview cards — must be dark */
+        [data-theme="light"] #hub-overview h4[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        /* All p descriptions inside hub overview cards — must be readable */
+        [data-theme="light"] #hub-overview p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        /* "How SafeTea Keeps You Safe" info box */
+        [data-theme="light"] #hub-overview > div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-overview h3[style*="color:#fff"],
+        [data-theme="light"] #hub-overview h4[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-overview p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        /* How-to step icons bg */
+        [data-theme="light"] #hub-overview div[style*="background:rgba(232,160,181,0.15)"],
+        [data-theme="light"] #hub-overview div[style*="background:rgba(90,160,210,0.15)"],
+        [data-theme="light"] #hub-overview div[style*="background:rgba(180,140,210,0.15)"],
+        [data-theme="light"] #hub-overview div[style*="background:rgba(76,175,80,0.15)"] {
+            background: var(--st-surface-soft) !important;
+        }
+
+        /* ===== Hub sub-section headings ===== */
+        [data-theme="light"] #tab-hub > div[style*="margin-bottom:24px"] > h2[style*="color:#fff"],
+        [data-theme="light"] #tab-hub h2[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #tab-hub > div[style*="margin-bottom:24px"] > p[style*="color:#8080A0"],
+        [data-theme="light"] #tab-hub p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* ===== Catfish section — light mode ===== */
+        [data-theme="light"] #hub-catfish .catfish-section > div[style*="margin-bottom"] > h2,
+        [data-theme="light"] #hub-catfish h2 {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-catfish p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] #hub-catfish div[style*="background:#22223A"],
+        [data-theme="light"] #hub-catfish div[style*="background:#141428"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-catfish div[style*="background:rgba(232,160,181"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+        }
+
+        /* ===== Refer a Good One — light mode ===== */
+        [data-theme="light"] #hub-referral h2,
+        [data-theme="light"] #hub-referral h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-referral p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] #hub-referral > div > div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        [data-theme="light"] #hub-referral input[style*="background:#141428"],
+        [data-theme="light"] #hub-referral select[style*="background:#141428"],
+        [data-theme="light"] #hub-referral textarea[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-referral label[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] #hub-referral div[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* ===== Name Check section — light mode ===== */
+        [data-theme="light"] #hub-namecheck h2,
+        [data-theme="light"] #hub-namecheck h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-namecheck p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] #hub-namecheck div[style*="background:#22223A"],
+        [data-theme="light"] #hub-namecheck div[style*="background:#141428"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-namecheck input[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+
+        /* ===== Tea Talk sub (inside hub) — light mode ===== */
+        [data-theme="light"] #hub-teatalk h2,
+        [data-theme="light"] #hub-teatalk h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-teatalk p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] #hub-teatalk div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+
+        /* ===== Date Check section — light mode inline overrides ===== */
+        [data-theme="light"] #hub-datecheck h2,
+        [data-theme="light"] #hub-datecheck h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-datecheck p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* ===== Generic: all dark inline backgrounds + text inside #tab-hub ===== */
+        [data-theme="light"] #tab-hub div[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+        }
+        [data-theme="light"] #tab-hub span[style*="color:#fff"],
+        [data-theme="light"] #tab-hub div[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #tab-hub span[style*="color:#8080A0"],
+        [data-theme="light"] #tab-hub div[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+        /* Sidebar right border */
+        [data-theme="light"] .sidebar-right {
+            border-left-color: var(--st-border);
+        }
+
+        /* ===== Feed invite card — light mode ===== */
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"][style*="background:linear-gradient"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"] span[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #tab-feed > .dashboard > .main-content > div[onclick*="switchTab"] span[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* ===== Search panels in hub — light mode ===== */
+        [data-theme="light"] #tab-hub .search-panel {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-hub .search-panel h3 { color: var(--st-text) !important; }
+        [data-theme="light"] #tab-hub .search-panel input,
+        [data-theme="light"] #tab-hub .search-panel select {
+            background: var(--st-surface-muted) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+
+        /* Buttons — rose gradient */
+        [data-theme="light"] .btn-post,
+        [data-theme="light"] .btn-search,
+        [data-theme="light"] .btn-nw-add,
+        [data-theme="light"] .btn-save,
+        [data-theme="light"] .btn-upgrade,
+        [data-theme="light"] .btn-upgrade-sm,
+        [data-theme="light"] .dc-btn-primary,
+        [data-theme="light"] .thread-input button {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+        }
+        [data-theme="light"] .btn-post:hover,
+        [data-theme="light"] .btn-search:hover,
+        [data-theme="light"] .btn-nw-add:hover,
+        [data-theme="light"] .btn-upgrade:hover {
+            box-shadow: 0 4px 16px rgba(217,106,138,0.3);
+        }
+        [data-theme="light"] .btn-upload {
+            border-color: var(--st-border);
+            color: var(--st-text-soft);
+        }
+        [data-theme="light"] .btn-upload:hover {
+            color: var(--st-primary);
+            border-color: var(--st-primary);
+        }
+        [data-theme="light"] .btn-generate {
+            border-color: var(--st-border);
+            color: var(--st-text-soft);
+        }
+        [data-theme="light"] .btn-generate:hover {
+            color: var(--st-primary);
+            border-color: var(--st-primary);
+        }
+        [data-theme="light"] .dc-btn-outline {
+            border-color: var(--st-border);
+            color: var(--st-text-soft);
+        }
+        [data-theme="light"] .post-action { color: var(--st-text-soft); }
+
+        /* Inbox */
+        [data-theme="light"] .inbox-conversations {
+            border-right-color: var(--st-border);
+        }
+        [data-theme="light"] .convo-item {
+            border-bottom-color: var(--st-border);
+        }
+        [data-theme="light"] .convo-item:hover {
+            background: var(--st-surface-muted);
+        }
+        [data-theme="light"] .thread-header {
+            border-bottom-color: var(--st-border);
+        }
+        [data-theme="light"] .thread-input {
+            border-top-color: var(--st-border);
+        }
+        [data-theme="light"] .msg-bubble.sent {
+            background: var(--st-surface-soft);
+            color: var(--st-text);
+        }
+        [data-theme="light"] .msg-bubble.received {
+            background: var(--st-surface-muted);
+            color: var(--st-text);
+        }
+
+        /* Disclaimer */
+        [data-theme="light"] .disclaimer {
+            background: rgba(241,196,15,0.06);
+            border-color: rgba(241,196,15,0.3);
+        }
+
+        /* SafeTea Report card in light mode */
+        [data-theme="light"] .safetea-report {
+            background: linear-gradient(135deg, var(--st-surface) 0%, var(--st-surface-soft) 100%);
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .safetea-report-header {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+        }
+        [data-theme="light"] .safetea-report-row {
+            border-bottom-color: var(--st-border);
+        }
+        [data-theme="light"] .safetea-report-icon {
+            background: var(--st-surface-soft);
+            color: var(--st-primary);
+        }
+        [data-theme="light"] .safetea-report-footer {
+            background: var(--st-surface-muted);
+            border-top-color: var(--st-border);
+        }
+        [data-theme="light"] .nw-list-icon {
+            background: var(--st-surface-soft);
+            color: var(--st-primary);
+        }
+        [data-theme="light"] .nw-list-delete:hover {
+            background: rgba(231,76,60,0.08);
+        }
+
+        /* Date check-in styles */
+        [data-theme="light"] .dc-active-date { border-color: var(--st-primary); }
+        [data-theme="light"] .dc-status {
+            background: var(--st-surface-soft);
+        }
+        [data-theme="light"] .dc-howto {
+            background: var(--st-surface-soft);
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .plus-badge {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+        }
+
+        /* Profile card light overrides */
+        [data-theme="light"] .profile-card::before {
+            background: linear-gradient(135deg, rgba(217,106,138,0.06), rgba(217,106,138,0.03));
+        }
+        [data-theme="light"] .profile-avatar-large {
+            background: var(--st-primary);
+            box-shadow: 0 4px 20px rgba(217,106,138,0.2);
+        }
+        [data-theme="light"] .avatar-option:hover {
+            border-color: var(--st-border);
+        }
+        [data-theme="light"] .avatar-option input[type="radio"] { accent-color: var(--st-primary); }
+        [data-theme="light"] .color-swatch.active {
+            border-color: var(--st-text);
+            box-shadow: 0 0 0 2px rgba(217,106,138,0.4);
+        }
+
+        /* Share modal */
+        [data-theme="light"] .dc-share-modal {
+            background: rgba(0,0,0,0.4);
+        }
+
+        /* Mobile tab bar */
+        [data-theme="light"] .mobile-tab-bar {
+            background: rgba(255,255,255,0.96) !important;
+            border-top-color: var(--st-border);
+        }
+        [data-theme="light"] .mobile-tab-bar a { color: var(--st-text-soft); }
+        [data-theme="light"] .mobile-tab-bar a.active { color: var(--st-primary); }
+        [data-theme="light"] .mobile-tab-bar a.active::after { background: var(--st-primary); }
+        /* Community light theme — fine-tune */
+        [data-theme="light"] .community-title { color: #1A1A2E !important; }
+        [data-theme="light"] #feed-sort-toggle div { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+        [data-theme="light"] .community-topbar-icon { background: var(--st-surface-muted); }
+        [data-theme="light"] .community-quickpost { background: var(--st-surface); }
+
+        /* FAB */
+        [data-theme="light"] .fab-invite {
+            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
+            box-shadow: 0 4px 20px rgba(217,106,138,0.3);
+        }
+
+        /* Scrollbar */
+        [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(217,106,138,0.15); }
+        [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(217,106,138,0.25); }
+
+        /* Inbox badge stays red in both themes */
+        /* Toast stays green/red in both themes */
+        /* Severity dots stay same colors in both themes */
+
+        /* ====== HOME TAB — LIGHT MODE OVERRIDES ====== */
+
+        /* Home welcome header */
+        [data-theme="light"] .home-welcome,
+        [data-theme="light"] .home-header h2 {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .home-header p {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* Home notification icon */
+        [data-theme="light"] .home-notif-icon {
+            background: var(--st-surface-soft) !important;
+        }
+        [data-theme="light"] .home-notif-icon i {
+            color: var(--st-primary) !important;
+        }
+
+        /* Home section titles */
+        [data-theme="light"] .home-section-title {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .home-section-title i {
+            color: var(--st-primary) !important;
+        }
+
+        /* Home tool cards — clean white surfaces */
+        [data-theme="light"] .home-tool-card {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] .home-tool-card:hover {
+            border-color: var(--st-primary) !important;
+            box-shadow: 0 2px 12px rgba(217,106,138,0.1);
+        }
+
+        /* Home card text */
+        [data-theme="light"] .home-card-title {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .home-card-desc {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] .home-card-label {
+            color: var(--st-primary) !important;
+        }
+
+        /* Active date card in light mode */
+        [data-theme="light"] #home-active-date {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] .home-timer {
+            color: var(--st-primary) !important;
+        }
+
+        /* How SafeTea keeps you safe — light card */
+        [data-theme="light"] .home-info-card {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+        }
+
+        /* Back buttons in hub sub-sections */
+        [data-theme="light"] .hub-back-btn {
+            color: var(--st-primary) !important;
+        }
+
+        /* Hub sub-section dark backgrounds → light in light mode */
+        [data-theme="light"] #tab-hub div[style*="background:#22223A"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-hub div[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+        }
+        [data-theme="light"] #tab-hub input[style*="background:#141428"],
+        [data-theme="light"] #tab-hub textarea[style*="background:#141428"],
+        [data-theme="light"] #tab-hub select[style*="background:#141428"] {
+            background: var(--st-surface-muted) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+
+        /* All white text in hub → dark in light mode */
+        [data-theme="light"] #tab-hub h2[style*="color:#fff"],
+        [data-theme="light"] #tab-hub h3[style*="color:#fff"],
+        [data-theme="light"] #tab-hub h4[style*="color:#fff"],
+        [data-theme="light"] #tab-hub div[style*="color:#fff"],
+        [data-theme="light"] #tab-hub span[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #tab-hub p[style*="color:#8080A0"],
+        [data-theme="light"] #tab-hub span[style*="color:#8080A0"],
+        [data-theme="light"] #tab-hub div[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* Community quick actions light mode */
+        [data-theme="light"] .community-quick-actions button {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] .community-quick-actions button:hover {
+            background: var(--st-surface-soft) !important;
+        }
+
+        /* Pulse animation for active date dot */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
     </style>
 </head>
 <body>
@@ -638,21 +1610,29 @@
         <div class="topnav-left">
             <a href="/" class="topnav-logo"><img src="/logo.png" alt="SafeTea"></a>
             <div class="topnav-nav">
-                <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
-                <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
+                <a class="active" data-tab="hub"><i class="fas fa-shield-alt"></i> Home</a>
+                <a data-tab="community"><img src="/logo.png" alt="" style="height:16px;vertical-align:middle;margin-right:4px"> SafeTea Hub</a>
+                <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts <span id="nw-alert-badge" style="display:none;background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px">0</span></a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="hub"><img src="logo.png" alt="SafeTea" style="height:18px;vertical-align:middle"> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
         <div class="topnav-right">
+            <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+                <div class="theme-toggle-track">
+                    <div class="theme-toggle-knob">
+                        <i class="fas fa-moon theme-icon-moon"></i>
+                        <i class="fas fa-sun theme-icon-sun"></i>
+                    </div>
+                </div>
+            </div>
             <div class="user-avatar" id="nav-avatar"></div>
             <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
         </div>
     </nav>
 
     <!-- FEED TAB -->
-    <div id="tab-feed" class="tab-section active">
+    <div id="tab-feed" class="tab-section">
         <div class="dashboard">
             <div class="main-content">
                 <div class="welcome-banner" id="welcome-banner">
@@ -720,9 +1700,143 @@
         </div>
     </div>
 
+    <!-- COMMUNITY TAB -->
+    <div id="tab-community" class="tab-section" style="background: linear-gradient(180deg, #FDF5F7 0%, #F8E8EE 20%, #FDF5F7 100%); min-height: 100vh;">
+        <div class="community-section">
+            <!-- Top Bar: Logo + Avatar + Icons -->
+            <div class="community-topbar">
+                <div class="community-topbar-left">
+                    <span style="font-size:22px">&#9749;</span>
+                    <span style="font-size:18px;font-weight:700;color:#E8A0B5;font-style:italic;">SafeTea</span>
+                </div>
+                <div class="community-topbar-right">
+                    <div class="community-topbar-avatar" id="comm-user-avatar">N</div>
+                    <div class="community-topbar-icon" onclick="switchTab('profile')">
+                        <i class="fas fa-cog"></i>
+                        <span class="community-topbar-badge" id="comm-settings-badge" style="display:none">0</span>
+                    </div>
+                    <div class="community-topbar-icon" onclick="switchTab('alerts')">
+                        <i class="fas fa-bell"></i>
+                        <span class="community-topbar-badge" id="comm-notif-badge" style="display:none">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- City Label + Title -->
+            <div class="community-city-label" onclick="openCityPicker()">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="community-city-name">Choose City</span>
+            </div>
+            <h1 class="community-title" id="community-title"><img src="/logo.png" alt="" style="height:28px;vertical-align:middle;margin-right:6px">SafeTea Hub</h1>
+
+            <!-- Search bar -->
+            <div class="community-search-bar" style="margin:0 16px 12px;position:relative">
+                <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#B0A0A8;font-size:14px"></i>
+                <input type="text" id="community-search-input" placeholder="Search names or posts in your city..." style="width:100%;padding:12px 14px 12px 40px;background:#fff;border:1px solid #f3c7d7;border-radius:12px;font-size:14px;font-family:'Inter',sans-serif;color:#1f1720;outline:none" onfocus="this.style.borderColor='#d96a8a'" onblur="this.style.borderColor='#f3c7d7'">
+            </div>
+
+            <!-- Category Tabs: Tea Talk + Good Guys -->
+            <div class="community-category-tabs">
+                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')">&#10004; Good Guys</button>
+            </div>
+
+            <!-- Quick Actions Row -->
+            <div class="community-quick-actions" style="display:flex;gap:8px;padding:0 16px;margin-bottom:16px;flex-wrap:wrap">
+                <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('search')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-search" style="color:#d96a8a;font-size:12px"></i> Search Name</button>
+                <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-eye" style="color:#d96a8a;font-size:12px"></i> Name Watch</button>
+                <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('referral')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #c8e6c9;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#2e7d32;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='#fff'"><i class="fas fa-heart" style="color:#2ecc71;font-size:12px"></i> Recommend a Guy</button>
+                <button onclick="openCityPicker()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-city" style="color:#d96a8a;font-size:12px"></i> Change City</button>
+            </div>
+
+            <!-- Feed Sort Toggle -->
+            <div id="feed-sort-toggle" style="display:none;margin:0 auto 12px;max-width:720px;padding:0 16px">
+                <div style="display:inline-flex;background:rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)">
+                    <button id="sort-hot-btn" onclick="setFeedSort('hot')" style="padding:6px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-radius:20px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;font-family:'Inter',sans-serif;transition:all 0.2s"><i class="fas fa-fire"></i> Hot</button>
+                    <button id="sort-recent-btn" onclick="setFeedSort('recent')" style="padding:6px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-radius:20px;background:transparent;color:#999;font-family:'Inter',sans-serif;transition:all 0.2s"><i class="fas fa-clock"></i> Recent</button>
+                </div>
+            </div>
+
+            <!-- Posts Feed -->
+            <div id="community-feed">
+                <div class="loading" style="text-align:center;padding:40px;color:#999;">
+                    <i class="fas fa-map-marker-alt" style="font-size:28px;color:#E8A0B5;display:block;margin-bottom:12px;"></i>
+                    Select a city to see posts
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Post Bar (fixed at bottom) -->
+        <div class="community-quickpost" id="community-quickpost" style="display:none;">
+            <input type="text" id="community-quickpost-input" placeholder="Share a warning, tip, or experience..." onclick="openPostModal()" readonly>
+            <button class="community-quickpost-btn" onclick="openPostModal()"><i class="fas fa-paper-plane"></i> Post</button>
+        </div>
+
+        <!-- Bottom Category Tabs (fixed) -->
+        <div id="community-bottom-tabs" style="display:none;position:fixed;bottom:120px;left:0;right:0;z-index:49;padding:8px 16px;max-width:720px;margin:0 auto;">
+            <div style="display:flex;gap:8px;">
+                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')" style="font-size:13px;padding:8px 16px;">&#9749; Tea Talk</button>
+                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')" style="font-size:13px;padding:8px 16px;">&#10004; Good Guys</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- City Picker Full Screen -->
+    <div class="city-picker-screen" id="city-picker">
+        <div class="city-picker-inner">
+            <div class="city-picker-header">
+                <h2>Choose Your City</h2>
+                <p>Connect with your local community &#x1F495;</p>
+            </div>
+            <input type="text" class="city-picker-search" id="city-search" placeholder="Search cities..." oninput="filterCitySearch(this.value)">
+            <div class="city-picker-grid" id="city-picker-grid">
+                <div style="text-align:center;padding:20px;color:#aaa;grid-column:span 2;"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>
+            </div>
+            <button class="city-picker-continue" id="city-continue-btn" disabled onclick="confirmCitySelection()">Continue</button>
+        </div>
+    </div>
+
+    <!-- Community Post Modal -->
+    <div class="post-modal-overlay" id="post-modal">
+        <div class="post-modal">
+            <h3>Share with your community</h3>
+            <textarea id="community-post-text" placeholder="What do you want your city to know?"></textarea>
+            <div class="post-modal-photo-section">
+                <label class="post-modal-photo-btn" for="post-photo-input">
+                    <i class="fas fa-camera"></i> Add Photo
+                </label>
+                <input type="file" id="post-photo-input" accept="image/*" style="display:none" onchange="handlePostPhoto(this)">
+                <div class="post-modal-photo-preview" id="post-photo-preview" style="display:none">
+                    <img id="post-photo-preview-img" src="" alt="Preview">
+                    <button class="post-modal-photo-remove" onclick="removePostPhoto()">&times;</button>
+                </div>
+            </div>
+            <div class="post-modal-actions">
+                <select class="post-modal-cat" id="community-post-cat">
+                    <option value="tea-talk">&#9749; Tea Talk</option>
+                    <option value="good-guys">&#10004; Good Guys</option>
+                </select>
+                <div style="display:flex;gap:8px">
+                    <button class="post-modal-cancel" onclick="closePostModal()">Cancel</button>
+                    <button class="post-modal-submit" onclick="submitCommunityPost()">Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ALERTS TAB -->
     <div id="tab-alerts" class="tab-section">
-        <div class="alerts-section">
+        <!-- Name Watch Alerts -->
+        <div id="nw-alerts-section" style="max-width:720px;margin:0 auto;padding:24px 24px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <h2 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:10px"><i class="fas fa-eye" style="color:#E8A0B5"></i> Name Watch Alerts</h2>
+                <button id="nw-mark-read-btn" onclick="markAllNameWatchRead()" style="display:none;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-check-double"></i> Mark All Read</button>
+            </div>
+            <div id="nw-alerts-list">
+                <div style="text-align:center;padding:20px;color:#8080A0;font-size:14px"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>No Name Watch alerts yet.<br><span style="font-size:12px">Add names in <a href="#" onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100);return false" style="color:#E8A0B5">Name Watch</a> to get notified when they're mentioned.</span></div>
+            </div>
+        </div>
+        <div class="alerts-section" style="max-width:720px;margin:0 auto;padding:0 24px 24px">
             <div class="alerts-header">
                 <h2><i class="fas fa-bell" style="color:#E8A0B5"></i> Alerts in Your Area</h2>
             </div>
@@ -766,95 +1880,124 @@
     </div>
 
     <!-- SEARCH TAB -->
-    <!-- HUB TAB -->
-    <div id="tab-hub" class="tab-section">
+    <!-- HUB TAB (Home — Safety Tools) -->
+    <div id="tab-hub" class="tab-section active">
         <div style="max-width:720px;margin:0 auto;padding:24px">
-            <div style="margin-bottom:24px">
-                <h2 style="color:#fff;font-size:22px;margin-bottom:8px"><img src="logo.png" alt="SafeTea" style="height:28px;vertical-align:middle"> SafeTea Hub</h2>
-                <p style="color:#8080A0;font-size:14px">Your command center for all SafeTea safety tools.</p>
+            <!-- Home Header -->
+            <div class="home-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+                <div>
+                    <h2 class="home-welcome" style="color:#fff;font-size:22px;margin-bottom:4px" id="home-welcome-text">Welcome back! <span style="font-size:20px">&#128150;</span></h2>
+                    <p style="color:#8080A0;font-size:14px">Your safety tools are ready when you need them.</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div class="home-notif-icon" onclick="switchTab('alerts')" style="width:36px;height:36px;background:rgba(232,160,181,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative">
+                        <i class="fas fa-bell" style="color:#E8A0B5;font-size:15px"></i>
+                        <span id="home-notif-dot" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;line-height:16px;text-align:center;background:#e74c3c;color:#fff;border-radius:8px;font-size:9px;font-weight:700;padding:0 4px"></span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Hub Sub-Navigation -->
-            <div class="hub-tabs" style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+            <!-- Hub Sub-Navigation (hidden — navigation via cards + back buttons) -->
+            <div class="hub-tabs" style="display:none;gap:8px;margin-bottom:24px;flex-wrap:wrap">
                 <button class="hub-tab active" data-hubsub="overview" onclick="switchHubTab('overview')" style="background:#E8A0B5;color:#1A1A2E;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Overview</button>
                 <button class="hub-tab" data-hubsub="growreferral" onclick="switchHubTab('growreferral')" style="background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(155,89,182,0.15));color:#E8A0B5;border:1px solid rgba(232,160,181,0.3);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-gift"></i> Invite &amp; Earn</button>
                 <button class="hub-tab" data-hubsub="datecheck" onclick="switchHubTab('datecheck')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-calendar-check"></i> Date Check</button>
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Reel in a Catfish</button>
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
-                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
+                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><img src="/logo.png" alt="" style="height:14px;vertical-align:middle"> Tea Talk</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
             </div>
 
-            <!-- HUB: OVERVIEW -->
+            <!-- HUB: OVERVIEW (Home — clean stacked layout) -->
             <div id="hub-overview" class="hub-sub active">
-                <!-- INVITE & EARN BANNER — prominent at top -->
-                <div onclick="switchHubTab('growreferral')" style="background:linear-gradient(135deg,#E8A0B5 0%,#D4768E 50%,#9b59b6 100%);border-radius:16px;padding:24px;margin-bottom:20px;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(232,160,181,0.3)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
-                    <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,0.1);border-radius:50%"></div>
-                    <div style="position:absolute;bottom:-30px;right:40px;width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:50%"></div>
-                    <div style="display:flex;align-items:center;gap:16px;position:relative;z-index:1">
-                        <div style="min-width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-gift" style="font-size:22px;color:#fff"></i></div>
+
+                <!-- ====== ACTIVE DATE CARD (shown when checked out) ====== -->
+                <div id="home-active-date" class="home-card" style="display:none;background:linear-gradient(135deg,rgba(232,160,181,0.08),rgba(180,140,210,0.06));border:1px solid rgba(232,160,181,0.2);border-radius:16px;padding:20px;margin-bottom:20px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+                        <div style="width:10px;height:10px;background:#E8A0B5;border-radius:50%;animation:pulse 2s infinite"></div>
+                        <span class="home-card-label" style="color:#E8A0B5;font-size:13px;font-weight:600">Active Date</span>
+                    </div>
+                    <div id="home-active-details">
+                        <div class="home-card-title" style="color:#fff;font-weight:600;font-size:16px;margin-bottom:4px" id="home-active-name"></div>
+                        <div style="color:#8080A0;font-size:13px;margin-bottom:2px" id="home-active-venue"></div>
+                    </div>
+                    <div style="text-align:center;margin:14px 0">
+                        <div class="home-timer" style="color:#E8A0B5;font-size:22px;font-weight:700" id="home-timer">0h 0m left</div>
+                        <div style="font-size:12px;color:#8080A0" id="home-timer-label">Since you checked in</div>
+                    </div>
+                    <button class="home-btn-safe" onclick="dateCheckIn()" style="width:100%;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="viewSafeTeaReport()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-file-alt"></i> View Details</button>
+                        <button onclick="shareDateLink()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-alt"></i> Share Live Link</button>
+                    </div>
+                </div>
+
+                <!-- ====== SAFETY TOOLS (stacked cards) ====== -->
+                <div style="margin-bottom:20px">
+                    <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-shield-alt" style="color:#E8A0B5;font-size:13px"></i> Safety Tools</h3>
+                    <p style="color:#8080A0;font-size:13px;margin-top:-8px;margin-bottom:14px">Private tools to help you stay safe and informed.</p>
+
+                    <!-- Date Check-In / Check-Out -->
+                    <div onclick="switchHubTab('datecheck')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.1),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.2)'">
+                        <div style="min-width:44px;height:44px;background:rgba(232,160,181,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-check" style="font-size:20px;color:#E8A0B5"></i></div>
                         <div style="flex:1">
-                            <h3 style="color:#fff;font-size:17px;font-weight:700;margin-bottom:4px">Invite Friends, Get Premium Free</h3>
-                            <p style="color:rgba(255,255,255,0.85);font-size:13px;line-height:1.4">Share SafeTea and earn up to 90 days of free Pro access. Tap to start sharing.</p>
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Date Check-In / Check-Out</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Share your date details via SMS with trusted contacts. Live tracking + safety check-in.</p>
                         </div>
-                        <i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.6);font-size:18px"></i>
+                        <span class="plus-badge" style="flex-shrink:0">SafeTea+</span>
+                    </div>
+
+                    <!-- Safety Search -->
+                    <div onclick="switchHubTab('search')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(91,160,208,0.08),rgba(91,160,208,0.02));border:1px solid rgba(91,160,208,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(91,160,208,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(91,160,208,0.15)'">
+                        <div style="min-width:44px;height:44px;background:rgba(91,160,208,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-search" style="font-size:20px;color:#5BA0D0"></i></div>
+                        <div style="flex:1">
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Safety Search</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Run background checks with social media, mugshots, and data broker exposure.</p>
+                        </div>
+                    </div>
+
+                    <!-- Reel in a Catfish -->
+                    <div onclick="switchHubTab('catfish')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.08),rgba(232,160,181,0.02));border:1px solid rgba(232,160,181,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.15)'">
+                        <div style="min-width:44px;height:44px;background:rgba(232,160,181,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-fish" style="font-size:20px;color:#E8A0B5"></i></div>
+                        <div style="flex:1">
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Reel in a Catfish</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Analyze profile photos for catfishing — metadata, editing software, reverse image search.</p>
+                        </div>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-                    <div onclick="switchHubTab('datecheck')" style="background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(232,160,181,0.05));border:1px solid rgba(232,160,181,0.25);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-calendar-check" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Date Check-In/Out</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Share date details via SMS with trusted contacts. Live tracking + safety check-in.</p>
-                        <span class="plus-badge" style="display:inline-block;margin-top:8px">SafeTea+</span>
-                    </div>
-                    <div onclick="switchHubTab('namewatch')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-eye" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Name Watch</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Monitor names across SafeTea. Get alerts when someone is mentioned by the community.</p>
-                        <span class="plus-badge" style="display:inline-block;margin-top:8px">SafeTea+</span>
-                    </div>
-                    <div onclick="switchHubTab('search')" style="background:linear-gradient(135deg,rgba(91,160,208,0.12),rgba(91,160,208,0.04));border:1px solid rgba(91,160,208,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-search" style="font-size:26px;color:#5BA0D0;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Safety Search</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Sex offender registry, background checks with social media, mugshots, and data broker exposure.</p>
-                    </div>
-                    <div onclick="switchHubTab('catfish')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-fish" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Reel in a Catfish</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Analyze profile photos for catfishing — metadata, editing software, reverse image search.</p>
+
+                <!-- ====== INVITE & EARN (horizontal banner) ====== -->
+                <div onclick="switchHubTab('growreferral')" class="home-invite-banner" style="background:linear-gradient(135deg,#E8A0B5 0%,#D4768E 50%,#9b59b6 100%);border-radius:14px;padding:16px 20px;margin-bottom:20px;cursor:pointer;position:relative;overflow:hidden;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(232,160,181,0.25)'" onmouseout="this.style.transform='none';this.style.boxShadow='none'">
+                    <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+                        <div style="min-width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-gift" style="font-size:18px;color:#fff"></i></div>
+                        <div style="flex:1">
+                            <h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:2px">Invite Friends, Get Premium Free</h4>
+                            <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.4">Share SafeTea and earn up to 90 days of free Pro access.</p>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.5);font-size:16px"></i>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-                    <div onclick="switchHubTab('teatalk')" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(210,130,160,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-mug-hot" style="font-size:26px;color:#E8A0B5;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Tea Talk</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Spill the tea — share experiences, ask the community, or give a heads up.</p>
-                    </div>
-                    <div onclick="switchHubTab('referral')" style="background:linear-gradient(135deg,rgba(46,204,113,0.12),rgba(46,204,113,0.04));border:1px solid rgba(46,204,113,0.2);border-radius:14px;padding:22px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                        <i class="fas fa-hand-holding-heart" style="font-size:26px;color:#2ecc71;margin-bottom:10px;display:block"></i>
-                        <h4 style="color:#fff;font-size:15px;margin-bottom:6px">Refer a Good One</h4>
-                        <p style="color:#8080A0;font-size:12px;line-height:1.5">Know a genuinely good guy? Vouch for him here and help the community.</p>
-                    </div>
-                </div>
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:24px">
-                    <h3 style="color:#fff;font-size:16px;margin-bottom:16px"><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> How SafeTea Keeps You Safe</h3>
-                    <div style="display:flex;flex-direction:column;gap:14px">
-                        <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(232,160,181,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#E8A0B5"></i></div>
-                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">1. Check Out Before Your Date</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Enter who, where, and when. Add trusted contacts who get an SMS with all the details.</p></div>
+
+                <!-- ====== HOW SAFETEA KEEPS YOU SAFE (light card) ====== -->
+                <div class="home-info-card" style="background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);border-radius:14px;padding:20px;margin-bottom:24px">
+                    <h3 class="home-card-title" style="color:#fff;font-size:15px;margin-bottom:14px"><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> How SafeTea Keeps You Safe</h3>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:34px;height:34px;background:rgba(232,160,181,0.12);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="color:#E8A0B5;font-size:13px"></i></div>
+                            <div><h4 class="home-card-title" style="color:#fff;font-size:13px;margin-bottom:2px">1. Check Out Before Your Date</h4><p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.4;margin:0">Enter who, where, and when. Add trusted contacts who get an SMS.</p></div>
                         </div>
-                        <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(90,160,210,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-sms" style="color:#5BA0D0"></i></div>
-                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">2. Trusted Contacts Get an SMS</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">They receive a text with date info and a live tracking link — no app needed.</p></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:34px;height:34px;background:rgba(90,160,210,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="fas fa-sms" style="color:#5BA0D0;font-size:13px"></i></div>
+                            <div><h4 class="home-card-title" style="color:#fff;font-size:13px;margin-bottom:2px">2. Trusted Contacts Get an SMS</h4><p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.4;margin:0">They receive date info and a live tracking link — no app needed.</p></div>
                         </div>
-                        <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(180,140,210,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#B48CD2"></i></div>
-                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">3. Live Tracking Page</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Contacts can check your status anytime — whether you're on the date and if you're overdue.</p></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:34px;height:34px;background:rgba(180,140,210,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="color:#B48CD2;font-size:13px"></i></div>
+                            <div><h4 class="home-card-title" style="color:#fff;font-size:13px;margin-bottom:2px">3. Live Tracking Page</h4><p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.4;margin:0">Contacts can check your status — whether you're on the date and if overdue.</p></div>
                         </div>
-                        <div style="display:flex;gap:14px;align-items:flex-start">
-                            <div style="min-width:38px;height:38px;background:rgba(76,175,80,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50"></i></div>
-                            <div><h4 style="color:#fff;font-size:13px;margin-bottom:3px">4. Check In When Safe</h4><p style="color:#8080A0;font-size:12px;line-height:1.4">Tap "Check In" and all your trusted contacts get a confirmation text instantly.</p></div>
+                        <div style="display:flex;gap:12px;align-items:flex-start">
+                            <div style="min-width:34px;height:34px;background:rgba(76,175,80,0.1);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="fas fa-check-circle" style="color:#4CAF50;font-size:13px"></i></div>
+                            <div><h4 class="home-card-title" style="color:#fff;font-size:13px;margin-bottom:2px">4. Check In When Safe</h4><p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.4;margin:0">Tap "Check In" and all your contacts get a confirmation text.</p></div>
                         </div>
                     </div>
                 </div>
@@ -862,6 +2005,7 @@
 
             <!-- HUB: SEARCH (moved from standalone tab) -->
             <div id="hub-search" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div class="search-section">
                     <div class="search-header">
                         <h2><img src="logo.png" alt="SafeTea" style="height:24px;vertical-align:middle"> Safety Search Tools</h2>
@@ -889,12 +2033,21 @@
                         <div class="form-row"><div class="form-group"><label>Approximate Age (optional)</label><input type="number" id="bg-age" placeholder="Age"></div></div>
                         <button class="btn-search" onclick="runBackgroundCheck()"><i class="fas fa-search"></i> Run Background Check</button>
                         <div id="background-results" class="search-results"></div>
+                        <div id="community-mentions-section" style="margin-top:20px">
+                            <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
+                                <h3 style="font-size:16px;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:10px"><i class="fas fa-comments" style="color:#E8A0B5"></i> Community Mentions</h3>
+                                <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Check whether this name appears in Tea Talk or Good Guys posts.</p>
+                                <button class="btn-search" onclick="loadCommunityMentions()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E)"><i class="fas fa-search"></i> Search Community Posts</button>
+                                <div id="community-mentions-results" style="margin-top:16px"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- HUB: NAME WATCH (moved from standalone tab) -->
             <div id="hub-namewatch" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div class="nw-section">
                     <div class="nw-header">
                         <h2><i class="fas fa-eye"></i> Name Watch <span class="plus-badge">SafeTea+</span></h2>
@@ -917,6 +2070,7 @@
 
             <!-- HUB: DATE CHECK (moved from standalone tab) -->
             <div id="hub-datecheck" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div class="datecheck-section">
                     <div class="datecheck-header">
                         <h2><i class="fas fa-calendar-check" style="color:#E8A0B5"></i> Date Check-In / Check-Out <span class="plus-badge">SafeTea+</span></h2>
@@ -1040,6 +2194,7 @@
 
             <!-- HUB: CATFISH CHECK -->
             <div id="hub-catfish" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div class="catfish-section">
                     <div style="margin-bottom:20px">
                         <h2><i class="fas fa-fish" style="color:#E8A0B5"></i> Reel in a Catfish</h2>
@@ -1074,8 +2229,9 @@
 
             <!-- HUB: TEA TALK (Spill the Tea) -->
             <div id="hub-teatalk" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div style="margin-bottom:20px">
-                    <h2><i class="fas fa-mug-hot" style="color:#E8A0B5"></i> Tea Talk</h2>
+                    <h2><img src="/logo.png" alt="" style="height:22px;vertical-align:middle;margin-right:6px"> Tea Talk</h2>
                     <p style="color:#8080A0;font-size:14px;margin-top:4px">Spill the tea, stay safe, and protect each other. Your voice matters.</p>
                 </div>
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
@@ -1111,9 +2267,10 @@
 
             <!-- HUB: REFER A GOOD ONE -->
             <div id="hub-referral" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <div style="margin-bottom:20px">
-                    <h2><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Refer a Good One</h2>
-                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Know a genuinely good guy? Vouch for him here. First name + last initial only.</p>
+                    <h2><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Recommend a Good Guy</h2>
+                    <p style="color:#8080A0;font-size:14px;margin-top:4px;line-height:1.5">Want to put a good word in for someone? Recommend a guy you know — a brother, coworker, friend, or ex — who treats women right. Your referral helps him stand out to women looking to date someone vetted by real people. First name + last initial only.</p>
                 </div>
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
                     <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Submit a Referral</h3>
@@ -1146,6 +2303,7 @@
 
             <!-- HUB: INVITE & EARN (Growth Referral) -->
             <div id="hub-growreferral" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
                 <!-- Hero invite header -->
                 <div style="text-align:center;padding:20px 16px 24px">
                     <div style="width:64px;height:64px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-heart" style="font-size:28px;color:#fff"></i></div>
@@ -1170,9 +2328,15 @@
                         <input type="text" id="grow-share-url" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#E8A0B5;font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
                         <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
                     </div>
-                    <div style="display:flex;gap:8px">
-                        <button onclick="shareReferralSMS()" style="flex:1;background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(46,204,113,0.25)"><i class="fas fa-sms"></i> Text a Friend</button>
-                        <button onclick="shareReferralNative()" style="flex:1;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 15px rgba(155,89,182,0.25)"><i class="fas fa-share-nodes"></i> Share Link</button>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+                        <button onclick="shareReferralSMS()" style="background:linear-gradient(135deg,#2ecc71,#27ae60);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-sms" style="font-size:18px"></i>Text</button>
+                        <button onclick="shareReferralEmail()" style="background:linear-gradient(135deg,#5BA0D0,#4A8BBF);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-envelope" style="font-size:18px"></i>Email</button>
+                        <button onclick="shareReferralIG()" style="background:linear-gradient(135deg,#E1306C,#C13584);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-instagram" style="font-size:18px"></i>Instagram</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                        <button onclick="shareReferralTikTok()" style="background:linear-gradient(135deg,#010101,#333);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-tiktok" style="font-size:18px"></i>TikTok</button>
+                        <button onclick="shareReferralFacebook()" style="background:linear-gradient(135deg,#1877F2,#145DBF);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fab fa-facebook" style="font-size:18px"></i>Facebook</button>
+                        <button onclick="shareReferralNative()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;color:#fff;padding:12px 8px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;flex-direction:column;align-items:center;gap:5px"><i class="fas fa-share-nodes" style="font-size:18px"></i>More</button>
                     </div>
                 </div>
 
@@ -1375,6 +2539,18 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Send Us Feedback -->
+            <div class="profile-form" style="margin-top:24px">
+                <h3><i class="fas fa-comment-dots" style="color:#E8A0B5"></i> Send Us Feedback</h3>
+                <p style="color:#8080A0;font-size:13px;margin:8px 0 16px">Bug reports, feature requests, or anything on your mind — we read every message.</p>
+                <textarea id="feedback-message" placeholder="Tell us what you think..." maxlength="2000" style="width:100%;min-height:100px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none" onfocus="this.style.borderColor='#E8A0B5'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'" oninput="updateFeedbackCounter()"></textarea>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                    <span id="feedback-counter" style="color:#8080A0;font-size:12px">0 / 2000</span>
+                    <button onclick="submitFeedback()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;transition:box-shadow 0.2s" onmouseover="this.style.boxShadow='0 4px 15px rgba(232,160,181,0.3)'" onmouseout="this.style.boxShadow='none'"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
+                </div>
+                <div id="feedback-success" style="display:none;margin-top:12px;padding:12px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);border-radius:8px;color:#2ecc71;font-size:13px;text-align:center"><i class="fas fa-check-circle"></i> Thanks for your feedback! We'll review it shortly.</div>
+            </div>
         </div>
     </div>
 
@@ -1383,13 +2559,686 @@
     <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
 
     <div class="mobile-tab-bar">
-        <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
-        <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
+        <a data-tab="hub" class="active" onclick="switchTab('hub')"><i class="fas fa-shield-alt"></i><span>Home</span></a>
+        <a data-tab="community" onclick="switchTab('community')"><img src="/logo.png" alt="" style="height:18px"><span>SafeTea Hub</span></a>
+        <a data-tab="alerts" onclick="switchTab('alerts')" style="position:relative"><i class="fas fa-bell"></i><span>Alerts</span><span id="nw-alert-badge-mobile" style="display:none;position:absolute;top:4px;right:12px;background:#e74c3c;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px;padding:0 4px">0</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
-        <a data-tab="hub" onclick="switchTab('hub')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+    // ============ THEME TOGGLE ============
+    function toggleTheme() {
+        var html = document.documentElement;
+        var current = html.getAttribute('data-theme');
+        var next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('safetea_theme', next); } catch(e) {}
+    }
+    // Restore saved theme on load
+    (function() {
+        try {
+            var saved = localStorage.getItem('safetea_theme');
+            if (saved === 'light' || saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+        } catch(e) {}
+    })();
+    </script>
+    <script>
+    // ============ REFERRAL / SHARE FUNCTIONS ============
+    var referralShareUrl = 'https://www.getsafetea.app';
+    var referralShareMessage = 'Hey! Check out SafeTea — it helps women stay safe while dating. Join our community and get safety tools for your next date.';
 
-    </html>
+    // Load referral code from API, fall back to landing page
+    (function loadReferralCode() {
+        var token = localStorage.getItem('token');
+        if (!token) {
+            document.getElementById('grow-share-url').value = referralShareUrl;
+            return;
+        }
+        fetch('/api/referral', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success && data.shareUrl) {
+                    referralShareUrl = data.shareUrl;
+                    document.getElementById('grow-share-url').value = data.shareUrl;
+                    if (data.referralCount !== undefined) {
+                        var countEl = document.getElementById('grow-ref-count');
+                        if (countEl) countEl.textContent = data.referralCount;
+                    }
+                } else {
+                    document.getElementById('grow-share-url').value = referralShareUrl;
+                }
+            })
+            .catch(function() {
+                document.getElementById('grow-share-url').value = referralShareUrl;
+            });
+    })();
+
+    function getShareUrl() {
+        return document.getElementById('grow-share-url').value || referralShareUrl;
+    }
+
+    function copyReferralLink() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied!');
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied!');
+        }
+    }
+
+    function shareReferralSMS() {
+        var url = getShareUrl();
+        var msg = referralShareMessage + ' ' + url;
+        window.location.href = 'sms:?body=' + encodeURIComponent(msg);
+    }
+
+    function shareReferralEmail() {
+        var url = getShareUrl();
+        var subject = 'Check out SafeTea — Stay Safe While Dating';
+        var body = referralShareMessage + '\n\n' + url;
+        window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    }
+
+    function shareReferralIG() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied! Paste it in your Instagram Story or DMs');
+                setTimeout(function() {
+                    window.open('https://www.instagram.com/', '_blank');
+                }, 800);
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied! Paste it in Instagram');
+            setTimeout(function() {
+                window.open('https://www.instagram.com/', '_blank');
+            }, 800);
+        }
+    }
+
+    function shareReferralTikTok() {
+        var url = getShareUrl();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Link copied! Paste it in your TikTok bio or DMs');
+                setTimeout(function() {
+                    window.open('https://www.tiktok.com/', '_blank');
+                }, 800);
+            });
+        } else {
+            var input = document.getElementById('grow-share-url');
+            input.select();
+            document.execCommand('copy');
+            showToast('Link copied! Paste it in TikTok');
+            setTimeout(function() {
+                window.open('https://www.tiktok.com/', '_blank');
+            }, 800);
+        }
+    }
+
+    function shareReferralFacebook() {
+        var url = getShareUrl();
+        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank', 'width=600,height=400');
+    }
+
+    function shareReferralNative() {
+        var url = getShareUrl();
+        if (navigator.share) {
+            navigator.share({
+                title: 'SafeTea — Date Safer',
+                text: referralShareMessage,
+                url: url
+            }).catch(function() {});
+        } else {
+            copyReferralLink();
+        }
+    }
+
+    function showToast(msg) {
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#2ecc71;color:#fff;padding:10px 24px;border-radius:25px;font-size:14px;font-weight:600;z-index:9999;white-space:nowrap;max-width:90vw;text-align:center';
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 2500);
+    }
+    </script>
+
+    <script>
+    /* ========== COMMUNITY TAB (Matching Nate's Mockups) ========== */
+    var communityState = {
+        cities: [],
+        selectedCity: null,
+        currentCategory: 'tea-talk',
+        posts: [],
+        pendingCity: null,
+        postPhotoFile: null,
+        postPhotoDataUrl: null
+    };
+
+    // City images — custom illustrated skylines
+    var cityImages = {
+        'Chicago':     { image: '/images/cities/chicago..png',      emoji: '&#x1F3D9;', color: '#F0C4D4' },
+        'New York':    { image: '/images/cities/newyork.png',      emoji: '&#x1F5FD;', color: '#D4E0F0' },
+        'Los Angeles': { image: '/images/cities/Los Angeles.jpg',   emoji: '&#x1F3AC;', color: '#F0D4C4' },
+        'Dallas':      { image: '/images/cities/dallas.jpg',       emoji: '&#x1F920;', color: '#D4F0E0' },
+        'Miami':       { image: '/images/cities/miami.jpg',        emoji: '&#x1F334;', color: '#C4E8F0' },
+        'Houston':     { image: '/images/cities/houston.jpg',      emoji: '&#x1F680;', color: '#E8D4F0' },
+        'Atlanta':     { image: '/images/cities/atlanta.jpg',      emoji: '&#x1F3D7;', color: '#F0D4D4' },
+        'Boston':      { image: '/images/cities/boston.jpg',        emoji: '&#x1F341;', color: '#D4D4F0' }
+    };
+
+    function loadCities() {
+        fetch('/api/cities')
+            .then(function(r) { return r.json(); })
+            .then(function(cities) {
+                communityState.cities = cities;
+                renderCityPickerGrid(cities);
+                // Auto-select saved city
+                var userCity = localStorage.getItem('safetea-city');
+                if (userCity) {
+                    var city = cities.find(function(c) { return c.id === parseInt(userCity); });
+                    if (city) {
+                        communityState.selectedCity = city;
+                        communityState.pendingCity = city;
+                        updateCommunityHeader(city);
+                        loadCommunityFeed();
+                        showQuickPost();
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('Failed to load cities:', err);
+            });
+    }
+
+    function renderCityPickerGrid(cities) {
+        var grid = document.getElementById('city-picker-grid');
+        grid.innerHTML = cities.map(function(city) {
+            var meta = cityImages[city.name] || { emoji: '&#x1F3D9;', color: '#F0E0E8' };
+            var isSelected = (communityState.pendingCity && communityState.pendingCity.id === city.id) ||
+                             (communityState.selectedCity && communityState.selectedCity.id === city.id);
+            // Use custom image if available, emoji fallback
+            var imgSection = '';
+            if (meta.image) {
+                imgSection = '<div class="city-card-img" style="background:' + meta.color + ';padding:0;overflow:hidden">' +
+                    '<img src="' + meta.image + '" alt="' + escapeHtml(city.name) + '" ' +
+                    'style="width:100%;height:100%;object-fit:cover;display:block" ' +
+                    'onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=font-size:48px>' + meta.emoji + '</span>\'">' +
+                '</div>';
+            } else {
+                imgSection = '<div class="city-card-img" style="background:' + meta.color + ';font-size:48px;">' + (city.emoji || meta.emoji) + '</div>';
+            }
+            return '<div class="city-card' + (isSelected ? ' selected' : '') + '" onclick="selectCityCard(' + JSON.stringify(city).replace(/"/g, '&quot;') + ', this)">' +
+                imgSection +
+                '<div class="city-card-info">' +
+                    '<span class="city-card-name">' + escapeHtml(city.name) + '</span>' +
+                    (isSelected ? '<span class="city-card-check"><i class="fas fa-check-circle"></i></span>' : '<span class="city-card-arrow">&rsaquo;</span>') +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function selectCityCard(city, el) {
+        communityState.pendingCity = city;
+        // Update all cards
+        document.querySelectorAll('.city-card').forEach(function(c) { c.classList.remove('selected'); });
+        if (el) el.classList.add('selected');
+        document.getElementById('city-continue-btn').disabled = false;
+        // Re-render to update check/arrow icons
+        renderCityPickerGrid(communityState.cities);
+    }
+
+    function filterCitySearch(val) {
+        var q = val.toLowerCase();
+        var filtered = communityState.cities.filter(function(c) {
+            return c.name.toLowerCase().indexOf(q) >= 0;
+        });
+        renderCityPickerGrid(filtered);
+    }
+
+    function confirmCitySelection() {
+        var city = communityState.pendingCity;
+        if (!city) return;
+        communityState.selectedCity = city;
+        localStorage.setItem('safetea-city', city.id);
+        updateCommunityHeader(city);
+        closeCityPicker();
+        loadCommunityFeed();
+        showQuickPost();
+        // Update on server
+        var token = localStorage.getItem('token');
+        if (token) {
+            fetch('/api/users/city', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ city_id: city.id })
+            }).catch(function() {});
+        }
+    }
+
+    function updateCommunityHeader(city) {
+        document.getElementById('community-city-name').textContent = city.name;
+        document.getElementById('community-title').innerHTML = '<img src="/logo.png" alt="" style="height:28px;vertical-align:middle;margin-right:6px">' + escapeHtml(city.name) + ' SafeTea Hub';
+    }
+
+    function showQuickPost() {
+        var qp = document.getElementById('community-quickpost');
+        if (qp) qp.style.display = 'flex';
+        var bt = document.getElementById('community-bottom-tabs');
+        if (bt) bt.style.display = 'block';
+    }
+
+    function openCityPicker() {
+        document.getElementById('city-picker').classList.add('show');
+        if (communityState.cities.length === 0) loadCities();
+        else renderCityPickerGrid(communityState.cities);
+    }
+
+    function closeCityPicker() {
+        document.getElementById('city-picker').classList.remove('show');
+    }
+
+    // Feed sort mode: 'hot' (engagement+recency like FB) or 'recent' (newest first)
+    var feedSortMode = 'hot';
+
+    function setFeedSort(mode) {
+        feedSortMode = mode;
+        // Update toggle UI
+        var hotBtn = document.getElementById('sort-hot-btn');
+        var recentBtn = document.getElementById('sort-recent-btn');
+        if (hotBtn && recentBtn) {
+            hotBtn.style.background = mode === 'hot' ? 'linear-gradient(135deg,#E8A0B5,#D4768E)' : 'transparent';
+            hotBtn.style.color = mode === 'hot' ? '#fff' : '#999';
+            recentBtn.style.background = mode === 'recent' ? 'linear-gradient(135deg,#E8A0B5,#D4768E)' : 'transparent';
+            recentBtn.style.color = mode === 'recent' ? '#fff' : '#999';
+        }
+        loadCommunityFeed();
+    }
+
+    function loadCommunityFeed() {
+        var city = communityState.selectedCity;
+        if (!city) return;
+        // Show sort toggle when city is selected
+        var sortToggle = document.getElementById('feed-sort-toggle');
+        if (sortToggle) sortToggle.style.display = 'block';
+        var feed = document.getElementById('community-feed');
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#E8A0B5;"></i></div>';
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var url = '/api/community?city=' + encodeURIComponent(city.name) + '&sort=' + feedSortMode;
+        // Tea Talk = main feed (no category filter), Good Guys = filtered
+        if (communityState.currentCategory === 'good-guys') {
+            url += '&category=good-guys';
+        }
+        fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var posts = Array.isArray(data) ? data : (data.posts || []);
+                communityState.posts = posts;
+                if (posts.length === 0) {
+                    feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">' +
+                        '<i class="fas fa-comments" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>' +
+                        'No posts yet in ' + escapeHtml(city.name) + '.<br>Be the first to share!</div>';
+                    return;
+                }
+                feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
+            })
+            .catch(function(err) {
+                feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">Failed to load posts. Try again.</div>';
+                console.error(err);
+            });
+    }
+
+    function renderCommunityPost(post) {
+        var colors = ['#E8A0B5','#9b59b6','#3498db','#2ecc71','#e67e22','#1abc9c','#e74c3c','#f39c12'];
+        var colorIndex = (post.user_id || 0) % colors.length;
+        var avatarColor = colors[colorIndex];
+        var initial = (post.display_name || post.username || 'A').charAt(0).toUpperCase();
+        var timeAgo = getTimeAgo(post.created_at);
+        var neighborhood = post.neighborhood ? ' &middot; ' + escapeHtml(post.neighborhood) : '';
+        var imageHtml = '';
+        if (post.image_url) {
+            imageHtml = '<img class="community-post-image" src="' + escapeHtml(post.image_url) + '" alt="Post image" loading="lazy">';
+        }
+        return '<div class="community-post">' +
+            '<div class="community-post-header">' +
+                '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div class="community-post-meta">' +
+                    '<span class="community-post-author">' + escapeHtml(post.display_name || post.username || 'Anonymous') + '</span>' +
+                    '<div class="community-post-time">' + timeAgo + neighborhood + '</div>' +
+                '</div>' +
+                '<button class="community-post-more">&middot;&middot;&middot;</button>' +
+            '</div>' +
+            '<div class="community-post-body">' + formatPostContent(post.content) + '</div>' +
+            imageHtml +
+            '<div class="community-post-actions">' +
+                '<button class="community-post-action"><i class="far fa-heart"></i> ' + (post.like_count || 0) + '</button>' +
+                '<button class="community-post-action"><i class="far fa-comment"></i> ' + (post.reply_count || post.comment_count || 0) + '</button>' +
+                '<button class="community-post-action"><i class="fas fa-share"></i> ' + (post.share_count || 0) + '</button>' +
+                '<span class="community-post-action-spacer"></span>' +
+                '<button class="community-post-more" style="padding:0">&middot;&middot;&middot;</button>' +
+            '</div>' +
+        '</div>';
+    }
+
+    function formatPostContent(text) {
+        if (!text) return '';
+        // Escape HTML first
+        var safe = escapeHtml(text);
+        // Bold text between *asterisks*
+        safe = safe.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+        // Bold text between **double asterisks**
+        safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        return safe;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getTimeAgo(dateStr) {
+        if (!dateStr) return '';
+        var now = new Date();
+        var then = new Date(dateStr);
+        var diff = Math.floor((now - then) / 1000);
+        if (diff < 60) return 'just now';
+        if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+        return then.toLocaleDateString();
+    }
+
+    function filterCommunity(cat) {
+        communityState.currentCategory = cat;
+        // Update all tab groups (top + bottom)
+        document.querySelectorAll('.community-cat-tab').forEach(function(t) {
+            t.classList.remove('active-tea', 'active-good');
+            t.classList.add('inactive');
+        });
+        document.querySelectorAll('.community-cat-tab[data-cat="' + cat + '"]').forEach(function(t) {
+            t.classList.remove('inactive');
+            if (cat === 'tea-talk') t.classList.add('active-tea');
+            else if (cat === 'good-guys') t.classList.add('active-good');
+        });
+        loadCommunityFeed();
+    }
+
+    function openPostModal() {
+        if (!communityState.selectedCity) {
+            openCityPicker();
+            return;
+        }
+        document.getElementById('post-modal').classList.add('show');
+        document.getElementById('community-post-text').focus();
+    }
+
+    function closePostModal() {
+        document.getElementById('post-modal').classList.remove('show');
+        document.getElementById('community-post-text').value = '';
+        removePostPhoto();
+    }
+
+    // Photo upload handling
+    function handlePostPhoto(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Photo must be under 5MB');
+                return;
+            }
+            communityState.postPhotoFile = file;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                communityState.postPhotoDataUrl = e.target.result;
+                document.getElementById('post-photo-preview-img').src = e.target.result;
+                document.getElementById('post-photo-preview').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function removePostPhoto() {
+        communityState.postPhotoFile = null;
+        communityState.postPhotoDataUrl = null;
+        document.getElementById('post-photo-preview').style.display = 'none';
+        document.getElementById('post-photo-preview-img').src = '';
+        document.getElementById('post-photo-input').value = '';
+    }
+
+    function submitCommunityPost() {
+        var content = document.getElementById('community-post-text').value.trim();
+        if (!content) return;
+        var category = document.getElementById('community-post-cat').value;
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var city = communityState.selectedCity;
+        if (!token || !city) return;
+        var btn = document.querySelector('.post-modal-submit');
+        btn.textContent = 'Posting...';
+        btn.disabled = true;
+
+        var postData = { content: content, category: category, city: city.name };
+        // If there's a photo, include as base64
+        if (communityState.postPhotoDataUrl) {
+            postData.image = communityState.postPhotoDataUrl;
+        }
+
+        fetch('/api/community/post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify(postData)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.textContent = 'Post';
+            btn.disabled = false;
+            if (data.error) {
+                showToast(data.error);
+                return;
+            }
+            closePostModal();
+            showToast('Posted to ' + city.name + '!');
+            loadCommunityFeed();
+        })
+        .catch(function(err) {
+            btn.textContent = 'Post';
+            btn.disabled = false;
+            showToast('Failed to post. Try again.');
+        });
+    }
+
+    // Close modals on overlay/background click
+    document.getElementById('post-modal').addEventListener('click', function(e) {
+        if (e.target === this) closePostModal();
+    });
+
+    // Load cities on page load
+    loadCities();
+
+    // ============ NAME WATCH ALERTS ============
+    var nwUnreadCount = 0;
+
+    function loadNameWatchAlerts() {
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        if (!token) return;
+
+        fetch('/api/namewatch', {
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data || data.error) return;
+
+            // Count unread
+            var unread = 0;
+            if (data.names) {
+                data.names.forEach(function(n) { unread += parseInt(n.unread_count || 0); });
+            }
+            nwUnreadCount = unread;
+            updateNwBadges(unread);
+
+            // Render alerts
+            var list = document.getElementById('nw-alerts-list');
+            if (!list) return;
+
+            var matches = data.matches || [];
+            if (matches.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0;font-size:14px"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>No Name Watch alerts yet.<br><span style="font-size:12px">Add names in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'namewatch\')},100);return false" style="color:#E8A0B5">Name Watch</a> to get notified when they\'re mentioned.</span></div>';
+                var markBtn = document.getElementById('nw-mark-read-btn');
+                if (markBtn) markBtn.style.display = 'none';
+                return;
+            }
+
+            var markBtn = document.getElementById('nw-mark-read-btn');
+            if (markBtn) markBtn.style.display = unread > 0 ? 'inline-flex' : 'none';
+
+            var h = '';
+            matches.forEach(function(m) {
+                var isUnread = !m.is_read;
+                var bgColor = isUnread ? 'rgba(232,160,181,0.08)' : 'rgba(255,255,255,0.02)';
+                var borderColor = isUnread ? 'rgba(232,160,181,0.2)' : 'rgba(255,255,255,0.06)';
+                var snippet = (m.post_content || '').substring(0, 120);
+                if ((m.post_content || '').length > 120) snippet += '...';
+                var timeStr = m.post_date ? getTimeAgo(m.post_date) : '';
+
+                h += '<div style="background:' + bgColor + ';border:1px solid ' + borderColor + ';border-radius:12px;padding:16px;margin-bottom:8px;transition:all 0.2s">';
+                h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+                h += '<div style="width:36px;height:36px;background:rgba(232,160,181,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center"><i class="fas fa-eye" style="color:#E8A0B5;font-size:14px"></i></div>';
+                h += '<div style="flex:1">';
+                h += '<span style="color:#E8A0B5;font-weight:600;font-size:14px">' + escapeHtml(m.matched_name || '') + '</span>';
+                if (isUnread) h += ' <span style="background:#e74c3c;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:6px">NEW</span>';
+                h += '<div style="color:#8080A0;font-size:11px;margin-top:2px">' + timeStr + (m.post_city ? ' &middot; ' + escapeHtml(m.post_city) : '') + '</div>';
+                h += '</div></div>';
+                if (snippet) {
+                    h += '<div style="color:#ccc;font-size:13px;line-height:1.5;padding-left:46px">"' + escapeHtml(snippet) + '"</div>';
+                }
+                h += '</div>';
+            });
+            list.innerHTML = h;
+        })
+        .catch(function(err) {
+            console.error('Name Watch alerts error:', err);
+        });
+    }
+
+    function updateNwBadges(count) {
+        // Top nav badge
+        var badge = document.getElementById('nw-alert-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        // Mobile nav badge
+        var mbadge = document.getElementById('nw-alert-badge-mobile');
+        if (mbadge) {
+            if (count > 0) {
+                mbadge.textContent = count;
+                mbadge.style.display = 'block';
+            } else {
+                mbadge.style.display = 'none';
+            }
+        }
+        // Home bell dot
+        var dot = document.getElementById('home-notif-dot');
+        if (dot) {
+            if (count > 0) {
+                dot.textContent = count;
+                dot.style.display = 'flex';
+                dot.style.alignItems = 'center';
+                dot.style.justifyContent = 'center';
+            } else {
+                dot.style.display = 'none';
+            }
+        }
+    }
+
+    function markAllNameWatchRead() {
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        if (!token) return;
+
+        fetch('/api/namewatch/read-all', {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                showToast('All alerts marked as read');
+                nwUnreadCount = 0;
+                updateNwBadges(0);
+                loadNameWatchAlerts();
+            }
+        })
+        .catch(function() { showToast('Failed to mark alerts as read'); });
+    }
+
+    // Poll for Name Watch alerts on load and every 60 seconds
+    loadNameWatchAlerts();
+    setInterval(loadNameWatchAlerts, 60000);
+
+    // ============ FEEDBACK ============
+    function updateFeedbackCounter() {
+        var msg = document.getElementById('feedback-message');
+        var counter = document.getElementById('feedback-counter');
+        if (msg && counter) {
+            counter.textContent = msg.value.length + ' / 2000';
+        }
+    }
+
+    function submitFeedback() {
+        var msg = document.getElementById('feedback-message');
+        if (!msg) return;
+        var text = msg.value.trim();
+        if (text.length < 10) {
+            showToast('Please write at least 10 characters');
+            return;
+        }
+        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        if (!token) {
+            showToast('Please log in to submit feedback');
+            return;
+        }
+        fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ message: text })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+        .then(function(res) {
+            if (res.status === 201 && res.data.success) {
+                msg.value = '';
+                updateFeedbackCounter();
+                var success = document.getElementById('feedback-success');
+                if (success) {
+                    success.style.display = 'block';
+                    setTimeout(function() { success.style.display = 'none'; }, 5000);
+                }
+                showToast('Feedback submitted!');
+            } else {
+                showToast(res.data.error || 'Failed to submit feedback');
+            }
+        })
+        .catch(function() { showToast('Network error — please try again'); });
+    }
+
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
+     

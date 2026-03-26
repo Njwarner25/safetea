@@ -339,24 +339,73 @@
 
     /* --- Responsive --- */
     @media (max-width: 768px) {
+      /* Drastically reduce section padding on mobile */
+      .section, .features-section, .problem-section, .trust-section, .pricing-section { padding: 48px 0 !important; }
+      .stats-bar { padding: 24px 0 !important; }
+      .cta-section { padding: 60px 0 !important; }
+
       .hero h1 { font-size: 2.6rem; }
       .hero-badge { font-size: 0.75rem; padding: 6px 16px; }
       .hero-illustration { max-width: 320px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+
+      /* Stats bar compact */
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
       .stat-number { font-size: 1.8rem; }
-      .solution-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; }
-      .features-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
-      .trust-grid { grid-template-columns: repeat(2, 1fr); }
-      .pricing-grid { grid-template-columns: 1fr !important; max-width: 400px; }
+
+      /* Problem + Solution merged — tighter spacing between headings */
+      .problem-section h2 + .section-body + h2 { margin-top: 32px; }
+
+      /* Solution cards horizontal scroll on mobile */
+      .solution-grid { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; gap: 16px; margin-top: 28px; }
+      .solution-card { padding: 24px 20px; }
+      .solution-card-icon { width: 48px; height: 48px; margin-bottom: 12px; }
+
+      /* Features compact */
+      .features-header { margin-bottom: 28px; }
+      .features-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; gap: 12px; }
+      .feature-card { padding: 20px 18px; display: flex; align-items: flex-start; gap: 14px; }
+      .feature-card-icon { width: 40px; height: 40px; margin-bottom: 0; flex-shrink: 0; }
+      .feature-card h3 { font-size: 0.95rem; margin-bottom: 4px; }
+      .feature-card p { font-size: 0.82rem; line-height: 1.5; }
+      .feature-card .feature-tag { margin-top: 8px; }
+
+      /* How It Works compact */
+      .steps-grid { margin-top: 28px; gap: 16px; }
+
+      /* Name Watch — hide demo mockup on mobile, keep explainer */
+      .name-watch-grid { grid-template-columns: 1fr !important; }
+      .name-watch-demo { display: none !important; }
+      .name-watch-section { padding: 48px 0 !important; }
+      .nw-steps { gap: 16px; }
+      .nw-step { padding: 14px; }
+
+      /* Trust compact */
+      .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+      /* Pricing compact */
+      .pricing-grid { grid-template-columns: 1fr !important; max-width: 400px; gap: 16px; }
+      .pricing-card { padding: 24px 20px; }
+
+      /* Referral tiers compact */
+      .referral-tiers { gap: 12px; }
+      .referral-banner { padding: 24px 16px; margin-top: 24px; }
+
+      /* Cities section compact */
+      #cities { padding: 48px 0 !important; }
+
       .footer-grid { grid-template-columns: 1fr; gap: 32px; text-align: center; }
       .footer-brand-block p { max-width: 100%; margin: 0 auto; }
       .footer-bottom-bar { flex-direction: column; gap: 12px; text-align: center; }
-      .cta-section { padding: 100px 0; }
     }
     @media (max-width: 480px) {
       .hero h1 { font-size: 2.1rem; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .hero-subtitle { font-size: 0.9rem; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
       .stat-number { font-size: 1.5rem; }
+      /* Even tighter on small phones */
+      .section, .features-section, .problem-section, .trust-section, .pricing-section { padding: 36px 0 !important; }
+      .solution-grid { gap: 12px; }
+      .features-grid { gap: 10px; }
     }
   </style>
 </head>
@@ -433,21 +482,13 @@
   </div>
 </section>
 
-<!-- PROBLEM -->
+<!-- PROBLEM + SOLUTION -->
 <section class="section problem-section" id="problem">
   <div class="container">
     <div class="section-content-centered">
       <h2>Dating shouldn't feel unsafe.</h2>
       <p class="section-body">Group chats disappear. Screenshots leak. Information gets lost. Women are left to figure things out alone — again and again.</p>
-    </div>
-  </div>
-</section>
-
-<!-- SOLUTION -->
-<section class="section section-alt" id="solution">
-  <div class="container">
-    <div class="section-content-centered">
-      <h2>SafeTea is built differently.</h2>
+      <h2 style="margin-top:48px">SafeTea is built differently.</h2>
       <p class="section-body">A purpose-built platform designed from day one to protect — not expose.</p>
     </div>
     <div class="solution-grid">

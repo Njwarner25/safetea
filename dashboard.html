@@ -1632,73 +1632,7 @@
     </nav>
 
     <!-- FEED TAB -->
-    <div id="tab-feed" class="tab-section">
-        <div class="dashboard">
-            <div class="main-content">
-                <div class="welcome-banner" id="welcome-banner">
-                    <h2 id="welcome-name">Welcome back!</h2>
-                    <p>Stay informed. Stay safe. Your community has your back.</p>
-                    <div class="city-badge" id="city-badge"><i class="fas fa-map-marker-alt"></i> <span id="user-city">Loading...</span></div>
-                </div>
-                <!-- INVITE FRIENDS CARD — Feed tab -->
-                <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)" style="background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(155,89,182,0.08));border:1px solid rgba(232,160,181,0.25);border-radius:14px;padding:16px 20px;margin-bottom:20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.5)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(232,160,181,0.25)';this.style.transform='none'">
-                    <div style="min-width:42px;height:42px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-plus" style="font-size:18px;color:#fff"></i></div>
-                    <div style="flex:1">
-                        <span style="color:#fff;font-size:14px;font-weight:600">Invite Friends to SafeTea</span>
-                        <span style="color:#8080A0;font-size:12px;display:block;margin-top:2px">Get free Premium when 3 friends join</span>
-                    </div>
-                    <div style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap">Share Now</div>
-                </div>
-
-                <div class="create-post">
-                    <div class="create-post-input">
-                        <div class="post-avatar" id="post-avatar" style="background:#E8A0B5"></div>
-                        <textarea id="new-post-content" placeholder="Share an experience or warning with your community..."></textarea>
-                    </div>
-                    <div id="image-preview" class="image-preview">
-                        <img id="preview-img" src="" alt="Preview">
-                        <button class="remove-image" onclick="removeImage()"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="create-post-actions">
-                        <div class="post-toolbar">
-                            <select class="post-category-select" id="new-post-category">
-                                <option value="general">General</option>
-                                <option value="safety-tip">Safety Tip</option>
-                                <option value="recommendation">Recommendation</option>
-                                <option value="good-news">Good News</option>
-                                <option value="warning">Warning</option>
-                            </select>
-                            <button class="btn-upload" onclick="document.getElementById('file-input').click()"><i class="fas fa-image"></i> Photo</button>
-                            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
-                        </div>
-                        <button class="btn-post" onclick="createPost()"><i class="fas fa-paper-plane"></i> Post</button>
-                    </div>
-                </div>
-                <div id="posts-feed">
-                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading community feed...</div>
-                </div>
-            </div>
-            <div class="sidebar-right">
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-chart-bar"></i> Your Stats</h3>
-                    <div class="stat-grid">
-                        <div class="stat-item"><div class="stat-number" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
-                        <div class="stat-item"><div class="stat-number" id="stat-replies">0</div><div class="stat-label">Replies</div></div>
-                        <div class="stat-item"><div class="stat-number" id="stat-role">-</div><div class="stat-label">Role</div></div>
-                        <div class="stat-item"><div class="stat-number" id="stat-status">-</div><div class="stat-label">Status</div></div>
-                    </div>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-exclamation-triangle"></i> Recent Alerts</h3>
-                    <div id="alerts-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
-                </div>
-                <div class="sidebar-card">
-                    <h3><i class="fas fa-trophy"></i> City Leaderboard</h3>
-                    <div id="cities-list"><div class="loading" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Legacy feed tab removed — all community content lives in SafeTea Hub -->
 
     <!-- COMMUNITY TAB -->
     <div id="tab-community" class="tab-section" style="background: linear-gradient(180deg, #FDF5F7 0%, #F8E8EE 20%, #FDF5F7 100%); min-height: 100vh;">

@@ -1,8 +1,10 @@
 import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator, Linking } from 'react-native';
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useCityStore } from '../store/cityStore';
 import { useBackgroundCheckStore } from '../store/backgroundCheckStore';
+import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
 import NameFeedIntegration from '../components/community/NameFeedIntegration';
 
@@ -33,6 +35,25 @@ function getSectionStatus(section: any): { label: string; color: string } {
 }
 
 export default function BackgroundCheckScreen() {
+  const user = useAuthStore((s) => s.user);
+
+  if (user?.tier !== 'pro') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.gateCard}>
+          <Text style={styles.gateIcon}>🔒</Text>
+          <Text style={styles.gateTitle}>Background Check is a Pro Feature</Text>
+          <Text style={styles.gateDesc}>
+            Run comprehensive public records searches across criminal records, court filings, social media, and more. Upgrade to SafeTea Pro to unlock.
+          </Text>
+          <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
+            <Text style={styles.upgradeBtnText}>Upgrade to Pro</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState('');
   const [isMentionsOpen, setIsMentionsOpen] = useState(false);
@@ -305,4 +326,13 @@ const styles = StyleSheet.create({
   mentionsBtn: { backgroundColor: Colors.coral, padding: Spacing.md, borderRadius: BorderRadius.lg, alignItems: 'center' },
   mentionsBtnText: { color: '#FFF', fontWeight: '700', fontSize: FontSize.sm },
   fcraNotice: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', lineHeight: 16, padding: Spacing.md },
+  gateCard: {
+    margin: Spacing.md, backgroundColor: Colors.surface, borderRadius: BorderRadius.lg,
+    padding: Spacing.xl, alignItems: 'center', borderWidth: 1, borderColor: Colors.border,
+  },
+  gateIcon: { fontSize: 48, marginBottom: Spacing.md },
+  gateTitle: { fontSize: FontSize.xl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm, textAlign: 'center' },
+  gateDesc: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: Spacing.lg },
+  upgradeBtn: { backgroundColor: Colors.coral, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, borderRadius: BorderRadius.lg },
+  upgradeBtnText: { color: '#FFF', fontWeight: '700', fontSize: FontSize.md },
 });

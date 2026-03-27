@@ -125,6 +125,7 @@
         if (tab === 'profile') loadProfile();
         if (tab === 'inbox') loadInbox();
         if (tab === 'hub') initHub();
+        if (tab === 'community' && typeof loadCommunityPosts === 'function') loadCommunityPosts();
     }
     window.switchTab = switchTab;
 

@@ -747,10 +747,10 @@
                 <span>SafeTea</span>
             </a>
             <div class="topnav-nav">
-                <a class="active" data-tab="feed"><i class="fas fa-home"></i> Feed</a>
+                <a class="active" data-tab="hub"><i class="fas fa-shield-alt"></i> Home</a>
+                <a data-tab="community"><img src="logo.png" alt="" style="height:18px;vertical-align:middle"> SafeTea Hub</a>
                 <a data-tab="alerts"><i class="fas fa-bell"></i> Alerts</a>
                 <a data-tab="inbox"><i class="fas fa-envelope"></i> Inbox <span id="inbox-badge" class="inbox-badge" style="display:none">0</span></a>
-                <a data-tab="hub"><img src="logo.png" alt="" style="height:18px;vertical-align:middle"> Hub</a>
                 <a data-tab="profile"><i class="fas fa-user"></i> Profile</a>
             </div>
         </div>
@@ -767,6 +767,49 @@
     </nav>
 
     <!-- Legacy feed tab removed — all community content lives in SafeTea Hub -->
+
+    <!-- ===== SAFETEA HUB (COMMUNITY) TAB ===== -->
+    <div id="tab-community" class="tab-section">
+        <div style="max-width:720px;margin:0 auto;padding:24px">
+            <h2 style="color:var(--text-primary);font-size:20px;font-weight:700;margin-bottom:4px"><img src="/logo.png" alt="" style="height:22px;vertical-align:middle;margin-right:6px"> SafeTea Hub</h2>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Community posts from your city. Share experiences and celebrate the good ones.</p>
+
+            <!-- Tea Talk / Good Guys Toggle -->
+            <div style="display:flex;gap:8px;margin-bottom:16px">
+                <button id="comm-tab-teatalk" onclick="switchCommunityFeed('tea-talk')" style="flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;background:var(--pink);color:#fff;transition:all 0.2s">&#9749; Tea Talk</button>
+                <button id="comm-tab-goodguys" onclick="switchCommunityFeed('good-guys')" style="flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);transition:all 0.2s">&#10004; Good Guys</button>
+            </div>
+
+            <!-- Quick Post Bar -->
+            <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+                <input type="text" id="comm-quickpost" placeholder="Share a warning, tip, or experience..." onclick="document.getElementById('comm-post-modal').style.display='flex'" readonly style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text-muted);font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;outline:none">
+                <button onclick="document.getElementById('comm-post-modal').style.display='flex'" style="background:var(--pink);color:#fff;border:none;padding:10px 20px;border-radius:24px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-paper-plane"></i> Post</button>
+            </div>
+
+            <!-- Feed -->
+            <div id="community-feed-list">
+                <div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Post Modal -->
+    <div id="comm-post-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;justify-content:center;align-items:center;padding:20px">
+        <div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:500px;width:100%;border:1px solid var(--border)">
+            <h3 style="color:var(--text-primary);font-size:16px;margin-bottom:12px">Share with your community</h3>
+            <textarea id="comm-post-body" placeholder="What do you want your city to know?" style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:10px;padding:14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:100px;outline:none"></textarea>
+            <div style="display:flex;gap:8px;margin-top:12px;justify-content:space-between;align-items:center">
+                <select id="comm-post-feed" style="background:var(--bg-tertiary);border:1px solid var(--border-light);color:var(--text-muted);padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
+                    <option value="tea-talk">&#9749; Tea Talk</option>
+                    <option value="good-guys">&#10004; Good Guys</option>
+                </select>
+                <div style="display:flex;gap:8px">
+                    <button onclick="document.getElementById('comm-post-modal').style.display='none'" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
+                    <button onclick="submitCommunityPost()" style="padding:10px 20px;border-radius:10px;border:none;background:var(--pink);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-paper-plane"></i> Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== ALERTS TAB ===== -->
     <div id="tab-alerts" class="tab-section">
@@ -1226,10 +1269,10 @@
 
     <!-- MOBILE TAB BAR -->
     <div class="mobile-tab-bar">
-        <a data-tab="feed" class="active" onclick="switchTab('feed')"><i class="fas fa-home"></i><span>Feed</span></a>
+        <a data-tab="hub" class="active" onclick="switchTab('hub')"><i class="fas fa-shield-alt"></i><span>Home</span></a>
+        <a data-tab="community" onclick="switchTab('community')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="alerts" onclick="switchTab('alerts')"><i class="fas fa-bell"></i><span>Alerts</span></a>
         <a data-tab="inbox" onclick="switchTab('inbox')"><i class="fas fa-envelope"></i><span>Inbox</span></a>
-        <a data-tab="hub" onclick="switchTab('hub')"><img src="logo.png" alt="" style="height:16px"><span>Hub</span></a>
         <a data-tab="profile" onclick="switchTab('profile')"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
@@ -1258,6 +1301,96 @@
         document.querySelectorAll('.timer-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
     }
+
+    // ============ COMMUNITY FEED ============
+    var commCurrentFeed = 'tea-talk';
+
+    function switchCommunityFeed(feed) {
+        commCurrentFeed = feed;
+        var teaBtn = document.getElementById('comm-tab-teatalk');
+        var goodBtn = document.getElementById('comm-tab-goodguys');
+        if (feed === 'tea-talk') {
+            teaBtn.style.background = 'var(--pink)'; teaBtn.style.color = '#fff'; teaBtn.style.border = 'none';
+            goodBtn.style.background = 'var(--bg-card)'; goodBtn.style.color = 'var(--text-muted)'; goodBtn.style.border = '1px solid var(--border)';
+        } else {
+            goodBtn.style.background = '#2ecc71'; goodBtn.style.color = '#fff'; goodBtn.style.border = 'none';
+            teaBtn.style.background = 'var(--bg-card)'; teaBtn.style.color = 'var(--text-muted)'; teaBtn.style.border = '1px solid var(--border)';
+        }
+        // Set post modal default to current feed
+        var sel = document.getElementById('comm-post-feed');
+        if (sel) sel.value = feed;
+        loadCommunityPosts();
+    }
+    window.switchCommunityFeed = switchCommunityFeed;
+
+    function loadCommunityPosts() {
+        var container = document.getElementById('community-feed-list');
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>';
+        var token = localStorage.getItem('token');
+        var url = '/api/posts?feed=' + (commCurrentFeed === 'good-guys' ? 'good-guys' : 'safety') + '&limit=20';
+        fetch(url, { headers: token ? { 'Authorization': 'Bearer ' + token } : {} })
+            .then(function(r) { return r.json(); })
+            .then(function(posts) {
+                if (!posts || !posts.length) {
+                    var emptyMsg = commCurrentFeed === 'good-guys'
+                        ? 'No Good Guys recommendations yet. Be the first to recognize someone!'
+                        : 'No posts yet. Be the first to share with your community!';
+                    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><i class="fas fa-'+(commCurrentFeed === 'good-guys' ? 'heart' : 'mug-hot')+'" style="font-size:32px;display:block;margin-bottom:12px;color:'+(commCurrentFeed === 'good-guys' ? '#2ecc71' : 'var(--pink)')+'"></i>' + emptyMsg + '</div>';
+                    return;
+                }
+                var html = '';
+                posts.forEach(function(p) {
+                    var initial = (p.author_custom_name || p.author_name || 'A').charAt(0).toUpperCase();
+                    var color = p.avatar_color || '#E8A0B5';
+                    var name = p.author_custom_name || p.author_name || 'Anonymous';
+                    var time = new Date(p.created_at).toLocaleDateString();
+                    var accent = commCurrentFeed === 'good-guys' ? '#2ecc71' : 'var(--pink)';
+                    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
+                    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+                    html += '<div style="width:36px;height:36px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px">'+initial+'</div>';
+                    html += '<div style="flex:1"><div style="color:var(--text-primary);font-size:14px;font-weight:600">'+name+'</div><div style="color:var(--text-muted);font-size:11px">'+time+'</div></div>';
+                    if (commCurrentFeed === 'good-guys') html += '<span style="background:rgba(46,204,113,0.12);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">Good Guy</span>';
+                    html += '</div>';
+                    if (p.title) html += '<div style="color:var(--text-primary);font-size:15px;font-weight:600;margin-bottom:4px">'+p.title+'</div>';
+                    html += '<div style="color:var(--text-secondary);font-size:14px;line-height:1.5">'+p.body+'</div>';
+                    if (p.image_url) html += '<img src="'+p.image_url+'" style="max-width:100%;border-radius:10px;margin-top:10px">';
+                    html += '<div style="display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+                    html += '<span style="color:var(--text-muted);font-size:13px;cursor:pointer"><i class="fas fa-heart" style="color:'+accent+'"></i> '+(p.likes||0)+'</span>';
+                    html += '<span style="color:var(--text-muted);font-size:13px"><i class="fas fa-comment"></i> '+(p.reply_count||0)+'</span>';
+                    html += '</div></div>';
+                });
+                container.innerHTML = html;
+            })
+            .catch(function() {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Failed to load posts. <a href="#" onclick="loadCommunityPosts();return false" style="color:var(--pink)">Try again</a></div>';
+            });
+    }
+    window.loadCommunityPosts = loadCommunityPosts;
+
+    function submitCommunityPost() {
+        var body = document.getElementById('comm-post-body').value.trim();
+        if (!body) { alert('Please write something before posting.'); return; }
+        var feed = document.getElementById('comm-post-feed').value;
+        var token = localStorage.getItem('token');
+        if (!token) { alert('Please log in to post.'); return; }
+        fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ title: body.substring(0, 60), body: body, feed: feed === 'good-guys' ? 'good-guys' : 'safety', category: feed === 'good-guys' ? 'good-guys' : 'general' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.id || data.message === 'Post created') {
+                document.getElementById('comm-post-body').value = '';
+                document.getElementById('comm-post-modal').style.display = 'none';
+                loadCommunityPosts();
+            } else {
+                alert(data.error || 'Failed to create post.');
+            }
+        })
+        .catch(function() { alert('Network error. Please try again.'); });
+    }
+    window.submitCommunityPost = submitCommunityPost;
 
     // ============ REFERRAL / SHARE FUNCTIONS ============
     var referralShareUrl = 'https://www.getsafetea.app';

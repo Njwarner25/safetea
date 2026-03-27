@@ -48,6 +48,13 @@ class ApiClient {
   }
 
   // Auth
+  async login(email: string, password: string) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
   async sendVerificationCode(phone: string) {
     return this.request('/auth/send-code', {
       method: 'POST',

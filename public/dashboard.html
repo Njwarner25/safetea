@@ -774,9 +774,9 @@
             <h2 style="color:var(--text-primary);font-size:20px;font-weight:700;margin-bottom:4px"><img src="/logo.png" alt="" style="height:22px;vertical-align:middle;margin-right:6px"> SafeTea Hub</h2>
             <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Community posts from your city. Share experiences and celebrate the good ones.</p>
 
-            <!-- Tea Talk / Good Guys Toggle -->
+            <!-- Community / Good Guys Toggle -->
             <div style="display:flex;gap:8px;margin-bottom:16px">
-                <button id="comm-tab-teatalk" onclick="switchCommunityFeed('tea-talk')" style="flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;background:var(--pink);color:#fff;transition:all 0.2s">&#9749; Tea Talk</button>
+                <button id="comm-tab-teatalk" onclick="switchCommunityFeed('tea-talk')" style="flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:none;background:var(--pink);color:#fff;transition:all 0.2s">&#128172; Community</button>
                 <button id="comm-tab-goodguys" onclick="switchCommunityFeed('good-guys')" style="flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);transition:all 0.2s">&#10004; Good Guys</button>
             </div>
 
@@ -800,7 +800,7 @@
             <textarea id="comm-post-body" placeholder="What do you want your city to know?" style="width:100%;background:var(--bg-tertiary);border:1px solid var(--border-light);border-radius:10px;padding:14px;color:var(--text-primary);font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:100px;outline:none"></textarea>
             <div style="display:flex;gap:8px;margin-top:12px;justify-content:space-between;align-items:center">
                 <select id="comm-post-feed" style="background:var(--bg-tertiary);border:1px solid var(--border-light);color:var(--text-muted);padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
-                    <option value="tea-talk">&#9749; Tea Talk</option>
+                    <option value="tea-talk">&#128172; Community</option>
                     <option value="good-guys">&#10004; Good Guys</option>
                 </select>
                 <div style="display:flex;gap:8px">
@@ -1313,7 +1313,7 @@
             teaBtn.style.background = 'var(--pink)'; teaBtn.style.color = '#fff'; teaBtn.style.border = 'none';
             goodBtn.style.background = 'var(--bg-card)'; goodBtn.style.color = 'var(--text-muted)'; goodBtn.style.border = '1px solid var(--border)';
         } else {
-            goodBtn.style.background = '#2ecc71'; goodBtn.style.color = '#fff'; goodBtn.style.border = 'none';
+            goodBtn.style.background = 'var(--green)'; goodBtn.style.color = '#fff'; goodBtn.style.border = 'none';
             teaBtn.style.background = 'var(--bg-card)'; teaBtn.style.color = 'var(--text-muted)'; teaBtn.style.border = '1px solid var(--border)';
         }
         // Set post modal default to current feed
@@ -1335,21 +1335,25 @@
                     var emptyMsg = commCurrentFeed === 'good-guys'
                         ? 'No Good Guys recommendations yet. Be the first to recognize someone!'
                         : 'No posts yet. Be the first to share with your community!';
-                    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><i class="fas fa-'+(commCurrentFeed === 'good-guys' ? 'heart' : 'mug-hot')+'" style="font-size:32px;display:block;margin-bottom:12px;color:'+(commCurrentFeed === 'good-guys' ? '#2ecc71' : 'var(--pink)')+'"></i>' + emptyMsg + '</div>';
+                    var emptyIcon = commCurrentFeed === 'good-guys' ? 'heart' : 'comments';
+                    var emptyColor = commCurrentFeed === 'good-guys' ? 'var(--green)' : 'var(--pink)';
+                    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><i class="fas fa-'+emptyIcon+'" style="font-size:32px;display:block;margin-bottom:12px;color:'+emptyColor+'"></i>' + emptyMsg + '</div>';
                     return;
                 }
+                var isGoodGuys = commCurrentFeed === 'good-guys';
+                var accent = isGoodGuys ? 'var(--green)' : 'var(--pink)';
                 var html = '';
                 posts.forEach(function(p) {
                     var initial = (p.author_custom_name || p.author_name || 'A').charAt(0).toUpperCase();
-                    var color = p.avatar_color || '#E8A0B5';
+                    var color = p.avatar_color || (isGoodGuys ? '#2ecc71' : '#E8A0B5');
                     var name = p.author_custom_name || p.author_name || 'Anonymous';
                     var time = new Date(p.created_at).toLocaleDateString();
-                    var accent = commCurrentFeed === 'good-guys' ? '#2ecc71' : 'var(--pink)';
-                    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px">';
+                    var borderAccent = isGoodGuys ? 'rgba(46,204,113,0.2)' : 'var(--border)';
+                    html += '<div style="background:var(--bg-card);border:1px solid '+borderAccent+';border-radius:14px;padding:16px;margin-bottom:12px">';
                     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
                     html += '<div style="width:36px;height:36px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px">'+initial+'</div>';
                     html += '<div style="flex:1"><div style="color:var(--text-primary);font-size:14px;font-weight:600">'+name+'</div><div style="color:var(--text-muted);font-size:11px">'+time+'</div></div>';
-                    if (commCurrentFeed === 'good-guys') html += '<span style="background:rgba(46,204,113,0.12);color:#2ecc71;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">Good Guy</span>';
+                    if (isGoodGuys) html += '<span style="background:rgba(46,204,113,0.12);color:var(--green);font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px">Good Guy</span>';
                     html += '</div>';
                     if (p.title) html += '<div style="color:var(--text-primary);font-size:15px;font-weight:600;margin-bottom:4px">'+p.title+'</div>';
                     html += '<div style="color:var(--text-secondary);font-size:14px;line-height:1.5">'+p.body+'</div>';

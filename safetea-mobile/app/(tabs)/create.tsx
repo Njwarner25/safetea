@@ -1,7 +1,10 @@
-import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Switch } from 'react-native';
-import { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, Pressable, ScrollView, Switch, Alert, ActivityIndicator } from 'react-native';
+import { useState, useRef } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { PostCategory } from '../../store/postStore';
+import { useAuthStore } from '../../store/authStore';
+import { useCityStore } from '../../store/cityStore';
+import { api } from '../../services/api';
 
 const CATEGORIES: { key: PostCategory; label: string; icon: string }[] = [
   { key: 'warning', label: 'Warning', icon: '⚠️' },
@@ -15,10 +18,53 @@ export default function CreatePostScreen() {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<PostCategory>('warning');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const user = useAuthStore((s) => s.user);
+  const selectedCity = useCityStore((s) => s.getSelectedCity());
 
-  const handleSubmit = () => {
-    // TODO: Submit post via API
-    console.log({ title, content, category, isAnonymous });
+  const handleSubmit = async () => {
+    if (!title.trim() || !content.trim()) {
+      Alert.alert('Missing Fields', 'Please enter both a title and details for your post.');
+      return;
+    }
+    if (title.trim().length < 3) {
+      Alert.alert('Title Too Short', 'Please enter a title with at least 3 characters.');
+      return;
+    }
+    if (content.trim().length < 10) {
+      Alert.alert('Details Too Short', 'Please share at least 10 characters of detail.');
+      return;
+    }
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const res = await api.createPost({
+        title: title.trim(),
+        content: content.trim(),
+        category,
+        cityId: selectedCity?.id?.toString() || '',
+        isAnonymous,
+      });
+
+      if (res.status === 201 || res.status === 200) {
+        Alert.alert('Post Submitted', 'Your post has been submitted for review.');
+        setTitle('');
+        setContent('');
+        setCategory('warning');
+        setIsAnonymous(false);
+      } else {
+        const errorMsg = (res.data as any)?.error || res.error || 'Failed to create post.';
+        Alert.alert('Error', errorMsg);
+      }
+    } catch (e) {
+      Alert.alert('Network Error', 'Could not reach the server. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+      isSubmittingRef.current = false;
+    }
   };
 
   return (
@@ -50,8 +96,16 @@ export default function CreatePostScreen() {
         <Switch value={isAnonymous} onValueChange={setIsAnonymous} trackColor={{ true: Colors.coral }} />
       </View>
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Submit for Review</Text>
+      <Pressable
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+        onPress={handleSubmit}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.submitText}>Submit for Review</Text>
+        )}
       </Pressable>
 
       <Text style={styles.notice}>All posts are reviewed by moderators before publishing.</Text>
@@ -73,5 +127,6 @@ const styles = StyleSheet.create({
   switchLabel: { fontSize: FontSize.md, color: Colors.textPrimary },
   submitButton: { backgroundColor: Colors.coral, padding: Spacing.md, borderRadius: BorderRadius.lg, alignItems: 'center', marginTop: Spacing.xl },
   submitText: { color: '#FFF', fontSize: FontSize.lg, fontWeight: '700' },
+  submitButtonDisabled: { opacity: 0.5 },
   notice: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.md, marginBottom: 40 },
 });

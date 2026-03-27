@@ -1745,7 +1745,7 @@
             <div class="community-quick-actions" style="display:flex;gap:8px;padding:0 16px;margin-bottom:16px;flex-wrap:wrap">
                 <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('search')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-search" style="color:#d96a8a;font-size:12px"></i> Search Name</button>
                 <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-eye" style="color:#d96a8a;font-size:12px"></i> Name Watch</button>
-                <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('referral')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #c8e6c9;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#2e7d32;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='#fff'"><i class="fas fa-heart" style="color:#2ecc71;font-size:12px"></i> Recommend a Guy</button>
+                <button onclick="switchTab('community');setTimeout(function(){filterCommunity('good-guys')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #c8e6c9;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#2e7d32;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#e8f5e9'" onmouseout="this.style.background='#fff'"><i class="fas fa-heart" style="color:#2ecc71;font-size:12px"></i> Recommend a Guy</button>
                 <button onclick="openCityPicker()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-city" style="color:#d96a8a;font-size:12px"></i> Change City</button>
             </div>
 
@@ -1905,8 +1905,7 @@
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-fish"></i> Reel in a Catfish</button>
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-search"></i> Safety Search</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
-                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><img src="/logo.png" alt="" style="height:14px;vertical-align:middle"> Tea Talk</button>
-                <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-hand-holding-heart"></i> Refer a Good</button>
+                <!-- Tea Talk and Good Guy referral now live in SafeTea Hub only -->
             </div>
 
             <!-- HUB: OVERVIEW (Home — clean stacked layout) -->
@@ -2227,79 +2226,9 @@
                 </div>
             </div>
 
-            <!-- HUB: TEA TALK (Spill the Tea) -->
-            <div id="hub-teatalk" class="hub-sub" style="display:none">
-                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
-                <div style="margin-bottom:20px">
-                    <h2><img src="/logo.png" alt="" style="height:22px;vertical-align:middle;margin-right:6px"> Tea Talk</h2>
-                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Spill the tea, stay safe, and protect each other. Your voice matters.</p>
-                </div>
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
-                    <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-mug-hot" style="color:#E8A0B5"></i> Spill the Tea</h3>
-                    <textarea id="hub-community-body" placeholder="Share your experience, ask the community, or give a heads up... (No full names - first name + last initial only)" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
-                    <div style="display:flex;gap:12px;margin-top:8px">
-                        <select id="hub-community-category" style="background:#141428;border:1px solid rgba(255,255,255,0.08);color:#8080A0;padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none">
-                            <option value="general">General</option>
-                            <option value="experience">Experience</option>
-                            <option value="warning">Warning</option>
-                            <option value="question">Question</option>
-                            <option value="positive">Positive</option>
-                        </select>
-                        <input type="text" id="hub-community-city" placeholder="Your city (optional)" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-size:13px;outline:none">
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
-                        <label style="font-size:13px;color:#8080A0;display:flex;align-items:center;gap:6px"><input type="checkbox" id="hub-community-anon" checked> Post anonymously</label>
-                        <button class="btn-post" id="hub-community-submit" onclick="hubSubmitCommunityPost()"><i class="fas fa-paper-plane"></i> Post</button>
-                    </div>
-                </div>
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px">
-                    <h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-info-circle" style="color:#E8A0B5"></i> Community Guidelines</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px">
-                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> First name + last initial only</span>
-                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Share experiences, not revenge</span>
-                        <span style="font-size:11px;color:#8080A0;background:#141428;padding:4px 10px;border-radius:20px"><i class="fas fa-check" style="color:#2ecc71"></i> Be honest and factual</span>
-                    </div>
-                </div>
-                <div id="hub-community-posts">
-                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading discussions...</div>
-                </div>
-            </div>
+            <!-- Tea Talk removed from Home — lives exclusively in SafeTea Hub -->
 
-            <!-- HUB: REFER A GOOD ONE -->
-            <div id="hub-referral" class="hub-sub" style="display:none">
-                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
-                <div style="margin-bottom:20px">
-                    <h2><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Recommend a Good Guy</h2>
-                    <p style="color:#8080A0;font-size:14px;margin-top:4px;line-height:1.5">Want to put a good word in for someone? Recommend a guy you know — a brother, coworker, friend, or ex — who treats women right. Your referral helps him stand out to women looking to date someone vetted by real people. First name + last initial only.</p>
-                </div>
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:20px">
-                    <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-hand-holding-heart" style="color:#2ecc71"></i> Submit a Referral</h3>
-                    <div style="display:flex;gap:12px;margin-bottom:12px">
-                        <input type="text" id="hub-referral-name" placeholder="His first name + last initial (e.g. David T.)" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none">
-                        <input type="text" id="hub-referral-city" placeholder="City" style="width:140px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none">
-                    </div>
-                    <select id="hub-referral-relation" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);color:#8080A0;padding:10px 14px;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px">
-                        <option>How do you know him?</option><option>Dated him</option><option>Friend's ex</option><option>Friend / Acquaintance</option><option>Coworker</option>
-                    </select>
-                    <textarea id="hub-referral-body" placeholder="Why would you recommend him? What makes him a good guy?" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:80px;outline:none"></textarea>
-                    <div style="margin-top:12px">
-                        <label for="hub-referral-photo" style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:#141428;border:1px dashed rgba(255,255,255,0.15);border-radius:8px;color:#8080A0;font-size:13px;cursor:pointer;transition:border-color 0.2s">
-                            <i class="fas fa-camera"></i> Add a photo <span style="font-size:11px;color:#555">(optional)</span>
-                        </label>
-                        <input type="file" id="hub-referral-photo" accept="image/*" onchange="handleReferralPhoto(this)" style="display:none">
-                        <div id="hub-referral-photo-preview" style="display:none;margin-top:10px;position:relative">
-                            <img id="hub-referral-photo-img" style="max-width:200px;max-height:200px;border-radius:10px;border:2px solid rgba(46,204,113,0.3);object-fit:cover">
-                            <button onclick="removeReferralPhoto()" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.7);color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center">&times;</button>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:flex-end;margin-top:12px">
-                        <button class="btn-post" style="background:linear-gradient(135deg,#2ecc71,#27ae60)" onclick="hubSubmitReferral()"><i class="fas fa-heart"></i> Submit Referral</button>
-                    </div>
-                </div>
-                <div id="hub-referral-posts">
-                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>
-                </div>
-            </div>
+            <!-- Good Guy referral removed from Home — lives exclusively in SafeTea Hub -->
 
             <!-- HUB: INVITE & EARN (Growth Referral) -->
             <div id="hub-growreferral" class="hub-sub" style="display:none">

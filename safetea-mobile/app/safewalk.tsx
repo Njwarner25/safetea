@@ -1,9 +1,29 @@
 import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert } from 'react-native';
 import { useState } from 'react';
+import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useSafeWalkStore } from '../store/safeWalkStore';
+import { useAuthStore } from '../store/authStore';
 
 export default function SafeWalkScreen() {
+  const user = useAuthStore((s) => s.user);
+
+  if (user?.tier === 'free') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.gateCard}>
+          <Text style={styles.gateIcon}>🔒</Text>
+          <Text style={styles.gateTitle}>SafeWalk is a SafeTea+ Feature</Text>
+          <Text style={styles.gateDesc}>
+            Share your date details with trusted contacts and get check-in reminders. Upgrade to SafeTea+ to unlock.
+          </Text>
+          <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
+            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
   const {
     trustedContacts, activeSession, pastSessions,
     addContact, removeContact, startSession, endSession, triggerPanic, respondToCheckIn,
@@ -230,4 +250,13 @@ const styles = StyleSheet.create({
   pastVenue: { fontSize: FontSize.md, fontWeight: '600', color: Colors.textPrimary },
   pastMeta: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: 2 },
   pastStatus: { fontSize: FontSize.sm, color: Colors.success, marginTop: 4 },
+  gateCard: {
+    margin: Spacing.md, backgroundColor: Colors.surface, borderRadius: BorderRadius.lg,
+    padding: Spacing.xl, alignItems: 'center', borderWidth: 1, borderColor: Colors.border,
+  },
+  gateIcon: { fontSize: 48, marginBottom: Spacing.md },
+  gateTitle: { fontSize: FontSize.xl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm, textAlign: 'center' },
+  gateDesc: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: Spacing.lg },
+  upgradeBtn: { backgroundColor: Colors.coral, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, borderRadius: BorderRadius.lg },
+  upgradeBtnText: { color: '#FFF', fontWeight: '700', fontSize: FontSize.md },
 });

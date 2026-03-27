@@ -1767,9 +1767,9 @@
         </div>
 
         <!-- Quick Post Bar (fixed at bottom) -->
-        <div class="community-quickpost" id="community-quickpost" style="display:none;">
-            <input type="text" id="community-quickpost-input" placeholder="Share a warning, tip, or experience..." onclick="openPostModal()" readonly>
-            <button class="community-quickpost-btn" onclick="openPostModal()"><i class="fas fa-paper-plane"></i> Post</button>
+        <div class="community-quickpost" id="community-quickpost">
+            <input type="text" id="community-quickpost-input" placeholder="Share a warning, tip, or experience..." onclick="communityState.selectedCity ? openPostModal() : openCityPicker()" readonly>
+            <button class="community-quickpost-btn" onclick="communityState.selectedCity ? openPostModal() : openCityPicker()"><i class="fas fa-paper-plane"></i> Post</button>
         </div>
 
         <!-- Bottom Category Tabs (fixed) -->

@@ -114,6 +114,14 @@ class ApiClient {
     return this.request('/search?q=' + encodeURIComponent(query) + '&city=' + cityId);
   }
 
+  // Subscription
+  async subscribe(priceId: string) {
+    return this.request('/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ priceId }),
+    });
+  }
+
   // Background Check
   async backgroundCheck(fullName: string, city?: string, state?: string, age?: number) {
     return this.request<any>('/screening/background', {

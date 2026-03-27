@@ -40,7 +40,7 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>Helpful</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{user.trustScore}</Text>
+          <Text style={styles.statValue}>{user.contributionScore}</Text>
           <Text style={styles.statLabel}>Trust</Text>
         </View>
       </View>

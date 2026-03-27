@@ -1,6 +1,13 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator, Linking } from 'react-native';
+import { useState } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useAuthStore } from '../store/authStore';
+import { api } from '../services/api';
+
+const STRIPE_PRICES = {
+  plus: 'price_1TDXLUFaKA9n89CXkfEotpfL',
+  pro: 'price_1TDXN5FaKA9n89CXeDxnAJMh',
+};
 
 const PLANS = [
   {
@@ -54,6 +61,27 @@ const PLANS = [
 export default function SubscriptionScreen() {
   const user = useAuthStore((s) => s.user);
   const currentTier = user?.tier || 'free';
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleUpgrade = async (planId: string) => {
+    const priceId = STRIPE_PRICES[planId as keyof typeof STRIPE_PRICES];
+    if (!priceId) return;
+
+    setLoadingPlan(planId);
+    try {
+      const res = await api.subscribe(priceId);
+      if (res.status === 200 && (res.data as any)?.url) {
+        await Linking.openURL((res.data as any).url);
+      } else {
+        const msg = (res.data as any)?.error || res.error || 'Failed to start checkout.';
+        Alert.alert('Error', msg);
+      }
+    } catch {
+      Alert.alert('Network Error', 'Could not reach the server. Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -95,16 +123,26 @@ export default function SubscriptionScreen() {
                 styles.planBtn,
                 isCurrent && styles.planBtnCurrent,
                 plan.popular && !isCurrent && styles.planBtnPopular,
+                loadingPlan === plan.id && styles.planBtnLoading,
               ]}
+              onPress={() => {
+                if (isCurrent || plan.id === 'free') return;
+                handleUpgrade(plan.id);
+              }}
+              disabled={isCurrent || plan.id === 'free' || loadingPlan !== null}
             >
-              <Text
-                style={[
-                  styles.planBtnText,
-                  (plan.popular && !isCurrent) && styles.planBtnTextPopular,
-                ]}
-              >
-                {isCurrent ? 'Current Plan' : plan.id === 'free' ? 'Downgrade' : 'Upgrade'}
-              </Text>
+              {loadingPlan === plan.id ? (
+                <ActivityIndicator color={plan.popular ? '#FFF' : Colors.textSecondary} />
+              ) : (
+                <Text
+                  style={[
+                    styles.planBtnText,
+                    (plan.popular && !isCurrent) && styles.planBtnTextPopular,
+                  ]}
+                >
+                  {isCurrent ? 'Current Plan' : plan.id === 'free' ? 'Free Forever' : 'Upgrade'}
+                </Text>
+              )}
             </Pressable>
           </View>
         );
@@ -160,6 +198,7 @@ const styles = StyleSheet.create({
   planBtnPopular: { backgroundColor: Colors.coral, borderColor: Colors.coral },
   planBtnText: { fontWeight: '700', fontSize: FontSize.md, color: Colors.textSecondary },
   planBtnTextPopular: { color: '#FFF' },
+  planBtnLoading: { opacity: 0.7 },
   modCallout: {
     marginTop: Spacing.md, padding: Spacing.lg, borderWidth: 2, borderStyle: 'dashed',
     borderColor: 'rgba(232,81,63,0.3)', borderRadius: BorderRadius.md,

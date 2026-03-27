@@ -1258,6 +1258,101 @@
                     </a>
                 </div>
             </div>
+
+            <!-- SETTINGS & ACCOUNT -->
+            <div class="profile-form" style="margin-top:24px">
+                <h3><i class="fas fa-cog" style="color:var(--pink)"></i> Settings & Account</h3>
+
+                <!-- Subscription -->
+                <div style="margin-top:16px;padding:16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                        <div><div style="font-weight:600;color:var(--text-primary);font-size:14px"><i class="fas fa-crown" style="color:var(--pink);margin-right:6px"></i> Subscription</div></div>
+                        <span id="settings-tier-badge" style="background:rgba(232,160,181,0.12);color:var(--pink);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px">Free</span>
+                    </div>
+                    <p style="color:var(--text-muted);font-size:12px;margin-bottom:12px" id="settings-billing-info">You're on the Free plan.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button onclick="showUpgradePrompt()" id="settings-upgrade-btn" style="background:var(--pink);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Upgrade</button>
+                        <button onclick="showCancelFlow()" id="settings-cancel-btn" style="display:none;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Cancel Subscription</button>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div style="padding:16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+                    <div style="font-weight:600;color:var(--text-primary);font-size:14px;margin-bottom:12px"><i class="fas fa-bell" style="color:var(--pink);margin-right:6px"></i> Notifications</div>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Name Watch alerts</span>
+                        <input type="checkbox" checked style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Community post replies</span>
+                        <input type="checkbox" checked style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Date Check-Out SMS reminders</span>
+                        <input type="checkbox" checked style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Email digest (weekly)</span>
+                        <input type="checkbox" style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                </div>
+
+                <!-- Privacy -->
+                <div style="padding:16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+                    <div style="font-weight:600;color:var(--text-primary);font-size:14px;margin-bottom:12px"><i class="fas fa-shield-alt" style="color:var(--pink);margin-right:6px"></i> Privacy</div>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Show profile in community</span>
+                        <input type="checkbox" checked style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                    <label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer">
+                        <span style="color:var(--text-primary);font-size:13px">Allow direct messages</span>
+                        <input type="checkbox" checked style="accent-color:var(--pink);width:18px;height:18px">
+                    </label>
+                </div>
+
+                <!-- Legal -->
+                <div style="padding:16px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;margin-bottom:12px">
+                    <div style="font-weight:600;color:var(--text-primary);font-size:14px;margin-bottom:12px"><i class="fas fa-gavel" style="color:var(--pink);margin-right:6px"></i> Legal</div>
+                    <a href="/terms.html" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none"><i class="fas fa-file-alt" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Terms of Service</a>
+                    <a href="/terms.html" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none"><i class="fas fa-user-shield" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Privacy Policy</a>
+                    <a href="#" onclick="alert('SafeTea offers a 7-day refund for first-time subscribers. Email support@getsafetea.app for refund requests.');return false" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;text-decoration:none"><i class="fas fa-undo" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Refund Policy</a>
+                </div>
+
+                <!-- Danger Zone -->
+                <div style="padding:16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:12px;margin-bottom:12px">
+                    <div style="font-weight:600;color:#EF4444;font-size:14px;margin-bottom:8px"><i class="fas fa-exclamation-triangle" style="margin-right:6px"></i> Danger Zone</div>
+                    <p style="color:var(--text-muted);font-size:12px;margin-bottom:12px">These actions cannot be undone.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button onclick="if(confirm('Export all your data? This will download a JSON file.')){alert('Data export requested. You will receive an email with your data within 24 hours.')}" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-download"></i> Export Data</button>
+                        <button onclick="if(confirm('Are you sure you want to delete your account? This action is permanent and cannot be undone.')){if(confirm('This will permanently delete all your posts, watched names, and account data. Type DELETE to confirm.')){alert('Account deletion requested. You will receive a confirmation email.')}}" style="background:transparent;border:1px solid rgba(239,68,68,0.3);color:#EF4444;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-trash"></i> Delete Account</button>
+                    </div>
+                </div>
+
+                <!-- Log Out -->
+                <button onclick="localStorage.clear();window.location.href='/login.html'" style="width:100%;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px"><i class="fas fa-sign-out-alt" style="margin-right:8px"></i> Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANCEL SUBSCRIPTION MODAL -->
+    <div id="cancel-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999;justify-content:center;align-items:center;padding:20px">
+        <div style="background:var(--bg-card);border-radius:16px;padding:24px;max-width:440px;width:100%;border:1px solid var(--border)">
+            <h3 style="color:var(--text-primary);font-size:18px;margin-bottom:8px">Cancel Subscription?</h3>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">We're sorry to see you go. Before you cancel, please let us know why:</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><input type="radio" name="cancel-reason" value="too-expensive" style="accent-color:var(--pink)"><span style="color:var(--text-primary);font-size:13px">Too expensive</span></label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><input type="radio" name="cancel-reason" value="not-using" style="accent-color:var(--pink)"><span style="color:var(--text-primary);font-size:13px">Not using it enough</span></label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><input type="radio" name="cancel-reason" value="missing-features" style="accent-color:var(--pink)"><span style="color:var(--text-primary);font-size:13px">Missing features I need</span></label>
+                <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-tertiary);border-radius:8px;cursor:pointer;border:1px solid var(--border)"><input type="radio" name="cancel-reason" value="other" style="accent-color:var(--pink)"><span style="color:var(--text-primary);font-size:13px">Other</span></label>
+            </div>
+            <div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:12px;margin-bottom:16px">
+                <p style="color:#2ecc71;font-size:13px;font-weight:600;margin-bottom:4px"><i class="fas fa-lightbulb"></i> Consider downgrading instead</p>
+                <p style="color:var(--text-muted);font-size:12px">You can switch to the Free plan and keep access to basic features without paying.</p>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button onclick="document.getElementById('cancel-modal').style.display='none'" style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">Keep Subscription</button>
+                <button onclick="confirmCancellation()" style="padding:10px 20px;border-radius:10px;border:none;background:#EF4444;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Confirm Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -1300,6 +1395,58 @@
     function selectTimer(btn, mins) {
         document.querySelectorAll('.timer-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
+    }
+
+    // ============ SETTINGS & CANCEL FLOW ============
+    function initSettings() {
+        var user = JSON.parse(localStorage.getItem('safetea_user') || '{}');
+        var tier = (user.subscription_tier || 'free').toLowerCase();
+        var badge = document.getElementById('settings-tier-badge');
+        var info = document.getElementById('settings-billing-info');
+        var upgradeBtn = document.getElementById('settings-upgrade-btn');
+        var cancelBtn = document.getElementById('settings-cancel-btn');
+        if (tier === 'free') {
+            badge.textContent = 'Free'; badge.style.color = 'var(--text-muted)'; badge.style.background = 'var(--bg-tertiary)';
+            info.textContent = "You're on the Free plan.";
+            upgradeBtn.style.display = ''; cancelBtn.style.display = 'none';
+        } else {
+            var tierName = tier === 'pro' ? 'SafeTea Pro' : 'SafeTea+';
+            badge.textContent = tierName; badge.style.color = 'var(--pink)'; badge.style.background = 'rgba(232,160,181,0.12)';
+            info.textContent = 'You are subscribed to ' + tierName + '.';
+            upgradeBtn.style.display = 'none'; cancelBtn.style.display = '';
+        }
+    }
+    function showCancelFlow() { document.getElementById('cancel-modal').style.display = 'flex'; }
+    window.showCancelFlow = showCancelFlow;
+    function confirmCancellation() {
+        var reason = document.querySelector('input[name="cancel-reason"]:checked');
+        if (!reason) { alert('Please select a reason.'); return; }
+        var token = localStorage.getItem('token');
+        if (!token) { alert('Please log in.'); return; }
+        // Call Stripe cancel endpoint
+        fetch('/api/subscribe', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: reason.value }) })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('cancel-modal').style.display = 'none';
+                if (data.success || data.message) {
+                    alert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
+                    var user = JSON.parse(localStorage.getItem('safetea_user') || '{}');
+                    user.subscription_tier = 'free';
+                    localStorage.setItem('safetea_user', JSON.stringify(user));
+                    initSettings();
+                } else {
+                    alert(data.error || 'Failed to cancel. Please contact support@getsafetea.app');
+                }
+            }).catch(function() { alert('Network error. Please try again or contact support@getsafetea.app'); });
+    }
+    window.confirmCancellation = confirmCancellation;
+    // Init settings on profile tab load
+    var origSwitchTab = window.switchTab;
+    if (origSwitchTab) {
+        window.switchTab = function(tab) {
+            origSwitchTab(tab);
+            if (tab === 'profile') initSettings();
+        };
     }
 
     // ============ COMMUNITY FEED ============

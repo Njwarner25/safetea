@@ -11,6 +11,8 @@ export const Colors = {
   coralLight: '#FF6B5A',
   coralDark: '#C4402F',
   coralMuted: 'rgba(232, 81, 63, 0.15)',
+  pink: '#E8513F',
+  pinkMuted: 'rgba(232, 81, 63, 0.15)',
   
   // Text
   textPrimary: '#FFFFFF',

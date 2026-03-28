@@ -1315,7 +1315,7 @@
                     <div style="font-weight:600;color:var(--text-primary);font-size:14px;margin-bottom:12px"><i class="fas fa-gavel" style="color:var(--pink);margin-right:6px"></i> Legal</div>
                     <a href="/terms.html" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none"><i class="fas fa-file-alt" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Terms of Service</a>
                     <a href="/terms.html" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none"><i class="fas fa-user-shield" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Privacy Policy</a>
-                    <a href="#" onclick="alert('SafeTea offers a 7-day refund for first-time subscribers. Email support@getsafetea.app for refund requests.');return false" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;text-decoration:none"><i class="fas fa-undo" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Refund Policy</a>
+                    <a href="#" onclick="requestRefund();return false" style="display:block;color:var(--text-primary);font-size:13px;padding:8px 0;text-decoration:none"><i class="fas fa-undo" style="color:var(--text-muted);margin-right:8px;width:16px;text-align:center"></i> Refund Policy (7-day window)</a>
                 </div>
 
                 <!-- Danger Zone -->
@@ -1396,6 +1396,28 @@
         document.querySelectorAll('.timer-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
     }
+
+    // ============ REFUND REQUEST ============
+    function requestRefund() {
+        var user = JSON.parse(localStorage.getItem('safetea_user') || '{}');
+        var tier = (user.subscription_tier || 'free').toLowerCase();
+        if (tier === 'free') {
+            alert('Refund Policy: SafeTea offers a full refund within 7 days of your first payment. Since you are on the Free plan, no refund is applicable.');
+            return;
+        }
+        if (!confirm('Request a refund? SafeTea offers a full refund within 7 days of your first payment. Would you like to proceed?')) return;
+        var token = localStorage.getItem('token');
+        fetch('/api/refund', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'requested_from_settings' }) })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('Refund of $' + data.amount + ' processed! It may take 5-10 business days to appear on your statement.');
+                } else {
+                    alert(data.error || 'Unable to process refund. Contact support@getsafetea.app for help.');
+                }
+            }).catch(function() { alert('Network error. Please contact support@getsafetea.app'); });
+    }
+    window.requestRefund = requestRefund;
 
     // ============ SETTINGS & CANCEL FLOW ============
     function initSettings() {

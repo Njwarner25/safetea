@@ -361,7 +361,13 @@
                       <option value="Los Angeles">Los Angeles</option>
                       <option value="Boston">Boston</option>
                       <option value="New York">New York</option>
+                      <option value="" disabled>────────────</option>
+                      <option value="other">My city isn't listed</option>
                     </select>
+                    <div id="city-request-form" style="display:none;margin-top:8px">
+                      <input type="email" id="city-request-email" placeholder="Your email — we'll notify you when we expand" style="width:100%;padding:10px 14px;background:#22223A;border:1px solid rgba(232,160,181,0.3);border-radius:8px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
+                      <button type="button" onclick="submitCityRequest()" style="margin-top:6px;background:#E8A0B5;color:#1A1A2E;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Request My City</button>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label>State</label>
@@ -402,7 +408,16 @@
     document.getElementById('reg-city').addEventListener('change', function() {
       const st = cityStateMap[this.value];
       if (st) document.getElementById('reg-state').value = st;
+      document.getElementById('city-request-form').style.display = this.value === 'other' ? 'block' : 'none';
     });
+    function submitCityRequest() {
+      const email = document.getElementById('city-request-email').value.trim();
+      if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return; }
+      alert('Thanks! We\'ll notify you at ' + email + ' when SafeTea expands to your city.');
+      document.getElementById('city-request-form').style.display = 'none';
+      document.getElementById('reg-city').value = '';
+    }
+    window.submitCityRequest = submitCityRequest;
 
     // ====== FIREBASE CONFIG ======
     // Replace these with your Firebase project values from:

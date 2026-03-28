@@ -13,6 +13,7 @@
         { "source": "/api/referral/track", "destination": "/api/referral/track" },
         { "source": "/api/referral", "destination": "/api/referral" },
         { "source": "/api/namewatch", "destination": "/api/namewatch" },
+        { "source": "/api/refund", "destination": "/api/refund" },
         { "source": "/api/migrate-referrals", "destination": "/api/migrate-referrals" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },

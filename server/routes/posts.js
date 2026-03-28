@@ -5,6 +5,7 @@ const { getOne, getAll, query } = require('../db/database');
 const { authenticate, optionalAuth } = require('../middleware/auth');
 
 const { checkNewPostAgainstWatchedNames } = require('./namewatch');
+const { analyzePost } = require('../services/ai-verification');
 
 const router = express.Router();
 
@@ -104,6 +105,11 @@ router.post('/', authenticate, [
     // Async: check new post against all watched names in this city
     checkNewPostAgainstWatchedNames(id, content, city).catch(err => {
       console.error('Name Watch matching error (non-blocking):', err);
+    });
+
+    // Async: AI story verification (non-blocking)
+    analyzePost(id, content, city, req.user.id).catch(err => {
+      console.error('AI verification error (non-blocking):', err);
     });
 
     res.status(201).json({ post });

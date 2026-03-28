@@ -197,4 +197,126 @@ router.get('/users', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/posts - List all posts with AI analysis data
+router.get('/posts', authenticate, requireAdmin, async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+  const offset = (page - 1) * limit;
+  const recommendation = req.query.recommendation || '';
+  const minScore = parseInt(req.query.min_score) || 0;
+  const maxScore = parseInt(req.query.max_score) || 10;
+
+  try {
+    let whereClause = 'WHERE 1=1';
+    const params = [];
+    let paramIndex = 1;
+
+    if (recommendation) {
+      whereClause += ` AND p.ai_recommendation = $${paramIndex}`;
+      params.push(recommendation);
+      paramIndex++;
+    }
+
+    if (minScore > 0) {
+      whereClause += ` AND p.ai_credibility_score >= $${paramIndex}`;
+      params.push(minScore);
+      paramIndex++;
+    }
+
+    if (maxScore < 10) {
+      whereClause += ` AND p.ai_credibility_score <= $${paramIndex}`;
+      params.push(maxScore);
+      paramIndex++;
+    }
+
+    const countResult = await getOne(
+      `SELECT COUNT(*) as count FROM posts p ${whereClause}`,
+      params
+    );
+
+    const posts = await getAll(
+      `SELECT p.*, u.email, u.display_name, u.avatar_initial, u.avatar_color, u.role as user_role
+       FROM posts p
+       JOIN users u ON p.user_id = u.id
+       ${whereClause}
+       ORDER BY p.created_at DESC
+       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...params, limit, offset]
+    );
+
+    res.json({
+      posts,
+      pagination: {
+        page,
+        limit,
+        total: parseInt(countResult.count),
+        totalPages: Math.ceil(parseInt(countResult.count) / limit)
+      }
+    });
+  } catch (err) {
+    console.error('Admin posts list error:', err);
+    res.status(500).json({ error: 'Failed to load posts' });
+  }
+});
+
+// POST /api/admin/posts/bulk-approve - Auto-approve all posts scored 7+
+router.post('/posts/bulk-approve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `UPDATE posts SET is_flagged = false
+       WHERE ai_credibility_score >= 7 AND (is_flagged = true OR is_flagged IS NULL)
+       RETURNING id`
+    );
+    const count = result.rows ? result.rows.length : 0;
+    res.json({ message: `${count} posts auto-approved`, count });
+  } catch (err) {
+    console.error('Bulk approve error:', err);
+    res.status(500).json({ error: 'Failed to bulk approve' });
+  }
+});
+
+// POST /api/admin/posts/bulk-flag - Flag all posts scored 3 or below
+router.post('/posts/bulk-flag', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await query(
+      `UPDATE posts SET is_flagged = true
+       WHERE ai_credibility_score <= 3 AND ai_credibility_score IS NOT NULL AND is_flagged = false
+       RETURNING id`
+    );
+    const count = result.rows ? result.rows.length : 0;
+    res.json({ message: `${count} posts flagged for review`, count });
+  } catch (err) {
+    console.error('Bulk flag error:', err);
+    res.status(500).json({ error: 'Failed to bulk flag' });
+  }
+});
+
+// PATCH /api/admin/posts/:id/moderate - Individual post moderation
+router.patch('/posts/:id/moderate', authenticate, requireAdmin, async (req, res) => {
+  const { action } = req.body; // 'approve', 'flag', 'remove'
+
+  if (!['approve', 'flag', 'remove'].includes(action)) {
+    return res.status(400).json({ error: 'Invalid action. Must be: approve, flag, or remove' });
+  }
+
+  try {
+    const post = await getOne('SELECT id FROM posts WHERE id = $1', [req.params.id]);
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (action === 'remove') {
+      await query('DELETE FROM posts WHERE id = $1', [req.params.id]);
+      res.json({ message: 'Post removed' });
+    } else {
+      const flagged = action === 'flag';
+      await query('UPDATE posts SET is_flagged = $1 WHERE id = $2', [flagged, req.params.id]);
+      res.json({ message: `Post ${action === 'approve' ? 'approved' : 'flagged'}` });
+    }
+  } catch (err) {
+    console.error('Moderate post error:', err);
+    res.status(500).json({ error: 'Failed to moderate post' });
+  }
+});
+
 module.exports = router;

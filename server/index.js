@@ -100,6 +100,11 @@ setInterval(() => {
 // Initial check on startup (after 30 seconds to let DB connect)
 setTimeout(() => checkScaleThreshold(), 30000);
 
+// Admin dashboard
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin.html'));
+});
+
 // SPA fallback - serve index.html for non-API routes
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {

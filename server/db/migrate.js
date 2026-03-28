@@ -330,6 +330,15 @@ async function migrate() {
     await client.query('CREATE INDEX IF NOT EXISTS idx_suggestion_votes_suggestion ON suggestion_votes(suggestion_id)');
     await client.query('CREATE INDEX IF NOT EXISTS idx_suggestion_votes_user ON suggestion_votes(user_id)');
 
+    // ===== AI Story Verification columns (Task 2) =====
+    await client.query(`ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS ai_credibility_score INTEGER`);
+    await client.query(`ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS ai_flags TEXT[] DEFAULT '{}'`);
+    await client.query(`ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS ai_recommendation TEXT`);
+    await client.query(`ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS ai_reasoning TEXT`);
+    await client.query(`ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMPTZ`);
+    await client.query('CREATE INDEX IF NOT EXISTS idx_posts_ai_score ON posts(ai_credibility_score)');
+    await client.query('CREATE INDEX IF NOT EXISTS idx_posts_ai_recommendation ON posts(ai_recommendation)');
+
     await client.query('COMMIT');
     console.log('Migrations completed successfully!');
   } catch (err) {

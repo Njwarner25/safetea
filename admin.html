@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SafeTea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e0e0e0; display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: #13131a; border-right: 1px solid rgba(255,255,255,0.06); padding: 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+        .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+        .sidebar-logo svg { width: 28px; height: 28px; }
+        .sidebar-logo span { font-size: 18px; font-weight: 800; }
+        .sidebar-logo .green { color: #4CAF50; }
+        .sidebar-logo .pink { color: #f27059; }
+        .sidebar-badge { background: rgba(242,112,89,0.15); color: #f27059; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        .sidebar-nav { padding: 16px 12px; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #888; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 2px; }
+        .sidebar-nav a:hover { color: #fff; background: rgba(255,255,255,0.04); }
+        .sidebar-nav a.active { color: #f27059; background: rgba(242,112,89,0.1); }
+        .sidebar-nav a i { width: 20px; text-align: center; font-size: 15px; }
+        .sidebar-section { padding: 12px 24px 8px; font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .sidebar-bottom a { color: #666; font-size: 13px; }
+
+        /* Main content */
+        .main { margin-left: 260px; flex: 1; min-height: 100vh; }
+        .topbar { background: #13131a; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 18px; font-weight: 700; color: #fff; }
+        .topbar-right { display: flex; align-items: center; gap: 16px; }
+        .topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #f27059; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; }
+        .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+        .content { padding: 32px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Cards */
+        .card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+        .card h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .card h3 i { color: #f27059; }
+
+        /* Stats grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; }
+        .stat-card .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #fff; }
+        .stat-card .stat-value.pink { color: #f27059; }
+
+        /* Moderation toolbar */
+        .mod-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .mod-filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .mod-filter { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; cursor: pointer; }
+        .mod-filter:focus { border-color: #f27059; }
+        .mod-filter option { background: #1a1a24; color: #e0e0e0; }
+        .mod-actions { display: flex; gap: 8px; }
+        .btn { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-approve { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .btn-approve:hover { background: rgba(46,204,113,0.25); }
+        .btn-flag { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .btn-flag:hover { background: rgba(231,76,60,0.25); }
+        .btn-primary { background: linear-gradient(135deg, #f27059, #e85d44); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-ghost { background: rgba(255,255,255,0.05); color: #aaa; border: 1px solid rgba(255,255,255,0.08); }
+        .btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+        /* Post cards */
+        .post-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .post-card:hover { border-color: rgba(255,255,255,0.12); }
+        .post-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+        .post-card-user { display: flex; align-items: center; gap: 10px; }
+        .post-card-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; }
+        .post-card-meta { display: flex; flex-direction: column; }
+        .post-card-name { font-size: 13px; font-weight: 600; color: #fff; }
+        .post-card-info { font-size: 11px; color: #666; margin-top: 2px; }
+        .post-card-badges { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+        /* AI Score badge */
+        .ai-score { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .ai-score.green { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .ai-score.yellow { background: rgba(241,196,15,0.15); color: #f1c40f; }
+        .ai-score.red { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .ai-score.pending { background: rgba(255,255,255,0.05); color: #666; }
+
+        /* AI Recommendation label */
+        .ai-rec { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .ai-rec.approve { background: rgba(46,204,113,0.1); color: #2ecc71; }
+        .ai-rec.review { background: rgba(241,196,15,0.1); color: #f1c40f; }
+        .ai-rec.flag_removal { background: rgba(231,76,60,0.1); color: #e74c3c; }
+
+        .post-card-content { font-size: 14px; line-height: 1.6; color: #ccc; margin-bottom: 12px; }
+        .post-card-category { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.05); color: #888; margin-bottom: 8px; }
+
+        /* AI Flags */
+        .ai-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .ai-flag-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: rgba(241,196,15,0.1); color: #f1c40f; }
+        .ai-flag-tag i { font-size: 10px; }
+
+        /* Expandable reasoning */
+        .ai-reasoning-toggle { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 4px; padding: 4px 0; }
+        .ai-reasoning-toggle:hover { color: #f27059; }
+        .ai-reasoning-text { display: none; background: rgba(255,255,255,0.03); border-left: 3px solid rgba(242,112,89,0.3); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 8px; font-size: 13px; color: #aaa; line-height: 1.5; }
+        .ai-reasoning-text.show { display: block; }
+
+        /* Post actions */
+        .post-card-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04); }
+
+        .flagged-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+        /* Pagination */
+        .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; }
+        .pagination button { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .pagination button:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+        .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination span { font-size: 13px; color: #888; }
+
+        /* Loading & empty */
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #555; }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; color: #333; }
+        .empty-state p { font-size: 14px; }
+
+        /* Placeholder sections */
+        .placeholder { text-align: center; padding: 80px 20px; }
+        .placeholder i { font-size: 64px; color: #222; margin-bottom: 16px; }
+        .placeholder h2 { font-size: 20px; color: #444; margin-bottom: 8px; }
+        .placeholder p { font-size: 14px; color: #555; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; right: 24px; background: #2ecc71; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .toast.error { background: #e74c3c; }
+        .toast.show { display: flex; align-items: center; gap: 8px; }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .mod-toolbar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="28" height="28" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4CAF50"/><stop offset="50%" stop-color="#F5A87A"/><stop offset="100%" stop-color="#F27059"/></linearGradient></defs><path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#lg)" opacity="0.9"/><path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#lg)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><span class="green">safe</span><span class="pink">tea</span></span>
+            <span class="sidebar-badge">ADMIN</span>
+        </div>
+        <div class="sidebar-section">Dashboard</div>
+        <nav class="sidebar-nav">
+            <a data-section="overview" class="active"><i class="fas fa-chart-line"></i> Overview</a>
+            <a data-section="users"><i class="fas fa-users"></i> User Management</a>
+            <a data-section="moderation"><i class="fas fa-shield-alt"></i> Content Moderation</a>
+            <a data-section="moderators"><i class="fas fa-user-shield"></i> Moderators</a>
+            <a data-section="cities"><i class="fas fa-city"></i> City Management</a>
+            <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
+            <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
+        </nav>
+        <div class="sidebar-bottom">
+            <a href="/dashboard.html" class="sidebar-nav"><i class="fas fa-arrow-left"></i> Back to App</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main">
+        <header class="topbar">
+            <h1 id="page-title">Overview</h1>
+            <div class="topbar-right">
+                <div class="topbar-avatar" id="admin-avatar">A</div>
+                <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- OVERVIEW -->
+            <div id="section-overview" class="section active">
+                <div class="stats-grid" id="overview-stats">
+                    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-total-users">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Paid Subscribers</div><div class="stat-value pink" id="stat-paid-users">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="stat-total-posts">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Active Cities</div><div class="stat-value" id="stat-active-cities">—</div></div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Growth</h3>
+                    <div id="growth-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+                        <div><span style="font-size:12px;color:#888">New Today</span><div style="font-size:22px;font-weight:700;color:#f27059" id="stat-new-today">—</div></div>
+                        <div><span style="font-size:12px;color:#888">This Week</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-week">—</div></div>
+                        <div><span style="font-size:12px;color:#888">This Month</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-month">—</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT MODERATION -->
+            <div id="section-moderation" class="section">
+                <div class="stats-grid" id="mod-stats">
+                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="mod-total">—</div></div>
+                    <div class="stat-card"><div class="stat-label">AI Approved</div><div class="stat-value" style="color:#2ecc71" id="mod-approved">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Needs Review</div><div class="stat-value" style="color:#f1c40f" id="mod-review">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value" style="color:#e74c3c" id="mod-flagged">—</div></div>
+                </div>
+
+                <div class="mod-toolbar">
+                    <div class="mod-filters">
+                        <select class="mod-filter" id="filter-recommendation" onchange="loadModerationPosts()">
+                            <option value="">All Recommendations</option>
+                            <option value="approve">Auto-Approve</option>
+                            <option value="review">Needs Review</option>
+                            <option value="flag_removal">Flag for Removal</option>
+                        </select>
+                        <select class="mod-filter" id="filter-score" onchange="loadModerationPosts()">
+                            <option value="">All Scores</option>
+                            <option value="7-10">Green (7-10)</option>
+                            <option value="4-6">Yellow (4-6)</option>
+                            <option value="1-3">Red (1-3)</option>
+                        </select>
+                    </div>
+                    <div class="mod-actions">
+                        <button class="btn btn-approve" onclick="bulkApprove()"><i class="fas fa-check-double"></i> Auto-approve all 7+ <span class="sidebar-badge" style="background:rgba(46,204,113,0.2);color:#2ecc71;margin-left:4px">AI</span></button>
+                        <button class="btn btn-flag" onclick="bulkFlag()"><i class="fas fa-flag"></i> Flag all 3 or below <span class="sidebar-badge" style="background:rgba(231,76,60,0.2);color:#e74c3c;margin-left:4px">AI</span></button>
+                    </div>
+                </div>
+
+                <div id="mod-posts-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>
+                </div>
+
+                <div class="pagination" id="mod-pagination" style="display:none">
+                    <button id="mod-prev" onclick="changePage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="mod-page-info">Page 1</span>
+                    <button id="mod-next" onclick="changePage(1)">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- USER MANAGEMENT -->
+            <div id="section-users" class="section">
+                <div class="placeholder"><i class="fas fa-users"></i><h2>User Management</h2><p>Search, filter, and manage user accounts.</p></div>
+            </div>
+
+            <!-- MODERATORS -->
+            <div id="section-moderators" class="section">
+                <div class="placeholder"><i class="fas fa-user-shield"></i><h2>Moderator Management</h2><p>Assign and manage moderators per city.</p></div>
+            </div>
+
+            <!-- CITIES -->
+            <div id="section-cities" class="section">
+                <div class="placeholder"><i class="fas fa-city"></i><h2>City Management</h2><p>Enable/disable cities and adjust features per city.</p></div>
+            </div>
+
+            <!-- REPORTS -->
+            <div id="section-reports" class="section">
+                <div class="placeholder"><i class="fas fa-chart-bar"></i><h2>Reports & Analytics</h2><p>Exportable data and trend analysis.</p></div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="section-settings" class="section">
+                <div class="placeholder"><i class="fas fa-cog"></i><h2>System Settings</h2><p>Feature flags, rate limits, and API configuration.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        let token = localStorage.getItem('safetea_token');
+        let currentPage = 1;
+
+        // Auth check
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        // Sidebar navigation
+        document.querySelectorAll('.sidebar-nav a[data-section]').forEach(link => {
+            link.addEventListener('click', () => {
+                const section = link.dataset.section;
+                document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+                link.classList.add('active');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById('section-' + section).classList.add('active');
+                document.getElementById('page-title').textContent = link.textContent.trim();
+
+                if (section === 'overview') loadOverview();
+                if (section === 'moderation') loadModerationPosts();
+            });
+        });
+
+        function authHeaders() {
+            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => t.className = 'toast', 3000);
+        }
+
+        function timeAgo(dateStr) {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + 'm ago';
+            const hours = Math.floor(mins / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            if (days < 30) return days + 'd ago';
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        function scoreColor(score) {
+            if (score === null || score === undefined) return 'pending';
+            if (score >= 7) return 'green';
+            if (score >= 4) return 'yellow';
+            return 'red';
+        }
+
+        function recLabel(rec) {
+            if (rec === 'approve') return '<span class="ai-rec approve"><i class="fas fa-check"></i> Auto-Approve</span>';
+            if (rec === 'review') return '<span class="ai-rec review"><i class="fas fa-eye"></i> Needs Review</span>';
+            if (rec === 'flag_removal') return '<span class="ai-rec flag_removal"><i class="fas fa-exclamation-triangle"></i> Flag for Removal</span>';
+            return '<span class="ai-rec" style="color:#666"><i class="fas fa-hourglass-half"></i> Pending</span>';
+        }
+
+        // ===== OVERVIEW =====
+        async function loadOverview() {
+            try {
+                const res = await fetch(API_BASE + '/admin/stats', { headers: authHeaders() });
+                if (res.status === 403 || res.status === 401) {
+                    showToast('Admin access required', true);
+                    return;
+                }
+                const data = await res.json();
+                document.getElementById('stat-total-users').textContent = data.overview.totalUsers;
+                document.getElementById('stat-paid-users').textContent = data.overview.paidUsers;
+                document.getElementById('stat-total-posts').textContent = data.overview.totalPosts;
+                document.getElementById('stat-active-cities').textContent = data.overview.activeCities;
+                document.getElementById('stat-new-today').textContent = data.growth.newToday;
+                document.getElementById('stat-new-week').textContent = data.growth.newThisWeek;
+                document.getElementById('stat-new-month').textContent = data.growth.newThisMonth;
+            } catch (err) {
+                console.error('Failed to load overview:', err);
+            }
+        }
+
+        // ===== CONTENT MODERATION =====
+        async function loadModerationPosts() {
+            const list = document.getElementById('mod-posts-list');
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading posts...</div>';
+
+            const rec = document.getElementById('filter-recommendation').value;
+            const scoreRange = document.getElementById('filter-score').value;
+            let minScore = 0, maxScore = 10;
+            if (scoreRange === '7-10') { minScore = 7; maxScore = 10; }
+            else if (scoreRange === '4-6') { minScore = 4; maxScore = 6; }
+            else if (scoreRange === '1-3') { minScore = 1; maxScore = 3; }
+
+            let url = `${API_BASE}/admin/posts?page=${currentPage}&limit=20`;
+            if (rec) url += `&recommendation=${rec}`;
+            if (minScore > 0) url += `&min_score=${minScore}`;
+            if (maxScore < 10) url += `&max_score=${maxScore}`;
+
+            try {
+                const res = await fetch(url, { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+
+                // Update stats
+                updateModStats(data.posts);
+
+                if (data.posts.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No posts match the current filters.</p></div>';
+                    document.getElementById('mod-pagination').style.display = 'none';
+                    return;
+                }
+
+                list.innerHTML = data.posts.map(post => renderPostCard(post)).join('');
+
+                // Pagination
+                const pag = document.getElementById('mod-pagination');
+                pag.style.display = 'flex';
+                document.getElementById('mod-prev').disabled = currentPage <= 1;
+                document.getElementById('mod-next').disabled = currentPage >= data.pagination.totalPages;
+                document.getElementById('mod-page-info').textContent = `Page ${currentPage} of ${data.pagination.totalPages} (${data.pagination.total} posts)`;
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load posts. Check admin permissions.</p></div>';
+                console.error(err);
+            }
+        }
+
+        function updateModStats(posts) {
+            // These are approximate counts based on loaded page; full counts would need a separate endpoint
+            const total = document.getElementById('mod-total');
+            const approved = document.getElementById('mod-approved');
+            const review = document.getElementById('mod-review');
+            const flagged = document.getElementById('mod-flagged');
+
+            // We'll just show page-level counts for now
+            total.textContent = posts.length;
+            approved.textContent = posts.filter(p => p.ai_recommendation === 'approve').length;
+            review.textContent = posts.filter(p => p.ai_recommendation === 'review').length;
+            flagged.textContent = posts.filter(p => p.ai_recommendation === 'flag_removal' || p.is_flagged).length;
+        }
+
+        function renderPostCard(post) {
+            const score = post.ai_credibility_score;
+            const color = scoreColor(score);
+            const scoreText = score !== null && score !== undefined ? score + '/10' : 'Pending';
+            const flags = post.ai_flags || [];
+            const reasoning = post.ai_reasoning || '';
+            const analyzedAt = post.ai_analyzed_at ? timeAgo(post.ai_analyzed_at) : '';
+
+            let flagsHtml = '';
+            if (flags.length > 0) {
+                flagsHtml = '<div class="ai-flags">' + flags.map(f => `<span class="ai-flag-tag"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(f)}</span>`).join('') + '</div>';
+            }
+
+            let reasoningHtml = '';
+            if (reasoning) {
+                reasoningHtml = `
+                    <button class="ai-reasoning-toggle" onclick="toggleReasoning(this)">
+                        <i class="fas fa-robot"></i> AI Reasoning <i class="fas fa-chevron-down" style="font-size:10px"></i>
+                    </button>
+                    <div class="ai-reasoning-text">${escapeHtml(reasoning)}${analyzedAt ? ' <span style="color:#555;font-size:11px">(analyzed ' + analyzedAt + ')</span>' : ''}</div>
+                `;
+            }
+
+            return `
+                <div class="post-card" id="post-${post.id}">
+                    <div class="post-card-header">
+                        <div class="post-card-user">
+                            <div class="post-card-avatar" style="background:${post.avatar_color || '#f27059'}">${post.avatar_initial || '?'}</div>
+                            <div class="post-card-meta">
+                                <div class="post-card-name">${escapeHtml(post.display_name || 'Anonymous')}</div>
+                                <div class="post-card-info">${post.city || 'Unknown'} &middot; ${timeAgo(post.created_at)} &middot; ${post.category || 'general'}</div>
+                            </div>
+                        </div>
+                        <div class="post-card-badges">
+                            ${post.is_flagged ? '<span class="flagged-indicator"><i class="fas fa-flag"></i> Flagged</span>' : ''}
+                            <span class="ai-score ${color}"><i class="fas fa-brain"></i> ${scoreText}</span>
+                            ${recLabel(post.ai_recommendation)}
+                        </div>
+                    </div>
+                    <div class="post-card-content">${escapeHtml(post.content)}</div>
+                    ${flagsHtml}
+                    ${reasoningHtml}
+                    <div class="post-card-actions">
+                        <button class="btn btn-sm btn-approve" onclick="moderatePost('${post.id}', 'approve')"><i class="fas fa-check"></i> Approve</button>
+                        <button class="btn btn-sm btn-flag" onclick="moderatePost('${post.id}', 'flag')"><i class="fas fa-flag"></i> Flag</button>
+                        <button class="btn btn-sm btn-ghost" onclick="moderatePost('${post.id}', 'remove')"><i class="fas fa-trash"></i> Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function toggleReasoning(btn) {
+            const text = btn.nextElementSibling;
+            text.classList.toggle('show');
+            const icon = btn.querySelector('.fa-chevron-down, .fa-chevron-up');
+            if (icon) icon.classList.toggle('fa-chevron-down');
+            if (icon) icon.classList.toggle('fa-chevron-up');
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            if (currentPage < 1) currentPage = 1;
+            loadModerationPosts();
+        }
+
+        async function moderatePost(postId, action) {
+            try {
+                const res = await fetch(`${API_BASE}/admin/posts/${postId}/moderate`, {
+                    method: 'PATCH',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(data.message);
+
+                if (action === 'remove') {
+                    document.getElementById('post-' + postId)?.remove();
+                } else {
+                    loadModerationPosts();
+                }
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        async function bulkApprove() {
+            if (!confirm('Auto-approve all posts with AI credibility score 7 or above?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/posts/bulk-approve`, {
+                    method: 'POST',
+                    headers: authHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(data.message);
+                loadModerationPosts();
+            } catch (err) {
+                showToast('Bulk approve failed: ' + err.message, true);
+            }
+        }
+
+        async function bulkFlag() {
+            if (!confirm('Flag all posts with AI credibility score 3 or below?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/admin/posts/bulk-flag`, {
+                    method: 'POST',
+                    headers: authHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(data.message);
+                loadModerationPosts();
+            } catch (err) {
+                showToast('Bulk flag failed: ' + err.message, true);
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('safetea_token');
+            window.location.href = '/';
+        }
+
+        // Init
+        loadOverview();
+    </script>
+</body>
+</html>

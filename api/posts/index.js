@@ -2,7 +2,7 @@ const { authenticate, cors } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 
 module.exports = async function handler(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   // ========== GET: List posts ==========
@@ -10,20 +10,36 @@ module.exports = async function handler(req, res) {
     const feed = req.query.feed || 'safety';
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
 
+    // Optional auth for user_liked
+    let userId = null;
     try {
+      const user = await authenticate(req);
+      if (user) userId = user.id;
+    } catch (e) { /* not logged in */ }
+
+    try {
+      const params = [feed, limit];
+      let userLikedSelect = 'false AS user_liked';
+      if (userId) {
+        userLikedSelect = 'EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $3) AS user_liked';
+        params.push(userId);
+      }
+
       const posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
                 p.likes, p.feed, p.image_url, p.created_at,
                 u.display_name AS author_name,
                 u.custom_display_name AS author_custom_name,
                 u.avatar_color,
-                (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count
+                (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
+                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
+                ${userLikedSelect}
          FROM posts p
          LEFT JOIN users u ON u.id = p.user_id
          WHERE p.feed = $1
          ORDER BY p.created_at DESC
          LIMIT $2`,
-        [feed, limit]
+        params
       );
 
       return res.status(200).json(posts);
@@ -72,21 +88,22 @@ module.exports = async function handler(req, res) {
     const isOwner = post.user_id === user.id;
     const isAdmin = user.role === 'admin' || user.role === 'moderator';
     if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: 'Not authorized to modify this post' });
+      return res.status(403).json({ error: 'Not authorized to edit this post' });
     }
 
     const body = req.body || {};
     const { title, body: postBody, category, city } = body;
 
-    if (!postBody || !postBody.trim()) {
-      return res.status(400).json({ error: 'Post body is required' });
-    }
-
     try {
       await run(
-        `UPDATE posts SET title = $1, body = $2, category = COALESCE($3, category), city = COALESCE($4, city)
+        `UPDATE posts SET
+          title = COALESCE($1, title),
+          body = COALESCE($2, body),
+          category = COALESCE($3, category),
+          city = COALESCE($4, city),
+          edited_at = NOW()
          WHERE id = $5`,
-        [title || postBody.substring(0, 60), postBody.trim(), category || null, city || null, id]
+        [title || null, postBody || null, category || null, city || null, id]
       );
 
       return res.status(200).json({ message: 'Post updated' });
@@ -109,13 +126,13 @@ module.exports = async function handler(req, res) {
     const isOwner = post.user_id === user.id;
     const isAdmin = user.role === 'admin' || user.role === 'moderator';
     if (!isOwner && !isAdmin) {
-      return res.status(403).json({ error: 'Not authorized to modify this post' });
+      return res.status(403).json({ error: 'Not authorized to delete this post' });
     }
 
     try {
       await run('DELETE FROM replies WHERE post_id = $1', [id]);
+      await run('DELETE FROM post_likes WHERE post_id = $1', [id]);
       await run('DELETE FROM posts WHERE id = $1', [id]);
-
       return res.status(200).json({ message: 'Post deleted' });
     } catch (err) {
       return res.status(500).json({ error: 'Failed to delete post', details: err.message });

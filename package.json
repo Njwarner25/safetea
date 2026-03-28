@@ -1,8 +1,31 @@
 {
+  "name": "safetea-api",
+  "version": "1.0.0",
+  "description": "SafeTea - Community safety platform for women",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "migrate": "node server/db/migrate.js",
+    "seed": "node server/db/seed.js",
+    "dev": "NODE_ENV=development node server/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "express-validator": "^7.2.0",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "twilio": "^5.13.1"
+    "openai": "^6.33.0",
+    "pg": "^8.13.0",
+    "stripe": "^14.0.0",
+    "twilio": "^5.13.1",
+    "uuid": "^10.0.0"
   }
 }

@@ -512,8 +512,10 @@
         function loadNews() {
             var feed = document.getElementById('news-feed');
             // Fetch real news from our API
-            fetch('/api/blog/news')
-                .then(function(res) { return res.json(); })
+            var controller = new AbortController();
+            var timeout = setTimeout(function() { controller.abort(); }, 5000);
+            fetch('/api/blog/news', { signal: controller.signal })
+                .then(function(res) { clearTimeout(timeout); return res.json(); })
                 .then(function(data) {
                     if (!data || !data.articles || data.articles.length === 0) {
                         feed.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No recent news available.</p>';

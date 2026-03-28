@@ -1,5 +1,5 @@
 const { getOne, run } = require('../_utils/db');
-const { generateToken, cors } = require('../_utils/auth');
+const { generateToken, cors, parseBody } = require('../_utils/auth');
 
 // Normalize phone number to E.164 format
 function normalizePhone(phone) {
@@ -16,7 +16,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { phone: rawPhone, code } = req.body || {};
+    const body = await parseBody(req);
+    const { phone: rawPhone, code } = body;
 
     if (!rawPhone || !rawPhone.trim()) {
       return res.status(400).json({ error: 'Phone number is required' });

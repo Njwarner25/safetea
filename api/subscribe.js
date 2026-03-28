@@ -5,12 +5,45 @@ module.exports = async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const user = await authenticate(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // ========== DELETE: Cancel subscription ==========
+  if (req.method === 'DELETE') {
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) return res.status(500).json({ error: 'Stripe not configured' });
+
+    try {
+      const stripe = require('stripe')(stripeKey);
+      const body = await parseBody(req);
+
+      const subId = user.stripe_subscription_id;
+      if (!subId) {
+        // No Stripe subscription — just downgrade in DB
+        await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', ['free', user.id]);
+        return res.status(200).json({ success: true, message: 'Subscription cancelled' });
+      }
+
+      // Cancel at end of billing period (don't cut off immediately)
+      const subscription = await stripe.subscriptions.update(subId, {
+        cancel_at_period_end: true,
+        metadata: { cancel_reason: body.reason || 'not specified' },
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Subscription will cancel at end of billing period',
+        cancelAt: subscription.current_period_end,
+      });
+    } catch (err) {
+      console.error('Stripe cancel error:', err);
+      return res.status(500).json({ error: 'Failed to cancel subscription', details: err.message });
+    }
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  const user = await authenticate(req);
-  if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   const body = await parseBody(req);
   const { priceId } = body;

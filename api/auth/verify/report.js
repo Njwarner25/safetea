@@ -1,5 +1,5 @@
 const { getOne, run } = require('../../_utils/db');
-const { authenticate, cors } = require('../../_utils/auth');
+const { authenticate, cors, parseBody } = require('../../_utils/auth');
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { reported_user_id, reason } = req.body || {};
+    const body = await parseBody(req);
+    const { reported_user_id, reason } = body;
 
     if (!reported_user_id || !reason) {
       return res.status(400).json({ error: 'Reported user ID and reason are required' });

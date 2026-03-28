@@ -1,4 +1,4 @@
-const { cors } = require('../_utils/auth');
+const { cors, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
 
 // Called when a new user signs up with a referral code
@@ -9,7 +9,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { referralCode, newUserId } = req.body || {};
+    const body = await parseBody(req);
+    const { referralCode, newUserId } = body;
 
     if (!referralCode || !newUserId) {
       return res.status(400).json({ error: 'referralCode and newUserId are required' });

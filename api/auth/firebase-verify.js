@@ -1,5 +1,5 @@
 const { getOne, run } = require('../_utils/db');
-const { generateToken, cors } = require('../_utils/auth');
+const { generateToken, cors, parseBody } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -7,7 +7,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { idToken, referralCode } = req.body || {};
+    const body = await parseBody(req);
+    const { idToken, referralCode } = body;
 
     if (!idToken) {
       return res.status(400).json({ error: 'Firebase ID token is required' });

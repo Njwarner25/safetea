@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { getOne, run } = require('../_utils/db');
-const { cors } = require('../_utils/auth');
+const { cors, parseBody } = require('../_utils/auth');
 
 // Generate a 6-digit OTP
 function generateOTP() {
@@ -22,7 +22,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { phone: rawPhone } = req.body || {};
+    const body = await parseBody(req);
+    const { phone: rawPhone } = body;
 
     if (!rawPhone || !rawPhone.trim()) {
       return res.status(400).json({ error: 'Phone number is required' });

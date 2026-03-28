@@ -1,5 +1,5 @@
 const { getOne, run } = require('../../_utils/db');
-const { authenticate, cors } = require('../../_utils/auth');
+const { authenticate, cors, parseBody } = require('../../_utils/auth');
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -10,7 +10,8 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { gender } = req.body || {};
+    const body = await parseBody(req);
+    const { gender } = body;
 
     if (!gender) {
       return res.status(400).json({ error: 'Gender selection is required' });

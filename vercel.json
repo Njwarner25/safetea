@@ -47,6 +47,8 @@
         { "source": "/api/watch-zones", "destination": "/api/watch-zones" },
         { "source": "/api/migrate-crime-alerts", "destination": "/api/migrate-crime-alerts" },
         { "source": "/api/cron/fetch-crime-alerts", "destination": "/api/cron/fetch-crime-alerts" },
+        { "source": "/api/community/post", "destination": "/api/community/post" },
+        { "source": "/api/community", "destination": "/api/community/index" },
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/posts/replies", "destination": "/api/posts/replies" },
         { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },

@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
     try {
       const replies = await getMany(
         `SELECT r.id, r.body, r.created_at, r.user_id,
-                u.username, u.display_name, u.avatar_url
+                u.display_name, u.avatar_color, u.avatar_initial
          FROM replies r
          JOIN users u ON u.id = r.user_id
          WHERE r.post_id = $1
@@ -59,8 +59,9 @@ module.exports = async function handler(req, res) {
       return res.status(201).json({
         ...reply,
         user_id: user.id,
-        username: user.username,
-        display_name: user.display_name
+        display_name: user.display_name,
+        avatar_color: user.avatar_color,
+        avatar_initial: user.avatar_initial
       });
     } catch (err) {
       console.error('Create reply error:', err);

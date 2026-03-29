@@ -21,6 +21,7 @@
         { "source": "/", "destination": "https://getsafetea.app", "permanent": false }
     ],
     "rewrites": [
+        { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
         { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
         { "source": "/api/screening/background", "destination": "/api/screening/background" },
         { "source": "/api/dates/checkout", "destination": "/api/dates/checkout" },

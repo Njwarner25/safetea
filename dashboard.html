@@ -1603,66 +1603,194 @@
             50% { opacity: 0.4; }
         }
 
-        /* ===== ALERTS IN YOUR AREA — Light Mode ===== */
-        /* Main alerts container */
-        [data-theme="light"] #hub-search div[style*="background:#22223A"] {
+        /* ===== COMPREHENSIVE LIGHT MODE — ALL SECTIONS ===== */
+
+        /* --- Global: all dark backgrounds (#22223A, #1A1A2E, #141428) --- */
+        [data-theme="light"] div[style*="background:#22223A"],
+        [data-theme="light"] div[style*="background: #22223A"] {
             background: var(--st-surface) !important;
-            border: 1px solid var(--st-border) !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+            border-color: var(--st-border) !important;
         }
-        /* Alert title + headings */
-        [data-theme="light"] #hub-search h3[style*="color:#fff"],
-        [data-theme="light"] #hub-search h4[style*="color:#fff"] {
-            color: var(--st-text) !important;
-        }
-        /* Gray description text */
-        [data-theme="light"] #hub-search p[style*="color:#8080A0"],
-        [data-theme="light"] #hub-search div[style*="color:#8080A0"],
-        [data-theme="light"] #hub-search span[style*="color:#666"] {
-            color: var(--st-text-soft) !important;
-        }
-        /* Dark inner cards (#1A1A2E) in alert list + watch zones */
-        [data-theme="light"] #hub-search div[style*="background:#1A1A2E"] {
+        [data-theme="light"] div[style*="background:#1A1A2E"],
+        [data-theme="light"] div[style*="background: #1A1A2E"] {
             background: var(--st-surface-soft) !important;
         }
-        /* Alert detail text */
-        [data-theme="light"] #hub-search div[style*="color:#fff"] {
+        [data-theme="light"] input[style*="background:#141428"],
+        [data-theme="light"] select[style*="background:#141428"],
+        [data-theme="light"] textarea[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
             color: var(--st-text) !important;
         }
-        [data-theme="light"] #hub-search div[style*="color:#ccc"] {
+
+        /* --- Global: white text → dark --- */
+        [data-theme="light"] h2[style*="color:#fff"],
+        [data-theme="light"] h3[style*="color:#fff"],
+        [data-theme="light"] h4[style*="color:#fff"],
+        [data-theme="light"] div[style*="color:#fff"],
+        [data-theme="light"] span[style*="color:#fff"],
+        [data-theme="light"] p[style*="color:#fff"],
+        [data-theme="light"] strong[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+
+        /* --- Global: gray text → readable --- */
+        [data-theme="light"] div[style*="color:#8080A0"],
+        [data-theme="light"] p[style*="color:#8080A0"],
+        [data-theme="light"] span[style*="color:#8080A0"],
+        [data-theme="light"] label[style*="color:#8080A0"],
+        [data-theme="light"] small[style*="color:#8080A0"] {
             color: var(--st-text-soft) !important;
         }
-        /* Select dropdowns in alert controls */
+        [data-theme="light"] div[style*="color:#666"],
+        [data-theme="light"] span[style*="color:#666"],
+        [data-theme="light"] p[style*="color:#666"] {
+            color: #888 !important;
+        }
+        [data-theme="light"] div[style*="color:#ccc"],
+        [data-theme="light"] span[style*="color:#ccc"],
+        [data-theme="light"] p[style*="color:#ccc"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* --- Alerts tab --- */
+        [data-theme="light"] #tab-alerts .alerts-section {
+            background: var(--st-surface);
+        }
         [data-theme="light"] #alert-radius,
         [data-theme="light"] #alert-days {
             background: var(--st-surface-soft) !important;
             border: 1px solid var(--st-border) !important;
             color: var(--st-text) !important;
         }
-        /* Dark input fields in search forms */
-        [data-theme="light"] #hub-search input[style*="background:#141428"],
-        [data-theme="light"] #hub-search select[style*="background:#141428"] {
+
+        /* --- Name Watch --- */
+        [data-theme="light"] #hub-namewatch div[style*="background:#22223A"],
+        [data-theme="light"] #nw-content div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #nw-input {
             background: var(--st-surface-soft) !important;
             border-color: var(--st-border) !important;
             color: var(--st-text) !important;
         }
-        /* Reply thread containers */
+        [data-theme="light"] #nw-upgrade-wall {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-namewatch h2,
+        [data-theme="light"] #hub-namewatch h3[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-namewatch p[style*="color:#8080A0"] {
+            color: var(--st-text-soft) !important;
+        }
+
+        /* --- Community tab --- */
+        [data-theme="light"] #tab-community div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-community div[style*="background:#141428"],
+        [data-theme="light"] #tab-community input[style*="background:#141428"],
+        [data-theme="light"] #tab-community textarea[style*="background:#141428"],
+        [data-theme="light"] #tab-community select[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+
+        /* --- Inbox tab --- */
+        [data-theme="light"] #tab-inbox div[style*="background:#22223A"],
+        [data-theme="light"] #tab-inbox div[style*="background:#1A1A2E"] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-inbox input[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+
+        /* --- Profile tab --- */
+        [data-theme="light"] #tab-profile div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-profile input[style*="background:#141428"],
+        [data-theme="light"] #tab-profile textarea[style*="background:#141428"],
+        [data-theme="light"] #tab-profile select[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .profile-card,
+        [data-theme="light"] .profile-form {
+            color: var(--st-text);
+        }
+
+        /* --- Date Check-In premium content --- */
+        [data-theme="light"] #dc-premium-content div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #dc-premium-content input[style*="background:#141428"],
+        [data-theme="light"] #dc-premium-content select[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #dc-upgrade-wall {
+            background: var(--st-surface) !important;
+            border-color: var(--st-border) !important;
+        }
+
+        /* --- Reply threads --- */
         [data-theme="light"] div[id^="replies-"] {
             border-top-color: var(--st-border) !important;
         }
-        [data-theme="light"] div[id^="replies-"] input[style*="background:#141428"] {
+        [data-theme="light"] div[id^="replies-"] input {
             background: var(--st-surface-soft) !important;
             border-color: var(--st-border) !important;
             color: var(--st-text) !important;
         }
-        [data-theme="light"] div[id^="replies-"] div[style*="color:#ccc"] {
-            color: var(--st-text-soft) !important;
-        }
-        [data-theme="light"] div[id^="replies-"] div[style*="color:#fff"] {
+
+        /* --- Feedback form --- */
+        [data-theme="light"] #feedback-message {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
             color: var(--st-text) !important;
         }
-        /* SOS button should stay red in light mode — no override needed */
-        /* Like button active state should stay red */
+
+        /* --- Hub tool cards (overview) --- */
+        [data-theme="light"] .home-tool-card,
+        [data-theme="light"] a[style*="background:linear-gradient(135deg,rgba(231,76,60"] {
+            border-color: var(--st-border) !important;
+        }
+
+        /* --- Hub back buttons --- */
+        [data-theme="light"] .hub-back-btn {
+            color: var(--st-primary) !important;
+        }
+
+        /* --- Mobile tab bar --- */
+        [data-theme="light"] .mobile-tab-bar {
+            background: rgba(255,255,255,0.96) !important;
+            border-top-color: var(--st-border) !important;
+        }
+        [data-theme="light"] .mobile-tab-bar a {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] .mobile-tab-bar a.active {
+            color: var(--st-primary) !important;
+        }
+
+        /* --- Preserve intentional colors in light mode --- */
+        /* SOS button stays red */
+        /* Like heart stays red when active */
+        /* Pink badge colors stay pink */
+        /* Green success colors stay green */
 
     </style>
 </head>

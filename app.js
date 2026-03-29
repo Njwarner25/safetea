@@ -796,44 +796,35 @@
             return;
         }
 
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching public records...</div>';
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching public records via SerpAPI...</div>';
 
-        // Simulate search with delay (in production this would hit a real API like NSOPW)
-        setTimeout(function() {
-            var query = (first + ' ' + last).trim().toLowerCase();
-            var sampleOffenders = [
-                { name: 'John Smith', city: 'Austin', state: 'Texas', risk: 'Level 2', offense: 'Indecency with a child', year: '2018' },
-                { name: 'Robert Johnson', city: 'Dallas', state: 'Texas', risk: 'Level 3', offense: 'Sexual assault', year: '2015' },
-                { name: 'Michael Williams', city: 'Houston', state: 'Texas', risk: 'Level 1', offense: 'Online solicitation', year: '2020' }
-            ];
+        apiFetch('/screening/offender?first=' + encodeURIComponent(first) + '&last=' + encodeURIComponent(last) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state)).then(function(data) {
+            if (!data) {
+                results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center"><div><i class="fas fa-exclamation-triangle" style="color:#f1c40f;font-size:32px;margin-bottom:8px"></i><p style="color:#888;font-size:13px">Search service unavailable. Try <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a> directly.</p></div></div>';
+                return;
+            }
 
-            var matches = sampleOffenders.filter(function(o) {
-                var nameMatch = o.name.toLowerCase().indexOf(query) !== -1;
-                var cityMatch = !city || o.city.toLowerCase().indexOf(city.toLowerCase()) !== -1;
-                var stateMatch = !state || o.state.toLowerCase() === state.toLowerCase();
-                return nameMatch && cityMatch && stateMatch;
-            });
-
-            if (matches.length > 0) {
-                results.innerHTML = '<h4 style="color:#e74c3c;margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> ' + matches.length + ' result(s) found</h4>' +
-                    matches.map(function(m) {
+            if (data.results && data.results.length > 0) {
+                results.innerHTML = '<h4 style="color:#e74c3c;margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> ' + data.results.length + ' result(s) found</h4>' +
+                    data.results.map(function(m) {
                         return '<div class="result-card">' +
-                            '<div class="result-avatar"><i class="fas fa-user"></i></div>' +
                             '<div class="result-info">' +
-                            '<h4>' + escapeHtml(m.name) + ' <span class="result-badge badge-danger">' + m.risk + '</span></h4>' +
-                            '<div class="result-detail"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(m.city) + ', ' + escapeHtml(m.state) + '</div>' +
-                            '<div class="result-detail"><i class="fas fa-gavel"></i> ' + escapeHtml(m.offense) + ' (' + m.year + ')</div>' +
+                            '<h4>' + escapeHtml(m.title || m.name || 'Result') + '</h4>' +
+                            '<div class="result-detail" style="margin-top:4px;font-size:13px;color:#8080A0;line-height:1.5">' + escapeHtml(m.snippet || m.description || '') + '</div>' +
+                            (m.link ? '<a href="' + escapeHtml(m.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:12px;margin-top:6px;display:inline-block">View source &rarr;</a>' : '') +
                             '</div></div>';
                     }).join('');
             } else {
                 results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center">' +
                     '<div><i class="fas fa-check-circle" style="color:#2ecc71;font-size:32px;margin-bottom:8px"></i>' +
                     '<h4 style="color:#2ecc71">No matches found</h4>' +
-                    '<p style="color:#888;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found in public records.' +
+                    '<p style="color:#888;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found.' +
                     (state ? ' State: ' + escapeHtml(state) : '') + '</p>' +
                     '<p style="color:#666;font-size:11px;margin-top:8px">For comprehensive results, also check <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a></p></div></div>';
             }
-        }, 2000);
+        }).catch(function() {
+            results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center"><div><i class="fas fa-exclamation-triangle" style="color:#f1c40f;font-size:32px;margin-bottom:8px"></i><p style="color:#888;font-size:13px">Search failed. Try <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a> directly.</p></div></div>';
+        });
     };
 
     // ==================== SEARCH: BACKGROUND CHECK ====================
@@ -1368,6 +1359,53 @@
         if (sub === 'teatalk') hubLoadCommunityPosts();
         if (sub === 'referral') hubLoadReferralPosts();
         if (sub === 'growreferral') loadGrowReferral();
+    };
+
+    // ==================== COMMUNITY MENTIONS ====================
+    window.loadCommunityMentions = function() {
+        var name = document.getElementById('bg-name').value.trim();
+        var container = document.getElementById('community-mentions-results');
+        if (!name || !container) {
+            showToast('Enter a name in the Background Check form first.', true);
+            return;
+        }
+
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Searching community posts...</div>';
+
+        apiFetch('/posts?feed=community&limit=50').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No community posts to search.</p>';
+                return;
+            }
+
+            var searchTerms = name.toLowerCase().split(/\s+/);
+            var matches = posts.filter(function(p) {
+                var content = ((p.body || '') + ' ' + (p.title || '')).toLowerCase();
+                return searchTerms.some(function(term) { return term.length >= 2 && content.indexOf(term) !== -1; });
+            });
+
+            if (matches.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:16px"><i class="fas fa-check-circle" style="color:#2ecc71;font-size:28px;display:block;margin-bottom:8px"></i><p style="color:#8080A0;font-size:13px">No community posts mention "' + escapeHtml(name) + '".</p></div>';
+                return;
+            }
+
+            container.innerHTML = '<p style="color:#E8A0B5;font-size:13px;font-weight:600;margin-bottom:12px">' + matches.length + ' post(s) mention "' + escapeHtml(name) + '"</p>' +
+                matches.slice(0, 10).map(function(p) {
+                    var highlighted = escapeHtml(p.body || '');
+                    searchTerms.forEach(function(term) {
+                        if (term.length >= 2) {
+                            var regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                            highlighted = highlighted.replace(regex, '<span style="background:rgba(231,76,60,0.2);color:#e74c3c;padding:1px 3px;border-radius:3px;font-weight:600">$1</span>');
+                        }
+                    });
+                    return '<div style="background:#1A1A2E;border-radius:10px;padding:14px;margin-bottom:8px">' +
+                        '<div style="font-size:12px;color:#666;margin-bottom:6px">' + getTimeAgo(p.created_at) + (p.city ? ' &bull; ' + escapeHtml(p.city) : '') + '</div>' +
+                        '<div style="font-size:13px;color:#ccc;line-height:1.5">' + highlighted + '</div>' +
+                    '</div>';
+                }).join('');
+        }).catch(function() {
+            container.innerHTML = '<p style="color:#e74c3c;font-size:13px">Failed to search community posts.</p>';
+        });
     };
 
     // ==================== ALERTS IN YOUR AREA ====================

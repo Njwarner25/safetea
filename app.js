@@ -2392,7 +2392,14 @@
         var urlEl = document.getElementById('grow-share-url');
         if (urlEl && urlEl.value) {
             var msg = 'Hey! Check out SafeTea — it helps women stay safe while dating. Join my community: ' + urlEl.value;
-            window.open('sms:?body=' + encodeURIComponent(msg), '_blank');
+            var isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMob) {
+                window.open('sms:?&body=' + encodeURIComponent(msg));
+            } else if (navigator.share) {
+                navigator.share({ title: 'SafeTea', text: msg, url: urlEl.value }).catch(function() {});
+            } else {
+                navigator.clipboard.writeText(msg).then(function() { showToast('Message copied! Paste in your messaging app.'); });
+            }
         }
     };
 

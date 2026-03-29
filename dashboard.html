@@ -2540,17 +2540,30 @@
         }
     }
 
+    function isMobile() {
+        return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
     function shareReferralSMS() {
         var url = getShareUrl();
         var msg = referralShareMessage + ' ' + url;
-        window.location.href = 'sms:?body=' + encodeURIComponent(msg);
+        if (isMobile()) {
+            // iOS uses &, Android uses ?, sms:?&body= works on both
+            window.open('sms:?&body=' + encodeURIComponent(msg));
+        } else if (navigator.share) {
+            navigator.share({ title: 'SafeTea', text: msg, url: url }).catch(function() {});
+        } else {
+            navigator.clipboard.writeText(msg).then(function() {
+                showToast('Message copied! Paste it in your messaging app.');
+            });
+        }
     }
 
     function shareReferralEmail() {
         var url = getShareUrl();
         var subject = 'Check out SafeTea — Stay Safe While Dating';
         var body = referralShareMessage + '\n\n' + url;
-        window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+        window.open('mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body));
     }
 
     function shareReferralIG() {

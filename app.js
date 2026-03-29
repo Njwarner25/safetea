@@ -1512,6 +1512,93 @@
         if (sub === 'growreferral') loadGrowReferral();
     };
 
+    // ==================== COMPOSE MESSAGE ====================
+    var composeRecipientId = null;
+
+    window.openComposeModal = function() {
+        var modal = document.getElementById('compose-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            composeRecipientId = null;
+            document.getElementById('compose-search').value = '';
+            document.getElementById('compose-body').value = '';
+            document.getElementById('compose-search-results').innerHTML = '';
+            document.getElementById('compose-selected').style.display = 'none';
+            setTimeout(function() { document.getElementById('compose-search').focus(); }, 100);
+        }
+    };
+
+    window.closeComposeModal = function() {
+        var modal = document.getElementById('compose-modal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.searchUsersForCompose = function(query) {
+        var container = document.getElementById('compose-search-results');
+        if (!query || query.length < 2) { container.innerHTML = ''; return; }
+
+        apiFetch('/users/search?q=' + encodeURIComponent(query)).then(function(data) {
+            var users = data && data.users ? data.users : [];
+            if (users.length === 0) {
+                container.innerHTML = '<p style="color:#666;font-size:12px;padding:8px">No users found</p>';
+                return;
+            }
+            container.innerHTML = users.map(function(u) {
+                var name = u.custom_display_name || u.display_name || 'User';
+                var initial = name[0].toUpperCase();
+                var color = u.avatar_color || '#E8A0B5';
+                return '<div onclick="selectComposeRecipient(' + u.id + ',\'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;border-radius:8px;transition:background 0.15s" onmouseover="this.style.background=\'rgba(232,160,181,0.08)\'" onmouseout="this.style.background=\'transparent\'">' +
+                    '<div style="width:32px;height:32px;border-radius:50%;background:' + color + ';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff">' + initial + '</div>' +
+                    '<div style="flex:1"><div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtml(name) + '</div>' +
+                    (u.city ? '<div style="color:#666;font-size:11px">' + escapeHtml(u.city) + '</div>' : '') +
+                    '</div></div>';
+            }).join('');
+        });
+    };
+
+    window.selectComposeRecipient = function(id, name) {
+        composeRecipientId = id;
+        document.getElementById('compose-search-results').innerHTML = '';
+        document.getElementById('compose-search').style.display = 'none';
+        document.getElementById('compose-selected').style.display = 'block';
+        document.getElementById('compose-selected-name').textContent = 'To: ' + name;
+        document.getElementById('compose-body').focus();
+    };
+
+    window.clearComposeRecipient = function() {
+        composeRecipientId = null;
+        document.getElementById('compose-selected').style.display = 'none';
+        document.getElementById('compose-search').style.display = 'block';
+        document.getElementById('compose-search').value = '';
+        document.getElementById('compose-search').focus();
+    };
+
+    window.sendComposeMessage = function() {
+        if (!composeRecipientId) { showToast('Please select a recipient', true); return; }
+        var body = document.getElementById('compose-body').value.trim();
+        if (!body) { showToast('Please write a message', true); return; }
+
+        var btn = document.getElementById('compose-send-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        apiFetch('/messages', {
+            method: 'POST',
+            body: JSON.stringify({ recipient_id: composeRecipientId, content: body })
+        }).then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            if (data && data.error) { showToast(data.error, true); return; }
+            showToast('Message sent!');
+            closeComposeModal();
+            loadInbox();
+        }).catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            showToast('Failed to send message', true);
+        });
+    };
+
     // ==================== COMMUNITY MENTIONS ====================
     window.loadCommunityMentions = function() {
         var name = document.getElementById('bg-name').value.trim();

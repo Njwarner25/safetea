@@ -379,7 +379,8 @@
         .dc-form-group input, .dc-form-group textarea, .dc-form-group select { width: 100%; padding: 10px 12px; background: #2A2A44; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; font-family: inherit; }
         .dc-form-group input:focus, .dc-form-group textarea:focus { outline: none; border-color: #E8A0B5; }
         .dc-form-row { display: flex; gap: 12px; }
-        .dc-form-row .dc-form-group { flex: 1; }
+        .dc-form-row .dc-form-group { flex: 1; min-width: 0; overflow: hidden; }
+        .dc-form-group input[type="datetime-local"] { max-width: 100%; }
         .dc-btn { padding: 12px 20px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; transition: all 0.2s; }
         .dc-btn-primary { background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; }
         .dc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(242,112,89,0.3); }
@@ -1985,8 +1986,9 @@
             </div>
             <!-- Inbox content (shown for premium users) -->
             <div id="inbox-content" style="display:none">
-                <div class="inbox-header">
+                <div class="inbox-header" style="display:flex;align-items:center;justify-content:space-between">
                     <h2><i class="fas fa-envelope" style="color:#E8A0B5"></i> Inbox</h2>
+                    <button onclick="openComposeModal()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-pen"></i> New Message</button>
                 </div>
                 <div class="inbox-layout">
                     <div class="inbox-conversations" id="inbox-conversations">
@@ -2000,6 +2002,29 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Compose Message Modal -->
+    <div id="compose-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center" onclick="if(event.target===this)closeComposeModal()">
+        <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;max-width:440px;width:90%;max-height:80vh;overflow-y:auto;margin:auto">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <h3 style="color:#fff;font-size:18px;margin:0">New Message</h3>
+                <button onclick="closeComposeModal()" style="background:rgba(255,255,255,0.06);border:none;color:#8080A0;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div style="margin-bottom:12px">
+                <label style="display:block;font-size:12px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Search for a user</label>
+                <input type="text" id="compose-search" placeholder="Type a name..." oninput="searchUsersForCompose(this.value)" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none">
+                <div id="compose-search-results" style="margin-top:8px"></div>
+            </div>
+            <div id="compose-selected" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);border-radius:10px">
+                <span style="color:#E8A0B5;font-size:13px;font-weight:600" id="compose-selected-name"></span>
+                <button onclick="clearComposeRecipient()" style="float:right;background:none;border:none;color:#8080A0;cursor:pointer;font-size:12px"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="margin-bottom:12px">
+                <textarea id="compose-body" placeholder="Write your message..." rows="4" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;resize:vertical"></textarea>
+            </div>
+            <button onclick="sendComposeMessage()" id="compose-send-btn" style="width:100%;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-paper-plane"></i> Send Message</button>
         </div>
     </div>
 

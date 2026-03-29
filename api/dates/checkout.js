@@ -38,6 +38,36 @@ module.exports = async function handler(req, res) {
     const shareCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     try {
+      // Ensure tables exist
+      await run(`CREATE TABLE IF NOT EXISTS date_checkouts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        date_name VARCHAR(255),
+        date_photo_url TEXT,
+        venue_name VARCHAR(255),
+        venue_address TEXT,
+        venue_lat DECIMAL(10,7),
+        venue_lng DECIMAL(10,7),
+        transportation VARCHAR(50),
+        transport_details TEXT,
+        scheduled_time TIMESTAMP,
+        estimated_return TIMESTAMP,
+        notes TEXT,
+        share_code VARCHAR(10) UNIQUE,
+        status VARCHAR(20) DEFAULT 'checked_out',
+        safety_rating INTEGER,
+        checked_in_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`);
+      await run(`CREATE TABLE IF NOT EXISTS date_trusted_contacts (
+        id SERIAL PRIMARY KEY,
+        checkout_id INTEGER REFERENCES date_checkouts(id) ON DELETE CASCADE,
+        contact_name VARCHAR(255),
+        contact_phone VARCHAR(50),
+        notified BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`);
+
       const checkout = await getOne(
         `INSERT INTO date_checkouts
          (user_id, date_name, date_photo_url, venue_name, venue_address, venue_lat, venue_lng,

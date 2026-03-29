@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
          FROM posts p
          LEFT JOIN users u ON u.id = p.user_id
          WHERE p.feed = $1
-         ORDER BY p.created_at DESC
+         ORDER BY (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id) + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id) DESC, p.created_at DESC
          LIMIT $2`,
         params
       );

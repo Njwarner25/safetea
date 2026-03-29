@@ -197,6 +197,11 @@
         var color = colors[post.id % colors.length];
         var canMod = canModifyPost(post);
 
+        var likeCount = parseInt(post.like_count) || 0;
+        var userLiked = post.user_liked === true || post.user_liked === 't';
+        var heartClass = userLiked ? 'fas fa-heart' : 'far fa-heart';
+        var heartColor = userLiked ? 'color:#e74c3c' : '';
+
         var html = '<div class="post-card" id="post-' + post.id + '">' +
             '<div class="post-header">' +
             '<div class="post-avatar" style="background:' + color + '">' + initial + '</div>' +
@@ -206,6 +211,7 @@
             '</div></div>' +
             '<div class="post-content">' + escapeHtml(post.body || '') + '</div>' +
             '<div class="post-actions">' +
+            '<button class="post-action" id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="' + heartColor + '"><i class="' + heartClass + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
             '<button class="post-action">\uD83D\uDCAC ' + (post.reply_count || 0) + ' replies</button>' +
             '<button class="post-action"><i class="fas fa-flag"></i> Report</button>' +
             '<button class="post-action"><i class="fas fa-share"></i> Share</button>' +
@@ -228,6 +234,32 @@
             document.getElementById('posts-feed').innerHTML = '<div class="empty-state"><p>Unable to load posts. Try refreshing.</p></div>';
         });
     }
+
+    // ==================== LIKE / UNLIKE ====================
+    window.toggleLike = function(postId) {
+        var btn = document.getElementById('like-btn-' + postId);
+        if (!btn) return;
+        var icon = btn.querySelector('i');
+        var isLiked = icon && icon.classList.contains('fa-heart') && icon.classList.contains('fas');
+        var method = isLiked ? 'DELETE' : 'POST';
+
+        apiFetch('/posts/like?id=' + postId, { method: method }).then(function(data) {
+            if (!data) return;
+            var countEl = document.getElementById('like-count-' + postId);
+            if (countEl) countEl.textContent = data.like_count;
+            if (icon) {
+                if (data.liked) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    btn.style.color = '#e74c3c';
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    btn.style.color = '';
+                }
+            }
+        });
+    };
 
     // ==================== CREATE POST ====================
     window.handleImageSelect = function(event) {
@@ -1518,6 +1550,10 @@
         var cityHtml = post.city ? ' <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
         var badgeHtml = hubGetCategoryBadge(post.category);
         var replyCount = post.reply_count || 0;
+        var likeCount = parseInt(post.like_count) || 0;
+        var userLiked = post.user_liked === true || post.user_liked === 't';
+        var heartIcon = userLiked ? 'fas fa-heart' : 'far fa-heart';
+        var heartStyle = userLiked ? 'color:#e74c3c' : 'color:#8080A0';
         var canMod = canModifyPost(post);
 
         return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
@@ -1530,8 +1566,8 @@
             '</div>' +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
             '<div style="display:flex;gap:16px;align-items:center">' +
+                '<button id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +
-                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-arrow-up"></i> ' + (post.upvotes || 0) + '</span>' +
                 (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtml(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'community\')" style="margin-left:auto;background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
                 (canMod ? '<button onclick="deletePost(' + post.id + ', \'community\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i> Delete</button>' : '') +
             '</div>' +

@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { sendRemovalStatusEmail, sendStrikeBanEmail } = require('../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -182,6 +183,15 @@ module.exports = async function handler(req, res) {
 
         return res.status(200).json({
           success: true,
+          // Email the uploader about the removal + strike
+          if (request.watermark_uploader_id) {
+            getOne('SELECT email, display_name FROM users WHERE id = $1', [request.watermark_uploader_id]).then(function(uploader) {
+              if (uploader && uploader.email) {
+                sendRemovalStatusEmail(uploader.email, uploader.display_name, 'approved').catch(function() {});
+              }
+            }).catch(function() {});
+          }
+
           message: 'Removal request approved. Photo deleted and uploader notified.',
           request_id,
           action: 'approved',

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { getOne, run } = require('../_utils/db');
 const { generateToken, cors, parseBody } = require('../_utils/auth');
+const { sendWelcomeEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
     cors(res);
@@ -32,6 +33,11 @@ module.exports = async function handler(req, res) {
 
       const user = await getOne('SELECT id, email, display_name, role, city FROM users WHERE email = $1', [email.toLowerCase()]);
           const token = generateToken(user);
+
+      // Send welcome email (non-blocking)
+      sendWelcomeEmail(user.email, user.display_name).catch(function(err) {
+        console.error('[Register] Welcome email failed:', err.message);
+      });
 
       return res.status(201).json({
               token,

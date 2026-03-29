@@ -19,37 +19,77 @@ module.exports = async function handler(req, res) {
   try {
     const fullName = ((first || '') + ' ' + last).trim();
     const locationParts = [city, state].filter(Boolean).join(', ');
-    const query = `"${fullName}" sex offender registry` + (locationParts ? ` ${locationParts}` : '');
 
-    const url = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&num=10`;
-    const response = await fetch(url);
-    const data = await response.json();
+    // Run two searches for better coverage
+    const queries = [
+      `"${fullName}" sex offender` + (locationParts ? ` ${locationParts}` : ''),
+      `"${fullName}" offender registry` + (state ? ` ${state}` : '')
+    ];
 
-    if (data.error) {
-      console.error('[Offender] SerpAPI error:', data.error);
-      return res.status(500).json({ error: 'Search failed' });
-    }
+    const allResults = [];
+    const seenLinks = new Set();
 
-    const organic = data.organic_results || [];
+    for (const query of queries) {
+      const url = `https://serpapi.com/search.json?q=${encodeURIComponent(query)}&api_key=${SERPAPI_KEY}&num=10`;
+      const response = await fetch(url);
+      const data = await response.json();
 
-    // Filter to results likely from offender registries
-    const registryDomains = ['nsopw.gov', 'meganslaw', 'offender', 'registry', 'sexoffender', 'sor.', 'familywatchdog', 'homefacts', 'city-data'];
-    const results = organic
-      .filter(r => {
+      if (data.error) {
+        console.error('[Offender] SerpAPI error:', data.error);
+        continue;
+      }
+
+      const organic = data.organic_results || [];
+
+      for (const r of organic) {
         const link = (r.link || '').toLowerCase();
         const title = (r.title || '').toLowerCase();
         const snippet = (r.snippet || '').toLowerCase();
-        return registryDomains.some(d => link.includes(d) || title.includes(d)) ||
-               snippet.includes('sex offender') || snippet.includes('registered offender');
-      })
-      .map(r => ({
-        title: r.title || '',
-        snippet: r.snippet || '',
-        link: r.link || '',
-        source: r.displayed_link || ''
-      }));
 
-    return res.status(200).json({ results, query: fullName, total: results.length });
+        // Skip if we've already seen this link
+        if (seenLinks.has(link)) continue;
+
+        // Include result if it's from a registry domain OR mentions relevant terms
+        const registryDomains = [
+          'nsopw.gov', 'meganslaw', 'offender', 'registry', 'sexoffender',
+          'sor.', 'familywatchdog', 'homefacts', 'city-data', 'bustedoffenders',
+          'mugshots', 'arrests', 'criminal', 'icrimewatch', 'sheriffalerts',
+          'offenderradar', 'neighborhoodscout'
+        ];
+
+        const isRegistrySite = registryDomains.some(d => link.includes(d));
+        const mentionsOffender = snippet.includes('sex offender') ||
+          snippet.includes('registered offender') ||
+          snippet.includes('sexual') ||
+          title.includes('sex offender') ||
+          title.includes('offender');
+        const mentionsName = snippet.includes(last.toLowerCase());
+
+        if ((isRegistrySite || mentionsOffender) && mentionsName) {
+          seenLinks.add(link);
+          allResults.push({
+            title: r.title || '',
+            snippet: r.snippet || '',
+            link: r.link || '',
+            source: r.displayed_link || '',
+            is_registry: isRegistrySite
+          });
+        }
+      }
+    }
+
+    // Sort: registry sites first, then by relevance
+    allResults.sort(function(a, b) {
+      if (a.is_registry && !b.is_registry) return -1;
+      if (!a.is_registry && b.is_registry) return 1;
+      return 0;
+    });
+
+    return res.status(200).json({
+      results: allResults.slice(0, 15),
+      query: fullName,
+      total: allResults.length
+    });
   } catch (err) {
     console.error('[Offender] Search failed:', err);
     return res.status(500).json({ error: 'Search failed', details: err.message });

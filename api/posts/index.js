@@ -1,5 +1,6 @@
 const { authenticate, cors } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { sendNameWatchMatchEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -67,6 +68,11 @@ module.exports = async function handler(req, res) {
          RETURNING id`,
         [user.id, title, postBody, category || 'general', city || null, feed || 'safety', image_url || null]
       );
+
+      // Check Name Watch matches (non-blocking)
+      checkNameWatchMatches(result.id, postBody, city).catch(function(err) {
+        console.error('[NameWatch] Match check failed:', err.message);
+      });
 
       return res.status(201).json({ id: result.id, message: 'Post created' });
     } catch (err) {
@@ -141,3 +147,56 @@ module.exports = async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 };
+
+// ─── Name Watch Match Detection ───
+async function checkNameWatchMatches(postId, postBody, postCity) {
+  try {
+    // Get all watched names (across all users)
+    const watchedNames = await getMany(
+      `SELECT wn.id, wn.name, wn.user_id, u.email, u.display_name, u.city
+       FROM watched_names wn
+       JOIN users u ON u.id = wn.user_id
+       WHERE u.subscription_tier != 'free'`
+    );
+
+    if (!watchedNames || watchedNames.length === 0) return;
+
+    const bodyLower = (postBody || '').toLowerCase();
+
+    for (const wn of watchedNames) {
+      const nameLower = wn.name.toLowerCase();
+      const nameParts = nameLower.split(/\s+/);
+
+      // Match: full name, first name (2+ chars), or initials
+      const fullMatch = bodyLower.includes(nameLower);
+      const partMatch = nameParts.some(function(p) { return p.length >= 2 && bodyLower.includes(p); });
+      const initials = nameParts.map(function(p) { return p[0]; }).join('').toLowerCase();
+      const initialMatch = initials.length >= 2 && bodyLower.includes(initials);
+
+      if (fullMatch || partMatch || initialMatch) {
+        // Check if this match already exists
+        const existing = await getOne(
+          'SELECT id FROM name_watch_matches WHERE watched_name_id = $1 AND post_id = $2',
+          [wn.id, postId]
+        );
+        if (existing) continue;
+
+        // Create match record
+        await run(
+          'INSERT INTO name_watch_matches (watched_name_id, post_id, matched_name) VALUES ($1, $2, $3)',
+          [wn.id, postId, wn.name]
+        );
+
+        // Send email notification
+        if (wn.email) {
+          const snippet = postBody.length > 150 ? postBody.substring(0, 150) + '...' : postBody;
+          sendNameWatchMatchEmail(wn.email, wn.display_name, wn.name, snippet, postCity || wn.city).catch(function(err) {
+            console.error('[NameWatch] Email failed for', wn.email, err.message);
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[NameWatch] Match check error:', err.message);
+  }
+}

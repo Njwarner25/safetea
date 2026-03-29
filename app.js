@@ -796,7 +796,7 @@
             return;
         }
 
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching public records via SerpAPI...</div>';
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching public registries...</div>';
 
         apiFetch('/screening/offender?first=' + encodeURIComponent(first) + '&last=' + encodeURIComponent(last) + '&city=' + encodeURIComponent(city) + '&state=' + encodeURIComponent(state)).then(function(data) {
             if (!data) {
@@ -804,24 +804,41 @@
                 return;
             }
 
+            var html = '';
+
             if (data.results && data.results.length > 0) {
-                results.innerHTML = '<h4 style="color:#e74c3c;margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> ' + data.results.length + ' result(s) found</h4>' +
-                    data.results.map(function(m) {
-                        return '<div class="result-card">' +
-                            '<div class="result-info">' +
-                            '<h4>' + escapeHtml(m.title || m.name || 'Result') + '</h4>' +
-                            '<div class="result-detail" style="margin-top:4px;font-size:13px;color:#8080A0;line-height:1.5">' + escapeHtml(m.snippet || m.description || '') + '</div>' +
-                            (m.link ? '<a href="' + escapeHtml(m.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:12px;margin-top:6px;display:inline-block">View source &rarr;</a>' : '') +
-                            '</div></div>';
-                    }).join('');
+                html += '<h4 style="color:#e74c3c;margin-bottom:12px"><i class="fas fa-exclamation-triangle"></i> ' + data.results.length + ' result(s) found</h4>';
+                html += data.results.map(function(m) {
+                    var badge = m.is_registry ? '<span style="background:rgba(231,76,60,0.15);color:#e74c3c;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:8px">REGISTRY</span>' : '';
+                    return '<div class="result-card">' +
+                        '<div class="result-info">' +
+                        '<h4>' + escapeHtml(m.title || 'Result') + badge + '</h4>' +
+                        '<div class="result-detail" style="margin-top:4px;font-size:13px;color:#8080A0;line-height:1.5">' + escapeHtml(m.snippet || '') + '</div>' +
+                        (m.source ? '<div style="font-size:11px;color:#666;margin-top:4px">' + escapeHtml(m.source) + '</div>' : '') +
+                        (m.link ? '<a href="' + escapeHtml(m.link) + '" target="_blank" rel="noopener" style="color:#E8A0B5;font-size:12px;margin-top:6px;display:inline-block">View details &rarr;</a>' : '') +
+                        '</div></div>';
+                }).join('');
             } else {
-                results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center">' +
+                html += '<div class="result-card" style="text-align:center;justify-content:center">' +
                     '<div><i class="fas fa-check-circle" style="color:#2ecc71;font-size:32px;margin-bottom:8px"></i>' +
-                    '<h4 style="color:#2ecc71">No matches found</h4>' +
-                    '<p style="color:#888;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found.' +
-                    (state ? ' State: ' + escapeHtml(state) : '') + '</p>' +
-                    '<p style="color:#666;font-size:11px;margin-top:8px">For comprehensive results, also check <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a></p></div></div>';
+                    '<h4 style="color:#2ecc71">No direct matches found</h4>' +
+                    '<p style="color:#888;font-size:13px;margin-top:4px">No registered sex offenders matching "' + escapeHtml(first + ' ' + last) + '" were found in our search.' +
+                    (state ? ' State: ' + escapeHtml(state) : '') + '</p></div></div>';
             }
+
+            // Always show registry search links
+            if (data.registry_links && data.registry_links.length > 0) {
+                html += '<div style="margin-top:16px;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px">' +
+                    '<h4 style="color:#fff;font-size:14px;margin-bottom:12px"><i class="fas fa-external-link-alt" style="color:#E8A0B5"></i> Search Official Registries Directly</h4>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-bottom:12px">Click to search for "' + escapeHtml(first + ' ' + last) + '" on these official registries:</p>';
+                data.registry_links.forEach(function(link) {
+                    html += '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener" style="display:block;padding:10px 14px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#E8A0B5;font-size:13px;font-weight:500;transition:background 0.2s" onmouseover="this.style.background=\'rgba(232,160,181,0.08)\'" onmouseout="this.style.background=\'#1A1A2E\'">' +
+                        '<i class="fas fa-shield-halved" style="margin-right:8px"></i>' + escapeHtml(link.name) + ' <i class="fas fa-external-link-alt" style="font-size:10px;margin-left:4px;color:#666"></i></a>';
+                });
+                html += '</div>';
+            }
+
+            results.innerHTML = html;
         }).catch(function() {
             results.innerHTML = '<div class="result-card" style="text-align:center;justify-content:center"><div><i class="fas fa-exclamation-triangle" style="color:#f1c40f;font-size:32px;margin-bottom:8px"></i><p style="color:#888;font-size:13px">Search failed. Try <a href="https://www.nsopw.gov" target="_blank" style="color:#f27059">NSOPW.gov</a> directly.</p></div></div>';
         });

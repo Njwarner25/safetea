@@ -170,6 +170,12 @@
             document.getElementById('post-avatar').style.background = user.avatar_color;
         }
 
+        // Show admin link for admin/moderator users
+        var adminLink = document.getElementById('admin-link');
+        if (adminLink && (user.role === 'admin' || user.role === 'moderator')) {
+            adminLink.style.display = '';
+        }
+
         // Load unread message count for badge
         loadUnreadCount();
     }

@@ -272,9 +272,20 @@
         let token = localStorage.getItem('safetea_token');
         let currentPage = 1;
 
-        // Auth check
+        // Auth check — admin/moderator only
         if (!token) {
             window.location.href = '/';
+        } else {
+            fetch(API_BASE + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+                .then(r => r.json())
+                .then(data => {
+                    const u = data.user || data;
+                    if (u.role !== 'admin' && u.role !== 'moderator') {
+                        alert('Admin access required.');
+                        window.location.href = '/dashboard.html';
+                    }
+                })
+                .catch(() => { window.location.href = '/'; });
         }
 
         // Sidebar navigation

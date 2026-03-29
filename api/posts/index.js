@@ -9,6 +9,7 @@ module.exports = async function handler(req, res) {
   // ========== GET: List posts ==========
   if (req.method === 'GET') {
     const feed = req.query.feed || 'safety';
+    const category = req.query.category || null;
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
 
     // Optional auth for user_liked
@@ -20,10 +21,15 @@ module.exports = async function handler(req, res) {
 
     try {
       const params = [feed, limit];
+      let categoryFilter = '';
+      if (category) {
+        params.push(category);
+        categoryFilter = ` AND p.category = $${params.length}`;
+      }
       let userLikedSelect = 'false AS user_liked';
       if (userId) {
-        userLikedSelect = 'EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $3) AS user_liked';
         params.push(userId);
+        userLikedSelect = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${params.length}) AS user_liked`;
       }
 
       const posts = await getMany(
@@ -37,7 +43,7 @@ module.exports = async function handler(req, res) {
                 ${userLikedSelect}
          FROM posts p
          LEFT JOIN users u ON u.id = p.user_id
-         WHERE p.feed = $1
+         WHERE p.feed = $1${categoryFilter}
          ORDER BY (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id) + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id) DESC, p.created_at DESC
          LIMIT $2`,
         params

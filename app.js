@@ -218,14 +218,97 @@
             '<div class="post-content">' + escapeHtml(post.body || '') + '</div>' +
             '<div class="post-actions">' +
             '<button class="post-action" id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="' + heartColor + '"><i class="' + heartClass + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
-            '<button class="post-action">\uD83D\uDCAC ' + (post.reply_count || 0) + ' replies</button>' +
+            '<button class="post-action" onclick="toggleReplies(' + post.id + ')">\uD83D\uDCAC <span id="reply-count-' + post.id + '">' + (post.reply_count || 0) + '</span> replies</button>' +
             '<button class="post-action"><i class="fas fa-flag"></i> Report</button>' +
             '<button class="post-action"><i class="fas fa-share"></i> Share</button>' +
             (canMod ? '<button class="post-action" onclick="editPost(' + post.id + ', \'' + escapeHtml(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'' + escapeHtml(post.feed || 'safety') + '\')"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
             (canMod ? '<button class="post-action" style="color:#e74c3c" onclick="deletePost(' + post.id + ', \'' + escapeHtml(post.feed || 'safety') + '\')"><i class="fas fa-trash"></i> Delete</button>' : '') +
-            '</div></div>';
+            '</div>' +
+            '<div id="replies-' + post.id + '" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px"></div>' +
+            '</div>';
         return html;
     }
+
+    // ==================== POST REPLIES ====================
+    window.toggleReplies = function(postId) {
+        var container = document.getElementById('replies-' + postId);
+        if (!container) return;
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            container.innerHTML = '<div style="text-align:center;color:#8080A0;font-size:13px;padding:8px"><i class="fas fa-spinner fa-spin"></i></div>';
+            loadReplies(postId);
+        } else {
+            container.style.display = 'none';
+        }
+    };
+
+    function loadReplies(postId) {
+        var container = document.getElementById('replies-' + postId);
+        if (!container) return;
+
+        apiFetch('/posts/replies?id=' + postId).then(function(data) {
+            var replies = data && data.replies ? data.replies : [];
+            var html = '';
+
+            // Reply input
+            html += '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+                '<input type="text" id="reply-input-' + postId + '" placeholder="Write a reply..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:\'Inter\',sans-serif;font-size:13px;outline:none" onkeypress="if(event.key===\'Enter\')submitReply(' + postId + ')">' +
+                '<button onclick="submitReply(' + postId + ')" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif;white-space:nowrap"><i class="fas fa-paper-plane"></i></button>' +
+            '</div>';
+
+            if (replies.length === 0) {
+                html += '<p style="color:#666;font-size:12px;text-align:center">No replies yet. Be the first!</p>';
+            } else {
+                replies.forEach(function(r) {
+                    var name = r.display_name || r.username || 'Anonymous';
+                    var initial = name[0].toUpperCase();
+                    html += '<div style="display:flex;gap:10px;margin-bottom:10px">' +
+                        '<div style="width:28px;height:28px;border-radius:50%;background:#8e44ad;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">' + initial + '</div>' +
+                        '<div style="flex:1">' +
+                            '<div style="font-size:12px"><span style="color:#fff;font-weight:600">' + escapeHtml(name) + '</span> <span style="color:#666">' + getTimeAgo(r.created_at) + '</span></div>' +
+                            '<div style="color:#ccc;font-size:13px;line-height:1.4;margin-top:2px">' + escapeHtml(r.body) + '</div>' +
+                        '</div>' +
+                        (r.user_id === user.id || user.role === 'admin' ? '<button onclick="deleteReply(' + postId + ',' + r.id + ')" style="background:none;border:none;color:#666;cursor:pointer;font-size:11px;flex-shrink:0"><i class="fas fa-trash"></i></button>' : '') +
+                    '</div>';
+                });
+            }
+
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<p style="color:#e74c3c;font-size:12px">Failed to load replies.</p>';
+        });
+    }
+
+    window.submitReply = function(postId) {
+        var input = document.getElementById('reply-input-' + postId);
+        if (!input || !input.value.trim()) return;
+        var body = input.value.trim();
+        input.value = '';
+        input.disabled = true;
+
+        apiFetch('/posts/replies?id=' + postId, {
+            method: 'POST',
+            body: JSON.stringify({ body: body })
+        }).then(function(data) {
+            input.disabled = false;
+            if (data && data.error) { showToast(data.error, true); return; }
+            // Update reply count
+            var countEl = document.getElementById('reply-count-' + postId);
+            if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+            loadReplies(postId);
+        }).catch(function() {
+            input.disabled = false;
+            showToast('Failed to post reply', true);
+        });
+    };
+
+    window.deleteReply = function(postId, replyId) {
+        apiFetch('/posts/replies?id=' + postId + '&reply_id=' + replyId, { method: 'DELETE' }).then(function() {
+            var countEl = document.getElementById('reply-count-' + postId);
+            if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || 0) - 1);
+            loadReplies(postId);
+        });
+    };
 
     function loadPosts() {
         apiFetch('/posts').then(function(data) {
@@ -1285,6 +1368,57 @@
             }
         }).catch(function() { showToast('Failed to check in', true); });
     };
+
+    window.triggerSOS = function() {
+        if (!activeCheckout) { showToast('No active date', true); return; }
+        if (!confirm('This will send an EMERGENCY alert to all your date contacts with your location. Are you sure?')) return;
+
+        var dateName = activeCheckout.dateName || activeCheckout.date_name || 'someone';
+        var venue = activeCheckout.venueName || activeCheckout.venue_name || '';
+
+        // Try to get current location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                sendSOSMessage(dateName, venue, pos.coords.latitude, pos.coords.longitude);
+            }, function() {
+                sendSOSMessage(dateName, venue, null, null);
+            }, { timeout: 5000 });
+        } else {
+            sendSOSMessage(dateName, venue, null, null);
+        }
+    };
+
+    function sendSOSMessage(dateName, venue, lat, lon) {
+        var locationUrl = lat && lon ? 'https://maps.google.com/maps?q=' + lat + ',' + lon : '';
+        var msg = 'SOS - EMERGENCY ALERT\n━━━━━━━━━━━━━━━━━━━━\nI need help RIGHT NOW.\n\nI am on a date with ' + dateName +
+            (venue ? ' at ' + venue : '') + '.\n' +
+            (locationUrl ? '\nMy location: ' + locationUrl + '\n' : '') +
+            '\nPlease call me immediately. If I don\'t answer, call 911.\n\nSent via SafeTea SOS';
+
+        // Also check in with safety_rating 1 (danger)
+        apiFetch('/dates/checkin', {
+            method: 'POST',
+            body: JSON.stringify({ checkoutId: activeCheckout.id, safetyRating: 1, sos: true })
+        }).catch(function() {});
+
+        // Open SMS to all contacts
+        if (activeCheckout.contacts && activeCheckout.contacts.length > 0) {
+            var phones = activeCheckout.contacts.map(function(ct) { return ct.contact_phone || ct.phone; }).filter(Boolean).join(',');
+            if (phones) {
+                window.open('sms:' + phones + '?body=' + encodeURIComponent(msg), '_blank');
+            }
+        }
+
+        // Also try tel: for immediate call to first contact
+        showToast('SOS sent! Opening SMS to your contacts...');
+
+        // Show emergency numbers
+        setTimeout(function() {
+            if (confirm('Do you want to call 911?')) {
+                window.open('tel:911', '_blank');
+            }
+        }, 2000);
+    }
 
     window.shareDateLink = function() {
         if (!activeCheckout) return;

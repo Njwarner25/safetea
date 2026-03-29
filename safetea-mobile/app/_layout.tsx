@@ -3,10 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../constants/colors';
+import { useScreenshotPrevention } from '../utils/useScreenshotPrevention';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useScreenshotPrevention();
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);

@@ -1358,10 +1358,206 @@
         }
         if (sub === 'namewatch' && typeof initNameWatch === 'function') initNameWatch();
         if (sub === 'datecheck' && typeof initDateCheck === 'function') initDateCheck();
-        if (sub === 'search') initSearchTabs();
+        if (sub === 'search') { initSearchTabs(); initAreaAlerts(); }
         if (sub === 'teatalk') hubLoadCommunityPosts();
         if (sub === 'referral') hubLoadReferralPosts();
         if (sub === 'growreferral') loadGrowReferral();
+    };
+
+    // ==================== ALERTS IN YOUR AREA ====================
+    var areaAlertLocation = null;
+
+    var ALERT_CATEGORY_MAP = {
+        sexual_assault:    { label: 'Sexual Assault',    severity: 'high',   icon: '🚨' },
+        assault:           { label: 'Assault',            severity: 'high',   icon: '⚠️' },
+        domestic_violence: { label: 'Domestic Violence',  severity: 'high',   icon: '🚨' },
+        stalking:          { label: 'Stalking',           severity: 'high',   icon: '🚨' },
+        kidnapping:        { label: 'Kidnapping',         severity: 'high',   icon: '🚨' },
+        human_trafficking: { label: 'Human Trafficking',  severity: 'high',   icon: '🚨' },
+        harassment:        { label: 'Harassment',          severity: 'medium', icon: '⚠️' },
+        robbery:           { label: 'Robbery',             severity: 'medium', icon: '⚠️' },
+        indecent_exposure: { label: 'Indecent Exposure',   severity: 'medium', icon: '⚠️' }
+    };
+
+    function initAreaAlerts() {
+        loadWatchZones();
+    }
+
+    window.detectLocationAndFetch = function() {
+        var prompt = document.getElementById('area-alerts-prompt');
+        var loading = document.getElementById('area-alerts-loading');
+        if (prompt) prompt.style.display = 'none';
+        if (loading) loading.style.display = 'block';
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                areaAlertLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                refreshAreaAlerts();
+            }, function() {
+                if (loading) loading.style.display = 'none';
+                if (prompt) prompt.style.display = 'block';
+                showToast('Location access denied. Add a watch zone manually.', true);
+            });
+        } else {
+            if (loading) loading.style.display = 'none';
+            showToast('Geolocation not supported', true);
+        }
+    };
+
+    window.refreshAreaAlerts = function() {
+        if (!areaAlertLocation) return;
+        var radius = document.getElementById('alert-radius').value;
+        var days = document.getElementById('alert-days').value;
+        var loading = document.getElementById('area-alerts-loading');
+        var summary = document.getElementById('area-alerts-summary');
+        var list = document.getElementById('area-alerts-list');
+        var empty = document.getElementById('area-alerts-empty');
+        var prompt = document.getElementById('area-alerts-prompt');
+
+        if (prompt) prompt.style.display = 'none';
+        if (loading) loading.style.display = 'block';
+        if (summary) summary.style.display = 'none';
+        if (list) list.style.display = 'none';
+        if (empty) empty.style.display = 'none';
+
+        apiFetch('/alerts/area?lat=' + areaAlertLocation.lat + '&lon=' + areaAlertLocation.lon + '&radius=' + radius + '&days=' + days).then(function(data) {
+            if (loading) loading.style.display = 'none';
+            if (!data || data.total === 0) {
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            renderAlertsSummary(data.summary, data.total, days);
+            renderAlertsList(data.alerts);
+        }).catch(function() {
+            if (loading) loading.style.display = 'none';
+            showToast('Failed to load area alerts', true);
+        });
+    };
+
+    function renderAlertsSummary(alertSummary, total, days) {
+        var container = document.getElementById('area-alerts-summary');
+        if (!container) return;
+
+        var cards = '';
+        var types = Object.keys(alertSummary).sort(function(a, b) { return alertSummary[b].count - alertSummary[a].count; });
+        types.forEach(function(type) {
+            var info = alertSummary[type];
+            var severityColor = info.severity === 'high' ? 'rgba(231,76,60,0.15)' : 'rgba(241,196,15,0.15)';
+            var textColor = info.severity === 'high' ? '#e74c3c' : '#f1c40f';
+            cards += '<div style="display:flex;align-items:center;gap:10px;background:' + severityColor + ';border-radius:10px;padding:10px 14px">' +
+                '<span style="font-size:16px">' + (info.icon || '⚠️') + '</span>' +
+                '<span style="flex:1;color:' + textColor + ';font-size:13px;font-weight:600">' + (info.label || type) + '</span>' +
+                '<span style="color:#fff;font-size:14px;font-weight:700">' + info.count + '</span>' +
+            '</div>';
+        });
+
+        container.innerHTML = '<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:12px;padding:16px;margin-bottom:16px">' +
+            '<div style="color:#e74c3c;font-size:15px;font-weight:700;margin-bottom:12px">' + total + ' safety-relevant incidents <span style="color:#8080A0;font-weight:400;font-size:13px">in the past ' + days + ' days</span></div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">' + cards + '</div>' +
+        '</div>';
+        container.style.display = 'block';
+    }
+
+    function renderAlertsList(alerts) {
+        var container = document.getElementById('area-alerts-list');
+        if (!container) return;
+
+        var html = '';
+        var shown = alerts.slice(0, 20);
+        shown.forEach(function(alert) {
+            var info = ALERT_CATEGORY_MAP[alert.crime_type] || { label: alert.crime_type, icon: '⚠️', severity: 'medium' };
+            var dist = alert.distance_miles ? parseFloat(alert.distance_miles).toFixed(2) + ' mi away' : '';
+            var timeAgo = getTimeAgo(alert.occurred_at);
+            html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#1A1A2E;border-radius:10px;margin-bottom:8px">' +
+                '<span style="font-size:18px">' + info.icon + '</span>' +
+                '<div style="flex:1">' +
+                    '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtml(info.label) + '</div>' +
+                    '<div style="color:#8080A0;font-size:12px">' + escapeHtml(alert.block_address || 'Nearby') + ' &bull; ' + timeAgo + '</div>' +
+                '</div>' +
+                '<span style="color:#666;font-size:11px;white-space:nowrap">' + dist + '</span>' +
+            '</div>';
+        });
+
+        if (alerts.length > 20) {
+            html += '<div style="text-align:center;padding:12px;color:#8080A0;font-size:13px">+ ' + (alerts.length - 20) + ' more incidents</div>';
+        }
+
+        container.innerHTML = html;
+        container.style.display = 'block';
+    }
+
+    // Watch Zones
+    function loadWatchZones() {
+        apiFetch('/watch-zones').then(function(zones) {
+            var container = document.getElementById('watch-zones-list');
+            if (!container) return;
+            if (!zones || zones.length === 0) {
+                container.innerHTML = '<p style="color:#666;font-size:13px">No watch zones yet. Add one or use your location to see area alerts.</p>';
+                return;
+            }
+            var html = '';
+            zones.forEach(function(z) {
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#1A1A2E;border-radius:8px;margin-bottom:6px">' +
+                    '<i class="fas fa-map-pin" style="color:#E8A0B5"></i>' +
+                    '<div style="flex:1">' +
+                        '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtml(z.name || 'Watch Zone') + '</div>' +
+                        '<div style="color:#666;font-size:11px">' + z.radius_miles + ' mi radius &bull; ' + (z.source === 'auto_checkin' ? 'Auto from check-in' : 'Manual') + '</div>' +
+                    '</div>' +
+                    '<button onclick="useWatchZone(' + z.latitude + ',' + z.longitude + ')" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:\'Inter\',sans-serif">View</button>' +
+                    '<button onclick="deleteWatchZone(' + z.id + ')" style="background:none;border:none;color:#666;cursor:pointer;font-size:12px"><i class="fas fa-trash"></i></button>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+
+            // Auto-load alerts from first watch zone if no location set
+            if (!areaAlertLocation && zones.length > 0) {
+                areaAlertLocation = { lat: parseFloat(zones[0].latitude), lon: parseFloat(zones[0].longitude) };
+                var prompt = document.getElementById('area-alerts-prompt');
+                if (prompt) prompt.style.display = 'none';
+                refreshAreaAlerts();
+            }
+        }).catch(function() {
+            var container = document.getElementById('watch-zones-list');
+            if (container) container.innerHTML = '<p style="color:#666;font-size:13px">Could not load watch zones.</p>';
+        });
+    }
+
+    window.useWatchZone = function(lat, lon) {
+        areaAlertLocation = { lat: lat, lon: lon };
+        refreshAreaAlerts();
+    };
+
+    window.deleteWatchZone = function(id) {
+        apiFetch('/watch-zones?id=' + id, { method: 'DELETE' }).then(function() {
+            loadWatchZones();
+            showToast('Watch zone removed');
+        });
+    };
+
+    window.addWatchZone = function() {
+        var name = prompt('Name this watch zone (e.g. "Downtown dates"):');
+        if (!name) return;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                apiFetch('/watch-zones', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: name,
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        radius_miles: 0.5,
+                        source: 'manual'
+                    })
+                }).then(function(data) {
+                    if (data && data.error) { showToast(data.error, true); return; }
+                    loadWatchZones();
+                    showToast('Watch zone added!');
+                });
+            }, function() {
+                showToast('Location access needed to add a watch zone', true);
+            });
+        }
     };
 
     // ==================== CATFISH CHECK ====================

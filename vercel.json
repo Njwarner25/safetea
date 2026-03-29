@@ -14,7 +14,8 @@
         }
     ],
     "crons": [
-        { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" }
+        { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" },
+        { "path": "/api/cron/fetch-crime-alerts", "schedule": "0 4 * * *" }
     ],
     "redirects": [
         { "source": "/", "destination": "https://getsafetea.app", "permanent": false }
@@ -40,6 +41,10 @@
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
         { "source": "/api/users/ban", "destination": "/api/users/ban" },
         { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },
+        { "source": "/api/alerts/area", "destination": "/api/alerts/area" },
+        { "source": "/api/watch-zones", "destination": "/api/watch-zones" },
+        { "source": "/api/migrate-crime-alerts", "destination": "/api/migrate-crime-alerts" },
+        { "source": "/api/cron/fetch-crime-alerts", "destination": "/api/cron/fetch-crime-alerts" },
         { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },
         { "source": "/api/(.*)", "destination": "/api/$1" }
     ]

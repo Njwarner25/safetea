@@ -1603,6 +1603,67 @@
             50% { opacity: 0.4; }
         }
 
+        /* ===== ALERTS IN YOUR AREA — Light Mode ===== */
+        /* Main alerts container */
+        [data-theme="light"] #hub-search div[style*="background:#22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        /* Alert title + headings */
+        [data-theme="light"] #hub-search h3[style*="color:#fff"],
+        [data-theme="light"] #hub-search h4[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        /* Gray description text */
+        [data-theme="light"] #hub-search p[style*="color:#8080A0"],
+        [data-theme="light"] #hub-search div[style*="color:#8080A0"],
+        [data-theme="light"] #hub-search span[style*="color:#666"] {
+            color: var(--st-text-soft) !important;
+        }
+        /* Dark inner cards (#1A1A2E) in alert list + watch zones */
+        [data-theme="light"] #hub-search div[style*="background:#1A1A2E"] {
+            background: var(--st-surface-soft) !important;
+        }
+        /* Alert detail text */
+        [data-theme="light"] #hub-search div[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-search div[style*="color:#ccc"] {
+            color: var(--st-text-soft) !important;
+        }
+        /* Select dropdowns in alert controls */
+        [data-theme="light"] #alert-radius,
+        [data-theme="light"] #alert-days {
+            background: var(--st-surface-soft) !important;
+            border: 1px solid var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        /* Dark input fields in search forms */
+        [data-theme="light"] #hub-search input[style*="background:#141428"],
+        [data-theme="light"] #hub-search select[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        /* Reply thread containers */
+        [data-theme="light"] div[id^="replies-"] {
+            border-top-color: var(--st-border) !important;
+        }
+        [data-theme="light"] div[id^="replies-"] input[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] div[id^="replies-"] div[style*="color:#ccc"] {
+            color: var(--st-text-soft) !important;
+        }
+        [data-theme="light"] div[id^="replies-"] div[style*="color:#fff"] {
+            color: var(--st-text) !important;
+        }
+        /* SOS button should stay red in light mode — no override needed */
+        /* Like button active state should stay red */
+
     </style>
 </head>
 <body>

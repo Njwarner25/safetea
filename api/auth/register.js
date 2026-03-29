@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const { getOne, run } = require('../_utils/db');
 const { generateToken, cors, parseBody } = require('../_utils/auth');
 const { sendWelcomeEmail } = require('../../services/email');
+const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
 
 module.exports = async function handler(req, res) {
     cors(res);
@@ -9,6 +10,12 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
+          // Rate limit: 5 registrations per hour per IP
+          const limited = await checkRateLimit(getClientIP(req), 'register', 5, 3600);
+          if (limited) {
+              return res.status(429).json({ error: 'Too many registration attempts. Please try again later.' });
+          }
+
           const body = await parseBody(req);
           const { email, password, display_name, city } = body;
 

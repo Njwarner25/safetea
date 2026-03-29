@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne } = require('../_utils/db');
+const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
 
 module.exports = async function handler(req, res) {
   cors(res);
@@ -8,6 +9,13 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Rate limit: 20 scans per hour per user, 5 per minute per IP
+  const ipLimited = await checkRateLimit(getClientIP(req), 'redflag_ip', 5, 60);
+  const userLimited = await checkRateLimit(String(user.id), 'redflag_user', 20, 3600);
+  if (ipLimited || userLimited) {
+    return res.status(429).json({ error: 'Too many scans. Please wait a few minutes before trying again.' });
+  }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   const { conversationText, textImages } = body;

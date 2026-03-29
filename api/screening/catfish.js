@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
+const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
 const https = require('https');
 
 // --- Image analysis helpers ---
@@ -250,6 +251,12 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Rate limit: 10 scans per hour per IP
+    const ipLimited = await checkRateLimit(getClientIP(req), 'catfish_ip', 10, 3600);
+    if (ipLimited) {
+      return res.status(429).json({ error: 'Too many scans. Please wait before trying again.' });
+    }
+
     // Auth is optional for testing, required in production
     const user = await authenticate(req);
 

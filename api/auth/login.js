@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { getOne } = require('../_utils/db');
 const { generateToken, cors, parseBody } = require('../_utils/auth');
+const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
 
 module.exports = async function handler(req, res) {
     cors(res);
@@ -8,6 +9,12 @@ module.exports = async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
+        // Rate limit: 10 login attempts per 15 minutes per IP
+        const limited = await checkRateLimit(getClientIP(req), 'login', 10, 900);
+        if (limited) {
+            return res.status(429).json({ error: 'Too many login attempts. Please wait 15 minutes.' });
+        }
+
         const body = await parseBody(req);
         const email = body.email;
         const password = body.password;

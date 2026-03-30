@@ -186,8 +186,80 @@ module.exports = async function handler(req, res) {
         try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id)`; } catch(e) {}
 
+        // ============================================================
+        // POST MODERATION + SAFETY TABLES (v4 migration)
+        // ============================================================
+
+        // Post reports
+        await sql`CREATE TABLE IF NOT EXISTS post_reports (
+            id SERIAL PRIMARY KEY,
+            reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+            reported_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reason VARCHAR(50) NOT NULL,
+            details TEXT,
+            reviewed BOOLEAN DEFAULT false,
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(reporter_id, post_id)
+        )`;
+
+        // Removal requests (photo/content takedown)
+        await sql`CREATE TABLE IF NOT EXISTS removal_requests (
+            id SERIAL PRIMARY KEY,
+            requester_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+            post_author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reason VARCHAR(50) NOT NULL,
+            details TEXT,
+            status VARCHAR(20) DEFAULT 'pending',
+            reviewed_by INTEGER REFERENCES users(id),
+            reviewed_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // Ban log (admin audit trail)
+        await sql`CREATE TABLE IF NOT EXISTS ban_log (
+            id SERIAL PRIMARY KEY,
+            admin_id INTEGER REFERENCES users(id),
+            banned_user_id INTEGER REFERENCES users(id),
+            reason TEXT NOT NULL,
+            ban_type VARCHAR(20) DEFAULT 'permanent',
+            ban_until TIMESTAMP,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+
+        // User columns for moderation
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at TIMESTAMP`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_reason TEXT`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_type VARCHAR(20)`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_until TIMESTAMP`; } catch(e) {}
+        try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS flagged BOOLEAN DEFAULT false`; } catch(e) {}
+
+        // Post columns for moderation
+        try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP`; } catch(e) {}
+
+        // Indexes for moderation
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_removal_requests_post ON removal_requests(post_id)`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_ban_log_user ON ban_log(banned_user_id)`; } catch(e) {}
+
+        // ============================================================
+        // PHOTO REMOVAL REQUEST - PUBLIC ENDPOINT COLUMNS (v5 migration)
+        // ============================================================
+        try { await sql`ALTER TABLE removal_requests ADD COLUMN IF NOT EXISTS reporter_email VARCHAR(255)`; } catch(e) {}
+        try { await sql`ALTER TABLE removal_requests ADD COLUMN IF NOT EXISTS leaked_image_hash VARCHAR(64)`; } catch(e) {}
+        try { await sql`ALTER TABLE removal_requests ADD COLUMN IF NOT EXISTS watermark_user_id INTEGER`; } catch(e) {}
+        try { await sql`ALTER TABLE removal_requests ADD COLUMN IF NOT EXISTS auto_action_taken VARCHAR(50)`; } catch(e) {}
+
+        // Make requester_id and post_id nullable for public (unauthenticated) requests
+        try { await sql`ALTER TABLE removal_requests ALTER COLUMN requester_id DROP NOT NULL`; } catch(e) {}
+        try { await sql`ALTER TABLE removal_requests DROP CONSTRAINT IF EXISTS removal_requests_requester_id_post_id_key`; } catch(e) {}
+
         return res.status(200).json({
-            message: 'Migration complete (v3: phone auth + verification + Name Watch + messages)'
+            message: 'Migration complete (v5: phone auth + verification + Name Watch + messages + moderation + photo removal public)'
         });
     } catch (error) {
         console.error('Migration error:', error);

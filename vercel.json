@@ -52,6 +52,7 @@
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/posts/replies", "destination": "/api/posts/replies" },
         { "source": "/api/namewatch/:path*", "destination": "/api/namewatch" },
+        { "source": "/api/photos/removal-public", "destination": "/api/photos/removal-public" },
         { "source": "/api/(.*)", "destination": "/api/$1" }
     ]
 }

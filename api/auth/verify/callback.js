@@ -5,6 +5,13 @@ const { cors } = require('../../_utils/auth');
 module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // GET = user browser redirect from Didit after completing verification
+  // Redirect them back to the verify page where polling will pick up the result
+  if (req.method === 'GET') {
+    return res.writeHead(302, { Location: '/verify.html' }).end();
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {

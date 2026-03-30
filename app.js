@@ -178,6 +178,7 @@
 
         // Load unread message count for badge
         loadUnreadCount();
+        loadNameWatchBadge();
     }
 
     // ==================== POSTS ====================
@@ -216,6 +217,7 @@
             '<div class="post-time">' + time + ' \u2022 ' + escapeHtml(post.city || '') + '</div>' +
             '</div></div>' +
             '<div class="post-content">' + escapeHtml(post.body || '') + '</div>' +
+            (post.image_url ? '<div style="margin:12px 0"><img src="' + escapeHtml(post.image_url) + '" style="width:100%;max-height:400px;object-fit:cover;border-radius:10px" loading="lazy" onerror="this.style.display=\'none\'"></div>' : '') +
             '<div class="post-actions">' +
             '<button class="post-action" id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="' + heartColor + '"><i class="' + heartClass + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
             '<button class="post-action" onclick="toggleReplies(' + post.id + ')">\uD83D\uDCAC <span id="reply-count-' + post.id + '">' + (post.reply_count || 0) + '</span> replies</button>' +
@@ -473,6 +475,27 @@
         }).catch(function() {
             // Silently fail — user may not be premium
         });
+    }
+
+    function loadNameWatchBadge() {
+        apiFetch('/namewatch').then(function(data) {
+            if (!data || !data.matches) return;
+            var unread = data.matches.filter(function(m) {
+                // Matches from the last 24 hours are "new"
+                var age = Date.now() - new Date(m.created_at).getTime();
+                return age < 86400000;
+            }).length;
+
+            var badge = document.getElementById('nw-alert-badge');
+            var badgeMobile = document.getElementById('nw-alert-badge-mobile');
+            var homeDot = document.getElementById('home-notif-dot');
+
+            if (unread > 0) {
+                if (badge) { badge.textContent = unread; badge.style.display = 'inline'; }
+                if (badgeMobile) { badgeMobile.textContent = unread; badgeMobile.style.display = 'inline'; }
+                if (homeDot) { homeDot.textContent = unread; homeDot.style.display = 'flex'; }
+            }
+        }).catch(function() {});
     }
 
     function loadInbox() {
@@ -863,6 +886,32 @@
             }
         }).catch(function() {
             showToast('Failed to update profile.', true);
+        });
+    };
+
+    window.changePassword = function() {
+        var current = document.getElementById('current-password').value;
+        var newPass = document.getElementById('new-password').value;
+        var confirm = document.getElementById('confirm-password').value;
+
+        if (!current) { showToast('Enter your current password', true); return; }
+        if (!newPass || newPass.length < 8) { showToast('New password must be at least 8 characters', true); return; }
+        if (newPass !== confirm) { showToast('Passwords do not match', true); return; }
+
+        apiFetch('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Password updated!');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } else {
+                showToast(data.error || 'Failed to change password', true);
+            }
+        }).catch(function() {
+            showToast('Failed to change password', true);
         });
     };
 
@@ -2043,6 +2092,7 @@
                 '</div>' +
             '</div>' +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
+            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtml(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px" loading="lazy" onerror="this.style.display=\'none\'"></div>' : '') +
             '<div style="display:flex;gap:16px;align-items:center">' +
                 '<button id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
                 '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +

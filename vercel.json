@@ -42,6 +42,7 @@
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },
         { "source": "/api/users/ban", "destination": "/api/users/ban" },
+        { "source": "/api/auth/change-password", "destination": "/api/auth/change-password" },
         { "source": "/api/auth/verify/:path*", "destination": "/api/auth/verify/:path*" },
         { "source": "/api/alerts/area", "destination": "/api/alerts/area" },
         { "source": "/api/watch-zones", "destination": "/api/watch-zones" },

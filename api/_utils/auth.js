@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { getOne } = require('./db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'safetea-dev-secret-change-me';
+// SECURITY: JWT_SECRET must be set in environment — no fallback
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('CRITICAL: JWT_SECRET environment variable is not set. Auth will fail.');
+}
 
 function generateToken(user) {
     return jwt.sign(
@@ -35,10 +39,29 @@ async function authenticate(req) {
     return user;
 }
 
-function cors(res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+function cors(res, req) {
+    // SECURITY: Restrict CORS to trusted origins only
+    const allowedOrigins = [
+      'https://getsafetea.app',
+      'https://www.getsafetea.app',
+      'https://safetea-landing.vercel.app',
+    ];
+    // Allow localhost in development
+    if (process.env.NODE_ENV !== 'production') {
+      allowedOrigins.push('http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080');
+    }
+    const origin = (req && req.headers && req.headers.origin) || '';
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (!origin) {
+      // No origin header = same-origin request or non-browser (mobile app, curl, etc.)
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    } else {
+      // Unknown origin — set to main domain (browser will block cross-origin)
+      res.setHeader('Access-Control-Allow-Origin', 'https://www.getsafetea.app');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 }
 
 function parseBody(req) {

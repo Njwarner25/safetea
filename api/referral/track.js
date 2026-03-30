@@ -4,7 +4,7 @@ const { getOne, run } = require('../_utils/db');
 // Called when a new user signs up with a referral code
 // This is hit from the verify-code.js signup flow
 module.exports = async function handler(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 

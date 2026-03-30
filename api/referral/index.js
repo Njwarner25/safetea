@@ -17,7 +17,7 @@ const REWARD_TIERS = [
 const MAX_LIFETIME_DAYS = 180; // 6-month cap
 
 module.exports = async function handler(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const user = await authenticate(req);

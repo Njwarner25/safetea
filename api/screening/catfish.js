@@ -243,7 +243,7 @@ function computeCatfishScore(analysis, reverseResults, imageUrl) {
 }
 
 module.exports = async function handler(req, res) {
-  cors(res);
+  cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   if (req.method !== 'POST') {

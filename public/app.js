@@ -1024,7 +1024,104 @@
 
     // ============ UPGRADE / PREMIUM ============
     window.showUpgradePrompt = function() {
-        if (typeof showToast === 'function') showToast('Upgrade coming soon! Contact support@getsafetea.app for early access.');
+        // Remove existing modal if open
+        var existing = document.getElementById('upgrade-modal');
+        if (existing) existing.remove();
+
+        var user = getUser();
+        var currentTier = (user && user.subscription_tier || 'free').toLowerCase();
+
+        var modal = document.createElement('div');
+        modal.id = 'upgrade-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+        modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+
+        var html = '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 24px">';
+        html += '<div style="text-align:center;margin-bottom:24px">';
+        html += '<h2 style="color:#fff;font-size:22px;margin-bottom:6px">Upgrade Your SafeTea</h2>';
+        html += '<p style="color:#8080A0;font-size:14px">Unlock premium safety features</p>';
+        html += '</div>';
+
+        // SafeTea+ card
+        var plusActive = currentTier === 'plus';
+        html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:12px">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea+ <span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">POPULAR</span></h3></div>';
+        html += '<div style="color:#fff;font-size:22px;font-weight:800">$5.99<span style="font-size:13px;font-weight:400;color:#8080A0">/mo</span></div>';
+        html += '</div>';
+        html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In/Out with SafeWalk</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SafeTea Reports & Sharing</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Name Watch Alerts</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SMS Notifications</div>';
+        html += '</div>';
+        if (plusActive) {
+            html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(232,160,181,0.1);border-radius:8px;color:#E8A0B5;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
+        } else {
+            html += '<button onclick="startCheckout(\'plus\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to SafeTea+</button>';
+        }
+        html += '</div>';
+
+        // Pro card
+        var proActive = currentTier === 'pro';
+        html += '<div style="background:#22223A;border:' + (proActive ? '2px solid #9b59b6' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea Pro <span style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">BEST VALUE</span></h3></div>';
+        html += '<div style="color:#fff;font-size:22px;font-weight:800">$9.99<span style="font-size:13px;font-weight:400;color:#8080A0">/mo</span></div>';
+        html += '</div>';
+        html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Everything in SafeTea+</div>';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Background Checks</div>';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Catfish Detection</div>';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Priority Support</div>';
+        html += '</div>';
+        if (proActive) {
+            html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(155,89,182,0.1);border-radius:8px;color:#9b59b6;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
+        } else {
+            html += '<button onclick="startCheckout(\'pro\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to Pro</button>';
+        }
+        html += '</div>';
+
+        // Close button
+        html += '<button onclick="document.getElementById(\'upgrade-modal\').remove()" style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#8080A0;font-size:13px;cursor:pointer;font-family:inherit">Maybe Later</button>';
+        html += '</div>';
+
+        modal.innerHTML = html;
+        document.body.appendChild(modal);
+    };
+
+    window.startCheckout = function(plan) {
+        // Find the button that was clicked and show loading state
+        var modal = document.getElementById('upgrade-modal');
+        if (modal) {
+            var buttons = modal.querySelectorAll('button');
+            buttons.forEach(function(b) { b.disabled = true; b.style.opacity = '0.6'; });
+        }
+
+        fetch('/api/subscriptions/checkout', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ plan: plan })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                if (typeof showToast === 'function') showToast(data.error || 'Failed to start checkout');
+                if (modal) {
+                    var buttons = modal.querySelectorAll('button');
+                    buttons.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+                }
+            }
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast('Network error — please try again');
+            if (modal) {
+                var buttons = modal.querySelectorAll('button');
+                buttons.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
+            }
+        });
     };
 
     // ============ INBOX / MESSAGING ============
@@ -1616,5 +1713,27 @@
     loadWatchZones();
     initAlertsTab();
     updateInboxBadge();
+
+    // Handle Stripe checkout success redirect
+    (function checkUpgradeSuccess() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('upgrade') === 'success') {
+            // Refresh user data from server to get updated tier
+            fetch('/api/auth/me', { headers: authHeaders() })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && (data.user || data.id)) {
+                        var u = data.user || data;
+                        localStorage.setItem('safetea_user', JSON.stringify(u));
+                    }
+                })
+                .catch(function() {});
+            if (typeof showToast === 'function') {
+                setTimeout(function() { showToast('Welcome to your upgraded SafeTea! All premium features are now unlocked.'); }, 500);
+            }
+            // Clean URL
+            window.history.replaceState({}, '', '/dashboard.html' + (params.get('tab') ? '?tab=' + params.get('tab') : ''));
+        }
+    })();
 
 })();

@@ -17,9 +17,6 @@
         { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" },
         { "path": "/api/cron/fetch-crime-alerts", "schedule": "0 4 * * *" }
     ],
-    "redirects": [
-        { "source": "/", "destination": "https://getsafetea.app", "permanent": false }
-    ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
         { "source": "/api/screening/offender", "destination": "/api/screening/offender" },

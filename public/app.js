@@ -1023,6 +1023,8 @@
     };
 
     // ============ UPGRADE / PREMIUM ============
+    var upgradeInterval = 'monthly'; // default billing interval
+
     window.showUpgradePrompt = function() {
         // Remove existing modal if open
         var existing = document.getElementById('upgrade-modal');
@@ -1036,18 +1038,34 @@
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
         modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
 
+        var isYearly = upgradeInterval === 'yearly';
+        var plusPrice = isYearly ? '$49.99' : '$5.99';
+        var plusPer = isYearly ? '/yr' : '/mo';
+        var proPrice = isYearly ? '$89.99' : '$9.99';
+        var proPer = isYearly ? '/yr' : '/mo';
+        var saveBadge = isYearly ? ' <span style="color:#2ecc71;font-size:11px;font-weight:600">Save 30%</span>' : '';
+
         var html = '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 24px">';
-        html += '<div style="text-align:center;margin-bottom:24px">';
+        html += '<div style="text-align:center;margin-bottom:20px">';
         html += '<h2 style="color:#fff;font-size:22px;margin-bottom:6px">Upgrade Your SafeTea</h2>';
         html += '<p style="color:#8080A0;font-size:14px">Unlock premium safety features</p>';
         html += '</div>';
+
+        // Billing toggle
+        var moStyle = !isYearly ? 'background:#E8A0B5;color:#1A1A2E;font-weight:600' : 'background:transparent;color:#8080A0';
+        var yrStyle = isYearly ? 'background:#E8A0B5;color:#1A1A2E;font-weight:600' : 'background:transparent;color:#8080A0';
+        html += '<div style="display:flex;justify-content:center;margin-bottom:20px">';
+        html += '<div style="display:inline-flex;background:#22223A;border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,0.06)">';
+        html += '<button onclick="upgradeInterval=\'monthly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + moStyle + '">Monthly</button>';
+        html += '<button onclick="upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly' + (isYearly ? '' : ' <span style="color:#2ecc71;font-size:10px">Save 30%</span>') + '</button>';
+        html += '</div></div>';
 
         // SafeTea+ card
         var plusActive = currentTier === 'plus';
         html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:12px">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
         html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea+ <span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">POPULAR</span></h3></div>';
-        html += '<div style="color:#fff;font-size:22px;font-weight:800">$5.99<span style="font-size:13px;font-weight:400;color:#8080A0">/mo</span></div>';
+        html += '<div style="color:#fff;font-size:22px;font-weight:800">' + plusPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + plusPer + '</span>' + saveBadge + '</div>';
         html += '</div>';
         html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In/Out with SafeWalk</div>';
@@ -1067,7 +1085,7 @@
         html += '<div style="background:#22223A;border:' + (proActive ? '2px solid #9b59b6' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
         html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea Pro <span style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">BEST VALUE</span></h3></div>';
-        html += '<div style="color:#fff;font-size:22px;font-weight:800">$9.99<span style="font-size:13px;font-weight:400;color:#8080A0">/mo</span></div>';
+        html += '<div style="color:#fff;font-size:22px;font-weight:800">' + proPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + proPer + '</span>' + saveBadge + '</div>';
         html += '</div>';
         html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
         html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Everything in SafeTea+</div>';
@@ -1101,7 +1119,7 @@
         fetch('/api/subscriptions/checkout', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ plan: plan })
+            body: JSON.stringify({ plan: plan, interval: upgradeInterval })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {

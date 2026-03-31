@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
 
       // Look up the photo by photo_id
       const photo = await getOne(
-        'SELECT id, image_data, user_id, deleted_at FROM photos WHERE id = ?',
+        'SELECT id, image_data, user_id, deleted_at FROM photos WHERE id = $1',
         [photo_id]
       );
 
@@ -71,15 +71,14 @@ module.exports = async function handler(req, res) {
       }
 
       // Create a removal_requests record
-      const result = await run(
+      await run(
         `INSERT INTO removal_requests (photo_id, user_id, reason, status, created_at)
-         VALUES (?, ?, ?, ?, datetime('now'))`,
+         VALUES ($1, $2, $3, $4, NOW())`,
         [photo_id, user.id, reason, 'pending']
       );
 
       return res.status(201).json({
         success: true,
-        request_id: result.lastID,
         message: 'Photo removal request submitted successfully'
       });
     }
@@ -96,13 +95,13 @@ module.exports = async function handler(req, res) {
       }
 
       // Get all removal requests for this user
-      const removalRequests = await getOne(
+      const { getMany } = require('../_utils/db');
+      const removalRequests = await getMany(
         `SELECT id, photo_id, reason, status, created_at
          FROM removal_requests
-         WHERE user_id = ?
+         WHERE user_id = $1
          ORDER BY created_at DESC`,
-        [user.id],
-        true // fetch all rows
+        [user.id]
       );
 
       return res.status(200).json({

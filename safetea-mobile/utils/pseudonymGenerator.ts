@@ -40,10 +40,18 @@ export const generateBatch = (count: number = 5, options: PseudonymOptions = {})
   return Array.from(results);
 };
 
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.getsafetea.app';
+
 export const isPseudonymAvailable = async (pseudonym: string): Promise<boolean> => {
-  // TODO: Check against API for uniqueness
-  // For now, simulate availability check
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(Math.random() > 0.1), 300);
-  });
+  try {
+    const res = await fetch(API_BASE + '/users/search?q=' + encodeURIComponent(pseudonym));
+    const data = await res.json();
+    const users = Array.isArray(data) ? data : data?.users || [];
+    return !users.some((u: any) =>
+      (u.display_name || u.pseudonym || '').toLowerCase() === pseudonym.toLowerCase()
+    );
+  } catch {
+    // If API is unreachable, allow the name (server will validate on save)
+    return true;
+  }
 };

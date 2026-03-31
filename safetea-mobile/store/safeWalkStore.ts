@@ -40,13 +40,8 @@ interface SafeWalkState {
   respondToCheckIn: (checkInId: string, status: CheckInStatus) => void;
 }
 
-const DEFAULT_CONTACTS: TrustedContact[] = [
-  { id: 'tc-1', name: 'Sarah M.', phone: '+1 (555) 123-4567', relationship: 'Best Friend' },
-  { id: 'tc-2', name: 'Mom', phone: '+1 (555) 987-6543', relationship: 'Family' },
-];
-
 export const useSafeWalkStore = create<SafeWalkState>((set, get) => ({
-  trustedContacts: DEFAULT_CONTACTS,
+  trustedContacts: [],
   activeSession: null,
   pastSessions: [],
 

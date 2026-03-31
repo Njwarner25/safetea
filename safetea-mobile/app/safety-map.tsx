@@ -1,17 +1,21 @@
-import { View, Text, StyleSheet, Pressable, FlatList } from 'react-native';
-import { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, FlatList, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
+import { useAuthStore } from '../store/authStore';
+import { getCityByNumericId } from '../constants/cities';
+
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.getsafetea.app';
 
 const FILTER_OPTIONS = ['All', 'Restaurants', 'Bars', 'Coffee Shops', 'Parks'];
 
-const MOCK_VENUES = [
-  { id: 'v1', name: 'Blue Door Coffee', type: 'Coffee Shops', rating: 4.8, safetyTags: ['Well-lit', 'Staff attentive', 'Busy area'], reports: 0 },
-  { id: 'v2', name: 'The Hideaway Bar', type: 'Bars', rating: 3.2, safetyTags: ['Dimly lit', 'Crowded weekends'], reports: 3 },
-  { id: 'v3', name: 'Olive Garden - River North', type: 'Restaurants', rating: 4.5, safetyTags: ['Family-friendly', 'Well-lit', 'Valet parking'], reports: 0 },
-  { id: 'v4', name: 'Lincoln Park', type: 'Parks', rating: 4.0, safetyTags: ['Daytime only', 'Popular area', 'Jogging paths'], reports: 1 },
-  { id: 'v5', name: 'Rooftop Lounge', type: 'Bars', rating: 4.3, safetyTags: ['Upscale', 'ID checked', 'Security present'], reports: 0 },
-  { id: 'v6', name: 'Corner Bakery Cafe', type: 'Coffee Shops', rating: 4.6, safetyTags: ['Daytime spot', 'Public', 'Quick exit'], reports: 0 },
-];
+interface Venue {
+  id: string;
+  name: string;
+  type: string;
+  rating: number;
+  safetyTags: string[];
+  reports: number;
+}
 
 function StarRating({ rating }: { rating: number }) {
   const stars = [];
@@ -27,10 +31,41 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function SafetyMapScreen() {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    const fetchVenues = async () => {
+      if (!user?.cityId) {
+        setIsLoading(false);
+        return;
+      }
+      const city = getCityByNumericId(user.cityId);
+      if (!city) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(API_BASE + '/venues?city=' + city.id);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setVenues(data);
+        } else if (data?.venues && Array.isArray(data.venues)) {
+          setVenues(data.venues);
+        }
+      } catch {
+        // API unavailable — venues remain empty
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchVenues();
+  }, [user?.cityId]);
 
   const filteredVenues = activeFilter === 'All'
-    ? MOCK_VENUES
-    : MOCK_VENUES.filter((v) => v.type === activeFilter);
+    ? venues
+    : venues.filter((v) => v.type === activeFilter);
 
   return (
     <View style={styles.container}>
@@ -58,29 +93,49 @@ export default function SafetyMapScreen() {
 
       {/* Venue List */}
       <Text style={styles.sectionTitle}>Venue Safety Ratings</Text>
-      <FlatList
-        data={filteredVenues}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={[styles.venueCard, item.reports > 0 && styles.venueCardWarning]}>
-            <View style={styles.venueHeader}>
-              <Text style={styles.venueName}>{item.name}</Text>
-              <StarRating rating={item.rating} />
+
+      {isLoading && (
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={Colors.coral} size="small" />
+          <Text style={styles.emptyText}>Loading venues...</Text>
+        </View>
+      )}
+
+      {!isLoading && filteredVenues.length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyIcon}>📍</Text>
+          <Text style={styles.emptyTitle}>No venue ratings yet</Text>
+          <Text style={styles.emptyText}>
+            Be the first to rate a date spot in your city! Venue safety ratings will appear here as the community contributes.
+          </Text>
+        </View>
+      )}
+
+      {!isLoading && filteredVenues.length > 0 && (
+        <FlatList
+          data={filteredVenues}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={[styles.venueCard, item.reports > 0 && styles.venueCardWarning]}>
+              <View style={styles.venueHeader}>
+                <Text style={styles.venueName}>{item.name}</Text>
+                <StarRating rating={item.rating} />
+              </View>
+              <Text style={styles.venueType}>{item.type}</Text>
+              <View style={styles.tagRow}>
+                {item.safetyTags.map((tag) => (
+                  <View key={tag} style={styles.safetyTag}>
+                    <Text style={styles.safetyTagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+              {item.reports > 0 && (
+                <Text style={styles.reportText}>⚠ {item.reports} safety report(s)</Text>
+              )}
             </View>
-            <Text style={styles.venueType}>{item.type}</Text>
-            <View style={styles.tagRow}>
-              {item.safetyTags.map((tag) => (
-                <View key={tag} style={styles.safetyTag}>
-                  <Text style={styles.safetyTagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-            {item.reports > 0 && (
-              <Text style={styles.reportText}>⚠ {item.reports} safety report(s)</Text>
-            )}
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
     </View>
   );
 }
@@ -105,6 +160,14 @@ const styles = StyleSheet.create({
   chipText: { fontSize: FontSize.sm, color: Colors.textSecondary },
   chipTextActive: { color: Colors.coral, fontWeight: '600' },
   sectionTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm },
+  emptyState: {
+    backgroundColor: Colors.surface, marginHorizontal: Spacing.md, padding: Spacing.xl,
+    borderRadius: BorderRadius.md, borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', gap: Spacing.sm,
+  },
+  emptyIcon: { fontSize: 36 },
+  emptyTitle: { fontSize: FontSize.md, fontWeight: '600', color: Colors.textPrimary },
+  emptyText: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18 },
   venueCard: {
     backgroundColor: Colors.surface, marginHorizontal: Spacing.md, marginBottom: Spacing.sm,
     borderRadius: BorderRadius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,

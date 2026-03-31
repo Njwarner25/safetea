@@ -1,14 +1,24 @@
-import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { useEffect, useState, useCallback } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { useNameWatchStore } from '../../store/nameWatchStore';
 import { usePostStore } from '../../store/postStore';
+import { useAuthStore } from '../../store/authStore';
+import { getCityByNumericId } from '../../constants/cities';
+import { api } from '../../services/api';
 
-const SYSTEM_ALERTS = [
-  { id: 'sys-1', type: 'community', title: 'New Safety Advisory', message: 'Multiple reports of suspicious activity near downtown area.', time: '2h ago', icon: '🚨' },
-  { id: 'sys-2', type: 'amber', title: 'AMBER Alert - Metro Area', message: 'Missing person alert issued for the metro area. Check local news for details.', time: '4h ago', icon: '🟡' },
-  { id: 'sys-3', type: 'system', title: 'Post Approved', message: 'Your recent safety report has been reviewed and published.', time: '1d ago', icon: '✅' },
-];
+const CATEGORY_MAP: Record<string, { label: string; severity: 'high' | 'medium'; icon: string }> = {
+  sexual_assault: { label: 'Sexual Assault', severity: 'high', icon: '🚨' },
+  assault: { label: 'Assault', severity: 'high', icon: '⚠️' },
+  domestic_violence: { label: 'Domestic Violence', severity: 'high', icon: '🚨' },
+  stalking: { label: 'Stalking', severity: 'high', icon: '🚨' },
+  kidnapping: { label: 'Kidnapping', severity: 'high', icon: '🚨' },
+  human_trafficking: { label: 'Human Trafficking', severity: 'high', icon: '🚨' },
+  harassment: { label: 'Harassment', severity: 'medium', icon: '⚠️' },
+  robbery: { label: 'Robbery', severity: 'medium', icon: '⚠️' },
+  indecent_exposure: { label: 'Indecent Exposure', severity: 'medium', icon: '⚠️' },
+};
 
 function MatchTypeLabel({ type }: { type: string }) {
   const labels: Record<string, string> = { exact: 'Exact Match', initials: 'Initials Match', partial: 'Partial Match' };
@@ -22,6 +32,12 @@ function MatchTypeLabel({ type }: { type: string }) {
 export default function AlertsScreen() {
   const { matches, watchedNames, markMatchRead } = useNameWatchStore();
   const posts = usePostStore((s) => s.posts);
+  const user = useAuthStore((s) => s.user);
+
+  const [crimeAlerts, setCrimeAlerts] = useState<any[]>([]);
+  const [crimeLoading, setCrimeLoading] = useState(true);
+  const [crimeError, setCrimeError] = useState<string | null>(null);
+  const [cityName, setCityName] = useState('');
 
   const getPost = (postId: string) => posts.find((p) => p.id === postId);
   const getEntryName = (entryId: string) => watchedNames.find((e) => e.id === entryId)?.displayName || 'Unknown';
@@ -33,6 +49,43 @@ export default function AlertsScreen() {
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const fetchCrimeAlerts = useCallback(async () => {
+    if (!user?.cityId) return;
+    const city = getCityByNumericId(user.cityId);
+    if (!city?.lat || !city?.lon) return;
+
+    setCityName(city.name);
+    setCrimeLoading(true);
+    setCrimeError(null);
+
+    try {
+      const res = await api.getAreaAlerts(city.lat, city.lon, 2, 30);
+      if (res.error) {
+        setCrimeError('Unable to load safety alerts');
+      } else {
+        setCrimeAlerts(Array.isArray(res.data) ? res.data : (res.data as any)?.alerts || []);
+      }
+    } catch {
+      setCrimeError('Unable to load safety alerts');
+    } finally {
+      setCrimeLoading(false);
+    }
+  }, [user?.cityId]);
+
+  useEffect(() => {
+    fetchCrimeAlerts();
+  }, [fetchCrimeAlerts]);
+
+  const getAlertStyle = (category: string) => {
+    const info = CATEGORY_MAP[category];
+    if (!info) return {};
+    return info.severity === 'high' ? styles.dangerCard : styles.warningCard;
+  };
+
+  const getAlertInfo = (category: string) => {
+    return CATEGORY_MAP[category] || { label: category.replace(/_/g, ' '), severity: 'medium' as const, icon: '⚠️' };
   };
 
   return (
@@ -109,19 +162,72 @@ export default function AlertsScreen() {
               </View>
             )}
 
-            {/* Community & System Alerts */}
+            {/* Safety Alerts Near You */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Community Alerts</Text>
-              {SYSTEM_ALERTS.map((item) => (
-                <Pressable key={item.id} style={[styles.alertCard, item.type === 'amber' && styles.amberCard]}>
-                  <Text style={styles.alertIcon}>{item.icon}</Text>
-                  <View style={styles.alertContent}>
-                    <Text style={styles.alertTitle}>{item.title}</Text>
-                    <Text style={styles.alertMessage}>{item.message}</Text>
-                    <Text style={styles.alertTime}>{item.time}</Text>
-                  </View>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Safety Alerts{cityName ? ` — ${cityName}` : ''}
+                </Text>
+                <Pressable onPress={fetchCrimeAlerts}>
+                  <Text style={styles.sectionLink}>Refresh</Text>
                 </Pressable>
-              ))}
+              </View>
+
+              {crimeLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color={Colors.coral} size="small" />
+                  <Text style={styles.loadingText}>Loading safety alerts...</Text>
+                </View>
+              )}
+
+              {crimeError && !crimeLoading && (
+                <View style={styles.emptyNameWatch}>
+                  <Text style={styles.emptyText}>{crimeError}</Text>
+                </View>
+              )}
+
+              {!crimeLoading && !crimeError && crimeAlerts.length === 0 && (
+                <View style={styles.emptyNameWatch}>
+                  <Text style={styles.emptyText}>No recent safety alerts in your area</Text>
+                </View>
+              )}
+
+              {!crimeLoading && !crimeError && crimeAlerts.length > 0 && (
+                <>
+                  <View style={styles.summaryBar}>
+                    <Text style={styles.summaryText}>
+                      {crimeAlerts.length} incident{crimeAlerts.length !== 1 ? 's' : ''} within 2 miles in the last 30 days
+                    </Text>
+                  </View>
+
+                  {crimeAlerts.map((alert: any, index: number) => {
+                    const info = getAlertInfo(alert.safety_category || alert.category);
+                    const distance = alert.distance_miles != null
+                      ? `${Number(alert.distance_miles).toFixed(1)} mi away`
+                      : '';
+                    return (
+                      <View
+                        key={alert.id || index}
+                        style={[styles.alertCard, getAlertStyle(alert.safety_category || alert.category)]}
+                      >
+                        <Text style={styles.alertIcon}>{info.icon}</Text>
+                        <View style={styles.alertContent}>
+                          <Text style={styles.alertTitle}>{info.label}</Text>
+                          <Text style={styles.alertMessage} numberOfLines={2}>
+                            {alert.description || alert.block || 'Reported incident'}
+                          </Text>
+                          <View style={styles.crimeMetaRow}>
+                            {distance ? <Text style={styles.crimeDistance}>{distance}</Text> : null}
+                            <Text style={styles.alertTime}>
+                              {alert.date ? formatTime(alert.date) : ''}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </>
+              )}
             </View>
           </View>
         }
@@ -139,7 +245,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: Spacing.lg },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
   sectionTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm },
-  sectionLink: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.pink },
+  sectionLink: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.coral },
 
   // Alert cards
   alertCard: {
@@ -147,33 +253,52 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md, gap: Spacing.md, borderWidth: 1, borderColor: Colors.border,
     marginBottom: Spacing.sm,
   },
-  nameWatchCard: { borderColor: Colors.pinkGlow },
-  unreadCard: { borderColor: Colors.pink, backgroundColor: 'rgba(232, 160, 181, 0.05)' },
-  amberCard: { borderColor: Colors.warning, backgroundColor: Colors.warningMuted },
+  nameWatchCard: { borderColor: Colors.coralMuted },
+  unreadCard: { borderColor: Colors.coral, backgroundColor: 'rgba(232, 81, 63, 0.05)' },
+  dangerCard: { borderColor: Colors.danger, backgroundColor: Colors.dangerMuted },
+  warningCard: { borderColor: Colors.warning, backgroundColor: Colors.warningMuted },
   alertIcon: { fontSize: 24 },
   alertContent: { flex: 1 },
   alertTitle: { fontSize: FontSize.md, fontWeight: '600', color: Colors.textPrimary, marginBottom: 4 },
   alertMessage: { fontSize: FontSize.sm, color: Colors.textSecondary, lineHeight: 18 },
   alertTime: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 4 },
 
+  // Crime alert meta
+  crimeMetaRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginTop: 4 },
+  crimeDistance: { fontSize: FontSize.xs, fontWeight: '600', color: Colors.coral },
+
+  // Summary bar
+  summaryBar: {
+    backgroundColor: Colors.surfaceLight, padding: Spacing.sm, borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.sm,
+  },
+  summaryText: { fontSize: FontSize.xs, fontWeight: '600', color: Colors.textSecondary, textAlign: 'center' },
+
+  // Loading
+  loadingContainer: {
+    backgroundColor: Colors.surface, padding: Spacing.lg, borderRadius: BorderRadius.md,
+    borderWidth: 1, borderColor: Colors.border, alignItems: 'center', gap: Spacing.sm,
+  },
+  loadingText: { fontSize: FontSize.sm, color: Colors.textMuted },
+
   // Name Watch specific
   matchHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 4 },
   matchTypeBadge: {
-    backgroundColor: Colors.pinkGlow, paddingHorizontal: Spacing.sm, paddingVertical: 2,
+    backgroundColor: Colors.coralMuted, paddingHorizontal: Spacing.sm, paddingVertical: 2,
     borderRadius: BorderRadius.sm,
   },
-  matchTypeText: { fontSize: FontSize.xs, color: Colors.pink, fontWeight: '600' },
-  matchedTerm: { fontSize: FontSize.xs, color: Colors.pink, marginTop: 4, fontStyle: 'italic' },
+  matchTypeText: { fontSize: FontSize.xs, color: Colors.coral, fontWeight: '600' },
+  matchedTerm: { fontSize: FontSize.xs, color: Colors.coral, marginTop: 4, fontStyle: 'italic' },
   unreadDot: {
-    width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.pink, alignSelf: 'center',
+    width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.coral, alignSelf: 'center',
   },
 
   // Inline explainer
   inlineExplainer: {
-    backgroundColor: Colors.pinkGlow, padding: Spacing.sm, borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.coralMuted, padding: Spacing.sm, borderRadius: BorderRadius.sm,
     marginBottom: Spacing.sm,
   },
-  inlineExplainerText: { fontSize: FontSize.xs, color: Colors.pink, fontWeight: '500' },
+  inlineExplainerText: { fontSize: FontSize.xs, color: Colors.coral, fontWeight: '500' },
 
   // Empty Name Watch
   emptyNameWatch: {

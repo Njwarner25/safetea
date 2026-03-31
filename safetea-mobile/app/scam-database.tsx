@@ -1,4 +1,5 @@
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator } from 'react-native';
+import { useEffect } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useScamStore, ScamCategory } from '../store/scamStore';
 
@@ -21,8 +22,12 @@ const CATEGORY_COLORS: Record<ScamCategory, string> = {
 };
 
 export default function ScamDatabaseScreen() {
-  const { searchQuery, selectedCategory, setSearchQuery, setCategory, getFilteredEntries } = useScamStore();
+  const { searchQuery, selectedCategory, setSearchQuery, setCategory, getFilteredEntries, fetchEntries, isLoading } = useScamStore();
   const entries = getFilteredEntries();
+
+  useEffect(() => {
+    fetchEntries();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -87,8 +92,17 @@ export default function ScamDatabaseScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🔍</Text>
-            <Text style={styles.emptyText}>No scams match your search</Text>
+            {isLoading ? (
+              <>
+                <ActivityIndicator color={Colors.coral} size="small" />
+                <Text style={styles.emptyText}>Loading scam database...</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyText}>No scams match your search</Text>
+              </>
+            )}
           </View>
         }
       />

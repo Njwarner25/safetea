@@ -1,7 +1,7 @@
-// Basic profanity filter - in production, use a comprehensive library
 const BLOCKED_PATTERNS: RegExp[] = [
-  // Placeholder patterns - replace with comprehensive list in production
-  /\b(slur1|slur2)\b/gi,
+  /\b(ass(?:hole)?|bastard|bitch|crap|damn|dick|dumbass|fuck(?:ing|ed|er)?|shit(?:ty)?|piss(?:ed)?|whore|slut|cunt)\b/gi,
+  /\b(retard(?:ed)?|fagg?ot|dyke|tranny|nigga?|nigger|spic|chink|kike|wetback|cracker)\b/gi,
+  /\b(kill\s+your\s*self|kys|neck\s+your\s*self)\b/gi,
 ];
 
 const SUSPICIOUS_PATTERNS: RegExp[] = [

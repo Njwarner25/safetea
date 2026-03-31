@@ -16,64 +16,21 @@ interface ScamState {
   entries: ScamEntry[];
   searchQuery: string;
   selectedCategory: ScamCategory | 'all';
+  isLoading: boolean;
 
   setSearchQuery: (q: string) => void;
   setCategory: (cat: ScamCategory | 'all') => void;
   getFilteredEntries: () => ScamEntry[];
+  fetchEntries: () => Promise<void>;
 }
 
-const DEFAULT_ENTRIES: ScamEntry[] = [
-  {
-    id: 'scam-1',
-    title: 'Military Romance Scam',
-    category: 'romance_fraud',
-    description: 'Claims to be deployed military officer. Asks for money for "leave papers" or "shipping personal items." Uses stolen photos from real service members.',
-    reportCount: 847,
-    platforms: ['Tinder', 'Facebook Dating'],
-    reportedAt: '2026-03-15',
-  },
-  {
-    id: 'scam-2',
-    title: 'Crypto Investment Lure',
-    category: 'crypto_scam',
-    description: 'Matches on dating apps, builds relationship, then introduces "amazing crypto investment opportunity." Often uses fake trading platforms.',
-    reportCount: 623,
-    platforms: ['Hinge', 'Bumble'],
-    reportedAt: '2026-03-12',
-  },
-  {
-    id: 'scam-3',
-    title: 'Stolen Photo Catfish',
-    category: 'catfish',
-    description: 'Uses photos stolen from Instagram influencers or models. Refuses video calls. Reverse image search reveals the real person.',
-    reportCount: 1204,
-    platforms: ['Tinder', 'Hinge', 'Bumble'],
-    reportedAt: '2026-03-10',
-  },
-  {
-    id: 'scam-4',
-    title: 'Intimate Image Extortion',
-    category: 'sextortion',
-    description: 'Quickly escalates to exchanging intimate photos, then threatens to share them with contacts unless paid. Often targets through dating apps.',
-    reportCount: 512,
-    platforms: ['Snapchat', 'Instagram'],
-    reportedAt: '2026-03-08',
-  },
-  {
-    id: 'scam-5',
-    title: 'Identity Verification Phish',
-    category: 'identity_theft',
-    description: 'Sends a link to a fake "dating safety verification" site that harvests personal information including SSN and credit card details.',
-    reportCount: 389,
-    platforms: ['Tinder', 'OkCupid'],
-    reportedAt: '2026-03-05',
-  },
-];
+const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.getsafetea.app';
 
 export const useScamStore = create<ScamState>((set, get) => ({
-  entries: DEFAULT_ENTRIES,
+  entries: [],
   searchQuery: '',
   selectedCategory: 'all',
+  isLoading: false,
 
   setSearchQuery: (q) => set({ searchQuery: q }),
 
@@ -95,5 +52,31 @@ export const useScamStore = create<ScamState>((set, get) => ({
     }
 
     return filtered;
+  },
+
+  fetchEntries: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await fetch(API_BASE + '/blog/news');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const mapped: ScamEntry[] = data
+          .filter((item: any) => item.category || item.title)
+          .map((item: any, i: number) => ({
+            id: item.id || 'scam-' + i,
+            title: item.title || 'Unknown Scam',
+            category: item.category || 'other',
+            description: item.description || item.snippet || '',
+            reportCount: item.reportCount || 0,
+            platforms: item.platforms || [],
+            reportedAt: item.reportedAt || item.date || new Date().toISOString(),
+          }));
+        set({ entries: mapped });
+      }
+    } catch {
+      // API unavailable — entries remain empty
+    } finally {
+      set({ isLoading: false });
+    }
   },
 }));

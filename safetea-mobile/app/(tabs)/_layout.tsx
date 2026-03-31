@@ -1,11 +1,30 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { useEffect, useState } from 'react';
 import { Colors } from '../../constants/colors';
 import { useNameWatchStore } from '../../store/nameWatchStore';
+import { useAuthStore } from '../../store/authStore';
+import { getCityByNumericId } from '../../constants/cities';
+import { api } from '../../services/api';
 
 export default function TabLayout() {
   const unreadCount = useNameWatchStore((s) => s.getUnreadCount());
-  const badgeCount = unreadCount > 0 ? unreadCount : 3; // fallback to system alerts count
+  const user = useAuthStore((s) => s.user);
+  const [crimeCount, setCrimeCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.cityId) return;
+    const city = getCityByNumericId(user.cityId);
+    if (!city?.lat || !city?.lon) return;
+    api.getAreaAlerts(city.lat, city.lon, 2, 30).then((res) => {
+      if (!res.error) {
+        const alerts = Array.isArray(res.data) ? res.data : (res.data as any)?.alerts || [];
+        setCrimeCount(alerts.length);
+      }
+    }).catch(() => {});
+  }, [user?.cityId]);
+
+  const badgeCount = unreadCount + crimeCount;
 
   return (
     <Tabs

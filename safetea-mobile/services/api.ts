@@ -137,6 +137,20 @@ class ApiClient {
     return this.request<any>('/community/name-mentions?' + params.toString());
   }
 
+  // Crime Alerts
+  async getAreaAlerts(lat: number, lon: number, radius: number = 2, days: number = 30) {
+    return this.request('/alerts/area?lat=' + lat + '&lon=' + lon + '&radius=' + radius + '&days=' + days + '&limit=20');
+  }
+
+  // Identity Verification (Didit)
+  async startIdentityVerification() {
+    return this.request<any>('/auth/verify/identity', { method: 'POST' });
+  }
+
+  async getVerificationStatus() {
+    return this.request<any>('/auth/verify/status');
+  }
+
   // Sex Offender Check
   async sexOffenderCheck(fullName: string, state?: string, city?: string, cityId?: string) {
     return this.request<any>('/screening/sex-offender', {

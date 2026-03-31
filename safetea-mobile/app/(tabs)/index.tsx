@@ -1,11 +1,12 @@
 import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { usePostStore, PostCategory, Post } from '../../store/postStore';
 import { useCityStore } from '../../store/cityStore';
 import { getAvatarById } from '../../constants/avatars';
 import { truncateText } from '../../utils/validators';
+import { api } from '../../services/api';
 
 const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }[] = [
   { key: 'all', label: 'All', icon: '📋' },
@@ -61,16 +62,34 @@ function PostCard({ post }: { post: Post }) {
 }
 
 export default function FeedScreen() {
-  const { filter, setFilter, getFilteredPosts } = usePostStore();
+  const { filter, setFilter, getFilteredPosts, setPosts, setLoading } = usePostStore();
   const { getSelectedCity } = useCityStore();
   const [refreshing, setRefreshing] = useState(false);
   const city = getSelectedCity();
   const posts = getFilteredPosts();
 
+  const fetchPosts = useCallback(async () => {
+    if (!city) return;
+    try {
+      const res = await api.getPosts(city.id);
+      if (!res.error && res.data) {
+        const items = Array.isArray(res.data) ? res.data : (res.data as any)?.posts || [];
+        if (items.length > 0) setPosts(items);
+      }
+    } catch {
+      // Network error — keep existing posts
+    }
+  }, [city?.id, setPosts]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPosts().finally(() => setLoading(false));
+  }, [fetchPosts, setLoading]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    fetchPosts().finally(() => setRefreshing(false));
+  }, [fetchPosts]);
 
   return (
     <View style={styles.container}>

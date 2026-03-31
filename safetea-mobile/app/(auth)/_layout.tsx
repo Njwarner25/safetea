@@ -16,6 +16,7 @@ export default function AuthLayout() {
       <Stack.Screen name="select-city" />
       <Stack.Screen name="create-pseudonym" />
       <Stack.Screen name="select-avatar" />
+      <Stack.Screen name="verify-identity" />
       <Stack.Screen name="guidelines" />
     </Stack>
   );

@@ -2,8 +2,10 @@ import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicat
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
-import { useScreeningStore, ScreeningResult, TeaScoreLevel } from '../store/screeningStore';
+import { useScreeningStore, ScreeningResult, TeaScoreLevel, RedFlag, GreenFlag } from '../store/screeningStore';
 import { useAuthStore } from '../store/authStore';
+import { getCityByNumericId } from '../constants/cities';
+import { api } from '../services/api';
 
 const PLATFORMS = ['Tinder', 'Hinge', 'Bumble', 'Other'];
 
@@ -14,22 +16,50 @@ const SCORE_COLORS: Record<TeaScoreLevel, string> = {
   danger: Colors.danger,
 };
 
-const MOCK_RED_FLAGS = [
-  { id: 'rf1', label: 'Possible stolen photos', severity: 'high' as const, description: 'Profile photos match images found on stock photo sites.' },
-  { id: 'rf2', label: 'New account', severity: 'medium' as const, description: 'Account created less than 7 days ago.' },
-  { id: 'rf3', label: 'No social media linked', severity: 'low' as const, description: 'No connected Instagram or Spotify accounts.' },
-];
-
-const MOCK_GREEN_FLAGS = [
-  { id: 'gf1', label: 'Detailed bio', description: 'Profile contains specific interests and hobbies.' },
-  { id: 'gf2', label: 'Multiple photos', description: 'Profile has 5+ photos in different settings.' },
-];
-
 function getScoreLevel(score: number): TeaScoreLevel {
   if (score >= 75) return 'safe';
   if (score >= 50) return 'caution';
   if (score >= 25) return 'warning';
   return 'danger';
+}
+
+function buildFlags(data: any): { redFlags: RedFlag[]; greenFlags: GreenFlag[]; score: number } {
+  const redFlags: RedFlag[] = [];
+  const greenFlags: GreenFlag[] = [];
+  let score = 70; // baseline
+
+  const profiles = data?.profiles || data?.results || [];
+  if (Array.isArray(profiles) && profiles.length > 0) {
+    greenFlags.push({ id: 'gf-found', label: 'Public profiles found', description: `Found ${profiles.length} matching public profile(s).` });
+  } else {
+    redFlags.push({ id: 'rf-noprofile', label: 'No public profiles found', severity: 'medium', description: 'Could not find matching public profiles for this name.' });
+    score -= 15;
+  }
+
+  if (data?.criminal_records || data?.criminalRecords) {
+    const records = data.criminal_records || data.criminalRecords;
+    if (Array.isArray(records) && records.length > 0) {
+      redFlags.push({ id: 'rf-criminal', label: 'Criminal records found', severity: 'high', description: `Found ${records.length} criminal record(s) associated with this name.` });
+      score -= 30;
+    } else {
+      greenFlags.push({ id: 'gf-nocriminal', label: 'No criminal records', description: 'No criminal records found for this name.' });
+    }
+  }
+
+  if (data?.sex_offender || data?.sexOffender) {
+    redFlags.push({ id: 'rf-so', label: 'Sex offender registry match', severity: 'high', description: 'Name matches a sex offender registry entry.' });
+    score -= 40;
+  }
+
+  if (data?.data_brokers || data?.dataBrokers) {
+    const brokers = data.data_brokers || data.dataBrokers;
+    if (Array.isArray(brokers) && brokers.length > 0) {
+      greenFlags.push({ id: 'gf-verified', label: 'Identity verified via data brokers', description: `Name appears in ${brokers.length} data broker profile(s), suggesting a real identity.` });
+      score += 5;
+    }
+  }
+
+  return { redFlags, greenFlags, score: Math.max(0, Math.min(100, score)) };
 }
 
 export default function ScreeningScreen() {
@@ -51,30 +81,63 @@ export default function ScreeningScreen() {
       </View>
     );
   }
+
   const { history, currentScan, isScanning, startScan, completeScan, clearCurrentScan } = useScreeningStore();
   const [profileName, setProfileName] = useState('');
   const [platform, setPlatform] = useState('Tinder');
+  const [scanError, setScanError] = useState<string | null>(null);
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (!profileName.trim()) return;
     startScan(profileName, platform);
+    setScanError(null);
 
-    // Mock 2-second scan
-    setTimeout(() => {
-      const score = Math.floor(Math.random() * 60) + 20; // 20-80 range
+    const city = user?.cityId ? getCityByNumericId(user.cityId) : undefined;
+
+    try {
+      const res = await api.backgroundCheck(profileName, city?.name, city?.state);
+
+      if (res.error || res.status >= 400) {
+        setScanError('Screening service unavailable. Please try again later.');
+        completeScan({
+          id: 'scan-' + Date.now(),
+          profileName,
+          platform,
+          teaScore: 0,
+          teaScoreLevel: 'danger',
+          redFlags: [],
+          greenFlags: [],
+          scannedAt: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { redFlags, greenFlags, score } = buildFlags(res.data);
       const result: ScreeningResult = {
         id: 'scan-' + Date.now(),
         profileName,
         platform,
         teaScore: score,
         teaScoreLevel: getScoreLevel(score),
-        redFlags: score < 60 ? MOCK_RED_FLAGS : MOCK_RED_FLAGS.slice(0, 1),
-        greenFlags: score >= 50 ? MOCK_GREEN_FLAGS : [],
+        redFlags,
+        greenFlags,
         scannedAt: new Date().toISOString(),
       };
       completeScan(result);
       setProfileName('');
-    }, 2000);
+    } catch {
+      setScanError('Network error. Check your connection and try again.');
+      completeScan({
+        id: 'scan-' + Date.now(),
+        profileName,
+        platform,
+        teaScore: 0,
+        teaScoreLevel: 'danger',
+        redFlags: [],
+        greenFlags: [],
+        scannedAt: new Date().toISOString(),
+      });
+    }
   };
 
   return (
@@ -90,7 +153,7 @@ export default function ScreeningScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Profile name"
+              placeholder="Full name"
               placeholderTextColor={Colors.textMuted}
               value={profileName}
               onChangeText={setProfileName}
@@ -119,9 +182,13 @@ export default function ScreeningScreen() {
                 <Text style={styles.scanBtnText}>🔍 Scan Profile</Text>
               )}
             </Pressable>
+
+            {scanError && (
+              <Text style={styles.errorText}>{scanError}</Text>
+            )}
           </View>
 
-          {currentScan && (
+          {currentScan && !scanError && (
             <View style={styles.resultCard}>
               <Text style={styles.resultTitle}>Results: {currentScan.profileName}</Text>
               <Text style={styles.resultPlatform}>{currentScan.platform}</Text>
@@ -213,6 +280,7 @@ const styles = StyleSheet.create({
   scanBtn: { backgroundColor: Colors.coral, padding: Spacing.md, borderRadius: BorderRadius.lg, alignItems: 'center' },
   scanBtnDisabled: { opacity: 0.5 },
   scanBtnText: { color: '#FFF', fontWeight: '700', fontSize: FontSize.md },
+  errorText: { color: Colors.danger, fontSize: FontSize.sm, marginTop: Spacing.sm, textAlign: 'center' },
   resultCard: { backgroundColor: Colors.surface, borderRadius: BorderRadius.lg, padding: Spacing.lg, marginBottom: Spacing.lg },
   resultTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary },
   resultPlatform: { fontSize: FontSize.sm, color: Colors.textSecondary, marginBottom: Spacing.lg },

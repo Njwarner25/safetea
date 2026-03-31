@@ -1,0 +1,913 @@
+// ============ SafeTea Dashboard — app.js ============
+// Core initialization, auth, profile, tools wiring
+
+(function() {
+    'use strict';
+
+    var TOKEN_KEY = 'safetea_token';
+    var USER_KEY = 'safetea_user';
+
+    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; } }
+    function authHeaders() { return { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }; }
+
+    // ============ AUTH GUARD ============
+    var token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+    }
+
+    // ============ LOAD PROFILE ============
+    function loadProfile() {
+        var user = getUser();
+        if (user) renderProfile(user);
+
+        // Refresh from server
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.user) {
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    renderProfile(data.user);
+                }
+            })
+            .catch(function() {});
+    }
+
+    function renderProfile(user) {
+        var nameEl = document.getElementById('profile-name');
+        var emailEl = document.getElementById('profile-email');
+        var roleEl = document.getElementById('profile-role');
+        var tierEl = document.getElementById('profile-tier');
+        var avatarEl = document.getElementById('profile-avatar');
+        var welcomeEl = document.getElementById('home-welcome-text');
+        var avatarPreview = document.getElementById('avatar-preview');
+        var avatarPreviewName = document.getElementById('avatar-preview-name');
+
+        var displayName = user.custom_display_name || user.display_name || user.email.split('@')[0];
+        var initial = displayName.charAt(0).toUpperCase();
+
+        if (nameEl) nameEl.textContent = displayName;
+        if (emailEl) emailEl.textContent = user.email;
+        if (roleEl) roleEl.textContent = user.role || 'member';
+        if (avatarEl) {
+            avatarEl.textContent = initial;
+            if (user.avatar_color) avatarEl.style.background = user.avatar_color;
+        }
+        if (welcomeEl) welcomeEl.innerHTML = 'Welcome back, ' + escapeHtmlSafe(displayName) + '! <span style="font-size:20px">&#128150;</span>';
+        if (avatarPreview) {
+            avatarPreview.textContent = initial;
+            if (user.avatar_color) avatarPreview.style.background = user.avatar_color;
+        }
+        if (avatarPreviewName) avatarPreviewName.textContent = displayName;
+
+        // Show tier badge
+        if (tierEl) {
+            var isPremium = user.subscription_tier === 'pro' || user.subscription_tier === 'premium' || user.subscription_tier === 'plus';
+            tierEl.style.display = isPremium ? 'block' : 'none';
+        }
+
+        // Date check premium gate
+        var dcUpgradeWall = document.getElementById('dc-upgrade-wall');
+        var dcPremiumContent = document.getElementById('dc-premium-content');
+        var isPaid = user.subscription_tier === 'pro' || user.subscription_tier === 'premium' || user.subscription_tier === 'plus';
+        if (dcUpgradeWall) dcUpgradeWall.style.display = isPaid ? 'none' : 'block';
+        if (dcPremiumContent) dcPremiumContent.style.display = isPaid ? 'block' : 'none';
+
+        // Inbox premium gate
+        var inboxGate = document.getElementById('inbox-gate');
+        var inboxContent = document.getElementById('inbox-content');
+        if (inboxGate) inboxGate.style.display = isPaid ? 'none' : 'block';
+        if (inboxContent) inboxContent.style.display = isPaid ? 'block' : 'none';
+
+        // User avatar in nav
+        var navAvatar = document.querySelector('.user-avatar');
+        if (navAvatar) {
+            navAvatar.textContent = initial;
+            if (user.avatar_color) navAvatar.style.background = user.avatar_color;
+        }
+    }
+
+    function escapeHtmlSafe(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ============ VERIFICATION STATUS ============
+    function loadVerificationStatus() {
+        fetch('/api/auth/verify/status', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.steps) {
+                    updateVerifyStep('age', data.steps.age);
+                    updateVerifyStep('identity', data.steps.identity);
+                    updateVerifyStep('gender', data.steps.gender);
+                }
+
+                var banner = document.getElementById('verification-banner');
+                if (banner && data.verified) {
+                    banner.style.display = 'block';
+                    banner.style.background = 'rgba(46,204,113,0.15)';
+                    banner.style.color = '#2ecc71';
+                    banner.innerHTML = '<i class="fas fa-check-circle"></i> Fully Verified';
+                }
+
+                // Show verify identity button if age is done but identity isn't
+                var identBtn = document.getElementById('btn-verify-identity');
+                if (identBtn && data.nextStep === 'identity') {
+                    identBtn.style.display = 'inline-block';
+                }
+            })
+            .catch(function() {
+                setVerifyStatus('age', 'Unable to check');
+                setVerifyStatus('identity', 'Unable to check');
+                setVerifyStatus('gender', 'Unable to check');
+            });
+    }
+
+    function updateVerifyStep(step, info) {
+        var statusEl = document.getElementById('verify-' + step + '-status');
+        var stepEl = document.getElementById('verify-step-' + step);
+        var iconEl = stepEl ? stepEl.querySelector('.verify-icon') : null;
+
+        if (info.completed) {
+            if (statusEl) { statusEl.textContent = 'Verified'; statusEl.style.color = '#2ecc71'; }
+            if (iconEl) { iconEl.classList.remove('pending'); iconEl.classList.add('completed'); iconEl.style.background = 'rgba(46,204,113,0.15)'; iconEl.style.color = '#2ecc71'; }
+        } else {
+            if (statusEl) { statusEl.textContent = 'Not verified'; statusEl.style.color = '#f1c40f'; }
+            if (iconEl) { iconEl.style.background = 'rgba(241,196,15,0.15)'; iconEl.style.color = '#f1c40f'; }
+        }
+    }
+
+    function setVerifyStatus(step, text) {
+        var el = document.getElementById('verify-' + step + '-status');
+        if (el) { el.textContent = text; el.style.color = '#8080A0'; }
+    }
+
+    // ============ LOGOUT ============
+    window.handleLogout = function() {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        window.location.href = '/login';
+    };
+
+    // ============ AREA ALERTS ============
+    var areaAlertLat = null;
+    var areaAlertLon = null;
+
+    window.detectLocationAndFetch = function() {
+        var prompt = document.getElementById('area-alerts-prompt');
+        var loading = document.getElementById('area-alerts-loading');
+        if (prompt) prompt.style.display = 'none';
+        if (loading) loading.style.display = 'block';
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                areaAlertLat = pos.coords.latitude;
+                areaAlertLon = pos.coords.longitude;
+                fetchAreaAlerts();
+            }, function() {
+                if (loading) loading.style.display = 'none';
+                if (prompt) prompt.style.display = 'block';
+                if (typeof showToast === 'function') showToast('Location access denied. Enable location to see nearby alerts.');
+            });
+        } else {
+            if (loading) loading.style.display = 'none';
+            if (typeof showToast === 'function') showToast('Geolocation not supported by your browser.');
+        }
+    };
+
+    window.refreshAreaAlerts = function() {
+        if (areaAlertLat && areaAlertLon) {
+            fetchAreaAlerts();
+        }
+    };
+
+    function fetchAreaAlerts() {
+        var loading = document.getElementById('area-alerts-loading');
+        var listEl = document.getElementById('area-alerts-list');
+        var summaryEl = document.getElementById('area-alerts-summary');
+        var emptyEl = document.getElementById('area-alerts-empty');
+        var prompt = document.getElementById('area-alerts-prompt');
+
+        if (loading) loading.style.display = 'block';
+        if (listEl) listEl.style.display = 'none';
+        if (summaryEl) summaryEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (prompt) prompt.style.display = 'none';
+
+        var radius = document.getElementById('alert-radius');
+        var days = document.getElementById('alert-days');
+        var r = radius ? radius.value : '0.5';
+        var d = days ? days.value : '30';
+
+        fetch('/api/alerts/area?lat=' + areaAlertLat + '&lon=' + areaAlertLon + '&radius=' + r + '&days=' + d + '&limit=30', {
+            headers: { 'Authorization': 'Bearer ' + getToken() }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (loading) loading.style.display = 'none';
+
+            if (!data.alerts || data.alerts.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            // Summary
+            if (summaryEl) {
+                summaryEl.style.display = 'block';
+                summaryEl.innerHTML = '<div style="background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;color:#F0D0C0">' +
+                    '<strong>' + data.total + '</strong> safety incident' + (data.total !== 1 ? 's' : '') +
+                    ' within <strong>' + data.radius_miles + ' mi</strong> in the last <strong>' + data.days_back + ' days</strong></div>';
+            }
+
+            // Alert list
+            if (listEl) {
+                listEl.style.display = 'block';
+                var html = '';
+                data.alerts.forEach(function(alert) {
+                    var cat = CATEGORY_MAP[alert.crime_type] || { label: alert.crime_type, severity: 'medium', icon: '⚠️' };
+                    var dist = parseFloat(alert.distance_miles).toFixed(2);
+                    var timeAgo = getTimeAgoFromDate(alert.occurred_at);
+                    var sevClass = cat.severity === 'high' ? 'border-left:3px solid #e74c3c' : 'border-left:3px solid #f1c40f';
+                    html += '<div style="background:#1A1A2E;border-radius:8px;padding:12px 16px;margin-bottom:8px;' + sevClass + '">';
+                    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+                    html += '<span style="font-size:16px">' + cat.icon + '</span>';
+                    html += '<strong style="color:#fff;font-size:14px">' + escapeHtmlSafe(cat.label) + '</strong>';
+                    html += '<span style="margin-left:auto;color:#8080A0;font-size:12px">' + dist + ' mi away</span>';
+                    html += '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px">' + timeAgo;
+                    if (alert.description) html += ' — ' + escapeHtmlSafe(alert.description.substring(0, 100));
+                    html += '</div></div>';
+                });
+                listEl.innerHTML = html;
+            }
+
+            // Also populate the alerts tab
+            var alertsFullList = document.getElementById('alerts-full-list');
+            if (alertsFullList && data.alerts.length > 0) {
+                var tabHtml = '<div style="margin-bottom:12px;padding:12px;background:rgba(232,160,181,0.06);border-radius:10px;font-size:13px;color:#F0D0C0">' +
+                    data.total + ' safety alert' + (data.total !== 1 ? 's' : '') + ' near your location</div>';
+                data.alerts.slice(0, 10).forEach(function(alert) {
+                    var cat = CATEGORY_MAP[alert.crime_type] || { label: alert.crime_type, severity: 'medium', icon: '⚠️' };
+                    var dist = parseFloat(alert.distance_miles).toFixed(2);
+                    tabHtml += '<div class="alert-item"><div class="alert-title"><span class="severity-dot severity-' + cat.severity + '"></span>' + escapeHtmlSafe(cat.label) + '</div>';
+                    tabHtml += '<div class="alert-meta">' + dist + ' mi away — ' + getTimeAgoFromDate(alert.occurred_at) + '</div></div>';
+                });
+                alertsFullList.innerHTML = tabHtml;
+            }
+        })
+        .catch(function() {
+            if (loading) loading.style.display = 'none';
+            if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.innerHTML = '<p style="color:#8080A0">Unable to load alerts. Please try again.</p>'; }
+        });
+    }
+
+    var CATEGORY_MAP = {
+        sexual_assault: { label: 'Sexual Assault', severity: 'high', icon: '🚨' },
+        assault: { label: 'Assault', severity: 'high', icon: '⚠️' },
+        domestic_violence: { label: 'Domestic Violence', severity: 'high', icon: '🚨' },
+        stalking: { label: 'Stalking', severity: 'high', icon: '🚨' },
+        kidnapping: { label: 'Kidnapping', severity: 'high', icon: '🚨' },
+        human_trafficking: { label: 'Human Trafficking', severity: 'high', icon: '🚨' },
+        harassment: { label: 'Harassment', severity: 'medium', icon: '⚠️' },
+        robbery: { label: 'Robbery', severity: 'medium', icon: '⚠️' },
+        indecent_exposure: { label: 'Indecent Exposure', severity: 'medium', icon: '⚠️' }
+    };
+
+    function getTimeAgoFromDate(dateStr) {
+        var d = new Date(dateStr);
+        var now = Date.now();
+        var diff = now - d.getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 60) return mins + 'm ago';
+        var hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ago';
+        var days = Math.floor(hrs / 24);
+        if (days < 30) return days + 'd ago';
+        return Math.floor(days / 30) + 'mo ago';
+    }
+
+    // ============ WATCH ZONES ============
+    window.addWatchZone = function() {
+        if (typeof showToast === 'function') showToast('Watch zones feature coming soon!');
+    };
+
+    function loadWatchZones() {
+        var el = document.getElementById('watch-zones-list');
+        if (!el) return;
+        fetch('/api/watch-zones', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.zones && data.zones.length > 0) {
+                    var html = '';
+                    data.zones.forEach(function(z) {
+                        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
+                        html += '<i class="fas fa-map-pin" style="color:#E8A0B5"></i>';
+                        html += '<span style="color:#fff;font-size:13px">' + escapeHtmlSafe(z.label || z.address || 'Zone') + '</span>';
+                        html += '</div>';
+                    });
+                    el.innerHTML = html;
+                } else {
+                    el.innerHTML = '<p style="font-size:13px">No watch zones set. Tap "Add Zone" to monitor an area.</p>';
+                }
+            })
+            .catch(function() {
+                el.innerHTML = '<p style="font-size:13px">No watch zones set.</p>';
+            });
+    }
+
+    // ============ ALERTS TAB ============
+    function initAlertsTab() {
+        var alertsFullList = document.getElementById('alerts-full-list');
+        if (!alertsFullList) return;
+        // Set a default message
+        alertsFullList.innerHTML = '<div style="text-align:center;padding:24px;color:#8080A0"><i class="fas fa-location-crosshairs" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>Enable location in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'search\')},100);return false" style="color:#E8A0B5">Safety Search</a> to see alerts near you.</div>';
+    }
+
+    // ============ SAFETY SEARCH ============
+    // Search tab switching
+    document.querySelectorAll('.search-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.search-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.search-panel').forEach(function(p) { p.classList.remove('active'); p.style.display = 'none'; });
+            this.classList.add('active');
+            var target = this.getAttribute('data-search');
+            var panel = document.getElementById('search-' + target);
+            if (panel) { panel.classList.add('active'); panel.style.display = 'block'; }
+        });
+    });
+
+    window.searchOffenders = function() {
+        var first = document.getElementById('so-first-name').value.trim();
+        var last = document.getElementById('so-last-name').value.trim();
+        var city = document.getElementById('so-city').value.trim();
+        var state = document.getElementById('so-state').value;
+        var results = document.getElementById('offender-results');
+
+        if (!last) { if (typeof showToast === 'function') showToast('Last name is required'); return; }
+
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching registries...</div>';
+
+        var params = 'last=' + encodeURIComponent(last);
+        if (first) params += '&first=' + encodeURIComponent(first);
+        if (city) params += '&city=' + encodeURIComponent(city);
+        if (state) params += '&state=' + encodeURIComponent(state);
+
+        fetch('/api/screening/offender?' + params, { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
+
+                var html = '';
+                if (data.results && data.results.length > 0) {
+                    html += '<div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);border-radius:10px;padding:12px;margin-bottom:16px;color:#e74c3c;font-weight:600"><i class="fas fa-exclamation-triangle"></i> ' + data.results.length + ' potential match(es) found</div>';
+                    data.results.forEach(function(r) {
+                        html += '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px;border-left:3px solid #e74c3c">';
+                        html += '<div style="font-weight:600;color:#fff;font-size:14px">' + escapeHtmlSafe(r.title) + '</div>';
+                        html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet) + '</div>';
+                        html += '<a href="' + r.link + '" target="_blank" style="color:#E8A0B5;font-size:12px;display:inline-block;margin-top:6px">View Source →</a>';
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:12px;margin-bottom:16px;color:#2ecc71;font-weight:600;text-align:center"><i class="fas fa-check-circle"></i> No registry matches found for "' + escapeHtmlSafe(data.query || last) + '"</div>';
+                }
+
+                if (data.registry_links && data.registry_links.length > 0) {
+                    html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)"><h4 style="color:#fff;font-size:13px;margin-bottom:8px">Direct Registry Links</h4>';
+                    data.registry_links.forEach(function(link) {
+                        html += '<a href="' + link.url + '" target="_blank" style="display:block;color:#E8A0B5;font-size:13px;padding:6px 0"><i class="fas fa-external-link-alt"></i> ' + escapeHtmlSafe(link.name) + '</a>';
+                    });
+                    html += '</div>';
+                }
+
+                results.innerHTML = html;
+            })
+            .catch(function() {
+                results.innerHTML = '<p style="color:#FF6B6B">Search failed. Please try again.</p>';
+            });
+    };
+
+    window.runBackgroundCheck = function() {
+        var name = document.getElementById('bg-name').value.trim();
+        var city = document.getElementById('bg-city').value.trim();
+        var state = document.getElementById('bg-state').value.trim();
+        var age = document.getElementById('bg-age').value;
+        var results = document.getElementById('background-results');
+
+        if (!name) { if (typeof showToast === 'function') showToast('Full name is required'); return; }
+
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Running background check...</div>';
+
+        fetch('/api/screening/background', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ name: name, city: city, state: state, age: age ? parseInt(age) : undefined })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
+
+            var html = '<div style="margin-bottom:16px">';
+            // Social profiles
+            if (data.socialProfiles && data.socialProfiles.length > 0) {
+                html += '<h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-user-circle" style="color:#E8A0B5"></i> Social Profiles</h4>';
+                data.socialProfiles.forEach(function(p) {
+                    html += '<a href="' + p.url + '" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#fff;font-size:13px">';
+                    html += '<i class="' + (p.icon || 'fas fa-link') + '" style="color:' + (p.color || '#E8A0B5') + ';font-size:16px"></i>';
+                    html += '<div><strong>' + escapeHtmlSafe(p.platform || p.name || 'Profile') + '</strong><br><span style="color:#8080A0;font-size:11px">' + escapeHtmlSafe(p.snippet || p.url) + '</span></div></a>';
+                });
+            }
+            // Criminal/court records
+            if (data.criminalRecords && data.criminalRecords.length > 0) {
+                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-gavel"></i> Public Records</h4>';
+                data.criminalRecords.forEach(function(r) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
+                    if (r.link) html += '<a href="' + r.link + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
+                    html += '</div>';
+                });
+            }
+            // Data broker exposure
+            if (data.dataBrokerExposure && data.dataBrokerExposure.length > 0) {
+                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-database"></i> Data Broker Exposure</h4>';
+                data.dataBrokerExposure.forEach(function(d) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(d.site || d.title) + '</div>';
+                    if (d.link) html += '<a href="' + d.link + '" target="_blank" style="color:#E8A0B5;font-size:12px">View →</a>';
+                    html += '</div>';
+                });
+            }
+
+            if ((!data.socialProfiles || data.socialProfiles.length === 0) && (!data.criminalRecords || data.criminalRecords.length === 0)) {
+                html += '<div style="text-align:center;padding:20px;color:#8080A0"><i class="fas fa-search" style="font-size:24px;display:block;margin-bottom:8px"></i>No significant results found for "' + escapeHtmlSafe(name) + '"</div>';
+            }
+
+            html += '</div>';
+            results.innerHTML = html;
+        })
+        .catch(function() {
+            results.innerHTML = '<p style="color:#FF6B6B">Background check failed. Please try again.</p>';
+        });
+    };
+
+    window.loadCommunityMentions = function() {
+        var name = document.getElementById('bg-name').value.trim();
+        var results = document.getElementById('community-mentions-results');
+        if (!name) { if (typeof showToast === 'function') showToast('Enter a name first'); return; }
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching posts...</div>';
+
+        fetch('/api/community?search=' + encodeURIComponent(name), { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.posts && data.posts.length > 0) {
+                    var html = '<div style="background:rgba(241,196,15,0.08);border:1px solid rgba(241,196,15,0.2);border-radius:8px;padding:10px;margin-bottom:12px;color:#f1c40f;font-size:13px"><i class="fas fa-exclamation-triangle"></i> ' + data.posts.length + ' mention(s) found</div>';
+                    data.posts.forEach(function(p) {
+                        html += '<div style="background:#1A1A2E;border-radius:8px;padding:12px;margin-bottom:8px"><div style="color:#fff;font-size:13px">' + escapeHtmlSafe(p.content ? p.content.substring(0, 200) : '') + '</div>';
+                        html += '<div style="color:#8080A0;font-size:11px;margin-top:4px">' + escapeHtmlSafe(p.category || '') + ' — ' + (typeof getTimeAgo === 'function' ? getTimeAgo(p.created_at) : '') + '</div></div>';
+                    });
+                    results.innerHTML = html;
+                } else {
+                    results.innerHTML = '<div style="text-align:center;padding:12px;color:#8080A0;font-size:13px"><i class="fas fa-check-circle" style="color:#2ecc71"></i> No community mentions found for "' + escapeHtmlSafe(name) + '"</div>';
+                }
+            })
+            .catch(function() { results.innerHTML = '<p style="color:#8080A0">Could not search posts.</p>'; });
+    };
+
+    // ============ CATFISH CHECK ============
+    window.handleCatfishFile = function(input) {
+        var file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { if (typeof showToast === 'function') showToast('File too large (max 5MB)'); return; }
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('cf-image-data').value = e.target.result;
+            document.getElementById('cf-image-url').value = '';
+            var preview = document.getElementById('cf-preview');
+            var previewImg = document.getElementById('cf-preview-img');
+            if (preview && previewImg) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.handleCatfishFileDrop = function(event) {
+        var file = event.dataTransfer.files[0];
+        if (file) {
+            var input = document.getElementById('cf-file-input');
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            handleCatfishFile(input);
+        }
+    };
+
+    window.runCatfishCheck = function() {
+        var imageData = document.getElementById('cf-image-data').value;
+        var imageUrl = document.getElementById('cf-image-url').value;
+        var profileName = document.getElementById('cf-profile-name').value.trim();
+        var platform = document.getElementById('cf-platform').value;
+        var results = document.getElementById('catfish-results');
+
+        if (!imageData && !imageUrl) { if (typeof showToast === 'function') showToast('Upload a photo or paste an image URL'); return; }
+
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Analyzing photo for catfish signals...</div>';
+
+        fetch('/api/screening/catfish', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ imageData: imageData || undefined, imageUrl: imageUrl || undefined, profileName: profileName, platform: platform })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
+            if (!data.scan) { results.innerHTML = '<p style="color:#8080A0">No results</p>'; return; }
+
+            var scan = data.scan;
+            var riskColors = { high_risk: '#e74c3c', medium_risk: '#f1c40f', low_risk: '#f39c12', likely_safe: '#2ecc71' };
+            var color = riskColors[scan.riskLevel] || '#8080A0';
+
+            var html = '<div style="text-align:center;padding:20px;background:rgba(' + (scan.riskLevel === 'likely_safe' ? '46,204,113' : scan.riskLevel === 'high_risk' ? '231,76,60' : '241,196,15') + ',0.08);border:1px solid ' + color + ';border-radius:12px;margin-bottom:16px">';
+            html += '<div style="font-size:32px;margin-bottom:8px">' + (scan.riskLabel ? scan.riskLabel.split(' ')[0] : '') + '</div>';
+            html += '<div style="font-size:18px;font-weight:700;color:' + color + '">' + escapeHtmlSafe(scan.riskLabel || '') + '</div>';
+            html += '<div style="font-size:36px;font-weight:800;color:' + color + ';margin:8px 0">' + scan.catfishScore + '/100</div>';
+            html += '</div>';
+
+            if (scan.redFlags && scan.redFlags.length > 0) {
+                html += '<h4 style="color:#e74c3c;font-size:14px;margin-bottom:8px">🚩 Red Flags</h4>';
+                scan.redFlags.forEach(function(f) {
+                    var sColor = f.severity === 'critical' ? '#e74c3c' : f.severity === 'high' ? '#e74c3c' : '#f1c40f';
+                    html += '<div style="background:#1A1A2E;border-left:3px solid ' + sColor + ';border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-weight:600;font-size:13px">' + escapeHtmlSafe(f.label) + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(f.description || '') + '</div></div>';
+                });
+            }
+
+            if (scan.greenFlags && scan.greenFlags.length > 0) {
+                html += '<h4 style="color:#2ecc71;font-size:14px;margin:16px 0 8px">✅ Green Flags</h4>';
+                scan.greenFlags.forEach(function(f) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #2ecc71;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(f.label) + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(f.description || '') + '</div></div>';
+                });
+            }
+
+            results.innerHTML = html;
+        })
+        .catch(function() {
+            results.innerHTML = '<p style="color:#FF6B6B">Analysis failed. Please try again.</p>';
+        });
+    };
+
+    // ============ DATE CHECK-OUT / CHECK-IN ============
+    var activeDateData = null;
+    var activeDateTimer = null;
+
+    window.handleDatePhotoUpload = function(input) {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var preview = document.getElementById('dc-photo-preview');
+            var previewImg = document.getElementById('dc-photo-preview-img');
+            var placeholder = document.getElementById('dc-photo-placeholder');
+            if (preview && previewImg) { previewImg.src = e.target.result; preview.style.display = 'block'; }
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    };
+
+    window.addContactRow = function() {
+        var list = document.getElementById('dc-contacts-list');
+        if (!list) return;
+        var row = document.createElement('div');
+        row.className = 'dc-contact-row';
+        row.innerHTML = '<input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>';
+        list.appendChild(row);
+    };
+
+    window.dateCheckOut = function() {
+        var btn = document.getElementById('dc-checkout-btn');
+        var dateName = document.getElementById('dc-date-name').value.trim();
+        var venueName = document.getElementById('dc-venue-name').value.trim();
+        var venueAddress = document.getElementById('dc-venue-address').value.trim();
+        var transportation = document.getElementById('dc-transportation').value;
+        var transportDetails = document.getElementById('dc-transport-details') ? document.getElementById('dc-transport-details').value.trim() : '';
+        var scheduledTime = document.getElementById('dc-scheduled-time').value;
+        var returnTime = document.getElementById('dc-return-time').value;
+        var notes = document.getElementById('dc-notes').value.trim();
+
+        // Photo: base64 from file or URL
+        var photoPreviewImg = document.getElementById('dc-photo-preview-img');
+        var photoUrl = document.getElementById('dc-photo-url').value.trim();
+        var datePhotoUrl = (photoPreviewImg && photoPreviewImg.src && photoPreviewImg.src.startsWith('data:')) ? photoPreviewImg.src : photoUrl;
+
+        if (!dateName || !venueName || !scheduledTime) {
+            if (typeof showToast === 'function') showToast('Please fill in required fields: name, venue, and date/time');
+            return;
+        }
+
+        // Gather trusted contacts
+        var contacts = [];
+        document.querySelectorAll('#dc-contacts-list .dc-contact-row').forEach(function(row) {
+            var name = row.querySelector('.dc-contact-name').value.trim();
+            var phone = row.querySelector('.dc-contact-phone').value.trim();
+            if (name && phone) contacts.push({ name: name, phone: phone });
+        });
+
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking out...'; }
+
+        fetch('/api/dates/checkout', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                dateName: dateName,
+                datePhotoUrl: datePhotoUrl,
+                venueName: venueName,
+                venueAddress: venueAddress,
+                transportation: transportation,
+                transportDetails: transportDetails,
+                scheduledTime: new Date(scheduledTime).toISOString(),
+                estimatedReturn: returnTime ? new Date(returnTime).toISOString() : undefined,
+                notes: notes,
+                trustedContacts: contacts
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out & Generate SafeTea Report'; }
+            if (data.error) { if (typeof showToast === 'function') showToast(data.error); return; }
+            if (typeof showToast === 'function') showToast('Checked out! Your trusted contacts will be notified.');
+            activeDateData = data.date || data;
+            showActiveDate(activeDateData);
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out & Generate SafeTea Report'; }
+            if (typeof showToast === 'function') showToast('Check-out failed. Please try again.');
+        });
+    };
+
+    function showActiveDate(date) {
+        var form = document.getElementById('dc-form');
+        var active = document.getElementById('dc-active');
+        var homeActive = document.getElementById('home-active-date');
+
+        if (form) form.style.display = 'none';
+        if (active) active.style.display = 'block';
+
+        // Fill active date details
+        var nameEl = document.getElementById('dc-active-name');
+        var venueEl = document.getElementById('dc-active-venue');
+        var timeEl = document.getElementById('dc-active-time');
+        if (nameEl) nameEl.textContent = date.date_name || date.dateName || '';
+        if (venueEl) venueEl.textContent = date.venue_name || date.venueName || '';
+        if (timeEl) timeEl.textContent = new Date(date.scheduled_time || date.scheduledTime).toLocaleString();
+
+        if (date.date_photo_url || date.datePhotoUrl) {
+            var photoDiv = document.getElementById('dc-active-photo');
+            var photoImg = document.getElementById('dc-active-photo-img');
+            if (photoDiv && photoImg) { photoImg.src = date.date_photo_url || date.datePhotoUrl; photoDiv.style.display = 'block'; }
+        }
+
+        // Home active date card
+        if (homeActive) {
+            homeActive.style.display = 'block';
+            var homeActiveName = document.getElementById('home-active-name');
+            var homeActiveVenue = document.getElementById('home-active-venue');
+            if (homeActiveName) homeActiveName.textContent = date.date_name || date.dateName || '';
+            if (homeActiveVenue) homeActiveVenue.textContent = date.venue_name || date.venueName || '';
+        }
+
+        // Start timer
+        startDateTimer(date.created_at || new Date().toISOString());
+    }
+
+    function startDateTimer(checkoutTime) {
+        if (activeDateTimer) clearInterval(activeDateTimer);
+        var start = new Date(checkoutTime).getTime();
+        activeDateTimer = setInterval(function() {
+            var elapsed = Date.now() - start;
+            var hrs = Math.floor(elapsed / 3600000);
+            var mins = Math.floor((elapsed % 3600000) / 60000);
+            var secs = Math.floor((elapsed % 60000) / 1000);
+            var text = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's';
+            var timer = document.getElementById('dc-timer');
+            var homeTimer = document.getElementById('home-timer');
+            if (timer) timer.textContent = text;
+            if (homeTimer) homeTimer.textContent = text;
+        }, 1000);
+    }
+
+    window.dateCheckIn = function() {
+        if (!activeDateData) { if (typeof showToast === 'function') showToast('No active date to check in from'); return; }
+
+        var dateId = activeDateData.id;
+        fetch('/api/dates/checkin', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ dateId: dateId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) { if (typeof showToast === 'function') showToast(data.error); return; }
+            if (typeof showToast === 'function') showToast('Checked in safely! Your contacts have been notified.');
+            if (activeDateTimer) clearInterval(activeDateTimer);
+            activeDateData = null;
+
+            // Reset UI
+            var active = document.getElementById('dc-active');
+            var form = document.getElementById('dc-form');
+            var homeActive = document.getElementById('home-active-date');
+            if (active) active.style.display = 'none';
+            if (form) form.style.display = 'block';
+            if (homeActive) homeActive.style.display = 'none';
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Check-in failed. Please try again.'); });
+    };
+
+    window.triggerSOS = function() {
+        if (confirm('This will alert your trusted contacts with an SOS message. Are you sure?')) {
+            if (typeof showToast === 'function') showToast('SOS alert sent to your trusted contacts!');
+        }
+    };
+
+    window.viewSafeTeaReport = function() {
+        if (!activeDateData) return;
+        var report = document.getElementById('dc-report');
+        var content = document.getElementById('dc-report-content');
+        if (report && content) {
+            report.style.display = 'block';
+            content.innerHTML = '<h3 style="color:#fff;margin-bottom:12px"><i class="fas fa-file-alt" style="color:#E8A0B5"></i> SafeTea Report</h3>' +
+                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Meeting:</strong> <span style="color:#F0D0C0">' + escapeHtmlSafe(activeDateData.date_name || activeDateData.dateName || '') + '</span></div>' +
+                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Venue:</strong> <span style="color:#F0D0C0">' + escapeHtmlSafe(activeDateData.venue_name || activeDateData.venueName || '') + '</span></div>' +
+                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Time:</strong> <span style="color:#F0D0C0">' + new Date(activeDateData.scheduled_time || activeDateData.scheduledTime).toLocaleString() + '</span></div>';
+        }
+    };
+
+    window.shareDateLink = function() {
+        if (!activeDateData || !activeDateData.share_code) { if (typeof showToast === 'function') showToast('No active date link available'); return; }
+        var url = window.location.origin + '/date-status?code=' + activeDateData.share_code;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() { if (typeof showToast === 'function') showToast('Share link copied!'); });
+        }
+    };
+
+    window.shareReportSMS = function() {
+        if (!activeDateData || !activeDateData.share_code) return;
+        var url = window.location.origin + '/date-status?code=' + activeDateData.share_code;
+        var msg = 'SafeTea Date Report: I\'m heading on a date. Track my status here: ' + url;
+        window.open('sms:?&body=' + encodeURIComponent(msg));
+    };
+
+    window.shareReportInbox = function() {
+        if (typeof showToast === 'function') showToast('Share via inbox coming soon');
+    };
+
+    window.closeReport = function() {
+        var report = document.getElementById('dc-report');
+        if (report) report.style.display = 'none';
+    };
+
+    // Transportation details toggle
+    var transportSelect = document.getElementById('dc-transportation');
+    if (transportSelect) {
+        transportSelect.addEventListener('change', function() {
+            var wrap = document.getElementById('dc-transport-details-wrap');
+            if (wrap) wrap.style.display = this.value ? 'block' : 'none';
+        });
+    }
+
+    // ============ IDENTITY VERIFICATION ============
+    window.startIdentityVerification = function() {
+        fetch('/api/auth/verify/identity', {
+            method: 'POST',
+            headers: authHeaders()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.verificationUrl) {
+                window.open(data.verificationUrl, '_blank');
+            } else if (data.error) {
+                if (typeof showToast === 'function') showToast(data.error);
+            } else {
+                if (typeof showToast === 'function') showToast('Identity verification initiated. Check your email.');
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Verification failed. Please try again.'); });
+    };
+
+    // ============ AVATAR CUSTOMIZATION ============
+    window.onAvatarTypeChange = function(type) {
+        document.getElementById('custom-name-input').style.display = type === 'custom' ? 'block' : 'none';
+        document.getElementById('generated-name-input').style.display = type === 'generated' ? 'block' : 'none';
+        var uploadInput = document.getElementById('upload-avatar-input');
+        if (uploadInput) uploadInput.style.display = type === 'upload' ? 'block' : 'none';
+
+        if (type === 'upload') {
+            var user = getUser();
+            var isPaid = user && (user.subscription_tier === 'pro' || user.subscription_tier === 'premium' || user.subscription_tier === 'plus');
+            var gate = document.getElementById('upload-avatar-gate');
+            var form = document.getElementById('upload-avatar-form');
+            if (gate) gate.style.display = isPaid ? 'none' : 'block';
+            if (form) form.style.display = isPaid ? 'block' : 'none';
+        }
+    };
+
+    window.generateRandomName = function() {
+        fetch('/api/users/generate-avatar', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var display = document.getElementById('generated-name-display');
+                if (display && data.name) display.textContent = data.name;
+            })
+            .catch(function() {
+                var names = ['TeaLover', 'SafeSipper', 'GuardianGal', 'BoldBrew', 'WatchfulEye', 'TrustedTea', 'ShieldSis'];
+                var display = document.getElementById('generated-name-display');
+                if (display) display.textContent = names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random() * 99);
+            });
+    };
+
+    window.handleAvatarUpload = function(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var previewImg = document.getElementById('avatar-preview-img');
+            var previewDiv = document.getElementById('avatar-upload-preview');
+            if (previewImg) previewImg.src = e.target.result;
+            if (previewDiv) previewDiv.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // ============ UPGRADE / PREMIUM ============
+    window.showUpgradePrompt = function() {
+        if (typeof showToast === 'function') showToast('Upgrade coming soon! Contact support@getsafetea.app for early access.');
+    };
+
+    // ============ INBOX / MESSAGING ============
+    window.openComposeModal = function() {
+        var modal = document.getElementById('compose-modal');
+        if (modal) modal.style.display = 'flex';
+    };
+
+    window.closeComposeModal = function() {
+        var modal = document.getElementById('compose-modal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    var composeRecipientId = null;
+    window.searchUsersForCompose = function(query) {
+        var results = document.getElementById('compose-search-results');
+        if (!query || query.length < 2) { results.innerHTML = ''; return; }
+
+        fetch('/api/users/search?q=' + encodeURIComponent(query), { headers: { 'Authorization': 'Bearer ' + getToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.users || data.users.length === 0) {
+                    results.innerHTML = '<p style="color:#8080A0;font-size:12px">No users found</p>';
+                    return;
+                }
+                var html = '';
+                data.users.forEach(function(u) {
+                    html += '<div onclick="selectComposeRecipient(' + u.id + ',\'' + escapeHtmlSafe(u.display_name || u.email) + '\')" style="padding:8px 12px;cursor:pointer;border-radius:6px;color:#fff;font-size:13px" onmouseover="this.style.background=\'rgba(232,160,181,0.1)\'" onmouseout="this.style.background=\'none\'">' + escapeHtmlSafe(u.display_name || u.email) + '</div>';
+                });
+                results.innerHTML = html;
+            })
+            .catch(function() { results.innerHTML = ''; });
+    };
+
+    window.selectComposeRecipient = function(id, name) {
+        composeRecipientId = id;
+        document.getElementById('compose-search-results').innerHTML = '';
+        document.getElementById('compose-search').value = '';
+        document.getElementById('compose-selected').style.display = 'block';
+        document.getElementById('compose-selected-name').textContent = name;
+    };
+
+    window.clearComposeRecipient = function() {
+        composeRecipientId = null;
+        document.getElementById('compose-selected').style.display = 'none';
+    };
+
+    window.sendComposeMessage = function() {
+        if (!composeRecipientId) { if (typeof showToast === 'function') showToast('Select a recipient'); return; }
+        var body = document.getElementById('compose-body').value.trim();
+        if (!body) { if (typeof showToast === 'function') showToast('Write a message'); return; }
+
+        if (typeof showToast === 'function') showToast('Messaging is coming soon!');
+        closeComposeModal();
+    };
+
+    // ============ INIT ============
+    loadProfile();
+    loadVerificationStatus();
+    loadWatchZones();
+    initAlertsTab();
+
+})();

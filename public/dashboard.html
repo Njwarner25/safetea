@@ -2788,6 +2788,25 @@
         // Scroll to top
         window.scrollTo(0, 0);
     }
+
+    // ============ HUB SUB-TAB SWITCHING ============
+    function switchHubTab(sub) {
+        // Hide all hub sub-sections
+        document.querySelectorAll('.hub-sub').forEach(function(s) { s.style.display = 'none'; s.classList.remove('active'); });
+        // Show the selected sub-section
+        var el = document.getElementById('hub-' + sub);
+        if (el) { el.style.display = 'block'; el.classList.add('active'); }
+        // Update hub tab buttons active state
+        document.querySelectorAll('.hub-tab').forEach(function(btn) {
+            var isCurrent = btn.getAttribute('data-hubsub') === sub;
+            btn.style.background = isCurrent ? '#E8A0B5' : '#22223A';
+            btn.style.color = isCurrent ? '#1A1A2E' : '#8080A0';
+            btn.style.fontWeight = isCurrent ? '600' : '500';
+            if (isCurrent) { btn.style.border = 'none'; } else { btn.style.border = '1px solid rgba(255,255,255,0.08)'; }
+        });
+        // Scroll to top
+        window.scrollTo(0, 0);
+    }
     </script>
     <script>
     // ============ REFERRAL / SHARE FUNCTIONS ============
@@ -2796,7 +2815,7 @@
 
     // Load referral code from API, fall back to landing page
     (function loadReferralCode() {
-        var token = localStorage.getItem('token');
+        var token = localStorage.getItem('safetea_token');
         if (!token) {
             document.getElementById('grow-share-url').value = referralShareUrl;
             return;
@@ -3034,7 +3053,7 @@
         loadCommunityFeed();
         showQuickPost();
         // Update on server
-        var token = localStorage.getItem('token');
+        var token = localStorage.getItem('safetea_token');
         if (token) {
             fetch('/api/users/city', {
                 method: 'PUT',
@@ -3091,7 +3110,7 @@
         if (sortToggle) sortToggle.style.display = 'block';
         var feed = document.getElementById('community-feed');
         feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#E8A0B5;"></i></div>';
-        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var token = localStorage.getItem('safetea_token');
         var url = '/api/community?city=' + encodeURIComponent(city.name) + '&sort=' + feedSortMode;
         // Tea Talk = main feed (no category filter), Good Guys = filtered
         if (communityState.currentCategory === 'good-guys') {
@@ -3239,7 +3258,7 @@
         var content = document.getElementById('community-post-text').value.trim();
         if (!content) return;
         var category = document.getElementById('community-post-cat').value;
-        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var token = localStorage.getItem('safetea_token');
         var city = communityState.selectedCity;
         if (!token || !city) return;
         var btn = document.querySelector('.post-modal-submit');
@@ -3288,7 +3307,7 @@
     var nwUnreadCount = 0;
 
     function loadNameWatchAlerts() {
-        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var token = localStorage.getItem('safetea_token');
         if (!token) return;
 
         fetch('/api/namewatch', {
@@ -3386,7 +3405,7 @@
     }
 
     function markAllNameWatchRead() {
-        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var token = localStorage.getItem('safetea_token');
         if (!token) return;
 
         fetch('/api/namewatch/read-all', {
@@ -3426,7 +3445,7 @@
             showToast('Please write at least 10 characters');
             return;
         }
-        var token = localStorage.getItem('token') || localStorage.getItem('safetea_token');
+        var token = localStorage.getItem('safetea_token');
         if (!token) {
             showToast('Please log in to submit feedback');
             return;

@@ -2,444 +2,149 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SafeTea Date Check</title>
-    <meta name="description" content="SafeTea Date Check — live safety tracking for your loved one's date">
-    <meta name="theme-color" content="#1A1A2E">
-    <link rel="icon" href="/safetea-logo.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Status - SafeTea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#1A1A2E;color:#fff;min-height:100vh;overflow-x:hidden}
-
-        .loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-        .loading-screen .logo{width:64px;height:64px;border-radius:50%;margin-bottom:16px;animation:pulse 1.5s ease infinite}
-        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}
-        .loading-screen h2{color:#E8A0B5;font-size:18px;margin-bottom:8px}
-        .loading-screen p{color:#8080B0;font-size:14px}
-        .error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center}
-        .error-screen .icon{font-size:48px;margin-bottom:16px}
-        .error-screen h2{color:#EF4444;font-size:20px;margin-bottom:8px}
-        .error-screen p{color:#8080B0;font-size:14px;max-width:300px;line-height:1.5}
-
-        .page{display:none;max-width:480px;margin:0 auto;padding:0 0 100px}
-        .page.active{display:block}
-
-        .header{background:linear-gradient(180deg,#1A1A2E 0%,rgba(26,26,46,0.95) 100%);padding:16px 20px 12px;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
-        .header-row{display:flex;align-items:center;gap:10px}
-        .header .logo{width:36px;height:36px;border-radius:50%}
-        .header h1{font-size:16px;font-weight:600;color:#E8A0B5;flex:1}
-        .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
-        .status-active{background:rgba(46,204,113,0.15);color:#2ecc71}
-        .status-active::before{content:'';width:8px;height:8px;border-radius:50%;background:#2ecc71;animation:blink 1.5s ease infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-        .status-safe{background:rgba(46,204,113,0.15);color:#2ecc71}
-        .status-overdue{background:rgba(239,68,68,0.15);color:#EF4444;animation:urgentPulse 2s ease infinite}
-        @keyframes urgentPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-
-        .timer-bar{background:#22223A;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05)}
-        .timer-label{font-size:12px;color:#8080B0;text-transform:uppercase;letter-spacing:1px}
-        .timer-value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}
-        .timer-value.overdue{color:#EF4444}
-
-        .map-section{position:relative;height:220px;background:#22223A;overflow:hidden}
-        .map-section iframe{width:100%;height:100%;border:0;filter:saturate(0.8) brightness(0.9)}
-        .map-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,26,46,0.9));padding:12px 20px;display:flex;align-items:center;gap:8px}
-        .map-pin{font-size:20px}
-        .map-address{font-size:13px;color:#ccc;flex:1;line-height:1.4}
-        .map-nav-btn{background:rgba(232,160,181,0.2);color:#E8A0B5;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap}
-
-        .cards{padding:16px 20px}
-        .card{background:#22223A;border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.04)}
-        .card-title{font-size:11px;color:#8080B0;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
-        .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-        .info-row:last-child{border-bottom:none}
-        .info-label{font-size:13px;color:#8080B0;min-width:90px}
-        .info-value{font-size:14px;color:#fff;text-align:right;flex:1;font-weight:500}
-        .info-value.highlight{color:#E8A0B5}
-
-        .date-photo{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #E8A0B5;margin-right:12px;flex-shrink:0}
-        .date-person{display:flex;align-items:center;padding:12px 0}
-        .date-person-info h3{font-size:16px;font-weight:600;color:#fff}
-        .date-person-info p{font-size:13px;color:#8080B0;margin-top:2px}
-
-        .actions{padding:0 20px;display:flex;flex-direction:column;gap:10px;margin-top:8px}
-        .action-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:12px;font-size:15px;font-weight:600;text-decoration:none;border:none;cursor:pointer;width:100%;transition:transform 0.1s,opacity 0.15s}
-        .action-btn:active{transform:scale(0.98);opacity:0.9}
-        .btn-directions{background:linear-gradient(135deg,#5BA0D0,#4A8BBF);color:#fff}
-        .btn-share-location{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
-        .btn-call{background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff}
-        .btn-emergency{background:rgba(239,68,68,0.15);color:#EF4444;border:1px solid rgba(239,68,68,0.25)}
-
-        .footer{text-align:center;padding:24px 20px;color:#6060A0;font-size:12px;line-height:1.6}
-        .footer a{color:#E8A0B5;text-decoration:none}
-
-        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:flex-end;justify-content:center}
-        .modal-overlay.active{display:flex}
-        .modal{background:#22223A;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;animation:slideUp 0.3s ease}
-        @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-        .modal h3{font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;text-align:center}
-        .modal p{font-size:14px;color:#8080B0;text-align:center;margin-bottom:20px;line-height:1.5}
-        .modal .action-btn{margin-bottom:8px}
-        .modal-close{background:rgba(255,255,255,0.08);color:#A0A0C0;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:500;width:100%;cursor:pointer;margin-top:4px}
-
-        .location-indicator{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:8px;margin-bottom:12px}
-        .location-indicator.active{display:flex}
-        .location-dot{width:10px;height:10px;border-radius:50%;background:#2ecc71;animation:blink 1.5s ease infinite;flex-shrink:0}
-        .location-text{font-size:13px;color:#2ecc71;flex:1}
-        .location-time{font-size:11px;color:#8080B0}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; padding: 32px 16px; }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo img { height: 36px; }
+        .card { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06); }
+        .status-header { text-align: center; margin-bottom: 24px; }
+        .status-icon { font-size: 48px; margin-bottom: 8px; }
+        .status-text { font-size: 20px; font-weight: 700; }
+        .status-sub { font-size: 13px; color: #8080A0; margin-top: 4px; }
+        .status-checked-out .status-text { color: #FFA500; }
+        .status-checked-in .status-text { color: #2ecc71; }
+        .status-overdue .status-text { color: #FF4444; }
+        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-size: 13px; color: #8080A0; }
+        .detail-value { font-size: 14px; font-weight: 500; color: #fff; text-align: right; max-width: 60%; }
+        .date-photo { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; display: block; margin: 0 auto 16px; border: 2px solid rgba(255,255,255,0.1); }
+        .map-link { display: block; text-align: center; color: #E8A0B5; text-decoration: none; font-size: 13px; margin-top: 8px; padding: 8px; background: rgba(232,160,181,0.1); border-radius: 8px; }
+        .map-link:hover { background: rgba(232,160,181,0.2); }
+        .timer { text-align: center; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 12px 0; }
+        .timer-label { font-size: 12px; color: #8080A0; }
+        .error-msg { text-align: center; color: #FF6B6B; padding: 40px 20px; }
+        .loading { text-align: center; padding: 60px 20px; color: #8080A0; }
+        .branding { text-align: center; margin-top: 24px; font-size: 12px; color: #555; }
     </style>
 </head>
 <body>
-    <!-- Loading State -->
-    <div id="loadingScreen" class="loading-screen">
-        <img src="/safetea-logo.png" alt="SafeTea" class="logo" onerror="this.style.background='#E8A0B5';this.alt='ST'">
-        <h2>Loading Date Check...</h2>
-        <p>Fetching safety details</p>
-    </div>
+    <div class="container">
+        <div class="logo"><img src="logo.png" alt="SafeTea"></div>
 
-    <!-- Error State -->
-    <div id="errorScreen" class="error-screen" style="display:none">
-        <div class="icon">&#9888;&#65039;</div>
-        <h2 id="errorTitle">Date Check Not Found</h2>
-        <p id="errorMessage">This share code is invalid or has expired. Ask your friend to resend the SafeTea Report link.</p>
-        <a href="https://www.getsafetea.app" class="action-btn btn-call" style="margin-top:20px;max-width:240px">Visit SafeTea</a>
-    </div>
+        <div id="loading" class="loading">Loading date status...</div>
+        <div id="error" class="error-msg" style="display:none"></div>
+        <div id="content" style="display:none"></div>
 
-    <!-- Main Page -->
-    <div id="mainPage" class="page">
-        <div class="header">
-            <div class="header-row">
-                <img src="/safetea-logo.png" alt="SafeTea" class="logo" onerror="this.style.background='#E8A0B5';this.style.borderRadius='50%';this.alt='ST'">
-                <h1>SafeTea Date Check</h1>
-                <span id="statusBadge" class="status-badge status-active">Active</span>
-            </div>
-        </div>
-
-        <div class="timer-bar">
-            <div><div class="timer-label">Time on date</div></div>
-            <div id="timerValue" class="timer-value">0:00:00</div>
-        </div>
-
-        <div class="map-section" id="mapSection">
-            <iframe id="mapFrame" src="about:blank" loading="lazy" referrerpolicy="no-referrer"></iframe>
-            <div class="map-overlay">
-                <span class="map-pin">&#128205;</span>
-                <span class="map-address" id="mapAddress">Loading...</span>
-                <a id="directionsBtn" class="map-nav-btn" href="#" target="_blank" rel="noopener">Directions</a>
-            </div>
-        </div>
-
-        <div class="cards">
-            <div id="locationIndicator" class="location-indicator">
-                <span class="location-dot"></span>
-                <span class="location-text">Live location shared</span>
-                <span class="location-time" id="locationTime"></span>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Meeting</div>
-                <div class="date-person">
-                    <img id="datePhoto" class="date-photo" src="" alt="" style="display:none" onerror="this.style.display='none'">
-                    <div class="date-person-info">
-                        <h3 id="dateName">-</h3>
-                        <p id="dateWith">with -</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Location Details</div>
-                <div class="info-row"><span class="info-label">Venue</span><span class="info-value" id="venueName">-</span></div>
-                <div class="info-row"><span class="info-label">Address</span><span class="info-value" id="venueAddress">-</span></div>
-                <div class="info-row" id="transportRow" style="display:none"><span class="info-label">Transport</span><span class="info-value" id="transportValue">-</span></div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Timing</div>
-                <div class="info-row"><span class="info-label">Checked out</span><span class="info-value" id="checkedOutTime">-</span></div>
-                <div class="info-row"><span class="info-label">Date time</span><span class="info-value" id="scheduledTime">-</span></div>
-                <div class="info-row" id="returnRow"><span class="info-label">Expected back</span><span class="info-value highlight" id="expectedReturn">-</span></div>
-                <div class="info-row" id="checkinRow" style="display:none"><span class="info-label">Checked in</span><span class="info-value" id="checkedInTime" style="color:#2ecc71">-</span></div>
-            </div>
-
-            <div class="card" id="notesCard" style="display:none">
-                <div class="card-title">Notes</div>
-                <p id="notesText" style="font-size:14px;color:#ccc;line-height:1.5;padding:4px 0"></p>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button class="action-btn btn-share-location" onclick="shareMyLocation()">
-                &#128225; Share My Location with Them
-            </button>
-            <a id="directionsAction" class="action-btn btn-directions" href="#" target="_blank" rel="noopener">
-                &#128506; Get Directions to Venue
-            </a>
-            <button class="action-btn btn-emergency" onclick="callEmergency()">
-                &#127384; Emergency: Call 911
-            </button>
-        </div>
-
-        <div class="footer">
-            <p>This is a private SafeTea Date Check page.<br>
-            Only people with the share link can see this.<br><br>
-            <a href="https://www.getsafetea.app">Learn about SafeTea</a></p>
-        </div>
-    </div>
-
-    <!-- Share Location Modal -->
-    <div id="shareModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
-        <div class="modal">
-            <h3>Share Your Location</h3>
-            <p>Your phone will ask for GPS permission. Your current location will be sent via text or your phone's share sheet so they know where you are.</p>
-            <button class="action-btn btn-share-location" onclick="doShareLocation()">
-                &#127758; Allow Location &amp; Share
-            </button>
-            <button class="modal-close" onclick="closeModal()">Cancel</button>
-        </div>
+        <div class="branding">Powered by SafeTea — Stay Safe</div>
     </div>
 
     <script>
-        let dateData = null;
-        let timerInterval = null;
-        let checkoutTime = null;
-
         const params = new URLSearchParams(window.location.search);
-        const shareCode = params.get('code') || '';
+        const code = params.get('code');
 
-        async function loadDateStatus() {
-            if (!shareCode) {
-                showError('No Share Code', 'This link is missing a share code. Ask your friend to resend the SafeTea Report link.');
-                return;
-            }
+        if (!code) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = 'No share code provided.';
+        } else {
+            fetchStatus();
+        }
+
+        async function fetchStatus() {
             try {
-                const res = await fetch('/api/dates/status?code=' + encodeURIComponent(shareCode));
+                const res = await fetch('/api/dates/status?code=' + encodeURIComponent(code));
                 const data = await res.json();
-                if (!res.ok || !data.success) {
-                    showError('Date Check Not Found', data.error || 'This share code is invalid or has expired.');
+                document.getElementById('loading').style.display = 'none';
+
+                if (!data.success) {
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = data.error || 'Unable to load status.';
                     return;
                 }
-                dateData = data.date;
-                renderPage();
+
+                renderStatus(data.date);
             } catch (err) {
-                showError('Connection Error', 'Could not reach SafeTea servers. Check your connection and try again.');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Failed to load status. Please try again.';
             }
         }
 
-        function showError(title, message) {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('errorTitle').textContent = title;
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorScreen').style.display = 'flex';
-        }
+        function renderStatus(date) {
+            const content = document.getElementById('content');
+            content.style.display = 'block';
 
-        function formatTime(isoString) {
-            if (!isoString) return '-';
-            return new Date(isoString).toLocaleString('en-US', {
-                month: 'short', day: 'numeric',
-                hour: 'numeric', minute: '2-digit',
-                hour12: true, timeZoneName: 'short'
-            });
-        }
+            const isCheckedIn = date.status === 'checked_in';
+            const isOverdue = date.isOverdue;
+            const statusClass = isCheckedIn ? 'status-checked-in' : (isOverdue ? 'status-overdue' : 'status-checked-out');
+            const statusIcon = isCheckedIn ? '✅' : (isOverdue ? '🚨' : '📍');
+            const statusLabel = isCheckedIn ? 'Checked In Safely' : (isOverdue ? 'Overdue - Not Yet Checked In' : 'Currently on Date');
+            const statusSub = isCheckedIn
+                ? 'Made it home safe at ' + new Date(date.checkedInAt).toLocaleTimeString()
+                : (isOverdue ? 'Expected return time has passed' : 'Checked out ' + date.minutesSinceCheckout + ' minutes ago');
 
-        function renderPage() {
-            var d = dateData;
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('mainPage').classList.add('active');
+            let html = '<div class="card ' + statusClass + '">';
+            html += '<div class="status-header">';
+            html += '<div class="status-icon">' + statusIcon + '</div>';
+            html += '<div class="status-text">' + statusLabel + '</div>';
+            html += '<div class="status-sub">' + statusSub + '</div>';
+            html += '</div>';
 
-            // Status
-            var badge = document.getElementById('statusBadge');
-            if (d.status === 'checked_in') {
-                badge.className = 'status-badge status-safe';
-                badge.textContent = 'Checked In Safe';
-            } else if (d.isOverdue) {
-                badge.className = 'status-badge status-overdue';
-                badge.textContent = 'OVERDUE';
-            } else {
-                badge.className = 'status-badge status-active';
-                badge.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:4px;animation:blink 1.5s ease infinite"></span> On Date';
+            if (!isCheckedIn) {
+                html += '<div class="timer" id="timer"></div>';
+                html += '<div class="timer-label" style="text-align:center">Time since check-out</div>';
             }
 
-            // Person
-            document.getElementById('dateName').textContent = d.dateName || 'Unknown';
-            document.getElementById('dateWith').textContent = (d.userName || 'A SafeTea user') + ' is meeting them';
-            if (d.datePhotoUrl) {
-                var photo = document.getElementById('datePhoto');
-                photo.src = d.datePhotoUrl;
-                photo.alt = d.dateName;
-                photo.style.display = 'block';
+            html += '</div>';
+
+            // Date details card
+            html += '<div class="card">';
+            if (date.datePhotoUrl) {
+                html += '<img class="date-photo" src="' + date.datePhotoUrl + '" alt="Date photo">';
+            }
+            html += '<div class="detail-row"><span class="detail-label">Your contact</span><span class="detail-value">' + date.userName + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Meeting</span><span class="detail-value">' + date.dateName + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Venue</span><span class="detail-value">' + date.venueName + '</span></div>';
+            if (date.venueAddress) {
+                html += '<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">' + date.venueAddress + '</span></div>';
+            }
+            html += '<div class="detail-row"><span class="detail-label">Date &amp; Time</span><span class="detail-value">' + new Date(date.scheduledTime).toLocaleString() + '</span></div>';
+            if (date.estimatedReturn) {
+                html += '<div class="detail-row"><span class="detail-label">Expected return</span><span class="detail-value">' + new Date(date.estimatedReturn).toLocaleString() + '</span></div>';
+            }
+            html += '</div>';
+
+            // Map link
+            if (date.venueLat && date.venueLng) {
+                html += '<a class="map-link" href="https://maps.google.com/?q=' + date.venueLat + ',' + date.venueLng + '" target="_blank">📍 View Venue on Map</a>';
+            } else if (date.venueAddress) {
+                html += '<a class="map-link" href="https://maps.google.com/?q=' + encodeURIComponent(date.venueAddress) + '" target="_blank">📍 View Venue on Map</a>';
             }
 
-            // Venue
-            document.getElementById('venueName').textContent = d.venueName || '-';
-            document.getElementById('venueAddress').textContent = d.venueAddress || 'No address provided';
-            document.getElementById('mapAddress').textContent = d.venueAddress || d.venueName || 'Venue';
+            content.innerHTML = html;
 
-            // Timing
-            document.getElementById('checkedOutTime').textContent = formatTime(d.checkedOutAt);
-            document.getElementById('scheduledTime').textContent = formatTime(d.scheduledTime);
-            document.getElementById('expectedReturn').textContent = formatTime(d.estimatedReturn) || 'Not set';
-            if (d.status === 'checked_in' && d.checkedInAt) {
-                document.getElementById('checkinRow').style.display = 'flex';
-                document.getElementById('checkedInTime').textContent = formatTime(d.checkedInAt);
-            }
-
-            // Map
-            loadMap(d);
-
-            // Directions
-            var dirUrl = getDirectionsUrl(d);
-            document.getElementById('directionsBtn').href = dirUrl;
-            document.getElementById('directionsAction').href = dirUrl;
-
-            // Timer
-            checkoutTime = new Date(d.checkedOutAt);
-            startTimer();
-        }
-
-        function getDirectionsUrl(d) {
-            if (d.venueLat && d.venueLng) return 'https://www.google.com/maps/dir/?api=1&destination=' + d.venueLat + ',' + d.venueLng;
-            if (d.venueAddress) return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(d.venueAddress);
-            if (d.venueName) return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(d.venueName);
-            return '#';
-        }
-
-        function loadMap(d) {
-            var mapUrl;
-            if (d.venueLat && d.venueLng) {
-                var lat = parseFloat(d.venueLat), lng = parseFloat(d.venueLng);
-                mapUrl = 'https://www.openstreetmap.org/export/embed.html?bbox=' +
-                    (lng-0.005) + ',' + (lat-0.003) + ',' + (lng+0.005) + ',' + (lat+0.003) +
-                    '&layer=mapnik&marker=' + lat + ',' + lng;
-            } else if (d.venueAddress) {
-                // Geocode address to coordinates via Nominatim
-                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(d.venueAddress))
-                    .then(function(r){ return r.json(); })
-                    .then(function(results){
-                        if (results && results.length > 0) {
-                            var lat = parseFloat(results[0].lat), lng = parseFloat(results[0].lon);
-                            document.getElementById('mapFrame').src =
-                                'https://www.openstreetmap.org/export/embed.html?bbox=' +
-                                (lng-0.005) + ',' + (lat-0.003) + ',' + (lng+0.005) + ',' + (lat+0.003) +
-                                '&layer=mapnik&marker=' + lat + ',' + lng;
-                            // Update directions link with resolved coordinates
-                            var gUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
-                            document.getElementById('directionsBtn').href = gUrl;
-                            document.getElementById('directionsAction').href = gUrl;
-                        }
-                    }).catch(function(){});
-                return;
-            }
-            if (mapUrl) document.getElementById('mapFrame').src = mapUrl;
-        }
-
-        function startTimer() {
-            function update() {
-                var now = new Date();
-                var diffMs;
-                var timerEl = document.getElementById('timerValue');
-                if (dateData.status === 'checked_in' && dateData.checkedInAt) {
-                    diffMs = new Date(dateData.checkedInAt) - checkoutTime;
-                    timerEl.classList.remove('overdue');
-                } else {
-                    diffMs = now - checkoutTime;
-                    if (dateData.estimatedReturn && now > new Date(dateData.estimatedReturn)) {
-                        timerEl.classList.add('overdue');
+            // Start timer if not checked in
+            if (!isCheckedIn) {
+                const checkoutTime = new Date(date.checkedOutAt).getTime();
+                setInterval(function() {
+                    const elapsed = Date.now() - checkoutTime;
+                    const hrs = Math.floor(elapsed / 3600000);
+                    const mins = Math.floor((elapsed % 3600000) / 60000);
+                    const secs = Math.floor((elapsed % 60000) / 1000);
+                    const timerEl = document.getElementById('timer');
+                    if (timerEl) {
+                        timerEl.textContent = (hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's';
+                        timerEl.style.color = date.isOverdue ? '#FF4444' : '#FFA500';
                     }
-                }
-                var totalSec = Math.floor(Math.max(0, diffMs) / 1000);
-                var h = Math.floor(totalSec / 3600);
-                var m = Math.floor((totalSec % 3600) / 60);
-                var s = totalSec % 60;
-                timerEl.textContent = h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-            }
-            update();
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(update, 1000);
-        }
-
-        // ============ LOCATION SHARING ============
-        function shareMyLocation() {
-            document.getElementById('shareModal').classList.add('active');
-        }
-        function closeModal() {
-            document.getElementById('shareModal').classList.remove('active');
-        }
-
-        function doShareLocation() {
-            closeModal();
-            if (!navigator.geolocation) {
-                alert('Location is not supported on this device.');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    var lat = pos.coords.latitude.toFixed(6);
-                    var lng = pos.coords.longitude.toFixed(6);
-                    var accuracy = Math.round(pos.coords.accuracy);
-                    var mapsUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
-                    var timestamp = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-                    var message =
-                        'SafeTea Location Update\n' +
-                        'I am currently here:\n' +
-                        mapsUrl + '\n' +
-                        'Accuracy: ~' + accuracy + 'm\n' +
-                        'Time: ' + timestamp + '\n\n' +
-                        'Sent via SafeTea Date Check';
-
-                    // Try native share (mobile)
-                    if (navigator.share) {
-                        navigator.share({
-                            title: 'My Location - SafeTea',
-                            text: message,
-                            url: mapsUrl
-                        }).catch(function() {
-                            // Fallback to SMS
-                            window.location.href = 'sms:?body=' + encodeURIComponent(message);
-                        });
-                    } else {
-                        // Desktop: open SMS
-                        window.location.href = 'sms:?body=' + encodeURIComponent(message);
-                    }
-
-                    // Show indicator
-                    document.getElementById('locationIndicator').classList.add('active');
-                    document.getElementById('locationTime').textContent = timestamp;
-                },
-                function(err) {
-                    if (err.code === 1) {
-                        alert('Location permission denied. Please allow location access in your browser settings and try again.');
-                    } else {
-                        alert('Could not get your location. Make sure Location Services are turned on and try again.');
-                    }
-                },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-            );
-        }
-
-        function callEmergency() {
-            if (confirm('This will dial 911. Are you sure?')) {
-                window.location.href = 'tel:911';
+                }, 1000);
             }
         }
-
-        // Auto-refresh every 30s
-        setInterval(function() {
-            fetch('/api/dates/status?code=' + encodeURIComponent(shareCode))
-                .then(function(r){ return r.json(); })
-                .then(function(data) {
-                    if (data.success && dateData) {
-                        var oldStatus = dateData.status;
-                        dateData = data.date;
-                        if (oldStatus !== dateData.status) renderPage();
-                    }
-                }).catch(function(){});
-        }, 30000);
-
-        // Start
-        loadDateStatus();
     </script>
 </body>
 </html>

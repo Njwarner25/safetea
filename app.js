@@ -862,7 +862,108 @@
         }
 
         initAvatarColorPicker();
+        loadVerificationStatus();
     }
+
+    // ==================== IDENTITY VERIFICATION ====================
+    function loadVerificationStatus() {
+        apiFetch('/auth/verify/status').then(function(data) {
+            if (!data) return;
+            var steps = data.steps || {};
+            updateVerifyStep('age', steps.age);
+            updateVerifyStep('identity', steps.identity);
+            updateVerifyStep('gender', steps.gender);
+
+            // Show/hide verify button for identity step
+            var btn = document.getElementById('btn-verify-identity');
+            if (btn) {
+                btn.style.display = (steps.identity && !steps.identity.completed) ? 'inline-block' : 'none';
+            }
+
+            // Show banner
+            var banner = document.getElementById('verification-banner');
+            if (banner) {
+                if (data.verified) {
+                    banner.style.display = 'block';
+                    banner.className = 'verification-complete-banner';
+                    banner.innerHTML = '<i class="fas fa-check-circle"></i> Fully Verified — Your identity has been confirmed';
+                } else if (data.nextStep) {
+                    banner.style.display = 'block';
+                    banner.className = 'verification-incomplete-banner';
+                    var stepLabels = { age: 'Age Verification', identity: 'Identity Verification', gender: 'Gender Verification' };
+                    banner.innerHTML = '<i class="fas fa-info-circle"></i> Next step: ' + (stepLabels[data.nextStep] || data.nextStep);
+                }
+            }
+        }).catch(function() {
+            // Silently fail — verification card stays in "Checking..." state
+        });
+    }
+
+    function updateVerifyStep(step, info) {
+        var el = document.getElementById('verify-step-' + step);
+        var statusEl = document.getElementById('verify-' + step + '-status');
+        if (!el || !statusEl) return;
+
+        var icon = el.querySelector('.verify-icon');
+        if (info && info.completed) {
+            icon.className = 'verify-icon complete';
+            statusEl.textContent = 'Completed';
+            statusEl.className = 'verify-status complete';
+        } else {
+            icon.className = 'verify-icon pending';
+            statusEl.textContent = 'Not completed';
+            statusEl.className = 'verify-status';
+        }
+    }
+
+    window.startIdentityVerification = function() {
+        var btn = document.getElementById('btn-verify-identity');
+        if (btn) { btn.disabled = true; btn.textContent = 'Starting...'; }
+
+        apiFetch('/auth/verify/identity', { method: 'POST' }).then(function(data) {
+            if (!data) {
+                showToast('Failed to start verification', true);
+                if (btn) { btn.disabled = false; btn.textContent = 'Verify Now'; }
+                return;
+            }
+
+            if (data.status === 'already_verified') {
+                showToast('Identity already verified!');
+                loadVerificationStatus();
+                return;
+            }
+
+            var url = data.verification_url;
+            if (url) {
+                window.open(url, '_blank');
+                if (btn) { btn.textContent = 'Waiting...'; }
+                showToast('Complete verification in the new tab');
+                // Poll for completion
+                var polls = 0;
+                var pollInterval = setInterval(function() {
+                    polls++;
+                    if (polls > 60) { // 5 minutes max
+                        clearInterval(pollInterval);
+                        if (btn) { btn.disabled = false; btn.textContent = 'Verify Now'; }
+                        return;
+                    }
+                    apiFetch('/auth/verify/status').then(function(status) {
+                        if (status && status.steps && status.steps.identity && status.steps.identity.completed) {
+                            clearInterval(pollInterval);
+                            showToast('Identity verified!');
+                            loadVerificationStatus();
+                        }
+                    }).catch(function() {});
+                }, 5000);
+            } else {
+                showToast('Verification session created — check back shortly');
+                if (btn) { btn.disabled = false; btn.textContent = 'Verify Now'; }
+            }
+        }).catch(function() {
+            showToast('Failed to start verification', true);
+            if (btn) { btn.disabled = false; btn.textContent = 'Verify Now'; }
+        });
+    };
 
     window.saveProfile = function() {
         var name = document.getElementById('edit-name').value.trim();

@@ -419,39 +419,104 @@
         .then(function(data) {
             if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
 
+            // Normalize: API returns data.sections.* (nested) format
+            var s = data.sections || {};
+            var socialProfiles = (s.socialMedia && s.socialMedia.profiles) || [];
+            var mugshots = (s.mugshots && s.mugshots.results) || [];
+            var criminalRecords = (s.criminalRecords && s.criminalRecords.results) || [];
+            var courtRecords = (s.courtRecords && s.courtRecords.results) || [];
+            var dataBrokers = (s.dataBrokers && s.dataBrokers.sites) || [];
+            var newsResults = (s.news && s.news.results) || [];
+            var risk = data.riskAssessment || {};
+
             var html = '<div style="margin-bottom:16px">';
+
+            // Risk assessment banner
+            if (risk.level) {
+                var riskColor = risk.level === 'high' ? '#e74c3c' : risk.level === 'medium' ? '#f1c40f' : '#2ecc71';
+                var riskLabel = risk.level === 'high' ? 'High Risk' : risk.level === 'medium' ? 'Medium Risk' : 'Low Risk';
+                html += '<div style="background:rgba(' + (risk.level === 'high' ? '231,76,60' : risk.level === 'medium' ? '241,196,15' : '46,204,113') + ',0.1);border:1px solid ' + riskColor + ';border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">';
+                html += '<div style="font-size:28px;font-weight:800;color:' + riskColor + '">' + (risk.score || 0) + '/100</div>';
+                html += '<div style="font-size:14px;font-weight:600;color:' + riskColor + ';margin-top:4px">' + riskLabel + '</div>';
+                if (risk.flags && risk.flags.length > 0) {
+                    html += '<div style="margin-top:10px;text-align:left">';
+                    risk.flags.forEach(function(f) { html += '<div style="color:#A0A0C0;font-size:12px;padding:2px 0"><i class="fas fa-exclamation-circle" style="color:' + riskColor + ';margin-right:6px"></i>' + escapeHtmlSafe(f) + '</div>'; });
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
             // Social profiles
-            if (data.socialProfiles && data.socialProfiles.length > 0) {
-                html += '<h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-user-circle" style="color:#E8A0B5"></i> Social Profiles</h4>';
-                data.socialProfiles.forEach(function(p) {
+            if (socialProfiles.length > 0) {
+                html += '<h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-user-circle" style="color:#E8A0B5"></i> Social Profiles (' + socialProfiles.length + ')</h4>';
+                socialProfiles.forEach(function(p) {
                     html += '<a href="' + p.url + '" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#fff;font-size:13px">';
                     html += '<i class="' + (p.icon || 'fas fa-link') + '" style="color:' + (p.color || '#E8A0B5') + ';font-size:16px"></i>';
-                    html += '<div><strong>' + escapeHtmlSafe(p.platform || p.name || 'Profile') + '</strong><br><span style="color:#8080A0;font-size:11px">' + escapeHtmlSafe(p.snippet || p.url) + '</span></div></a>';
+                    html += '<div><strong>' + escapeHtmlSafe(p.platform || 'Profile') + '</strong><br><span style="color:#8080A0;font-size:11px">' + escapeHtmlSafe(p.snippet || p.url) + '</span></div></a>';
                 });
             }
-            // Criminal/court records
-            if (data.criminalRecords && data.criminalRecords.length > 0) {
-                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-gavel"></i> Public Records</h4>';
-                data.criminalRecords.forEach(function(r) {
+
+            // Mugshots
+            if (mugshots.length > 0) {
+                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-camera"></i> Mugshots / Arrest Photos (' + mugshots.length + ')</h4>';
+                mugshots.forEach(function(r) {
                     html += '<div style="background:#1A1A2E;border-left:3px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:6px">';
                     html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
                     html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
-                    if (r.link) html += '<a href="' + r.link + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
-                    html += '</div>';
-                });
-            }
-            // Data broker exposure
-            if (data.dataBrokerExposure && data.dataBrokerExposure.length > 0) {
-                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-database"></i> Data Broker Exposure</h4>';
-                data.dataBrokerExposure.forEach(function(d) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(d.site || d.title) + '</div>';
-                    if (d.link) html += '<a href="' + d.link + '" target="_blank" style="color:#E8A0B5;font-size:12px">View →</a>';
+                    if (r.url) html += '<a href="' + r.url + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
                     html += '</div>';
                 });
             }
 
-            if ((!data.socialProfiles || data.socialProfiles.length === 0) && (!data.criminalRecords || data.criminalRecords.length === 0)) {
+            // Criminal records
+            if (criminalRecords.length > 0) {
+                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-gavel"></i> Criminal Records (' + criminalRecords.length + ')</h4>';
+                criminalRecords.forEach(function(r) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
+                    if (r.url) html += '<a href="' + r.url + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
+                    html += '</div>';
+                });
+            }
+
+            // Court records
+            if (courtRecords.length > 0) {
+                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-balance-scale"></i> Court Records (' + courtRecords.length + ')</h4>';
+                courtRecords.forEach(function(r) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
+                    if (r.url) html += '<a href="' + r.url + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
+                    html += '</div>';
+                });
+            }
+
+            // Data broker exposure
+            if (dataBrokers.length > 0) {
+                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-database"></i> Data Broker Exposure (' + dataBrokers.length + ' sites)</h4>';
+                dataBrokers.forEach(function(d) {
+                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
+                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(d.site || d.title) + '</div>';
+                    if (d.snippet) html += '<div style="color:#8080A0;font-size:11px;margin-top:4px">' + escapeHtmlSafe(d.snippet) + '</div>';
+                    if (d.url) html += '<a href="' + d.url + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
+                    html += '</div>';
+                });
+            }
+
+            // News & articles
+            if (newsResults.length > 0) {
+                html += '<h4 style="color:#3498db;font-size:14px;margin:16px 0 8px"><i class="fas fa-newspaper"></i> News & Articles (' + newsResults.length + ')</h4>';
+                newsResults.forEach(function(r) {
+                    html += '<a href="' + r.url + '" target="_blank" style="display:block;background:#1A1A2E;border-left:3px solid #3498db;border-radius:8px;padding:12px;margin-bottom:6px;text-decoration:none">';
+                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Article') + '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div></a>';
+                });
+            }
+
+            // No results at all
+            var totalResults = socialProfiles.length + mugshots.length + criminalRecords.length + courtRecords.length + dataBrokers.length + newsResults.length;
+            if (totalResults === 0) {
                 html += '<div style="text-align:center;padding:20px;color:#8080A0"><i class="fas fa-search" style="font-size:24px;display:block;margin-bottom:8px"></i>No significant results found for "' + escapeHtmlSafe(name) + '"</div>';
             }
 

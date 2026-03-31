@@ -85,11 +85,17 @@ export default function CreatePostScreen() {
         ))}
       </View>
 
-      <Text style={styles.label}>Title</Text>
-      <TextInput style={styles.input} placeholder="Brief title..." placeholderTextColor={Colors.textMuted} value={title} onChangeText={setTitle} />
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>Title</Text>
+        <Text style={[styles.charCount, title.length > 100 && styles.charCountOver]}>{title.length}/100</Text>
+      </View>
+      <TextInput style={styles.input} placeholder="Brief title..." placeholderTextColor={Colors.textMuted} value={title} onChangeText={(t) => setTitle(t.slice(0, 100))} maxLength={100} />
 
-      <Text style={styles.label}>Details</Text>
-      <TextInput style={[styles.input, styles.textArea]} placeholder="Share your experience..." placeholderTextColor={Colors.textMuted} value={content} onChangeText={setContent} multiline numberOfLines={6} textAlignVertical="top" />
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>Details</Text>
+        <Text style={[styles.charCount, content.length > 2000 && styles.charCountOver]}>{content.length}/2000</Text>
+      </View>
+      <TextInput style={[styles.input, styles.textArea]} placeholder="Share your experience..." placeholderTextColor={Colors.textMuted} value={content} onChangeText={(t) => setContent(t.slice(0, 2000))} multiline numberOfLines={6} textAlignVertical="top" maxLength={2000} />
 
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Post anonymously</Text>
@@ -128,5 +134,8 @@ const styles = StyleSheet.create({
   submitButton: { backgroundColor: Colors.coral, padding: Spacing.md, borderRadius: BorderRadius.lg, alignItems: 'center', marginTop: Spacing.xl },
   submitText: { color: '#FFF', fontSize: FontSize.lg, fontWeight: '700' },
   submitButtonDisabled: { opacity: 0.5 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.md, marginBottom: Spacing.xs },
+  charCount: { fontSize: FontSize.xs, color: Colors.textMuted },
+  charCountOver: { color: Colors.danger },
   notice: { fontSize: FontSize.xs, color: Colors.textMuted, textAlign: 'center', marginTop: Spacing.md, marginBottom: 40 },
 });

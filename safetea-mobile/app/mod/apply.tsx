@@ -1,20 +1,33 @@
-import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { useAuthStore } from '../../store/authStore';
+import { api } from '../../services/api';
 
 export default function ModApplyScreen() {
   const user = useAuthStore((s) => s.user);
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!reason.trim() || reason.trim().length < 20) {
       Alert.alert('More Detail Needed', 'Please write at least 20 characters about why you want to moderate.');
       return;
     }
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      const res = await api.submitModApplication(reason.trim());
+      if (res.status >= 200 && res.status < 300) {
+        setSubmitted(true);
+      } else {
+        Alert.alert('Error', (res.data as any)?.error || 'Could not submit application. Please try again.');
+      }
+    } catch {
+      Alert.alert('Network Error', 'Could not reach the server. Please try again.');
+    }
+    setSubmitting(false);
   };
 
   if (submitted) {
@@ -67,11 +80,15 @@ export default function ModApplyScreen() {
           textAlignVertical="top"
         />
         <Pressable
-          style={[styles.submitBtn, (!reason.trim() || reason.trim().length < 20) && styles.submitBtnDisabled]}
+          style={[styles.submitBtn, (submitting || !reason.trim() || reason.trim().length < 20) && styles.submitBtnDisabled]}
           onPress={handleSubmit}
-          disabled={!reason.trim() || reason.trim().length < 20}
+          disabled={submitting || !reason.trim() || reason.trim().length < 20}
         >
-          <Text style={styles.submitBtnText}>Submit Application</Text>
+          {submitting ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.submitBtnText}>Submit Application</Text>
+          )}
         </Pressable>
       </View>
     </ScrollView>

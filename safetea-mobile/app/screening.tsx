@@ -1,10 +1,9 @@
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useScreeningStore, ScreeningResult, TeaScoreLevel, RedFlag, GreenFlag } from '../store/screeningStore';
 import { useAuthStore } from '../store/authStore';
-import { getCityByNumericId } from '../constants/cities';
 import { api } from '../services/api';
 
 const PLATFORMS = ['Tinder', 'Hinge', 'Bumble', 'Other'];
@@ -92,51 +91,41 @@ export default function ScreeningScreen() {
     startScan(profileName, platform);
     setScanError(null);
 
-    const city = user?.cityId ? getCityByNumericId(user.cityId) : undefined;
-
     try {
-      const res = await api.backgroundCheck(profileName, city?.name, city?.state);
-
-      if (res.error || res.status >= 400) {
-        setScanError('Screening service unavailable. Please try again later.');
-        completeScan({
+      const res = await api.screenProfile(profileName.trim(), platform);
+      if (res.status === 200 && res.data) {
+        const d = res.data as any;
+        const score = d.catfishScore ?? d.teaScore ?? 50;
+        const redFlags = (d.redFlags || []).map((f: any, i: number) => ({
+          id: 'rf-' + i,
+          label: typeof f === 'string' ? f : f.label || f.flag || 'Unknown',
+          severity: (f.severity || 'medium') as 'low' | 'medium' | 'high',
+          description: typeof f === 'string' ? f : f.description || f.detail || '',
+        }));
+        const greenFlags = (d.greenFlags || []).map((f: any, i: number) => ({
+          id: 'gf-' + i,
+          label: typeof f === 'string' ? f : f.label || f.flag || 'Unknown',
+          description: typeof f === 'string' ? f : f.description || f.detail || '',
+        }));
+        const result: ScreeningResult = {
           id: 'scan-' + Date.now(),
           profileName,
           platform,
-          teaScore: 0,
-          teaScoreLevel: 'danger',
-          redFlags: [],
-          greenFlags: [],
+          teaScore: score,
+          teaScoreLevel: getScoreLevel(score),
+          redFlags,
+          greenFlags,
           scannedAt: new Date().toISOString(),
-        });
-        return;
+        };
+        completeScan(result);
+        setProfileName('');
+      } else {
+        setScanError((res.data as any)?.error || 'Could not complete the scan. Please try again.');
+        clearCurrentScan();
       }
-
-      const { redFlags, greenFlags, score } = buildFlags(res.data);
-      const result: ScreeningResult = {
-        id: 'scan-' + Date.now(),
-        profileName,
-        platform,
-        teaScore: score,
-        teaScoreLevel: getScoreLevel(score),
-        redFlags,
-        greenFlags,
-        scannedAt: new Date().toISOString(),
-      };
-      completeScan(result);
-      setProfileName('');
     } catch {
       setScanError('Network error. Check your connection and try again.');
-      completeScan({
-        id: 'scan-' + Date.now(),
-        profileName,
-        platform,
-        teaScore: 0,
-        teaScoreLevel: 'danger',
-        redFlags: [],
-        greenFlags: [],
-        scannedAt: new Date().toISOString(),
-      });
+      clearCurrentScan();
     }
   };
 

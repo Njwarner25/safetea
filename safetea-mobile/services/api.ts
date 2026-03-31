@@ -88,6 +88,14 @@ class ApiClient {
     });
   }
 
+  // Report
+  async reportPost(postId: string, reason: string, details?: string) {
+    return this.request('/posts/report', {
+      method: 'POST',
+      body: JSON.stringify({ post_id: postId, reason, details }),
+    });
+  }
+
   // Cities
   async getCities() {
     return this.request('/cities');
@@ -157,6 +165,75 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ fullName, state, city, cityId }),
     });
+  }
+
+  // AI Profile Screening (catfish detection)
+  async screenProfile(profileName: string, platform: string) {
+    return this.request<any>('/screening/catfish', {
+      method: 'POST',
+      body: JSON.stringify({ profileName, platform }),
+    });
+  }
+
+  // SafeWalk — Date Checkout (start session)
+  async dateCheckout(data: { dateName: string; venue: string; address?: string; transportation?: string; estimatedReturn?: string; contacts: { name: string; phone: string }[] }) {
+    return this.request<any>('/dates/checkout', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // SafeWalk — Date Check-in (safe return)
+  async dateCheckin(checkoutId: string, safetyRating?: number, notes?: string) {
+    return this.request<any>('/dates/checkin', {
+      method: 'POST',
+      body: JSON.stringify({ checkoutId, safetyRating, notes }),
+    });
+  }
+
+  // SafeWalk — Share date details with contacts
+  async shareDateDetails(checkoutId: string, contacts: { name: string; phone: string }[]) {
+    return this.request<any>('/dates/share', {
+      method: 'POST',
+      body: JSON.stringify({ checkoutId, contacts }),
+    });
+  }
+
+  // SafeWalk — Panic alert
+  async panicAlert(checkoutId: string) {
+    return this.request<any>('/dates/report', {
+      method: 'POST',
+      body: JSON.stringify({ checkoutId, method: 'sms', emergency: true }),
+    });
+  }
+
+  // Moderator — Submit application
+  async submitModApplication(motivation: string) {
+    return this.request<any>('/admin/moderators', {
+      method: 'POST',
+      body: JSON.stringify({ motivation }),
+    });
+  }
+
+  // Moderator — Get queue
+  async getModQueueItems() {
+    return this.request<any>('/admin/posts');
+  }
+
+  // Moderator — Take action on post
+  async moderatePostAction(postId: string, action: string, reason?: string) {
+    return this.request<any>('/admin/posts/' + postId + '/moderate', {
+      method: 'POST',
+      body: JSON.stringify({ action, reason }),
+    });
+  }
+
+  // Scam database — fetch entries from community reports
+  async getScamReports(category?: string, search?: string) {
+    const params = new URLSearchParams();
+    if (category && category !== 'all') params.set('category', category);
+    if (search) params.set('q', search);
+    return this.request<any>('/community?type=scam&' + params.toString());
   }
 }
 

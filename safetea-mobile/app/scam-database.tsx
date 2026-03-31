@@ -22,7 +22,7 @@ const CATEGORY_COLORS: Record<ScamCategory, string> = {
 };
 
 export default function ScamDatabaseScreen() {
-  const { searchQuery, selectedCategory, setSearchQuery, setCategory, getFilteredEntries, fetchEntries, isLoading } = useScamStore();
+  const { searchQuery, selectedCategory, setSearchQuery, setCategory, getFilteredEntries, fetchEntries, loading } = useScamStore();
   const entries = getFilteredEntries();
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function ScamDatabaseScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            {isLoading ? (
+            {loading ? (
               <>
                 <ActivityIndicator color={Colors.coral} size="small" />
                 <Text style={styles.emptyText}>Loading scam database...</Text>

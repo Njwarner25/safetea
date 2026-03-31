@@ -7,6 +7,7 @@ import { useCityStore } from '../../store/cityStore';
 import { getAvatarById } from '../../constants/avatars';
 import { truncateText } from '../../utils/validators';
 import { api } from '../../services/api';
+import ReportModal from '../../components/ReportModal';
 
 const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }[] = [
   { key: 'all', label: 'All', icon: '📋' },
@@ -16,7 +17,7 @@ const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }
   { key: 'alert', label: 'Alerts', icon: '🚨' },
 ];
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => void }) {
   const avatar = getAvatarById(post.authorAvatarId);
   const categoryColors: Record<PostCategory, string> = {
     warning: Colors.warning,
@@ -43,6 +44,13 @@ function PostCard({ post }: { post: Post }) {
             {post.category}
           </Text>
         </View>
+        <Pressable
+          style={styles.reportTrigger}
+          onPress={(e) => { e.stopPropagation(); onReport(post.id); }}
+          hitSlop={8}
+        >
+          <Text style={styles.reportTriggerText}>⋯</Text>
+        </Pressable>
       </View>
       <Text style={styles.cardTitle}>{post.title}</Text>
       <Text style={styles.cardContent}>{truncateText(post.content, 150)}</Text>
@@ -65,6 +73,7 @@ export default function FeedScreen() {
   const { filter, setFilter, getFilteredPosts, setPosts, setLoading } = usePostStore();
   const { getSelectedCity } = useCityStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [reportPostId, setReportPostId] = useState<string | null>(null);
   const city = getSelectedCity();
   const posts = getFilteredPosts();
 
@@ -115,7 +124,7 @@ export default function FeedScreen() {
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PostCard post={item} />}
+        renderItem={({ item }) => <PostCard post={item} onReport={setReportPostId} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.coral} />}
         ListEmptyComponent={
@@ -125,6 +134,11 @@ export default function FeedScreen() {
             <Text style={styles.emptySubtext}>Be the first to share a safety update</Text>
           </View>
         }
+      />
+      <ReportModal
+        postId={reportPostId}
+        visible={reportPostId !== null}
+        onClose={() => setReportPostId(null)}
       />
     </View>
   );
@@ -159,4 +173,6 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: Spacing.md },
   emptyText: { fontSize: FontSize.lg, color: Colors.textPrimary, fontWeight: '600' },
   emptySubtext: { fontSize: FontSize.sm, color: Colors.textSecondary, marginTop: Spacing.xs },
+  reportTrigger: { marginLeft: Spacing.sm, paddingHorizontal: 6, paddingVertical: 2 },
+  reportTriggerText: { fontSize: 18, color: Colors.textMuted, fontWeight: '700' },
 });

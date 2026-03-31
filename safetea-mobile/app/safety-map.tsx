@@ -1,10 +1,8 @@
 import { View, Text, StyleSheet, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
-import { useAuthStore } from '../store/authStore';
-import { getCityByNumericId } from '../constants/cities';
-
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://api.getsafetea.app';
+import { useCityStore } from '../store/cityStore';
+import { api } from '../services/api';
 
 const FILTER_OPTIONS = ['All', 'Restaurants', 'Bars', 'Coffee Shops', 'Parks'];
 
@@ -15,6 +13,7 @@ interface Venue {
   rating: number;
   safetyTags: string[];
   reports: number;
+  source: 'community' | 'curated';
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -29,39 +28,71 @@ function StarRating({ rating }: { rating: number }) {
   return <View style={{ flexDirection: 'row', gap: 1 }}>{stars}</View>;
 }
 
+function extractVenuesFromPosts(posts: any[]): Venue[] {
+  const venueMap = new Map<string, Venue>();
+  const venuePatterns = /(?:at|@)\s+([A-Z][A-Za-z\s'&-]+(?:Bar|Grill|Cafe|Coffee|Restaurant|Lounge|Park|Kitchen|Pub|Bistro|Diner|Club|Rooftop|Garden|Terrace))/g;
+
+  for (const post of posts) {
+    const text = (post.content || post.title || '').toString();
+    const matches = text.matchAll(venuePatterns);
+    for (const match of matches) {
+      const name = match[1].trim();
+      const key = name.toLowerCase();
+      if (venueMap.has(key)) {
+        const existing = venueMap.get(key)!;
+        existing.reports += post.category === 'warning' || post.category === 'alert' ? 1 : 0;
+        if (post.category === 'positive') existing.rating = Math.min(5, existing.rating + 0.2);
+      } else {
+        let type = 'Restaurants';
+        const lower = name.toLowerCase();
+        if (lower.includes('bar') || lower.includes('lounge') || lower.includes('pub') || lower.includes('club') || lower.includes('rooftop')) type = 'Bars';
+        else if (lower.includes('coffee') || lower.includes('cafe') || lower.includes('bakery')) type = 'Coffee Shops';
+        else if (lower.includes('park') || lower.includes('garden') || lower.includes('terrace')) type = 'Parks';
+
+        const safetyTags: string[] = [];
+        if (text.toLowerCase().includes('well-lit') || text.toLowerCase().includes('well lit')) safetyTags.push('Well-lit');
+        if (text.toLowerCase().includes('busy') || text.toLowerCase().includes('crowded')) safetyTags.push('Busy area');
+        if (text.toLowerCase().includes('security') || text.toLowerCase().includes('bouncer')) safetyTags.push('Security present');
+        if (text.toLowerCase().includes('staff') || text.toLowerCase().includes('bartender')) safetyTags.push('Attentive staff');
+        if (safetyTags.length === 0) safetyTags.push('Community reported');
+
+        venueMap.set(key, {
+          id: 'v-' + venueMap.size,
+          name,
+          type,
+          rating: post.category === 'positive' ? 4.0 : post.category === 'warning' ? 2.5 : 3.5,
+          safetyTags,
+          reports: post.category === 'warning' || post.category === 'alert' ? 1 : 0,
+          source: 'community',
+        });
+      }
+    }
+  }
+  return Array.from(venueMap.values());
+}
+
 export default function SafetyMapScreen() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const user = useAuthStore((s) => s.user);
+  const [loading, setLoading] = useState(true);
+  const selectedCity = useCityStore((s) => s.getSelectedCity());
 
   useEffect(() => {
-    const fetchVenues = async () => {
-      if (!user?.cityId) {
-        setIsLoading(false);
-        return;
+    loadVenues();
+  }, [selectedCity?.id]);
+
+  const loadVenues = async () => {
+    setLoading(true);
+    try {
+      const res = await api.getPosts(selectedCity?.id?.toString() || '', 1);
+      if (res.status === 200 && res.data) {
+        const posts = (res.data as any)?.posts || (res.data as any) || [];
+        const extracted = extractVenuesFromPosts(Array.isArray(posts) ? posts : []);
+        setVenues(extracted);
       }
-      const city = getCityByNumericId(user.cityId);
-      if (!city) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(API_BASE + '/venues?city=' + city.id);
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setVenues(data);
-        } else if (data?.venues && Array.isArray(data.venues)) {
-          setVenues(data.venues);
-        }
-      } catch {
-        // API unavailable — venues remain empty
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchVenues();
-  }, [user?.cityId]);
+    } catch { /* use empty list */ }
+    setLoading(false);
+  };
 
   const filteredVenues = activeFilter === 'All'
     ? venues
@@ -69,16 +100,18 @@ export default function SafetyMapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Map Placeholder */}
       <View style={styles.mapPlaceholder}>
         <View style={styles.mapOverlay}>
           <Text style={styles.mapIcon}>🗺️</Text>
-          <Text style={styles.mapText}>Interactive Map Coming Soon</Text>
-          <Text style={styles.mapSubtext}>Crowd-sourced safety data for your city</Text>
+          <Text style={styles.mapText}>Safety Map</Text>
+          <Text style={styles.mapSubtext}>
+            {venues.length > 0
+              ? `${venues.length} venues from community reports`
+              : 'Crowd-sourced safety data for your city'}
+          </Text>
         </View>
       </View>
 
-      {/* Filter Chips */}
       <View style={styles.filterRow}>
         {FILTER_OPTIONS.map((filter) => (
           <Pressable
@@ -91,27 +124,22 @@ export default function SafetyMapScreen() {
         ))}
       </View>
 
-      {/* Venue List */}
       <Text style={styles.sectionTitle}>Venue Safety Ratings</Text>
 
-      {isLoading && (
-        <View style={styles.emptyState}>
-          <ActivityIndicator color={Colors.coral} size="small" />
-          <Text style={styles.emptyText}>Loading venues...</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={Colors.coral} />
+          <Text style={styles.loadingText}>Loading venue data...</Text>
         </View>
-      )}
-
-      {!isLoading && filteredVenues.length === 0 && (
-        <View style={styles.emptyState}>
+      ) : filteredVenues.length === 0 ? (
+        <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>📍</Text>
-          <Text style={styles.emptyTitle}>No venue ratings yet</Text>
+          <Text style={styles.emptyTitle}>No venues found</Text>
           <Text style={styles.emptyText}>
-            Be the first to rate a date spot in your city! Venue safety ratings will appear here as the community contributes.
+            Venue data is sourced from community posts. As members share experiences at specific locations, they'll appear here.
           </Text>
         </View>
-      )}
-
-      {!isLoading && filteredVenues.length > 0 && (
+      ) : (
         <FlatList
           data={filteredVenues}
           keyExtractor={(item) => item.id}
@@ -160,14 +188,6 @@ const styles = StyleSheet.create({
   chipText: { fontSize: FontSize.sm, color: Colors.textSecondary },
   chipTextActive: { color: Colors.coral, fontWeight: '600' },
   sectionTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm },
-  emptyState: {
-    backgroundColor: Colors.surface, marginHorizontal: Spacing.md, padding: Spacing.xl,
-    borderRadius: BorderRadius.md, borderWidth: 1, borderColor: Colors.border,
-    alignItems: 'center', gap: Spacing.sm,
-  },
-  emptyIcon: { fontSize: 36 },
-  emptyTitle: { fontSize: FontSize.md, fontWeight: '600', color: Colors.textPrimary },
-  emptyText: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 18 },
   venueCard: {
     backgroundColor: Colors.surface, marginHorizontal: Spacing.md, marginBottom: Spacing.sm,
     borderRadius: BorderRadius.md, padding: Spacing.md, borderWidth: 1, borderColor: Colors.border,
@@ -180,4 +200,10 @@ const styles = StyleSheet.create({
   safetyTag: { backgroundColor: Colors.surfaceLight, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: BorderRadius.sm },
   safetyTagText: { fontSize: FontSize.xs, color: Colors.textSecondary },
   reportText: { fontSize: FontSize.sm, color: Colors.danger, marginTop: Spacing.sm },
+  loadingContainer: { alignItems: 'center', padding: Spacing.xl },
+  loadingText: { color: Colors.textSecondary, marginTop: Spacing.sm, fontSize: FontSize.sm },
+  emptyContainer: { alignItems: 'center', padding: Spacing.xl },
+  emptyIcon: { fontSize: 48, marginBottom: Spacing.sm },
+  emptyTitle: { fontSize: FontSize.lg, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.xs },
+  emptyText: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, maxWidth: 300 },
 });

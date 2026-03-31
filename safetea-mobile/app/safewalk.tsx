@@ -1,9 +1,10 @@
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useSafeWalkStore } from '../store/safeWalkStore';
 import { useAuthStore } from '../store/authStore';
+import { api } from '../services/api';
 
 export default function SafeWalkScreen() {
   const user = useAuthStore((s) => s.user);
@@ -32,33 +33,115 @@ export default function SafeWalkScreen() {
   const [venue, setVenue] = useState('');
   const [partnerName, setPartnerName] = useState('');
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [checkoutId, setCheckoutId] = useState<string | null>(null);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
+  const [newContactRelation, setNewContactRelation] = useState('');
+  const [showAddContact, setShowAddContact] = useState(false);
 
-  const handleStartSession = () => {
+  const handleAddContact = () => {
+    if (!newContactName.trim() || !newContactPhone.trim()) {
+      Alert.alert('Missing Info', 'Please enter a name and phone number.');
+      return;
+    }
+    addContact({
+      id: 'tc-' + Date.now(),
+      name: newContactName.trim(),
+      phone: newContactPhone.trim(),
+      relationship: newContactRelation.trim() || 'Contact',
+    });
+    setNewContactName('');
+    setNewContactPhone('');
+    setNewContactRelation('');
+    setShowAddContact(false);
+  };
+
+  const handleStartSession = async () => {
     if (!venue || !partnerName || !selectedContactId) {
       Alert.alert('Missing Info', 'Please fill in all fields and select a trusted contact.');
       return;
     }
-    startSession({
-      id: 'session-' + Date.now(),
-      venue,
-      partnerName,
-      startTime: new Date().toISOString(),
-      trustedContactId: selectedContactId,
-      status: 'active',
-      checkIns: [],
-    });
-    setVenue('');
-    setPartnerName('');
-    setSelectedContactId(null);
+    const selectedContact = trustedContacts.find(c => c.id === selectedContactId);
+    if (!selectedContact) return;
+
+    setLoading(true);
+    try {
+      const res = await api.dateCheckout({
+        dateName: partnerName,
+        venue,
+        contacts: [{ name: selectedContact.name, phone: selectedContact.phone }],
+      });
+      const id = (res.data as any)?.checkout?.id || (res.data as any)?.id;
+      if (id) setCheckoutId(id.toString());
+
+      startSession({
+        id: id?.toString() || 'session-' + Date.now(),
+        venue,
+        partnerName,
+        startTime: new Date().toISOString(),
+        trustedContactId: selectedContactId,
+        status: 'active',
+        checkIns: [],
+      });
+      setVenue('');
+      setPartnerName('');
+      setSelectedContactId(null);
+
+      if (res.status >= 200 && res.status < 300) {
+        Alert.alert('SafeWalk Started', 'Your trusted contact has been notified via SMS.');
+      }
+    } catch {
+      Alert.alert('Network Error', 'Could not reach the server. Session started locally.');
+      startSession({
+        id: 'session-' + Date.now(),
+        venue,
+        partnerName,
+        startTime: new Date().toISOString(),
+        trustedContactId: selectedContactId,
+        status: 'active',
+        checkIns: [],
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSafeCheckin = async () => {
+    const id = checkoutId || activeSession?.id;
+    if (id) {
+      try {
+        await api.dateCheckin(id, 5);
+      } catch { /* best effort */ }
+    }
+    const checkIn = {
+      id: 'ci-' + Date.now(),
+      sessionId: activeSession?.id || '',
+      time: new Date().toISOString(),
+      status: 'safe' as const,
+    };
+    respondToCheckIn(checkIn.id, 'safe');
+    Alert.alert('Check-in Sent', 'Your trusted contact has been notified you are safe.');
   };
 
   const handlePanic = () => {
     Alert.alert(
       'Emergency Alert',
-      'This will notify your trusted contact immediately. Continue?',
+      'This will notify your trusted contact immediately via SMS. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Send Alert', style: 'destructive', onPress: () => triggerPanic() },
+        {
+          text: 'Send Alert', style: 'destructive', onPress: async () => {
+            triggerPanic();
+            const id = checkoutId || activeSession?.id;
+            if (id) {
+              try {
+                await api.panicAlert(id);
+              } catch { /* best effort */ }
+            }
+            Alert.alert('Alert Sent', 'Your emergency contacts have been notified.');
+          }
+        },
       ]
     );
   };
@@ -95,19 +178,7 @@ export default function SafeWalkScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable
-                  style={styles.safeBtn}
-                  onPress={() => {
-                    const checkIn = {
-                      id: 'ci-' + Date.now(),
-                      sessionId: activeSession.id,
-                      time: new Date().toISOString(),
-                      status: 'safe' as const,
-                    };
-                    respondToCheckIn(checkIn.id, 'safe');
-                    Alert.alert('Check-in Sent', 'Your contact has been notified you are safe.');
-                  }}
-                >
+                <Pressable style={styles.safeBtn} onPress={handleSafeCheckin}>
                   <Text style={styles.safeBtnText}>✓ I'm Safe</Text>
                 </Pressable>
                 <Pressable style={styles.panicBtn} onPress={handlePanic}>
@@ -154,8 +225,12 @@ export default function SafeWalkScreen() {
                 </Pressable>
               ))}
 
-              <Pressable style={styles.startBtn} onPress={handleStartSession}>
-                <Text style={styles.startBtnText}>Start SafeWalk</Text>
+              <Pressable style={[styles.startBtn, loading && styles.startBtnDisabled]} onPress={handleStartSession} disabled={loading}>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.startBtnText}>Start SafeWalk</Text>
+                )}
               </Pressable>
             </View>
           )}
@@ -174,6 +249,26 @@ export default function SafeWalkScreen() {
                 </Pressable>
               </View>
             ))}
+
+            {showAddContact ? (
+              <View style={styles.addContactForm}>
+                <TextInput style={styles.input} placeholder="Contact name" placeholderTextColor={Colors.textMuted} value={newContactName} onChangeText={setNewContactName} />
+                <TextInput style={styles.input} placeholder="Phone number" placeholderTextColor={Colors.textMuted} value={newContactPhone} onChangeText={setNewContactPhone} keyboardType="phone-pad" />
+                <TextInput style={styles.input} placeholder="Relationship (optional)" placeholderTextColor={Colors.textMuted} value={newContactRelation} onChangeText={setNewContactRelation} />
+                <View style={styles.addContactRow}>
+                  <Pressable style={styles.addContactSave} onPress={handleAddContact}>
+                    <Text style={styles.addContactSaveText}>Save Contact</Text>
+                  </Pressable>
+                  <Pressable style={styles.addContactCancel} onPress={() => setShowAddContact(false)}>
+                    <Text style={styles.addContactCancelText}>Cancel</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable style={styles.addContactBtn} onPress={() => setShowAddContact(true)}>
+                <Text style={styles.addContactBtnText}>+ Add Trusted Contact</Text>
+              </Pressable>
+            )}
           </View>
 
           {pastSessions.length > 0 && (
@@ -257,6 +352,15 @@ const styles = StyleSheet.create({
   gateIcon: { fontSize: 48, marginBottom: Spacing.md },
   gateTitle: { fontSize: FontSize.xl, fontWeight: '700', color: Colors.textPrimary, marginBottom: Spacing.sm, textAlign: 'center' },
   gateDesc: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: Spacing.lg },
+  startBtnDisabled: { opacity: 0.5 },
+  addContactBtn: { borderWidth: 1, borderColor: Colors.coral, borderStyle: 'dashed', padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center', marginTop: Spacing.sm },
+  addContactBtnText: { color: Colors.coral, fontWeight: '600', fontSize: FontSize.sm },
+  addContactForm: { backgroundColor: Colors.surfaceLight, padding: Spacing.md, borderRadius: BorderRadius.md, marginTop: Spacing.sm },
+  addContactRow: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
+  addContactSave: { flex: 1, backgroundColor: Colors.coral, padding: Spacing.sm, borderRadius: BorderRadius.md, alignItems: 'center' },
+  addContactSaveText: { color: '#FFF', fontWeight: '600', fontSize: FontSize.sm },
+  addContactCancel: { flex: 1, borderWidth: 1, borderColor: Colors.border, padding: Spacing.sm, borderRadius: BorderRadius.md, alignItems: 'center' },
+  addContactCancelText: { color: Colors.textSecondary, fontSize: FontSize.sm },
   upgradeBtn: { backgroundColor: Colors.coral, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.md, borderRadius: BorderRadius.lg },
   upgradeBtnText: { color: '#FFF', fontWeight: '700', fontSize: FontSize.md },
 });

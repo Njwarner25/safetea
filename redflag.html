@@ -112,6 +112,15 @@
         .tip-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; font-size: 13px; line-height: 1.5; color: #F0D0C0; }
         .tip-bullet { color: #E8A0B5; font-weight: 700; flex-shrink: 0; }
 
+        /* Disclaimer & Confirmation */
+        .disclaimer-box { background: rgba(241,196,15,0.08); border: 1px solid rgba(241,196,15,0.2); border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
+        .disclaimer-box p { font-size: 13px; color: #f1c40f; line-height: 1.6; margin-bottom: 10px; }
+        .disclaimer-box label { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #F0D0C0; cursor: pointer; line-height: 1.5; }
+        .disclaimer-box input[type="checkbox"] { margin-top: 3px; accent-color: #E8A0B5; flex-shrink: 0; width: 16px; height: 16px; }
+        .results-disclaimer { background: rgba(241,196,15,0.06); border: 1px solid rgba(241,196,15,0.15); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+        .results-disclaimer i { color: #f1c40f; margin-top: 2px; flex-shrink: 0; }
+        .results-disclaimer p { font-size: 12px; color: #8080A0; line-height: 1.5; }
+
         @media (max-width: 600px) {
             .scanner-page { padding: 20px 16px 100px; }
             .scanner-hero h1 { font-size: 22px; }
@@ -134,10 +143,10 @@
 
     <div class="scanner-page">
         <div class="scanner-hero">
-            <div class="ai-badge"><i class="fas fa-robot"></i> AI-Powered</div>
+            <div class="ai-badge"><i class="fas fa-robot"></i> AI-Powered Advisory Tool</div>
             <div class="scanner-icon">🚩</div>
             <h1>Red Flag Scanner</h1>
-            <p>Upload a conversation or paste the text. Our AI will analyze his messages for red flags, manipulation tactics, and true motives.</p>
+            <p>Upload a conversation or paste the text. Our AI will look for communication patterns commonly associated with relationship concerns. This is an advisory tool — not a factual determination.</p>
         </div>
 
         <!-- Input Section -->
@@ -166,13 +175,25 @@
                 <input type="text" id="convoContext" placeholder="e.g. Met on Hinge, been talking 3 days, he wants to meet tonight">
             </div>
 
-            <button class="btn-scan" id="btnScan" onclick="runScan()">
-                <i class="fas fa-search"></i> Scan for Red Flags
+            <div class="disclaimer-box">
+                <p><i class="fas fa-exclamation-triangle"></i> This tool provides AI-generated advisory opinions about communication patterns. Results are not factual determinations and should not be used to accuse, defame, or make definitive judgments about any individual.</p>
+                <label>
+                    <input type="checkbox" id="disclaimerCheck" onchange="toggleScanButton()">
+                    I understand this is an advisory tool only. I accept responsibility for how I interpret and use these results.
+                </label>
+            </div>
+
+            <button class="btn-scan" id="btnScan" onclick="runScan()" disabled>
+                <i class="fas fa-search"></i> Scan for Patterns
             </button>
         </div>
 
         <!-- Results -->
         <div class="results-section" id="resultsSection">
+            <div class="results-disclaimer" id="resultsDisclaimer">
+                <i class="fas fa-info-circle"></i>
+                <p>These results are AI-generated advisory opinions based on communication patterns. They are <strong>not factual determinations</strong> about any person's character, intentions, or behavior. Use your own judgment and consider the full context of your situation.</p>
+            </div>
             <div class="rating-banner" id="ratingBanner">
                 <div class="rating-header">
                     <div>
@@ -188,7 +209,7 @@
                     </div>
                 </div>
                 <div class="motive-box" id="motiveBox" style="display:none">
-                    <h4><i class="fas fa-brain"></i> His Likely Motive</h4>
+                    <h4><i class="fas fa-brain"></i> Possible Intent (Advisory)</h4>
                     <p id="motiveText"></p>
                 </div>
             </div>
@@ -209,7 +230,7 @@
             </div>
 
             <div class="tactics-section" id="tacticsSection" style="display:none">
-                <h3><i class="fas fa-exclamation-triangle"></i> Manipulation Tactics Detected</h3>
+                <h3><i class="fas fa-exclamation-triangle"></i> Patterns That May Resemble Known Tactics</h3>
                 <div id="tacticsList"></div>
             </div>
 
@@ -239,6 +260,12 @@
             } catch (e) { window.location.href = '/login.html?redirect=redflag'; }
         }
         checkAuth();
+
+        // Disclaimer checkbox toggle
+        function toggleScanButton() {
+            const checked = document.getElementById('disclaimerCheck').checked;
+            document.getElementById('btnScan').disabled = !checked;
+        }
 
         // Input mode switching
         function switchInputMode(mode) {
@@ -298,7 +325,7 @@
             results.classList.add('visible');
             document.getElementById('ratingBanner').className = 'rating-banner rating-caution';
             document.getElementById('ratingLabel').textContent = 'Analyzing...';
-            document.getElementById('ratingSummary').textContent = 'Our AI is reading the conversation and identifying behavioral patterns...';
+            document.getElementById('ratingSummary').textContent = 'Our AI is reviewing communication patterns. Results are advisory only...';
             document.getElementById('riskScoreNum').textContent = '...';
             document.getElementById('scoreCircle').style.strokeDashoffset = '175.93';
             document.getElementById('motiveBox').style.display = 'none';
@@ -312,7 +339,11 @@
 
             try {
                 const token = localStorage.getItem('safetea_token');
-                const body = { conversationText: convoText + (context ? '\n\n[Context: ' + context + ']' : '') };
+                const body = {
+                    conversationText: convoText + (context ? '\n\n[Context: ' + context + ']' : ''),
+                    disclaimerAccepted: true,
+                    disclaimerAcceptedAt: new Date().toISOString()
+                };
                 if (hasImages) body.textImages = screenshotData;
 
                 const res = await fetch(API_BASE + '/api/screening/redflag', {
@@ -341,7 +372,7 @@
         function renderResults(scan) {
             // Rating banner
             const ratingClass = { safe: 'rating-safe', caution: 'rating-caution', danger: 'rating-danger' }[scan.overall_rating] || 'rating-caution';
-            const ratingText = { safe: 'Looks Safe', caution: 'Proceed with Caution', danger: 'Danger — Red Flags Detected' }[scan.overall_rating] || 'Analysis Complete';
+            const ratingText = { safe: 'Patterns Appear Positive', caution: 'Some Patterns Worth Noting', danger: 'Multiple Concerning Patterns Observed' }[scan.overall_rating] || 'Analysis Complete';
 
             document.getElementById('ratingBanner').className = 'rating-banner ' + ratingClass;
             document.getElementById('ratingLabel').textContent = ratingText;

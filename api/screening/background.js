@@ -32,7 +32,6 @@ async function serpSearch(query) {
 }
 
 async function googleSearch(query) {
-    // Fallback: use Google Custom Search if available, otherwise SerpAPI
     return await serpSearch(query);
 }
 
@@ -64,6 +63,15 @@ module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  try {
+    const user = await authenticate(req);
+    if (!user) return res.status(401).json({ error: 'Sign in to run background checks' });
+
+    // Plus or Pro tier required (admins bypass)
+    if (user.role !== 'admin' && (!user.subscription_tier || (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro'))) {
+      return res.status(403).json({ error: 'Background checks require a Plus or Pro subscription', upgrade: true });
+    }
+
     const body = await parseBody(req);
     const { fullName, city, state, age } = body;
 
@@ -83,7 +91,6 @@ module.exports = async function handler(req, res) {
         sections: {}
     };
 
-    // Run all searches in parallel for speed
     const hasSerpApi = !!process.env.SERPAPI_KEY;
 
     if (hasSerpApi) {
@@ -95,21 +102,14 @@ module.exports = async function handler(req, res) {
             courtResults,
             newsResults
         ] = await Promise.all([
-            // 1. Social Media Search
             serpSearch(`"${name}" ${location} site:linkedin.com OR site:facebook.com OR site:instagram.com OR site:twitter.com`),
-            // 2. Mugshot Search
             serpSearch(`"${name}" ${location} mugshot OR arrest photo OR booking photo`),
-            // 3. Criminal Records
             serpSearch(`"${name}" ${location} criminal record OR arrest OR charged OR convicted -obituary`),
-            // 4. Data Broker / People Search Sites
             serpSearch(`"${name}" ${location} site:spokeo.com OR site:whitepages.com OR site:beenverified.com OR site:truthfinder.com OR site:radaris.com OR site:fastpeoplesearch.com OR site:mylife.com`),
-            // 5. Court Records
             serpSearch(`"${name}" ${location} court case OR court record OR lawsuit OR filed`),
-            // 6. News / Public Mentions
             serpSearch(`"${name}" ${location} news OR article -obituary -linkedin -facebook`)
         ]);
 
-        // ---- SOCIAL MEDIA ----
         const socialProfiles = [];
         for (const platform of SOCIAL_PLATFORMS) {
             const profile = extractProfileUrl(socialResults, platform.domain);
@@ -125,11 +125,10 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        // Also do individual platform searches if we didn't find enough
         if (socialProfiles.length < 2) {
             const individualSearches = await Promise.all(
                 SOCIAL_PLATFORMS.filter(p => !socialProfiles.find(s => s.platform === p.name))
-                    .slice(0, 3) // limit to 3 extra searches
+                    .slice(0, 3)
                     .map(async (platform) => {
                         const r = await serpSearch(`"${name}" ${location} site:${platform.domain}`);
                         const profile = extractProfileUrl(r, platform.domain);
@@ -157,7 +156,6 @@ module.exports = async function handler(req, res) {
             profiles: socialProfiles
         };
 
-        // ---- MUGSHOTS ----
         const mugshots = extractMultipleResults(mugResults, 5).filter(r =>
             r.title.toLowerCase().includes('mugshot') ||
             r.title.toLowerCase().includes('arrest') ||
@@ -174,7 +172,6 @@ module.exports = async function handler(req, res) {
             results: mugshots
         };
 
-        // ---- CRIMINAL RECORDS ----
         const criminalHits = extractMultipleResults(criminalResults, 5).filter(r => {
             const text = (r.title + ' ' + r.snippet).toLowerCase();
             return (text.includes('arrest') || text.includes('criminal') ||
@@ -189,7 +186,6 @@ module.exports = async function handler(req, res) {
             results: criminalHits
         };
 
-        // ---- DATA BROKER EXPOSURE ----
         const brokerHits = extractMultipleResults(dataBrokerResults, 10);
         const exposedOn = [];
         for (const hit of brokerHits) {
@@ -214,7 +210,6 @@ module.exports = async function handler(req, res) {
                 : 'No data broker profiles found for this person.'
         };
 
-        // ---- COURT RECORDS ----
         const courtHits = extractMultipleResults(courtResults, 5).filter(r => {
             const text = (r.title + ' ' + r.snippet).toLowerCase();
             return text.includes('court') || text.includes('case') ||
@@ -228,7 +223,6 @@ module.exports = async function handler(req, res) {
             results: courtHits
         };
 
-        // ---- NEWS / PUBLIC MENTIONS ----
         const newsHits = extractMultipleResults(newsResults, 5);
         report.sections.news = {
             status: newsHits.length > 0 ? 'found' : 'none',
@@ -237,16 +231,227 @@ module.exports = async function handler(req, res) {
         };
 
     } else {
-        // No SerpAPI key — return guidance on where to search manually
-        report.sections.socialMedia = { status: 'manual', profiles: [], note: 'SerpAPI key not configured. Search manually on LinkedIn, Facebook, Instagram.' };
-        report.sections.mugshots = { status: 'manual', results: [], note: 'Search manually on mugshots.com or local county sheriff sites.' };
-        report.sections.criminalRecords = { status: 'manual', results: [], note: 'Check your county court clerk website or use a paid service.' };
-        report.sections.dataBrokers = { status: 'manual', sites: [], note: 'Check Spokeo, WhitePages, BeenVerified, TruthFinder manually.' };
-        report.sections.courtRecords = { status: 'manual', results: [], note: 'Search PACER or your state court system.' };
-        report.sections.news = { status: 'manual', results: [], note: 'Search Google News for the person\'s name.' };
+        // Fallback: Google News RSS (real web search results, free, no API key) + Wikipedia + DuckDuckGo
+
+        // Google News RSS — returns actual news results (free, no key needed)
+        async function googleNewsRSS(query) {
+            try {
+                const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+                const res = await fetch(url, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SafeTea/1.0)' }
+                });
+                const xml = await res.text();
+                const results = [];
+                // Parse RSS items: <item><title>...</title><link>...</link><description>...</description></item>
+                const itemPattern = /<item>([\s\S]*?)<\/item>/g;
+                let match;
+                while ((match = itemPattern.exec(xml)) !== null) {
+                    const item = match[1];
+                    const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || item.match(/<title>([\s\S]*?)<\/title>/);
+                    const linkMatch = item.match(/<link>([\s\S]*?)<\/link>/);
+                    const descMatch = item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || item.match(/<description>([\s\S]*?)<\/description>/);
+                    const sourceMatch = item.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+                    if (titleMatch && linkMatch) {
+                        const title = titleMatch[1].replace(/<[^>]*>/g, '').trim();
+                        const snippet = descMatch ? descMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+                        const source = sourceMatch ? sourceMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+                        results.push({
+                            url: linkMatch[1].trim(),
+                            title: title,
+                            snippet: snippet || (source ? `Source: ${source}` : ''),
+                            source: source
+                        });
+                    }
+                    if (results.length >= 10) break;
+                }
+                return results;
+            } catch (e) { return []; }
+        }
+
+        // Bing Web Search (free, no API key needed for basic results)
+        async function bingSearch(query) {
+            try {
+                const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&count=10`;
+                const res = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml',
+                        'Accept-Language': 'en-US,en;q=0.9'
+                    }
+                });
+                const html = await res.text();
+                const results = [];
+                // Bing result pattern: <li class="b_algo">...<h2><a href="URL">TITLE</a></h2>...<p>SNIPPET</p>
+                const resultPattern = /<li class="b_algo">([\s\S]*?)<\/li>/g;
+                let match;
+                while ((match = resultPattern.exec(html)) !== null) {
+                    const block = match[1];
+                    const linkMatch = block.match(/<a[^>]*href="(https?:\/\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/);
+                    const snippetMatch = block.match(/<p[^>]*>([\s\S]*?)<\/p>/);
+                    if (linkMatch) {
+                        results.push({
+                            url: linkMatch[1],
+                            title: linkMatch[2].replace(/<[^>]*>/g, '').trim(),
+                            snippet: snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').trim() : ''
+                        });
+                    }
+                    if (results.length >= 8) break;
+                }
+                return results;
+            } catch (e) { return []; }
+        }
+
+        // Wikipedia opensearch
+        async function wikiSearch(query, limit = 5) {
+            try {
+                const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=${limit}&format=json&origin=*`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const results = [];
+                if (data && data[1]) {
+                    for (let i = 0; i < data[1].length; i++) {
+                        results.push({ url: data[3][i] || '', title: data[1][i] || '', snippet: data[2][i] || '' });
+                    }
+                }
+                return results;
+            } catch (e) { return []; }
+        }
+
+        // DuckDuckGo instant answer API
+        async function ddgInstant(query) {
+            try {
+                const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const results = [];
+                if (data.AbstractText) {
+                    results.push({ url: data.AbstractURL || '', title: data.Heading || query, snippet: data.AbstractText });
+                }
+                if (data.RelatedTopics) {
+                    for (const topic of data.RelatedTopics.slice(0, 5)) {
+                        if (topic.Text && topic.FirstURL) {
+                            results.push({ url: topic.FirstURL, title: topic.Text.substring(0, 120), snippet: topic.Text });
+                        }
+                    }
+                }
+                return results;
+            } catch (e) { return []; }
+        }
+
+        // Run all searches in parallel — Google News RSS is the primary source for real results
+        const [
+            gnewsPerson,
+            gnewsCriminal,
+            gnewsArrest,
+            bingPerson,
+            bingCriminal,
+            wikiResults,
+            ddgPerson
+        ] = await Promise.all([
+            googleNewsRSS(`"${name}" ${location}`),
+            googleNewsRSS(`"${name}" criminal OR arrest OR charged`),
+            googleNewsRSS(`"${name}" ${location} mugshot OR arrest OR court`),
+            bingSearch(`"${name}" ${location}`),
+            bingSearch(`"${name}" ${location} criminal record OR arrest OR charged`),
+            wikiSearch(name),
+            ddgInstant(name)
+        ]);
+
+        // Combine all results from multiple sources
+        const allResults = [
+            ...(gnewsPerson || []), ...(gnewsCriminal || []), ...(gnewsArrest || []),
+            ...(bingPerson || []), ...(bingCriminal || []),
+            ...(ddgPerson || []), ...(wikiResults || [])
+        ];
+
+        // Deduplicate by URL
+        const seenUrls = new Set();
+        const uniqueResults = allResults.filter(r => {
+            if (!r.url || seenUrls.has(r.url)) return false;
+            seenUrls.add(r.url);
+            return true;
+        });
+
+        // Parse social profiles
+        const socialProfiles = [];
+        for (const r of uniqueResults) {
+            for (const platform of SOCIAL_PLATFORMS) {
+                if (r.url && r.url.includes(platform.domain) && !socialProfiles.find(s => s.platform === platform.name)) {
+                    socialProfiles.push({
+                        platform: platform.name, icon: platform.icon, color: platform.color,
+                        url: r.url, title: r.title, snippet: r.snippet
+                    });
+                }
+            }
+        }
+        report.sections.socialMedia = {
+            status: socialProfiles.length > 0 ? 'found' : 'none',
+            count: socialProfiles.length,
+            profiles: socialProfiles
+        };
+
+        // Criminal/mugshot/court detection from all results
+        const criminalHits = [];
+        const mugshots = [];
+        const courtHits = [];
+        for (const r of uniqueResults) {
+            const text = (r.title + ' ' + r.snippet).toLowerCase();
+            if (text.includes('mugshot') || text.includes('booking photo') || (r.url && r.url.includes('mugshot'))) {
+                mugshots.push(r);
+            } else if (text.includes('criminal') || text.includes('arrest') || text.includes('charged') ||
+                       text.includes('convicted') || text.includes('felony') || text.includes('misdemeanor') ||
+                       text.includes('murder') || text.includes('assault') || text.includes('battery') ||
+                       text.includes('shooting') || text.includes('indicted') || text.includes('suspect')) {
+                criminalHits.push(r);
+            } else if (text.includes('court') || text.includes('lawsuit') || text.includes('docket') ||
+                       text.includes('filed') || text.includes('plaintiff') || text.includes('defendant')) {
+                courtHits.push(r);
+            }
+        }
+        report.sections.mugshots = { status: mugshots.length > 0 ? 'found' : 'clear', count: mugshots.length, results: mugshots.slice(0, 5) };
+        report.sections.criminalRecords = { status: criminalHits.length > 0 ? 'found' : 'clear', count: criminalHits.length, results: criminalHits.slice(0, 5) };
+        report.sections.courtRecords = { status: courtHits.length > 0 ? 'found' : 'clear', count: courtHits.length, results: courtHits.slice(0, 5) };
+
+        // Data broker exposure
+        const exposedOn = [];
+        for (const r of uniqueResults) {
+            for (const site of DATA_BROKER_SITES) {
+                if (r.url && r.url.includes(site) && !exposedOn.find(e => e.site === site)) {
+                    exposedOn.push({ site, url: r.url, title: r.title, snippet: r.snippet });
+                }
+            }
+        }
+        report.sections.dataBrokers = {
+            status: exposedOn.length > 0 ? 'exposed' : 'not_found',
+            count: exposedOn.length,
+            sites: exposedOn,
+            note: exposedOn.length > 0
+                ? 'This person\'s information appears on data broker sites.'
+                : 'No data broker profiles found.'
+        };
+
+        // News — everything that's not social/broker/criminal already categorized
+        const categorizedUrls = new Set([
+            ...socialProfiles.map(s => s.url),
+            ...mugshots.map(m => m.url),
+            ...criminalHits.map(c => c.url),
+            ...courtHits.map(c => c.url),
+            ...exposedOn.map(e => e.url)
+        ]);
+
+        const newsHits = uniqueResults.filter(r =>
+            !categorizedUrls.has(r.url) &&
+            !SOCIAL_PLATFORMS.some(p => r.url.includes(p.domain)) &&
+            !DATA_BROKER_SITES.some(s => r.url.includes(s))
+        );
+
+        report.sections.news = {
+            status: newsHits.length > 0 ? 'found' : 'none',
+            count: Math.min(newsHits.length, 10),
+            results: newsHits.slice(0, 10)
+        };
     }
 
-    // ---- RISK ASSESSMENT ----
     let riskScore = 0;
     let riskFlags = [];
 
@@ -267,4 +472,9 @@ module.exports = async function handler(req, res) {
     };
 
     return res.status(200).json(report);
+
+  } catch (err) {
+    console.error('[Background Check] Error:', err);
+    return res.status(500).json({ error: 'Background check failed. Please try again.' });
+  }
 };

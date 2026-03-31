@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - SafeTea</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D0D1A;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .settings-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(34,34,58,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 100%;
+    }
+    .header-back {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #E8A0B5;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .header-back:hover { opacity: 0.8; }
+    .header-back i { font-size: 18px; }
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* ===== CONTAINER ===== */
+    .settings-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 16px 16px 80px;
+    }
+
+    /* ===== PROFILE CARD ===== */
+    .profile-card {
+      background: #22223A;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .profile-info h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .profile-info p {
+      color: #8080A0;
+      font-size: 13px;
+    }
+    .profile-info .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #2ecc71;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .profile-info .verified-badge i { font-size: 11px; }
+
+    /* ===== SECTIONS ===== */
+    .settings-section {
+      margin-bottom: 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #555;
+      padding: 0 4px;
+      margin-bottom: 8px;
+    }
+    .settings-group {
+      background: #22223A;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* ===== ROW ITEMS ===== */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .settings-row:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .settings-row + .settings-row {
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      min-width: 0;
+    }
+    .row-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .row-icon.pink { background: rgba(232,160,181,0.12); color: #E8A0B5; }
+    .row-icon.blue { background: rgba(100,149,237,0.12); color: #6495ED; }
+    .row-icon.green { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .row-icon.orange { background: rgba(243,156,18,0.12); color: #f39c12; }
+    .row-icon.purple { background: rgba(155,89,182,0.12); color: #9b59b6; }
+    .row-icon.gray { background: rgba(128,128,160,0.12); color: #8080A0; }
+    .row-icon.red { background: rgba(231,76,60,0.12); color: #e74c3c; }
+    .row-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .row-text .label {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .row-text .sublabel {
+      font-size: 12px;
+      color: #8080A0;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #555;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .row-right .value {
+      color: #8080A0;
+      font-size: 13px;
+    }
+    .row-right i {
+      font-size: 12px;
+      color: #444;
+    }
+
+    /* ===== TOGGLE SWITCH ===== */
+    .toggle {
+      width: 44px;
+      height: 26px;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.1);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle.on {
+      background: #E8A0B5;
+    }
+    .toggle .knob {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle.on .knob {
+      transform: translateX(18px);
+    }
+
+    /* ===== EDIT MODAL ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-sheet {
+      background: #22223A;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: none;
+      color: #8080A0;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-field {
+      margin-bottom: 18px;
+    }
+    .modal-field label {
+      display: block;
+      font-size: 13px;
+      color: #8080A0;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .modal-field input {
+      width: 100%;
+      padding: 13px 14px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    .modal-field input:focus {
+      outline: none;
+      border-color: #E8A0B5;
+    }
+    .btn-save {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 8px;
+    }
+    .btn-save:hover {
+      box-shadow: 0 4px 15px rgba(232,160,181,0.3);
+      transform: translateY(-1px);
+    }
+    .btn-save:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ===== DELETE ACCOUNT FLOW ===== */
+    .delete-section {
+      margin-top: 8px;
+    }
+    .reason-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 15px;
+    }
+    .reason-option:last-child { border-bottom: none; }
+    .reason-radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s;
+    }
+    .reason-option.selected .reason-radio {
+      border-color: #E8A0B5;
+    }
+    .reason-option.selected .reason-radio::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #E8A0B5;
+    }
+    .btn-delete {
+      width: 100%;
+      padding: 15px;
+      background: transparent;
+      border: 1px solid rgba(231,76,60,0.4);
+      border-radius: 10px;
+      color: #e74c3c;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 16px;
+    }
+    .btn-delete:hover {
+      background: rgba(231,76,60,0.08);
+    }
+    .btn-delete:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .refund-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #8080A0;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .refund-link:hover { color: #E8A0B5; }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #2ecc71;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 999;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.error {
+      background: #e74c3c;
+    }
+
+    /* ===== LOG OUT ===== */
+    .logout-row .label { color: #e74c3c; }
+    .delete-row .label { color: #e74c3c; }
+
+    /* ===== APP VERSION ===== */
+    .app-version {
+      text-align: center;
+      color: #444;
+      font-size: 11px;
+      padding: 24px 0 16px;
+    }
+
+    /* ===== SPINNER ===== */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="settings-header">
+    <a href="/dashboard.html" class="header-back">
+      <i class="fas fa-chevron-left"></i>
+      Back
+    </a>
+    <div class="header-title">Settings</div>
+    <div style="width:60px;"></div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="settings-container">
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card" id="profile-card">
+      <div class="profile-avatar" id="avatar-initials">--</div>
+      <div class="profile-info">
+        <h2 id="user-name">Loading...</h2>
+        <p id="user-email">...</p>
+        <div class="verified-badge" id="verified-badge" style="display:none;">
+          <i class="fas fa-check-circle"></i> Verified
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT SECTION -->
+    <div class="settings-section">
+      <div class="section-label">Account</div>
+      <div class="settings-group">
+        <div class="settings-row" onclick="openEditModal('name')">
+          <div class="row-left">
+            <div class="row-icon pink"><i class="fas fa-user"></i></div>
+            <div class="row-text">
+              <div class="label">Name</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <span class="value" id="row-name">â</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        <div class="settings-row" onclick="openEditModal('email')">
+          <div class="row-left">
+            <div class="row-icon blue"><i class="fas fa-envelope"></i></div>
+            <div class="row-text">
+              <div class="label">Email</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <span class="value" id="row-email">â</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        <div class="settings-row" onclick="openEditModal('phone')">
+          <div class="row-left">
+            <div class="row-icon green"><i class="fas fa-phone"></i></div>
+            <div class="row-text">
+              <div class="label">Phone</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <span class="value" id="row-phone">â</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS SECTION -->
+    <div class="settings-section">
+      <div class="section-label">Notifications</div>
+      <div class="settings-group">
+        <div class="settings-row" onclick="toggleSetting('push_notifications', this)">
+          <div class="row-left">
+            <div class="row-icon purple"><i class="fas fa-bell"></i></div>
+            <div class="row-text">
+              <div class="label">Push Notifications</div>
+              <div class="sublabel">Community alerts & messages</div>
+            </div>
+          </div>
+          <div class="toggle on" id="toggle-push"><div class="knob"></div></div>
+        </div>
+        <div class="settings-row" onclick="toggleSetting('email_alerts', this)">
+          <div class="row-left">
+            <div class="row-icon blue"><i class="fas fa-at"></i></div>
+            <div class="row-text">
+              <div class="label">Email Alerts</div>
+              <div class="sublabel">Weekly digest & important updates</div>
+            </div>
+          </div>
+          <div class="toggle on" id="toggle-email"><div class="knob"></div></div>
+        </div>
+        <div class="settings-row" onclick="toggleSetting('safety_alerts', this)">
+          <div class="row-left">
+            <div class="row-icon orange"><i class="fas fa-shield-halved"></i></div>
+            <div class="row-text">
+              <div class="label">Safety Alerts</div>
+              <div class="sublabel">Date check-in reminders & SOS</div>
+            </div>
+          </div>
+          <div class="toggle on" id="toggle-safety"><div class="knob"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION SECTION (only shown for premium users) -->
+    <div class="settings-section" id="subscription-section" style="display:none;">
+      <div class="section-label">Subscription</div>
+      <div class="settings-group">
+        <div class="settings-row" style="cursor:default;">
+          <div class="row-left">
+            <div class="row-icon pink"><i class="fas fa-crown"></i></div>
+            <div class="row-text">
+              <div class="label" id="sub-plan">SafeTea Premium</div>
+              <div class="sublabel" id="sub-details">Loading...</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <span class="value" style="color:#2ecc71;font-weight:500;" id="sub-status">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGAL SECTION -->
+    <div class="settings-section">
+      <div class="section-label">Legal</div>
+      <div class="settings-group">
+        <a class="settings-row" href="/terms.html" target="_blank">
+          <div class="row-left">
+            <div class="row-icon gray"><i class="fas fa-file-contract"></i></div>
+            <div class="row-text">
+              <div class="label">Terms of Service</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <i class="fas fa-arrow-up-right-from-square" style="font-size:11px;"></i>
+          </div>
+        </a>
+        <a class="settings-row" href="/privacy.html" target="_blank">
+          <div class="row-left">
+            <div class="row-icon gray"><i class="fas fa-shield-halved"></i></div>
+            <div class="row-text">
+              <div class="label">Privacy Policy</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <i class="fas fa-arrow-up-right-from-square" style="font-size:11px;"></i>
+          </div>
+        </a>
+        <a class="settings-row" href="mailto:support@getsafetea.app">
+          <div class="row-left">
+            <div class="row-icon gray"><i class="fas fa-circle-question"></i></div>
+            <div class="row-text">
+              <div class="label">Help & Support</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <i class="fas fa-arrow-up-right-from-square" style="font-size:11px;"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="settings-section">
+      <div class="settings-group">
+        <div class="settings-row logout-row" onclick="logOut()">
+          <div class="row-left">
+            <div class="row-icon red"><i class="fas fa-right-from-bracket"></i></div>
+            <div class="row-text">
+              <div class="label">Log Out</div>
+            </div>
+          </div>
+        </div>
+        <div class="settings-row delete-row" onclick="openDeleteModal()">
+          <div class="row-left">
+            <div class="row-icon red"><i class="fas fa-trash-can"></i></div>
+            <div class="row-text">
+              <div class="label">Delete Account</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-version">SafeTea v1.0.0</div>
+  </div>
+
+  <!-- EDIT MODAL (bottom sheet) -->
+  <div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 id="edit-modal-title">Edit</h3>
+        <button class="modal-close" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-field">
+        <label id="edit-modal-label">Value</label>
+        <input type="text" id="edit-modal-input" placeholder="" />
+      </div>
+      <button class="btn-save" id="edit-modal-save" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+
+  <!-- DELETE ACCOUNT MODAL -->
+  <div class="modal-overlay" id="delete-modal" onclick="if(event.target===this)closeDeleteModal()">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Delete Account</h3>
+        <button class="modal-close" onclick="closeDeleteModal()"><i class="fas fa-xmark"></i></button>
+      </div>
+      <p style="color:#8080A0;font-size:14px;margin-bottom:20px;line-height:1.5;">
+        We're sorry to see you go. Your account and all data will be permanently deleted. This cannot be undone.
+      </p>
+      <div class="delete-section">
+        <p style="font-size:14px;font-weight:500;margin-bottom:12px;">Why are you leaving?</p>
+        <div class="reason-option" onclick="selectReason('found_someone', this)">
+          <div class="reason-radio"></div>
+          <span>I found someone</span>
+        </div>
+        <div class="reason-option" onclick="selectReason('taking_break', this)">
+          <div class="reason-radio"></div>
+          <span>Taking a break from dating</span>
+        </div>
+        <div class="reason-option" onclick="selectReason('not_useful', this)">
+          <div class="reason-radio"></div>
+          <span>Not finding it useful</span>
+        </div>
+        <div class="reason-option" onclick="selectReason('other', this)">
+          <div class="reason-radio"></div>
+          <span>Other reason</span>
+        </div>
+      </div>
+      <button class="btn-delete" id="btn-confirm-delete" onclick="confirmDelete()" disabled>
+        Delete My Account
+      </button>
+      <a class="refund-link" href="mailto:support@getsafetea.app?subject=Refund%20Request">
+        Need a refund? Contact support â
+      </a>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API_BASE = '/api';
+    let currentUser = null;
+    let editingField = null;
+    let deleteReason = null;
+
+    // ===== AUTH =====
+    function getToken() { return localStorage.getItem('safetea_token'); }
+    function getUser() {
+      try { return JSON.parse(localStorage.getItem('safetea_user')); }
+      catch { return null; }
+    }
+
+    // ===== TOAST =====
+    function showToast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' error' : '');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ===== POPULATE UI =====
+    function populateSettings() {
+      const user = getUser();
+      if (!user) return;
+      currentUser = user;
+
+      // Avatar initials
+      const name = user.display_name || user.name || user.email || '';
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) || '?';
+      document.getElementById('avatar-initials').textContent = initials;
+
+      // Profile card
+      document.getElementById('user-name').textContent = name || 'SafeTea User';
+      document.getElementById('user-email').textContent = user.email || '';
+      if (user.is_verified) {
+        document.getElementById('verified-badge').style.display = 'inline-flex';
+      }
+
+      // Row values
+      document.getElementById('row-name').textContent = name || 'Not set';
+      document.getElementById('row-email').textContent = user.email || 'Not set';
+      document.getElementById('row-phone').textContent = user.phone || user.phone_number || 'Not set';
+
+      // Notification prefs (from localStorage)
+      const prefs = JSON.parse(localStorage.getItem('safetea_prefs') || '{}');
+      if (prefs.push_notifications === false) document.getElementById('toggle-push').classList.remove('on');
+      if (prefs.email_alerts === false) document.getElementById('toggle-email').classList.remove('on');
+      if (prefs.safety_alerts === false) document.getElementById('toggle-safety').classList.remove('on');
+
+      // Subscription info
+      if (user.subscription_tier && user.subscription_tier !== 'free') {
+        document.getElementById('subscription-section').style.display = 'block';
+        document.getElementById('sub-plan').textContent = 'SafeTea ' + (user.subscription_tier === 'plus' ? '+' : user.subscription_tier === 'pro' ? 'Pro' : user.subscription_tier);
+        document.getElementById('sub-details').textContent = user.subscription_status === 'active'
+          ? '$9.99/mo Â· Renews ' + (user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'monthly')
+          : 'Inactive';
+        document.getElementById('sub-status').textContent = user.subscription_status === 'active' ? 'Active' : 'Inactive';
+        if (user.subscription_status !== 'active') {
+          document.getElementById('sub-status').style.color = '#8080A0';
+        }
+      }
+    }
+
+    // ===== TOGGLE NOTIFICATIONS =====
+    function toggleSetting(key, rowEl) {
+      const toggle = rowEl.querySelector('.toggle');
+      const isOn = toggle.classList.toggle('on');
+      const prefs = JSON.parse(localStorage.getItem('safetea_prefs') || '{}');
+      prefs[key] = isOn;
+      localStorage.setItem('safetea_prefs', JSON.stringify(prefs));
+      showToast(isOn ? 'Enabled' : 'Disabled');
+    }
+
+    // ===== EDIT MODAL =====
+    function openEditModal(field) {
+      editingField = field;
+      const modal = document.getElementById('edit-modal');
+      const titles = { name: 'Edit Name', email: 'Edit Email', phone: 'Edit Phone' };
+      const labels = { name: 'Display Name', email: 'Email Address', phone: 'Phone Number' };
+      const types = { name: 'text', email: 'email', phone: 'tel' };
+      const values = {
+        name: currentUser?.display_name || currentUser?.name || '',
+        email: currentUser?.email || '',
+        phone: currentUser?.phone || currentUser?.phone_number || ''
+      };
+
+      document.getElementById('edit-modal-title').textContent = titles[field];
+      document.getElementById('edit-modal-label').textContent = labels[field];
+      const input = document.getElementById('edit-modal-input');
+      input.type = types[field];
+      input.value = values[field];
+      modal.classList.add('open');
+      setTimeout(() => input.focus(), 100);
+    }
+
+    function closeModal() {
+      document.getElementById('edit-modal').classList.remove('open');
+      editingField = null;
+    }
+
+    async function saveEdit() {
+      const input = document.getElementById('edit-modal-input');
+      const val = input.value.trim();
+      if (!val) { showToast('Please enter a value', true); return; }
+
+      const btn = document.getElementById('edit-modal-save');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+      try {
+        const fieldMap = { name: 'display_name', email: 'email', phone: 'phone_number' };
+        const body = {};
+        body[fieldMap[editingField]] = val;
+
+        const res = await fetch(API_BASE + '/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to update');
+        }
+
+        // Update local state
+        const user = getUser();
+        if (user) {
+          Object.assign(user, body);
+          localStorage.setItem('safetea_user', JSON.stringify(user));
+        }
+
+        closeModal();
+        populateSettings();
+        showToast('Updated successfully');
+      } catch (err) {
+        showToast(err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    }
+
+    // ===== DELETE ACCOUNT =====
+    function openDeleteModal() {
+      deleteReason = null;
+      document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
+      document.getElementById('btn-confirm-delete').disabled = true;
+      document.getElementById('delete-modal').classList.add('open');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('open');
+    }
+
+    function selectReason(reason, el) {
+      deleteReason = reason;
+      document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('btn-confirm-delete').disabled = false;
+    }
+
+    async function confirmDelete() {
+      if (!deleteReason) return;
+
+      const btn = document.getElementById('btn-confirm-delete');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Deleting...';
+
+      try {
+        const res = await fetch(API_BASE + '/users/account', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          body: JSON.stringify({ reason: deleteReason })
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Failed to delete account');
+        }
+
+        // Clear all local data
+        localStorage.removeItem('safetea_token');
+        localStorage.removeItem('safetea_user');
+        localStorage.removeItem('safetea_prefs');
+
+        showToast('Account deleted. Goodbye.');
+        setTimeout(() => { window.location.href = '/'; }, 1500);
+      } catch (err) {
+        showToast(err.message, true);
+        btn.disabled = false;
+        btn.textContent = 'Delete My Account';
+      }
+    }
+
+    // ===== LOG OUT =====
+    function logOut() {
+      localStorage.removeItem('safetea_token');
+      localStorage.removeItem('safetea_user');
+      localStorage.removeItem('safetea_prefs');
+      window.location.href = '/login.html';
+    }
+
+    // ===== INIT =====
+    function init() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+      populateSettings();
+    }
+
+    init();
+  </script>
+</body>
+</html>

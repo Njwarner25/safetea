@@ -2813,6 +2813,10 @@
         });
         // Scroll to top
         window.scrollTo(0, 0);
+        // Load inbox conversations when switching to inbox tab
+        if (tab === 'inbox' && typeof loadConversations === 'function') {
+            loadConversations();
+        }
     }
 
     // ============ HUB SUB-TAB SWITCHING ============

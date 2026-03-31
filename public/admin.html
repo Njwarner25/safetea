@@ -8,32 +8,30 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e0e0e0; display: flex; min-height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; display: flex; min-height: 100vh; }
 
         /* Sidebar */
-        .sidebar { width: 260px; background: #13131a; border-right: 1px solid rgba(255,255,255,0.06); padding: 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+        .sidebar { width: 260px; background: #22223A; border-right: 1px solid rgba(255,255,255,0.06); padding: 0; position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
         .sidebar-logo { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
-        .sidebar-logo svg { width: 28px; height: 28px; }
-        .sidebar-logo span { font-size: 18px; font-weight: 800; }
-        .sidebar-logo .green { color: #4CAF50; }
-        .sidebar-logo .pink { color: #f27059; }
-        .sidebar-badge { background: rgba(242,112,89,0.15); color: #f27059; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        .sidebar-logo img { height: 28px; }
+        .sidebar-logo span { font-size: 18px; font-weight: 800; color: #fff; }
+        .sidebar-badge { background: rgba(232,160,181,0.15); color: #E8A0B5; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
         .sidebar-nav { padding: 16px 12px; }
-        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #888; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 2px; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #8080A0; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; cursor: pointer; margin-bottom: 2px; }
         .sidebar-nav a:hover { color: #fff; background: rgba(255,255,255,0.04); }
-        .sidebar-nav a.active { color: #f27059; background: rgba(242,112,89,0.1); }
+        .sidebar-nav a.active { color: #E8A0B5; background: rgba(232,160,181,0.1); }
         .sidebar-nav a i { width: 20px; text-align: center; font-size: 15px; }
         .sidebar-section { padding: 12px 24px 8px; font-size: 11px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 1px; }
         .sidebar-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06); }
-        .sidebar-bottom a { color: #666; font-size: 13px; }
+        .sidebar-bottom a { color: #8080A0; font-size: 13px; }
 
         /* Main content */
         .main { margin-left: 260px; flex: 1; min-height: 100vh; }
-        .topbar { background: #13131a; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        .topbar { background: #22223A; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
         .topbar h1 { font-size: 18px; font-weight: 700; color: #fff; }
         .topbar-right { display: flex; align-items: center; gap: 16px; }
-        .topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #f27059; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; }
-        .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .topbar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; }
+        .btn-logout { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .btn-logout:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
 
         .content { padding: 32px; }
@@ -41,44 +39,46 @@
         .section.active { display: block; }
 
         /* Cards */
-        .card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+        .card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
         .card h3 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .card h3 i { color: #f27059; }
+        .card h3 i { color: #E8A0B5; }
 
         /* Stats grid */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; }
-        .stat-card .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .stat-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; }
+        .stat-card .stat-label { font-size: 12px; color: #8080A0; margin-bottom: 4px; }
         .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #fff; }
-        .stat-card .stat-value.pink { color: #f27059; }
+        .stat-card .stat-value.pink { color: #E8A0B5; }
 
         /* Moderation toolbar */
         .mod-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
         .mod-filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .mod-filter { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; cursor: pointer; }
-        .mod-filter:focus { border-color: #f27059; }
-        .mod-filter option { background: #1a1a24; color: #e0e0e0; }
+        .mod-filter { background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; cursor: pointer; }
+        .mod-filter:focus { border-color: #E8A0B5; }
+        .mod-filter option { background: #141428; color: #F0D0C0; }
         .mod-actions { display: flex; gap: 8px; }
         .btn { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; border: none; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .btn-approve { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .btn-approve:hover { background: rgba(46,204,113,0.25); }
         .btn-flag { background: rgba(231,76,60,0.15); color: #e74c3c; }
         .btn-flag:hover { background: rgba(231,76,60,0.25); }
-        .btn-primary { background: linear-gradient(135deg, #f27059, #e85d44); color: #fff; }
-        .btn-primary:hover { box-shadow: 0 4px 15px rgba(242,112,89,0.3); }
+        .btn-primary { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; }
+        .btn-primary:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-ghost { background: rgba(255,255,255,0.05); color: #aaa; border: 1px solid rgba(255,255,255,0.08); }
         .btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .btn-danger { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .btn-danger:hover { background: rgba(231,76,60,0.25); }
 
         /* Post cards */
-        .post-card { background: #13131a; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; }
+        .post-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; }
         .post-card:hover { border-color: rgba(255,255,255,0.12); }
         .post-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
         .post-card-user { display: flex; align-items: center; gap: 10px; }
         .post-card-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; }
         .post-card-meta { display: flex; flex-direction: column; }
         .post-card-name { font-size: 13px; font-weight: 600; color: #fff; }
-        .post-card-info { font-size: 11px; color: #666; margin-top: 2px; }
+        .post-card-info { font-size: 11px; color: #8080A0; margin-top: 2px; }
         .post-card-badges { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
         /* AI Score badge */
@@ -86,7 +86,7 @@
         .ai-score.green { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .ai-score.yellow { background: rgba(241,196,15,0.15); color: #f1c40f; }
         .ai-score.red { background: rgba(231,76,60,0.15); color: #e74c3c; }
-        .ai-score.pending { background: rgba(255,255,255,0.05); color: #666; }
+        .ai-score.pending { background: rgba(255,255,255,0.05); color: #8080A0; }
 
         /* AI Recommendation label */
         .ai-rec { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
@@ -95,7 +95,7 @@
         .ai-rec.flag_removal { background: rgba(231,76,60,0.1); color: #e74c3c; }
 
         .post-card-content { font-size: 14px; line-height: 1.6; color: #ccc; margin-bottom: 12px; }
-        .post-card-category { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.05); color: #888; margin-bottom: 8px; }
+        .post-card-category { display: inline-flex; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.05); color: #8080A0; margin-bottom: 8px; }
 
         /* AI Flags */
         .ai-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
@@ -103,9 +103,9 @@
         .ai-flag-tag i { font-size: 10px; }
 
         /* Expandable reasoning */
-        .ai-reasoning-toggle { background: none; border: none; color: #888; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 4px; padding: 4px 0; }
-        .ai-reasoning-toggle:hover { color: #f27059; }
-        .ai-reasoning-text { display: none; background: rgba(255,255,255,0.03); border-left: 3px solid rgba(242,112,89,0.3); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 8px; font-size: 13px; color: #aaa; line-height: 1.5; }
+        .ai-reasoning-toggle { background: none; border: none; color: #8080A0; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 4px; padding: 4px 0; }
+        .ai-reasoning-toggle:hover { color: #E8A0B5; }
+        .ai-reasoning-text { display: none; background: rgba(255,255,255,0.03); border-left: 3px solid rgba(232,160,181,0.3); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 8px; font-size: 13px; color: #aaa; line-height: 1.5; }
         .ai-reasoning-text.show { display: block; }
 
         /* Post actions */
@@ -115,33 +115,69 @@
 
         /* Pagination */
         .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; }
-        .pagination button { background: #1a1a24; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .pagination button { background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #aaa; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
         .pagination button:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
         .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
-        .pagination span { font-size: 13px; color: #888; }
+        .pagination span { font-size: 13px; color: #8080A0; }
 
         /* Loading & empty */
-        .loading { text-align: center; padding: 40px; color: #666; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #555; }
+        .loading { text-align: center; padding: 40px; color: #8080A0; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #8080A0; }
         .empty-state i { font-size: 48px; margin-bottom: 16px; color: #333; }
         .empty-state p { font-size: 14px; }
 
         /* Placeholder sections */
         .placeholder { text-align: center; padding: 80px 20px; }
-        .placeholder i { font-size: 64px; color: #222; margin-bottom: 16px; }
-        .placeholder h2 { font-size: 20px; color: #444; margin-bottom: 8px; }
-        .placeholder p { font-size: 14px; color: #555; }
+        .placeholder i { font-size: 64px; color: #333; margin-bottom: 16px; }
+        .placeholder h2 { font-size: 20px; color: #8080A0; margin-bottom: 8px; }
+        .placeholder p { font-size: 14px; color: #666; }
 
         /* Toast */
         .toast { position: fixed; bottom: 24px; right: 24px; background: #2ecc71; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 999; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
         .toast.error { background: #e74c3c; }
         .toast.show { display: flex; align-items: center; gap: 8px; }
 
+        /* Form styles */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #8080A0; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); color: #F0D0C0; padding: 10px 14px; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; }
+        .form-input:focus { border-color: #E8A0B5; }
+        .form-input::placeholder { color: #555; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Moderator list */
+        .mod-list-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #141428; border-radius: 10px; margin-bottom: 8px; }
+        .mod-list-user { display: flex; align-items: center; gap: 12px; }
+        .mod-list-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0; }
+        .mod-list-info { display: flex; flex-direction: column; }
+        .mod-list-name { font-size: 14px; font-weight: 600; color: #fff; }
+        .mod-list-detail { font-size: 12px; color: #8080A0; margin-top: 2px; }
+        .mod-list-role { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+        .mod-list-role.admin { background: rgba(232,160,181,0.15); color: #E8A0B5; }
+        .mod-list-role.moderator { background: rgba(46,204,113,0.15); color: #2ecc71; }
+
+        /* Credentials display */
+        .credentials-box { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: none; }
+        .credentials-box h4 { color: #2ecc71; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .credentials-box .cred-line { font-size: 13px; color: #ccc; margin-bottom: 4px; }
+        .credentials-box .cred-value { font-family: monospace; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px; color: #2ecc71; }
+
+        /* City grid */
+        .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .city-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; transition: border-color 0.2s; }
+        .city-card:hover { border-color: rgba(232,160,181,0.3); }
+        .city-card-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .city-card-state { font-size: 13px; color: #8080A0; margin-bottom: 12px; }
+        .city-card-stat { font-size: 12px; color: #8080A0; margin-bottom: 4px; }
+        .city-card-stat span { color: #E8A0B5; font-weight: 600; }
+        .city-card-actions { margin-top: 14px; display: flex; gap: 8px; }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main { margin-left: 0; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .mod-toolbar { flex-direction: column; align-items: stretch; }
+            .form-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -149,8 +185,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
-            <svg width="28" height="28" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4CAF50"/><stop offset="50%" stop-color="#F5A87A"/><stop offset="100%" stop-color="#F27059"/></linearGradient></defs><path d="M12 22 C12 22 10 44 16 50 C20 54 36 54 40 50 C46 44 44 22 44 22 Z" fill="url(#lg)" opacity="0.9"/><path d="M44 28 C50 28 54 32 54 38 C54 44 50 46 44 46" stroke="url(#lg)" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M20 36 L26 42 L38 28" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span><span class="green">safe</span><span class="pink">tea</span></span>
+            <img src="/logo.png" alt="SafeTea">
+            <span>safetea</span>
             <span class="sidebar-badge">ADMIN</span>
         </div>
         <div class="sidebar-section">Dashboard</div>
@@ -159,7 +195,7 @@
             <a data-section="users"><i class="fas fa-users"></i> User Management</a>
             <a data-section="moderation"><i class="fas fa-shield-alt"></i> Content Moderation</a>
             <a data-section="moderators"><i class="fas fa-user-shield"></i> Moderators</a>
-            <a data-section="cities"><i class="fas fa-city"></i> City Management</a>
+            <a data-section="cities"><i class="fas fa-city"></i> City Feeds</a>
             <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
             <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
         </nav>
@@ -182,17 +218,17 @@
             <!-- OVERVIEW -->
             <div id="section-overview" class="section active">
                 <div class="stats-grid" id="overview-stats">
-                    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-total-users">—</div></div>
-                    <div class="stat-card"><div class="stat-label">Paid Subscribers</div><div class="stat-value pink" id="stat-paid-users">—</div></div>
-                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="stat-total-posts">—</div></div>
-                    <div class="stat-card"><div class="stat-label">Active Cities</div><div class="stat-value" id="stat-active-cities">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="stat-total-users">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Paid Subscribers</div><div class="stat-value pink" id="stat-paid-users">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="stat-total-posts">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Active Cities</div><div class="stat-value" id="stat-active-cities">&mdash;</div></div>
                 </div>
                 <div class="card">
                     <h3><i class="fas fa-chart-line"></i> Growth</h3>
                     <div id="growth-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-                        <div><span style="font-size:12px;color:#888">New Today</span><div style="font-size:22px;font-weight:700;color:#f27059" id="stat-new-today">—</div></div>
-                        <div><span style="font-size:12px;color:#888">This Week</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-week">—</div></div>
-                        <div><span style="font-size:12px;color:#888">This Month</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-month">—</div></div>
+                        <div><span style="font-size:12px;color:#8080A0">New Today</span><div style="font-size:22px;font-weight:700;color:#E8A0B5" id="stat-new-today">&mdash;</div></div>
+                        <div><span style="font-size:12px;color:#8080A0">This Week</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-week">&mdash;</div></div>
+                        <div><span style="font-size:12px;color:#8080A0">This Month</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-month">&mdash;</div></div>
                     </div>
                 </div>
             </div>
@@ -200,10 +236,10 @@
             <!-- CONTENT MODERATION -->
             <div id="section-moderation" class="section">
                 <div class="stats-grid" id="mod-stats">
-                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="mod-total">—</div></div>
-                    <div class="stat-card"><div class="stat-label">AI Approved</div><div class="stat-value" style="color:#2ecc71" id="mod-approved">—</div></div>
-                    <div class="stat-card"><div class="stat-label">Needs Review</div><div class="stat-value" style="color:#f1c40f" id="mod-review">—</div></div>
-                    <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value" style="color:#e74c3c" id="mod-flagged">—</div></div>
+                    <div class="stat-card"><div class="stat-label">Total Posts</div><div class="stat-value" id="mod-total">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">AI Approved</div><div class="stat-value" style="color:#2ecc71" id="mod-approved">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Needs Review</div><div class="stat-value" style="color:#f1c40f" id="mod-review">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value" style="color:#e74c3c" id="mod-flagged">&mdash;</div></div>
                 </div>
 
                 <div class="mod-toolbar">
@@ -240,17 +276,121 @@
 
             <!-- USER MANAGEMENT -->
             <div id="section-users" class="section">
-                <div class="placeholder"><i class="fas fa-users"></i><h2>User Management</h2><p>Search, filter, and manage user accounts.</p></div>
+                <div class="card" style="margin-bottom:20px">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <div style="flex:1;min-width:200px">
+                            <input type="text" class="form-input" id="user-search" placeholder="Search by name, email, phone, or ID..." onkeydown="if(event.key==='Enter')loadUsers()">
+                        </div>
+                        <select class="form-input" id="user-filter" style="width:auto;min-width:150px" onchange="loadUsers()">
+                            <option value="all">All Users</option>
+                            <option value="banned">Banned</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="verified">Verified</option>
+                            <option value="unverified">Unverified</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadUsers()"><i class="fas fa-search"></i> Search</button>
+                    </div>
+                </div>
+                <div id="user-count" style="font-size:13px;color:#8080A0;margin-bottom:12px"></div>
+                <div id="users-list"></div>
+                <div class="pagination" id="user-pagination" style="display:none;margin-top:16px">
+                    <button id="user-prev" onclick="changeUserPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="user-page-info">Page 1</span>
+                    <button id="user-next" onclick="changeUserPage(1)">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <!-- Ban/Suspend Modal -->
+                <div id="ban-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
+                    <div style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;max-width:480px;width:90%;margin:auto;position:relative;top:50%;transform:translateY(-50%)">
+                        <h3 style="color:#fff;margin-bottom:20px" id="ban-modal-title">Ban User</h3>
+                        <input type="hidden" id="ban-user-id">
+                        <div class="form-group" style="margin-bottom:14px">
+                            <label>Action</label>
+                            <select class="form-input" id="ban-action" onchange="toggleBanFields()">
+                                <option value="permanent">Permanent Ban</option>
+                                <option value="temporary">Temporary Suspension</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="ban-duration-group" style="margin-bottom:14px;display:none">
+                            <label>Duration (days)</label>
+                            <input type="number" class="form-input" id="ban-duration" min="1" max="365" value="7" placeholder="e.g. 7">
+                        </div>
+                        <div class="form-group" style="margin-bottom:20px">
+                            <label>Reason (min 10 characters)</label>
+                            <textarea class="form-input" id="ban-reason" rows="3" placeholder="Explain why this user is being banned/suspended..." style="resize:vertical"></textarea>
+                        </div>
+                        <div style="display:flex;gap:10px;justify-content:flex-end">
+                            <button class="btn btn-ghost" onclick="closeBanModal()">Cancel</button>
+                            <button class="btn btn-danger" id="ban-submit-btn" onclick="submitBan()"><i class="fas fa-ban"></i> Confirm Ban</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- MODERATORS -->
             <div id="section-moderators" class="section">
-                <div class="placeholder"><i class="fas fa-user-shield"></i><h2>Moderator Management</h2><p>Assign and manage moderators per city.</p></div>
+                <div class="card">
+                    <h3><i class="fas fa-user-plus"></i> Add New Moderator</h3>
+                    <div id="credentials-display" class="credentials-box">
+                        <h4><i class="fas fa-check-circle"></i> Moderator Created Successfully</h4>
+                        <div class="cred-line">Email: <span class="cred-value" id="cred-email"></span></div>
+                        <div class="cred-line">Password: <span class="cred-value" id="cred-password"></span></div>
+                        <div style="margin-top:10px;font-size:12px;color:#8080A0"><i class="fas fa-info-circle"></i> Share these credentials securely with the new moderator.</div>
+                    </div>
+                    <form id="add-mod-form" onsubmit="addModerator(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" class="form-input" id="mod-email" placeholder="moderator@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" class="form-input" id="mod-display-name" placeholder="Jane Doe" required minlength="2">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="text" class="form-input" id="mod-password" placeholder="Min 6 characters" required minlength="6">
+                                <div style="margin-top:4px"><button type="button" class="btn btn-sm btn-ghost" onclick="generatePassword()" style="font-size:11px"><i class="fas fa-dice"></i> Generate</button></div>
+                            </div>
+                            <div class="form-group">
+                                <label>City (Optional)</label>
+                                <input type="text" class="form-input" id="mod-city" placeholder="e.g. Chicago">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="add-mod-btn"><i class="fas fa-user-plus"></i> Create Moderator Account</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-user-shield"></i> Current Moderators</h3>
+                    <div id="moderators-list">
+                        <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading moderators...</div>
+                    </div>
+                </div>
             </div>
 
             <!-- CITIES -->
             <div id="section-cities" class="section">
-                <div class="placeholder"><i class="fas fa-city"></i><h2>City Management</h2><p>Enable/disable cities and adjust features per city.</p></div>
+                <div class="card" style="margin-bottom:20px">
+                    <h3><i class="fas fa-city"></i> City Feeds</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:4px">Select a city to view its community feed and posts.</p>
+                </div>
+                <div id="cities-list" class="city-grid">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>
+                </div>
+            </div>
+
+            <!-- CITY FEED VIEW -->
+            <div id="section-city-feed" class="section">
+                <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
+                    <button class="btn btn-ghost" onclick="backToCities()"><i class="fas fa-arrow-left"></i> Back to Cities</button>
+                    <h2 style="font-size:18px;font-weight:700;color:#fff" id="city-feed-title">City Feed</h2>
+                </div>
+                <div id="city-feed-posts">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading feed...</div>
+                </div>
             </div>
 
             <!-- REPORTS -->
@@ -272,7 +412,7 @@
         let token = localStorage.getItem('safetea_token');
         let currentPage = 1;
 
-        // Auth check — admin/moderator only
+        // Auth check — verify token and admin/moderator role
         if (!token) {
             window.location.href = '/';
         } else {
@@ -283,6 +423,10 @@
                     if (u.role !== 'admin' && u.role !== 'moderator') {
                         alert('Admin access required.');
                         window.location.href = '/dashboard.html';
+                    } else {
+                        // Show admin initial in avatar
+                        const avatarEl = document.getElementById('admin-avatar');
+                        if (avatarEl && u.display_name) avatarEl.textContent = u.display_name[0].toUpperCase();
                     }
                 })
                 .catch(() => { window.location.href = '/'; });
@@ -300,6 +444,9 @@
 
                 if (section === 'overview') loadOverview();
                 if (section === 'moderation') loadModerationPosts();
+                if (section === 'users') loadUsers();
+                if (section === 'moderators') loadModerators();
+                if (section === 'cities') loadCities();
             });
         });
 
@@ -337,7 +484,13 @@
             if (rec === 'approve') return '<span class="ai-rec approve"><i class="fas fa-check"></i> Auto-Approve</span>';
             if (rec === 'review') return '<span class="ai-rec review"><i class="fas fa-eye"></i> Needs Review</span>';
             if (rec === 'flag_removal') return '<span class="ai-rec flag_removal"><i class="fas fa-exclamation-triangle"></i> Flag for Removal</span>';
-            return '<span class="ai-rec" style="color:#666"><i class="fas fa-hourglass-half"></i> Pending</span>';
+            return '<span class="ai-rec" style="color:#8080A0"><i class="fas fa-hourglass-half"></i> Pending</span>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
         }
 
         // ===== OVERVIEW =====
@@ -383,7 +536,6 @@
                 if (!res.ok) throw new Error('Failed to load');
                 const data = await res.json();
 
-                // Update stats
                 updateModStats(data.posts);
 
                 if (data.posts.length === 0) {
@@ -394,7 +546,6 @@
 
                 list.innerHTML = data.posts.map(post => renderPostCard(post)).join('');
 
-                // Pagination
                 const pag = document.getElementById('mod-pagination');
                 pag.style.display = 'flex';
                 document.getElementById('mod-prev').disabled = currentPage <= 1;
@@ -407,17 +558,10 @@
         }
 
         function updateModStats(posts) {
-            // These are approximate counts based on loaded page; full counts would need a separate endpoint
-            const total = document.getElementById('mod-total');
-            const approved = document.getElementById('mod-approved');
-            const review = document.getElementById('mod-review');
-            const flagged = document.getElementById('mod-flagged');
-
-            // We'll just show page-level counts for now
-            total.textContent = posts.length;
-            approved.textContent = posts.filter(p => p.ai_recommendation === 'approve').length;
-            review.textContent = posts.filter(p => p.ai_recommendation === 'review').length;
-            flagged.textContent = posts.filter(p => p.ai_recommendation === 'flag_removal' || p.is_flagged).length;
+            document.getElementById('mod-total').textContent = posts.length;
+            document.getElementById('mod-approved').textContent = posts.filter(p => p.ai_recommendation === 'approve').length;
+            document.getElementById('mod-review').textContent = posts.filter(p => p.ai_recommendation === 'review').length;
+            document.getElementById('mod-flagged').textContent = posts.filter(p => p.ai_recommendation === 'flag_removal' || p.is_flagged).length;
         }
 
         function renderPostCard(post) {
@@ -447,7 +591,7 @@
                 <div class="post-card" id="post-${post.id}">
                     <div class="post-card-header">
                         <div class="post-card-user">
-                            <div class="post-card-avatar" style="background:${post.avatar_color || '#f27059'}">${post.avatar_initial || '?'}</div>
+                            <div class="post-card-avatar" style="background:${post.avatar_color || '#E8A0B5'}">${post.avatar_initial || '?'}</div>
                             <div class="post-card-meta">
                                 <div class="post-card-name">${escapeHtml(post.display_name || 'Anonymous')}</div>
                                 <div class="post-card-info">${post.city || 'Unknown'} &middot; ${timeAgo(post.created_at)} &middot; ${post.category || 'general'}</div>
@@ -469,12 +613,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
         }
 
         function toggleReasoning(btn) {
@@ -501,7 +639,6 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 showToast(data.message);
-
                 if (action === 'remove') {
                     document.getElementById('post-' + postId)?.remove();
                 } else {
@@ -515,10 +652,7 @@
         async function bulkApprove() {
             if (!confirm('Auto-approve all posts with AI credibility score 7 or above?')) return;
             try {
-                const res = await fetch(`${API_BASE}/admin/posts/bulk-approve`, {
-                    method: 'POST',
-                    headers: authHeaders()
-                });
+                const res = await fetch(`${API_BASE}/admin/posts/bulk-approve`, { method: 'POST', headers: authHeaders() });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 showToast(data.message);
@@ -531,10 +665,7 @@
         async function bulkFlag() {
             if (!confirm('Flag all posts with AI credibility score 3 or below?')) return;
             try {
-                const res = await fetch(`${API_BASE}/admin/posts/bulk-flag`, {
-                    method: 'POST',
-                    headers: authHeaders()
-                });
+                const res = await fetch(`${API_BASE}/admin/posts/bulk-flag`, { method: 'POST', headers: authHeaders() });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 showToast(data.message);
@@ -542,6 +673,384 @@
             } catch (err) {
                 showToast('Bulk flag failed: ' + err.message, true);
             }
+        }
+
+        // ===== MODERATORS =====
+        async function loadModerators() {
+            const list = document.getElementById('moderators-list');
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading moderators...</div>';
+            try {
+                const res = await fetch(API_BASE + '/admin/moderators', { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+                const mods = data.moderators || [];
+                if (mods.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><p>No moderators yet. Add one above.</p></div>';
+                    return;
+                }
+                list.innerHTML = mods.map(mod => {
+                    const isAdmin = mod.role === 'admin';
+                    const initial = mod.avatar_initial || (mod.display_name || mod.email || '?')[0].toUpperCase();
+                    const color = mod.avatar_color || '#E8A0B5';
+                    return `
+                        <div class="mod-list-item">
+                            <div class="mod-list-user">
+                                <div class="mod-list-avatar" style="background:${color}">${initial}</div>
+                                <div class="mod-list-info">
+                                    <div class="mod-list-name">${escapeHtml(mod.display_name || mod.email)}</div>
+                                    <div class="mod-list-detail">${escapeHtml(mod.email || '')}${mod.city ? ' &middot; ' + escapeHtml(mod.city) : ''} &middot; Joined ${timeAgo(mod.created_at)}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span class="mod-list-role ${mod.role}">${mod.role}</span>
+                                ${!isAdmin ? `<button class="btn btn-sm btn-danger" onclick="removeModerator(${mod.id}, '${escapeHtml(mod.display_name || mod.email)}')"><i class="fas fa-user-minus"></i> Demote</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load moderators.</p></div>';
+                console.error(err);
+            }
+        }
+
+        function generatePassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$';
+            let pw = '';
+            for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+            document.getElementById('mod-password').value = pw;
+        }
+
+        async function addModerator(e) {
+            e.preventDefault();
+            const btn = document.getElementById('add-mod-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+            const email = document.getElementById('mod-email').value.trim();
+            const displayName = document.getElementById('mod-display-name').value.trim();
+            const password = document.getElementById('mod-password').value;
+            const city = document.getElementById('mod-city').value.trim();
+
+            try {
+                const res = await fetch(API_BASE + '/admin/moderators', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ email, displayName, password, city })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                showToast(data.message);
+
+                // Show credentials
+                if (data.credentials) {
+                    document.getElementById('cred-email').textContent = data.credentials.email;
+                    document.getElementById('cred-password').textContent = data.credentials.password;
+                    document.getElementById('credentials-display').style.display = 'block';
+                } else {
+                    document.getElementById('credentials-display').style.display = 'none';
+                }
+
+                // Reset form
+                document.getElementById('add-mod-form').reset();
+                loadModerators();
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Moderator Account';
+            }
+        }
+
+        async function removeModerator(userId, name) {
+            if (!confirm(`Demote "${name}" from moderator to regular member?`)) return;
+            try {
+                const res = await fetch(API_BASE + '/admin/moderators', {
+                    method: 'DELETE',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ userId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(data.message);
+                loadModerators();
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== USER MANAGEMENT =====
+        var userPage = 1;
+
+        async function loadUsers() {
+            const list = document.getElementById('users-list');
+            const q = document.getElementById('user-search').value.trim();
+            const filter = document.getElementById('user-filter').value;
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading users...</div>';
+
+            try {
+                const params = new URLSearchParams({ page: userPage, filter });
+                if (q) params.set('q', q);
+                const res = await fetch(API_BASE + '/admin/users?' + params, { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+
+                document.getElementById('user-count').textContent = data.total + ' user(s) found';
+
+                if (!data.users || data.users.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>No users found.</p></div>';
+                    document.getElementById('user-pagination').style.display = 'none';
+                    return;
+                }
+
+                list.innerHTML = data.users.map(function(u) {
+                    var name = u.custom_display_name || u.display_name || 'Unknown';
+                    var initial = u.avatar_initial || name[0].toUpperCase();
+                    var color = u.avatar_color || '#6c7b95';
+                    var tier = u.subscription_tier || 'free';
+                    var tierBadge = tier === 'pro' ? '<span style="background:rgba(232,160,181,0.15);color:#E8A0B5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">PRO</span>'
+                        : tier === 'plus' ? '<span style="background:rgba(52,152,219,0.15);color:#3498db;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px">PLUS</span>'
+                        : '<span style="font-size:10px;color:#8080A0">FREE</span>';
+                    var verifiedBadge = u.is_verified ? '<span style="color:#2ecc71;font-size:11px" title="Verified"><i class="fas fa-check-circle"></i></span>' : '<span style="color:#8080A0;font-size:11px" title="Unverified"><i class="fas fa-times-circle"></i></span>';
+
+                    var statusBadge = '';
+                    var actionBtns = '';
+                    if (u.banned && u.ban_type === 'permanent') {
+                        statusBadge = '<span class="flagged-indicator"><i class="fas fa-ban"></i> Banned</span>';
+                        actionBtns = '<button class="btn btn-sm btn-primary" onclick="liftBan(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-unlock"></i> Lift Ban</button>';
+                    } else if (u.banned && u.ban_type === 'temporary') {
+                        var expired = u.ban_until && new Date(u.ban_until) < new Date();
+                        statusBadge = expired
+                            ? '<span class="flagged-indicator" style="background:rgba(241,196,15,0.15);color:#f1c40f"><i class="fas fa-clock"></i> Expired</span>'
+                            : '<span class="flagged-indicator" style="background:rgba(241,196,15,0.15);color:#f1c40f"><i class="fas fa-pause-circle"></i> Suspended</span>';
+                        actionBtns = '<button class="btn btn-sm btn-primary" onclick="liftBan(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-unlock"></i> Lift Suspension</button>';
+                    } else if (u.banned) {
+                        statusBadge = '<span class="flagged-indicator"><i class="fas fa-ban"></i> Banned</span>';
+                        actionBtns = '<button class="btn btn-sm btn-primary" onclick="liftBan(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-unlock"></i> Lift Ban</button>';
+                    } else {
+                        statusBadge = '<span style="color:#2ecc71;font-size:11px"><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> Active</span>';
+                        actionBtns = '<button class="btn btn-sm btn-danger" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'permanent\')"><i class="fas fa-ban"></i> Ban</button>' +
+                            '<button class="btn btn-sm btn-ghost" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'temporary\')"><i class="fas fa-pause-circle"></i> Suspend</button>';
+                    }
+
+                    var roleBadge = u.role === 'admin' ? '<span class="mod-list-role admin">admin</span>' : u.role === 'moderator' ? '<span class="mod-list-role" style="background:rgba(52,152,219,0.15);color:#3498db">mod</span>' : '';
+
+                    var banInfo = '';
+                    if (u.banned && u.ban_reason) {
+                        banInfo = '<div style="margin-top:8px;background:#141428;border-radius:8px;padding:10px 12px;font-size:12px">' +
+                            '<span style="color:#e74c3c;font-weight:600">Reason:</span> <span style="color:#8080A0">' + escapeHtml(u.ban_reason) + '</span>' +
+                            (u.ban_until ? '<br><span style="color:#f1c40f;font-weight:600">Until:</span> <span style="color:#8080A0">' + new Date(u.ban_until).toLocaleDateString() + '</span>' : '') +
+                            '</div>';
+                    }
+
+                    return '<div class="mod-list-item" style="margin-bottom:8px;flex-wrap:wrap">' +
+                        '<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px">' +
+                            '<div class="mod-list-avatar" style="background:' + color + '">' + escapeHtml(initial) + '</div>' +
+                            '<div>' +
+                                '<div class="mod-list-name">' + escapeHtml(name) + ' ' + verifiedBadge + ' ' + roleBadge + '</div>' +
+                                '<div class="mod-list-detail">' + escapeHtml(u.email || '') + (u.city ? ' &middot; ' + escapeHtml(u.city) : '') + ' &middot; ' + tierBadge + ' &middot; ID: ' + u.id + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+                            statusBadge +
+                            (u.role !== 'admin' ? actionBtns : '') +
+                        '</div>' +
+                        banInfo +
+                    '</div>';
+                }).join('');
+
+                // Pagination
+                if (data.totalPages > 1) {
+                    document.getElementById('user-pagination').style.display = 'flex';
+                    document.getElementById('user-page-info').textContent = 'Page ' + data.page + ' of ' + data.totalPages;
+                    document.getElementById('user-prev').disabled = data.page <= 1;
+                    document.getElementById('user-next').disabled = data.page >= data.totalPages;
+                } else {
+                    document.getElementById('user-pagination').style.display = 'none';
+                }
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load users.</p></div>';
+                console.error(err);
+            }
+        }
+
+        function changeUserPage(delta) {
+            userPage = Math.max(1, userPage + delta);
+            loadUsers();
+        }
+
+        function openBanModal(userId, name, type) {
+            document.getElementById('ban-user-id').value = userId;
+            document.getElementById('ban-action').value = type;
+            document.getElementById('ban-reason').value = '';
+            document.getElementById('ban-duration').value = '7';
+            document.getElementById('ban-modal-title').textContent = type === 'permanent' ? 'Ban "' + name + '"' : 'Suspend "' + name + '"';
+            document.getElementById('ban-submit-btn').innerHTML = type === 'permanent' ? '<i class="fas fa-ban"></i> Confirm Ban' : '<i class="fas fa-pause-circle"></i> Confirm Suspension';
+            toggleBanFields();
+            document.getElementById('ban-modal').style.display = 'flex';
+        }
+
+        function closeBanModal() {
+            document.getElementById('ban-modal').style.display = 'none';
+        }
+
+        function toggleBanFields() {
+            var action = document.getElementById('ban-action').value;
+            document.getElementById('ban-duration-group').style.display = action === 'temporary' ? 'block' : 'none';
+            document.getElementById('ban-modal-title').textContent = document.getElementById('ban-modal-title').textContent.replace(/^(Ban|Suspend)/, action === 'permanent' ? 'Ban' : 'Suspend');
+            document.getElementById('ban-submit-btn').innerHTML = action === 'permanent' ? '<i class="fas fa-ban"></i> Confirm Ban' : '<i class="fas fa-pause-circle"></i> Confirm Suspension';
+        }
+
+        async function submitBan() {
+            var userId = document.getElementById('ban-user-id').value;
+            var banType = document.getElementById('ban-action').value;
+            var reason = document.getElementById('ban-reason').value.trim();
+            var duration = parseInt(document.getElementById('ban-duration').value) || 7;
+
+            if (reason.length < 10) {
+                showToast('Reason must be at least 10 characters', true);
+                return;
+            }
+
+            var btn = document.getElementById('ban-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                var body = { user_id: parseInt(userId), reason: reason, ban_type: banType };
+                if (banType === 'temporary') body.duration_days = duration;
+
+                var res = await fetch(API_BASE + '/admin/ban', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify(body)
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                showToast(banType === 'permanent' ? 'User banned successfully' : 'User suspended for ' + duration + ' day(s)');
+                closeBanModal();
+                loadUsers();
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            } finally {
+                btn.disabled = false;
+                toggleBanFields();
+            }
+        }
+
+        async function liftBan(userId, name) {
+            if (!confirm('Lift ban/suspension for "' + name + '"? This will restore their account and unhide their posts.')) return;
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ban', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action: 'unban', user_id: userId })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Ban/suspension lifted for ' + name);
+                loadUsers();
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== CITY FEEDS =====
+        async function loadCities() {
+            const list = document.getElementById('cities-list');
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>';
+            try {
+                const res = await fetch(API_BASE + '/cities', { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+                const cities = data.cities || data || [];
+                if (cities.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-city"></i><p>No cities found.</p></div>';
+                    return;
+                }
+                list.innerHTML = cities.map(c => {
+                    const name = c.city || c.name || 'Unknown';
+                    const state = c.state || '';
+                    const votes = c.votes || 0;
+                    return `
+                        <div class="city-card">
+                            <div class="city-card-name">${escapeHtml(name)}</div>
+                            ${state ? `<div class="city-card-state">${escapeHtml(state)}</div>` : '<div class="city-card-state">-</div>'}
+                            <div class="city-card-stat">Votes: <span>${votes}</span></div>
+                            <div class="city-card-actions">
+                                <button class="btn btn-sm btn-primary" onclick="viewCityFeed('${escapeHtml(name)}')"><i class="fas fa-stream"></i> View Feed</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load cities.</p></div>';
+                console.error(err);
+            }
+        }
+
+        async function viewCityFeed(cityName) {
+            // Hide cities section, show city feed
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-city-feed').classList.add('active');
+            document.getElementById('page-title').textContent = cityName + ' Feed';
+            document.getElementById('city-feed-title').textContent = cityName + ' Feed';
+
+            const container = document.getElementById('city-feed-posts');
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading feed...</div>';
+
+            try {
+                // Load posts for this city using community endpoint
+                const res = await fetch(`${API_BASE}/community?city=${encodeURIComponent(cityName)}&limit=50`, { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                const data = await res.json();
+                const posts = data.posts || data || [];
+                if (posts.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-leaf"></i><p>No posts in ' + escapeHtml(cityName) + ' yet.</p></div>';
+                    return;
+                }
+                container.innerHTML = posts.map(post => {
+                    const avatar = post.avatar_initial || (post.display_name || '?')[0].toUpperCase();
+                    const color = post.avatar_color || '#E8A0B5';
+                    return `
+                        <div class="post-card">
+                            <div class="post-card-header">
+                                <div class="post-card-user">
+                                    <div class="post-card-avatar" style="background:${color}">${avatar}</div>
+                                    <div class="post-card-meta">
+                                        <div class="post-card-name">${escapeHtml(post.display_name || 'Anonymous')}</div>
+                                        <div class="post-card-info">${escapeHtml(post.category || 'general')} &middot; ${timeAgo(post.created_at)} &middot; ${post.likes || 0} likes &middot; ${post.reply_count || 0} replies</div>
+                                    </div>
+                                </div>
+                                <div class="post-card-badges">
+                                    ${post.is_flagged ? '<span class="flagged-indicator"><i class="fas fa-flag"></i> Flagged</span>' : ''}
+                                    ${post.hidden ? '<span class="flagged-indicator" style="background:rgba(241,196,15,0.15);color:#f1c40f"><i class="fas fa-eye-slash"></i> Hidden</span>' : ''}
+                                </div>
+                            </div>
+                            ${post.title ? '<div style="font-size:15px;font-weight:600;color:#fff;margin-bottom:6px">' + escapeHtml(post.title) + '</div>' : ''}
+                            <div class="post-card-content">${escapeHtml(post.body || post.content || '')}</div>
+                            ${post.image_url ? '<img src="' + escapeHtml(post.image_url) + '" style="max-width:100%;border-radius:8px;margin-bottom:10px" onerror="this.style.display=\'none\'">' : ''}
+                            <div class="post-card-actions">
+                                <button class="btn btn-sm btn-approve" onclick="moderatePost('${post.id}', 'approve')"><i class="fas fa-check"></i> Approve</button>
+                                <button class="btn btn-sm btn-flag" onclick="moderatePost('${post.id}', 'flag')"><i class="fas fa-flag"></i> Flag</button>
+                                <button class="btn btn-sm btn-ghost" onclick="moderatePost('${post.id}', 'remove')"><i class="fas fa-trash"></i> Remove</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load feed for ' + escapeHtml(cityName) + '.</p></div>';
+                console.error(err);
+            }
+        }
+
+        function backToCities() {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-cities').classList.add('active');
+            document.getElementById('page-title').textContent = 'City Feeds';
         }
 
         function handleLogout() {

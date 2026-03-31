@@ -128,6 +128,82 @@ async function reverseImageSearch(imageUrl) {
   });
 }
 
+// Bing Visual Search as free fallback for reverse image search
+async function bingReverseImageSearch(imageBuffer) {
+  const apiKey = process.env.BING_SEARCH_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const boundary = '----FormBoundary' + Date.now();
+    const mimeType = (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) ? 'image/jpeg' : 'image/png';
+    const bodyParts = [
+      `--${boundary}\r\n`,
+      `Content-Disposition: form-data; name="image"; filename="photo.jpg"\r\n`,
+      `Content-Type: ${mimeType}\r\n\r\n`,
+    ];
+    const bodyStart = Buffer.from(bodyParts.join(''));
+    const bodyEnd = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const requestBody = Buffer.concat([bodyStart, imageBuffer, bodyEnd]);
+
+    const res = await fetch('https://api.bing.microsoft.com/v7.0/images/visualsearch', {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': apiKey,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      },
+      body: requestBody,
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    // Extract relevant results
+    const tags = data.tags || [];
+    const results = { inline_images: [], organic_results: [], knowledge_graph: null };
+
+    for (const tag of tags) {
+      if (tag.displayName && tag.displayName !== '') {
+        // If Bing identifies an entity
+        results.knowledge_graph = { title: tag.displayName, description: '' };
+      }
+      for (const action of (tag.actions || [])) {
+        if (action.actionType === 'PagesIncluding' && action.data && action.data.value) {
+          for (const page of action.data.value) {
+            results.organic_results.push({ title: page.name || '', link: page.hostPageUrl || '' });
+          }
+        }
+        if (action.actionType === 'VisualSearch' && action.data && action.data.value) {
+          for (const img of action.data.value) {
+            results.inline_images.push({ link: img.contentUrl || '', source: img.hostPageUrl || '' });
+          }
+        }
+      }
+    }
+
+    return (results.inline_images.length > 0 || results.organic_results.length > 0 || results.knowledge_graph) ? results : null;
+  } catch (e) {
+    console.error('[Catfish] Bing Visual Search error:', e.message);
+    return null;
+  }
+}
+
+// Check database for duplicate photo hashes (catches reused photos across profiles)
+async function checkDatabaseDuplicates(imageHash, userId) {
+  try {
+    const dupes = await getMany(
+      `SELECT cs.user_id, cs.profile_name, cs.platform, cs.created_at
+       FROM catfish_scans cs
+       WHERE cs.image_hash = $1 AND ($2::int IS NULL OR cs.user_id != $2)
+       ORDER BY cs.created_at DESC LIMIT 5`,
+      [imageHash, userId || null]
+    );
+    return dupes;
+  } catch (e) {
+    // Table may not exist yet
+    return [];
+  }
+}
+
 // Compute a simple perceptual hash fingerprint
 function simpleHash(buffer) {
   let hash = 0;
@@ -257,8 +333,13 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Too many scans. Please wait before trying again.' });
     }
 
-    // Auth is optional for testing, required in production
     const user = await authenticate(req);
+    if (!user) return res.status(401).json({ error: 'Sign in to use the Catfish Scanner' });
+
+    // Plus or Pro tier required (admins bypass)
+    if (user.role !== 'admin' && (!user.subscription_tier || (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro'))) {
+      return res.status(403).json({ error: 'Catfish Scanner requires a Plus or Pro subscription', upgrade: true });
+    }
 
     const body = await parseBody(req);
     const { imageUrl, imageData, profileName, platform } = body;
@@ -302,13 +383,31 @@ module.exports = async function handler(req, res) {
     const imageAnalysis = analyzeImageBuffer(imageBuffer);
     const imageHash = simpleHash(imageBuffer);
 
-    // Step 2: Reverse image search (if API key available)
-    const reverseResults = await reverseImageSearch(imageUrl);
+    // Step 2: Reverse image search — try SerpAPI, then Bing, then DB duplicates
+    let reverseResults = await reverseImageSearch(imageUrl);
+    if (!reverseResults) {
+      reverseResults = await bingReverseImageSearch(imageBuffer);
+    }
+
+    // Check database for duplicate photo hashes
+    const dbDuplicates = await checkDatabaseDuplicates(imageHash, user ? user.id : null);
 
     // Step 2b: GPT-4o Vision analysis (identifies celebrities, fake photos, AI-generated images)
     let aiVisionResult = null;
     const OPENAI_KEY = process.env.OPENAI_API_KEY;
-    if (OPENAI_KEY && imageData) {
+
+    // Build image content for AI vision — works with file upload (base64) OR URL
+    let aiImageContent = null;
+    if (imageData) {
+      aiImageContent = { type: 'image_url', image_url: { url: imageData, detail: 'high' } };
+    } else if (imageUrl) {
+      // Convert fetched image buffer to base64 data URL for GPT-4o
+      const mimeType = imageAnalysis.isJpeg ? 'image/jpeg' : imageAnalysis.isPng ? 'image/png' : imageAnalysis.isWebp ? 'image/webp' : 'image/jpeg';
+      const base64 = imageBuffer.toString('base64');
+      aiImageContent = { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'high' } };
+    }
+
+    if (OPENAI_KEY && aiImageContent) {
       try {
         const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -341,7 +440,7 @@ Respond in JSON only:
               role: 'user',
               content: [
                 { type: 'text', text: 'Analyze this dating profile photo for catfishing.' + (profileName ? ' The profile claims to be "' + profileName + '".' : '') },
-                { type: 'image_url', image_url: { url: imageData, detail: 'high' } }
+                aiImageContent
               ]
             }],
             max_tokens: 500,
@@ -363,10 +462,103 @@ Respond in JSON only:
       }
     }
 
+    // Step 2c: Free fallback — web search for profile name (works without any API keys)
+    if (!aiVisionResult && !reverseResults && profileName && profileName.trim().length > 1) {
+      try {
+        const searchName = profileName.trim();
+        const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(searchName)}&format=json&no_html=1&skip_disambig=1`;
+        const ddgRes = await fetch(ddgUrl);
+        const ddgData = await ddgRes.json();
+
+        // Check if DuckDuckGo identifies them as a known entity (celebrity, public figure)
+        if (ddgData.AbstractText || ddgData.Heading) {
+          const abstract = (ddgData.AbstractText || '').toLowerCase();
+          const heading = (ddgData.Heading || '').toLowerCase();
+          const combined = heading + ' ' + abstract;
+
+          const celebKeywords = ['actor', 'actress', 'singer', 'musician', 'athlete', 'model',
+            'celebrity', 'politician', 'president', 'rapper', 'artist', 'footballer',
+            'basketball', 'baseball', 'entertainer', 'television', 'film', 'movie',
+            'grammy', 'oscar', 'emmy', 'billboard', 'nba', 'nfl', 'mlb',
+            'famous', 'star', 'influencer', 'youtuber', 'tiktok star'];
+
+          const isCeleb = celebKeywords.some(kw => combined.includes(kw));
+          const isWikipedia = (ddgData.AbstractSource || '').toLowerCase().includes('wikipedia');
+          const hasImage = !!ddgData.Image;
+
+          if (isCeleb || isWikipedia) {
+            aiVisionResult = {
+              is_celebrity: true,
+              celebrity_name: ddgData.Heading || searchName,
+              celebrity_confidence: isWikipedia && isCeleb ? 'high' : 'medium',
+              is_ai_generated: false,
+              is_stock_photo: false,
+              is_professional: true,
+              assessment: `"${ddgData.Heading || searchName}" is a known public figure. ${(ddgData.AbstractText || '').substring(0, 200)}`,
+              catfish_likelihood: 'high'
+            };
+          }
+        }
+
+        // Also do an HTML search for more info
+        if (!aiVisionResult) {
+          const htmlUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchName + ' celebrity OR actor OR singer OR public figure')}`;
+          const htmlRes = await fetch(htmlUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+          });
+          const html = await htmlRes.text();
+
+          // Check if results strongly suggest a public figure
+          const celebSites = ['wikipedia.org', 'imdb.com', 'people.com', 'tmz.com', 'eonline.com',
+            'billboard.com', 'espn.com', 'nba.com', 'nfl.com'];
+          let celebSiteCount = 0;
+          for (const site of celebSites) {
+            if (html.includes(site)) celebSiteCount++;
+          }
+
+          if (celebSiteCount >= 2) {
+            // Extract a snippet about them
+            const snippetPattern = /<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/;
+            const snippetMatch = snippetPattern.exec(html);
+            const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+
+            aiVisionResult = {
+              is_celebrity: true,
+              celebrity_name: searchName,
+              celebrity_confidence: celebSiteCount >= 3 ? 'high' : 'medium',
+              is_ai_generated: false,
+              is_stock_photo: false,
+              is_professional: true,
+              assessment: `"${searchName}" appears to be a well-known public figure (found on ${celebSiteCount} celebrity/news sites). ${snippet.substring(0, 200)}`,
+              catfish_likelihood: 'high'
+            };
+          }
+        }
+      } catch (e) {
+        console.error('[Catfish] Free name search fallback error:', e.message);
+      }
+    }
+
     // Step 3: Compute catfish score
     const result = computeCatfishScore(imageAnalysis, reverseResults, imageUrl);
 
-    // Step 3b: Merge AI vision results into score
+    // Step 3b: Merge database duplicate results
+    if (dbDuplicates && dbDuplicates.length > 0) {
+      result.score = Math.min(100, result.score + 15 * Math.min(dbDuplicates.length, 3));
+      result.flags.push({
+        label: `Photo used in ${dbDuplicates.length} other scan(s) on SafeTea`,
+        severity: dbDuplicates.length >= 3 ? 'high' : 'medium',
+        description: 'This exact photo has been submitted in other catfish scans on SafeTea. ' +
+          dbDuplicates.map(d => d.profile_name ? `"${d.profile_name}" on ${d.platform || 'unknown'}` : 'unnamed profile').join(', ')
+      });
+      // Recalculate risk level
+      if (result.score >= 70) result.riskLevel = 'high_risk';
+      else if (result.score >= 40) result.riskLevel = 'medium_risk';
+      else if (result.score >= 20) result.riskLevel = 'low_risk';
+      else result.riskLevel = 'likely_safe';
+    }
+
+    // Step 3c: Merge AI vision results into score
     if (aiVisionResult) {
       if (aiVisionResult.is_celebrity) {
         result.score = Math.min(100, result.score + 50);
@@ -436,10 +628,11 @@ Respond in JSON only:
         aiVision: aiVisionResult || null,
         reverseSearchAvailable: !!reverseResults,
         aiVisionAvailable: !!aiVisionResult,
+        dbDuplicatesFound: dbDuplicates ? dbDuplicates.length : 0,
         note: aiVisionResult
           ? 'AI vision analysis completed.' + (reverseResults ? ' Reverse image search also completed.' : '')
           : !reverseResults
-            ? 'Configure OPENAI_API_KEY for AI celebrity detection, or SERPAPI_KEY for reverse image search.'
+            ? 'Image metadata and database duplicate analysis completed.' + (dbDuplicates && dbDuplicates.length > 0 ? ' Duplicate photos found in SafeTea database.' : '') + ' Configure OPENAI_API_KEY or BING_SEARCH_KEY for enhanced detection.'
             : 'Reverse image search completed.',
       },
     };
@@ -460,6 +653,6 @@ Respond in JSON only:
     return res.status(200).json(response);
   } catch (err) {
     console.error('Catfish scan error:', err);
-    return res.status(500).json({ error: 'Internal server error', details: err.message });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

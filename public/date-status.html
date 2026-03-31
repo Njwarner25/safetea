@@ -76,6 +76,19 @@
             }
         }
 
+        function fmtDate(str) {
+            if (!str) return 'N/A';
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return 'Invalid date';
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+        function fmtTime(str) {
+            if (!str) return '';
+            const d = new Date(str);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
         function renderStatus(date) {
             const content = document.getElementById('content');
             content.style.display = 'block';
@@ -86,7 +99,7 @@
             const statusIcon = isCheckedIn ? '✅' : (isOverdue ? '🚨' : '📍');
             const statusLabel = isCheckedIn ? 'Checked In Safely' : (isOverdue ? 'Overdue - Not Yet Checked In' : 'Currently on Date');
             const statusSub = isCheckedIn
-                ? 'Made it home safe at ' + new Date(date.checkedInAt).toLocaleTimeString()
+                ? 'Made it home safe at ' + fmtTime(date.checkedInAt)
                 : (isOverdue ? 'Expected return time has passed' : 'Checked out ' + date.minutesSinceCheckout + ' minutes ago');
 
             let html = '<div class="card ' + statusClass + '">';
@@ -114,9 +127,9 @@
             if (date.venueAddress) {
                 html += '<div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">' + date.venueAddress + '</span></div>';
             }
-            html += '<div class="detail-row"><span class="detail-label">Date &amp; Time</span><span class="detail-value">' + new Date(date.scheduledTime).toLocaleString() + '</span></div>';
+            html += '<div class="detail-row"><span class="detail-label">Date &amp; Time</span><span class="detail-value">' + fmtDate(date.scheduledTime) + '</span></div>';
             if (date.estimatedReturn) {
-                html += '<div class="detail-row"><span class="detail-label">Expected return</span><span class="detail-value">' + new Date(date.estimatedReturn).toLocaleString() + '</span></div>';
+                html += '<div class="detail-row"><span class="detail-label">Expected return</span><span class="detail-value">' + fmtDate(date.estimatedReturn) + '</span></div>';
             }
             html += '</div>';
 

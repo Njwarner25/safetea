@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { sendStrikeBanEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -64,6 +65,13 @@ module.exports = async function handler(req, res) {
         // Unhide posts
         await run('UPDATE posts SET hidden = false WHERE user_id = $1', [user_id]);
 
+        // Send inbox notification to user
+        await run(
+          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
+           VALUES ($1, $1, $2, true, NOW())`,
+          [user_id, '✅ Your account has been unsuspended. You can now use SafeTea again. Please review our community guidelines to avoid future issues.']
+        );
+
         return res.status(200).json({ message: 'User unbanned successfully', user_id });
       }
 
@@ -109,6 +117,25 @@ module.exports = async function handler(req, res) {
 
       // Hide all user's posts
       await run('UPDATE posts SET hidden = true WHERE user_id = $1', [user_id]);
+
+      // Send inbox notification to user
+      const banMsg = ban_type === 'permanent'
+        ? `⛔ Your account has been permanently suspended.\n\nReason: ${reason}\n\nIf you believe this is a mistake, contact support at support@getsafetea.app.`
+        : `⚠️ Your account has been temporarily suspended for ${duration_days} day(s).\n\nReason: ${reason}\n\nYour access will be restored on ${banUntil.toLocaleDateString()}. If you believe this is a mistake, contact support@getsafetea.app.`;
+      await run(
+        `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
+         VALUES ($1, $1, $2, true, NOW())`,
+        [user_id, banMsg]
+      );
+
+      // Send ban notification email (non-blocking)
+      const targetUser = await getOne('SELECT email, display_name FROM users WHERE id = $1', [user_id]);
+      if (targetUser && targetUser.email) {
+        const strikeCount = ban_type === 'permanent' ? 3 : 1;
+        sendStrikeBanEmail(targetUser.email, targetUser.display_name, strikeCount, ban_type === 'permanent').catch(function(err) {
+          console.error('[Ban] Strike/ban email failed:', err.message);
+        });
+      }
 
       return res.status(200).json({
         message: 'User banned successfully',

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photo Removal Request - SafeTea</title>
+  <meta name="description" content="Request removal of a SafeTea photo shared without your permission. Our invisible watermark technology identifies the source.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: var(--bg); color: var(--text-primary); font-family: 'Inter', sans-serif; }
+
+    .page-header {
+      padding: 24px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .page-header .container {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-header a.logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: #fff; font-weight: 700; font-size: 1.2rem;
+    }
+    .page-header a.logo img { height: 32px; }
+    .page-header a.back-link {
+      color: #E8A0B5; text-decoration: none; font-size: 0.9rem; font-weight: 500;
+    }
+    .page-header a.back-link:hover { text-decoration: underline; }
+
+    .removal-page { padding: 80px 0 100px; position: relative; }
+    .removal-page::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse 600px 300px at 50% 50%, rgba(232,160,181,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .removal-page h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem; font-weight: 700; text-align: center;
+      margin-bottom: 12px; position: relative; z-index: 1;
+    }
+    .removal-page .subtitle {
+      text-align: center; color: var(--text-muted); font-size: 1.05rem;
+      max-width: 560px; margin: 0 auto 48px; line-height: 1.6;
+      position: relative; z-index: 1;
+    }
+
+    .removal-steps {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; margin-bottom: 48px; position: relative; z-index: 1;
+    }
+    .removal-step {
+      background: #22223A; border-radius: var(--radius-lg);
+      padding: 32px 24px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.3s ease;
+    }
+    .removal-step:hover {
+      border-color: rgba(232,160,181,0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .removal-step-icon {
+      width: 56px; height: 56px; margin: 0 auto 16px;
+      background: rgba(232,160,181,0.08); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; color: #E8A0B5;
+    }
+    .removal-step h4 { font-size: 1rem; color: #fff; margin-bottom: 6px; }
+    .removal-step p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
+
+    .removal-form {
+      max-width: 560px; margin: 0 auto; position: relative; z-index: 1;
+    }
+    .removal-upload-area {
+      border: 2px dashed rgba(232,160,181,0.25);
+      border-radius: var(--radius-lg); padding: 40px 24px;
+      text-align: center; cursor: pointer;
+      transition: all 0.3s ease; background: rgba(34,34,58,0.6);
+      margin-bottom: 16px;
+    }
+    .removal-upload-area:hover, .removal-upload-area.dragover {
+      border-color: rgba(232,160,181,0.5);
+      background: rgba(232,160,181,0.04);
+    }
+    .removal-upload-area i { font-size: 2rem; color: #E8A0B5; margin-bottom: 12px; }
+    .removal-upload-area p { color: var(--text-muted); font-size: 0.9rem; }
+    .removal-upload-area .file-name {
+      margin-top: 8px; color: #E8A0B5; font-weight: 500; font-size: 0.85rem;
+    }
+    .removal-input {
+      width: 100%; padding: 14px 16px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08); background: #22223A;
+      color: #fff; font-family: inherit; font-size: 0.9rem;
+      margin-bottom: 12px; transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    .removal-input:focus {
+      outline: none; border-color: rgba(232,160,181,0.4);
+    }
+    .removal-input::placeholder { color: #6060A0; }
+    textarea.removal-input { resize: vertical; min-height: 80px; }
+    .removal-submit {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #f27059, #E8A0B5);
+      color: #fff; font-family: inherit; font-size: 1rem;
+      font-weight: 600; cursor: pointer; transition: all 0.3s;
+      margin-top: 4px;
+    }
+    .removal-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,160,181,0.3); }
+    .removal-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .removal-result {
+      margin-top: 16px; padding: 16px 20px; border-radius: 10px;
+      font-size: 0.9rem; line-height: 1.5; display: none;
+    }
+    .removal-result.success { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); color: #2ecc71; }
+    .removal-result.error { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.2); color: #e74c3c; }
+    .removal-result.info { background: rgba(232,160,181,0.1); border: 1px solid rgba(232,160,181,0.2); color: #E8A0B5; }
+    .removal-note {
+      margin-top: 20px; padding: 14px 18px; border-radius: 10px;
+      background: rgba(155,89,182,0.06); border: 1px solid rgba(155,89,182,0.12);
+      font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;
+    }
+    .removal-note i { color: #9b59b6; margin-right: 6px; }
+
+    @media (max-width: 768px) {
+      .removal-page { padding: 48px 0 60px; }
+      .removal-page h1 { font-size: 1.8rem; }
+      .removal-steps { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; gap: 12px; }
+      .removal-step { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="container">
+    <a href="index.html" class="logo">
+      <img src="logo.png" alt="SafeTea">
+      SafeTea
+    </a>
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+  </div>
+</header>
+
+<section class="removal-page">
+  <div class="container">
+    <h1>Photo Removal Request</h1>
+    <p class="subtitle">If someone shared your SafeTea photo without permission, upload it here. Our invisible watermark technology will identify the leaker and take immediate action.</p>
+
+    <div class="removal-steps">
+      <div class="removal-step">
+        <div class="removal-step-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <h4>Upload the photo</h4>
+        <p>Upload the leaked photo you found shared outside of SafeTea.</p>
+      </div>
+      <div class="removal-step">
+        <div class="removal-step-icon"><i class="fas fa-shield-alt"></i></div>
+        <h4>We scan for our watermark</h4>
+        <p>Our invisible steganography watermark is embedded in every photo uploaded to SafeTea.</p>
+      </div>
+      <div class="removal-step">
+        <div class="removal-step-icon"><i class="fas fa-user-slash"></i></div>
+        <h4>Leaker is suspended</h4>
+        <p>If verified, the leaker's account is automatically banned and all their posts are hidden.</p>
+      </div>
+    </div>
+
+    <div class="removal-form">
+      <div class="removal-upload-area" id="removal-drop-zone">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>Drag &amp; drop your photo here, or <strong style="color:#E8A0B5">click to browse</strong></p>
+        <p style="font-size:0.78rem;color:#6060A0;margin-top:6px">PNG, JPEG, or WebP &mdash; max 10MB</p>
+        <div class="file-name" id="removal-file-name" style="display:none"></div>
+        <input type="file" id="removal-file-input" accept="image/png,image/jpeg,image/webp" style="display:none">
+      </div>
+      <input type="email" class="removal-input" id="removal-email" placeholder="Your email (for follow-up)" maxlength="255">
+      <textarea class="removal-input" id="removal-details" placeholder="Where did you find this photo? (optional)" maxlength="2000"></textarea>
+      <button class="removal-submit" id="removal-submit-btn" disabled>Submit Removal Request</button>
+      <div class="removal-result" id="removal-result"></div>
+      <div class="removal-note">
+        <i class="fas fa-info-circle"></i>
+        <strong>How it works:</strong> Every photo uploaded to SafeTea is invisibly watermarked with the uploader's identity using LSB steganography. This watermark survives screenshots, crops, and re-sharing. Even if someone screenshots content, the watermark identifies the source.
+      </div>
+      <div class="removal-note" style="margin-top:10px">
+        <i class="fas fa-clock"></i>
+        <strong>Auto-deletion policy:</strong> All community posts containing photos of men are automatically removed from feeds within 7 days to further protect privacy.
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var dropZone = document.getElementById('removal-drop-zone');
+  var fileInput = document.getElementById('removal-file-input');
+  var fileName = document.getElementById('removal-file-name');
+  var submitBtn = document.getElementById('removal-submit-btn');
+  var resultDiv = document.getElementById('removal-result');
+  var selectedFile = null;
+
+  dropZone.addEventListener('click', function(){ fileInput.click(); });
+  dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('dragover'); });
+  dropZone.addEventListener('drop', function(e){
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', function(){ if(fileInput.files.length) handleFile(fileInput.files[0]); });
+
+  function handleFile(file){
+    if(!file.type.match(/^image\/(png|jpeg|webp)$/)){
+      showResult('Please upload a PNG, JPEG, or WebP image.','error'); return;
+    }
+    if(file.size > 10*1024*1024){
+      showResult('File is too large. Maximum size is 10MB.','error'); return;
+    }
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileName.style.display = 'block';
+    submitBtn.disabled = false;
+    resultDiv.style.display = 'none';
+  }
+
+  function showResult(msg, type){
+    resultDiv.textContent = msg;
+    resultDiv.className = 'removal-result ' + type;
+    resultDiv.style.display = 'block';
+  }
+
+  submitBtn.addEventListener('click', function(){
+    if(!selectedFile) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    resultDiv.style.display = 'none';
+
+    var reader = new FileReader();
+    reader.onload = function(){
+      var base64 = reader.result;
+      var payload = { image: base64 };
+      var email = document.getElementById('removal-email').value.trim();
+      var details = document.getElementById('removal-details').value.trim();
+      if(email) payload.email = email;
+      if(details) payload.details = details;
+
+      fetch('/api/photos/removal-public', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        submitBtn.textContent = 'Submit Removal Request';
+        if(data.success){
+          if(data.watermark_detected){
+            showResult(data.message, 'success');
+          } else {
+            showResult(data.message, 'info');
+          }
+          selectedFile = null;
+          fileName.style.display = 'none';
+          fileInput.value = '';
+        } else {
+          showResult(data.error || 'Something went wrong. Please try again.', 'error');
+          submitBtn.disabled = false;
+        }
+      })
+      .catch(function(){
+        submitBtn.textContent = 'Submit Removal Request';
+        submitBtn.disabled = false;
+        showResult('Network error. Please check your connection and try again.', 'error');
+      });
+    };
+    reader.readAsDataURL(selectedFile);
+  });
+})();
+</script>
+
+</body>
+</html>

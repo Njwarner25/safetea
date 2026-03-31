@@ -94,6 +94,16 @@
         return div.innerHTML;
     }
 
+    function formatDateTime(dateStr) {
+        if (!dateStr) return 'N/A';
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 'Invalid date';
+        return d.toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: 'numeric', minute: '2-digit', hour12: true
+        });
+    }
+
     // ============ VERIFICATION STATUS ============
     function loadVerificationStatus() {
         fetch('/api/auth/verify/status', { headers: { 'Authorization': 'Bearer ' + getToken() } })
@@ -568,6 +578,24 @@
     var activeDateData = null;
     var activeDateTimer = null;
 
+    // Check for active date on page load
+    function checkActiveDate() {
+        fetch('/api/dates/checkout', { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.checkouts && data.checkouts.length > 0) {
+                    // Find the most recent checked_out date
+                    var active = data.checkouts.find(function(c) { return c.status === 'checked_out'; });
+                    if (active) {
+                        activeDateData = active;
+                        showActiveDate(activeDateData);
+                    }
+                }
+            })
+            .catch(function() {});
+    }
+    checkActiveDate();
+
     window.handleDatePhotoUpload = function(input) {
         var file = input.files[0];
         if (!file) return;
@@ -642,8 +670,8 @@
         .then(function(data) {
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-door-open"></i> Check Out & Generate SafeTea Report'; }
             if (data.error) { if (typeof showToast === 'function') showToast(data.error); return; }
-            if (typeof showToast === 'function') showToast('Checked out! Your trusted contacts will be notified.');
-            activeDateData = data.date || data;
+            if (typeof showToast === 'function') showToast(data.smsMessage || 'Checked out! Your trusted contacts will be notified.');
+            activeDateData = data.checkout || data.date || data;
             showActiveDate(activeDateData);
         })
         .catch(function() {
@@ -666,7 +694,7 @@
         var timeEl = document.getElementById('dc-active-time');
         if (nameEl) nameEl.textContent = date.date_name || date.dateName || '';
         if (venueEl) venueEl.textContent = date.venue_name || date.venueName || '';
-        if (timeEl) timeEl.textContent = new Date(date.scheduled_time || date.scheduledTime).toLocaleString();
+        if (timeEl) timeEl.textContent = formatDateTime(date.scheduled_time || date.scheduledTime);
 
         if (date.date_photo_url || date.datePhotoUrl) {
             var photoDiv = document.getElementById('dc-active-photo');
@@ -736,36 +764,185 @@
         }
     };
 
+    function reportRow(icon, label, value) {
+        return '<div class="safetea-report-row">' +
+            '<div class="safetea-report-icon"><i class="fas ' + icon + '"></i></div>' +
+            '<div><div class="safetea-report-label">' + label + '</div><div class="safetea-report-value">' + value + '</div></div>' +
+        '</div>';
+    }
+
+    function renderSafeTeaReport(report) {
+        var container = document.getElementById('dc-report-content');
+        if (!container) return;
+
+        var photoHtml = '';
+        if (report.datePhotoUrl || report.date_photo_url) {
+            var photoSrc = report.datePhotoUrl || report.date_photo_url;
+            photoHtml = '<div class="safetea-report-photo"><img src="' + escapeHtmlSafe(photoSrc) + '" alt="Date photo" onerror="this.parentElement.style.display=\'none\'"></div>';
+        }
+
+        var rows = '';
+        rows += reportRow('fa-user', 'Meeting', escapeHtmlSafe(report.dateName || report.date_name || ''));
+        var venue = escapeHtmlSafe(report.venue || report.venue_name || report.venueName || '');
+        var addr = report.address || report.venue_address || report.venueAddress || '';
+        if (addr) venue += '<br><span style="font-size:12px;color:#8080A0">' + escapeHtmlSafe(addr) + '</span>';
+        rows += reportRow('fa-map-marker-alt', 'Location', venue);
+        var transport = report.transportation || '';
+        var transportDetail = report.transportDetails || report.transport_details || '';
+        if (transport) rows += reportRow('fa-car', 'Transportation', escapeHtmlSafe(transport) + (transportDetail ? '<br><span style="font-size:12px;color:#8080A0">' + escapeHtmlSafe(transportDetail) + '</span>' : ''));
+        var sTime = report.scheduledTime || report.scheduled_time;
+        if (sTime) rows += reportRow('fa-clock', 'Date & Time', formatDateTime(sTime));
+        var eReturn = report.estimatedReturn || report.estimated_return;
+        if (eReturn) rows += reportRow('fa-home', 'Expected Back', formatDateTime(eReturn));
+        if (report.notes) rows += reportRow('fa-sticky-note', 'Notes', escapeHtmlSafe(report.notes));
+        var trackUrl = report.trackingUrl || ('https://www.getsafetea.app/date-status?code=' + (report.shareCode || report.share_code || ''));
+        rows += reportRow('fa-link', 'Live Tracking', '<a href="' + escapeHtmlSafe(trackUrl) + '" target="_blank" style="color:#E8A0B5;text-decoration:underline;word-break:break-all">' + escapeHtmlSafe(trackUrl) + '</a>');
+
+        var userName = report.userName || report.user_name || '';
+        var shareCode = report.shareCode || report.share_code || '';
+        var createdAt = report.createdAt || report.created_at || '';
+
+        container.innerHTML =
+            '<div class="safetea-report">' +
+                '<div class="safetea-report-header">' +
+                    '<h3><i class="fas fa-shield-alt"></i> SafeTea Report</h3>' +
+                    (userName ? '<p>Date Safety Details for ' + escapeHtmlSafe(userName) + '</p>' : '') +
+                '</div>' +
+                '<div class="safetea-report-body">' +
+                    photoHtml +
+                    rows +
+                '</div>' +
+                '<div class="safetea-report-footer">' +
+                    '<span>' + (shareCode ? 'Report #' + shareCode + ' | ' : '') + (createdAt ? 'Generated ' + formatDateTime(createdAt) : '') + '</span>' +
+                '</div>' +
+            '</div>';
+    }
+
     window.viewSafeTeaReport = function() {
-        if (!activeDateData) return;
-        var report = document.getElementById('dc-report');
-        var content = document.getElementById('dc-report-content');
-        if (report && content) {
-            report.style.display = 'block';
-            content.innerHTML = '<h3 style="color:#fff;margin-bottom:12px"><i class="fas fa-file-alt" style="color:#E8A0B5"></i> SafeTea Report</h3>' +
-                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Meeting:</strong> <span style="color:#F0D0C0">' + escapeHtmlSafe(activeDateData.date_name || activeDateData.dateName || '') + '</span></div>' +
-                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Venue:</strong> <span style="color:#F0D0C0">' + escapeHtmlSafe(activeDateData.venue_name || activeDateData.venueName || '') + '</span></div>' +
-                '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px"><strong style="color:#fff">Time:</strong> <span style="color:#F0D0C0">' + new Date(activeDateData.scheduled_time || activeDateData.scheduledTime).toLocaleString() + '</span></div>';
+        var reportDiv = document.getElementById('dc-report');
+        if (!reportDiv) return;
+
+        if (reportDiv.style.display === 'block') {
+            reportDiv.style.display = 'none';
+            return;
+        }
+
+        reportDiv.style.display = 'block';
+
+        if (activeDateData) {
+            // First try to fetch full report from API
+            var dateId = activeDateData.id;
+            if (dateId) {
+                fetch('/api/dates/report?id=' + dateId, { headers: authHeaders() })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data && data.report) {
+                            renderSafeTeaReport(data.report);
+                        } else {
+                            // Fallback: render from activeDateData
+                            renderSafeTeaReport(activeDateData);
+                        }
+                    })
+                    .catch(function() {
+                        renderSafeTeaReport(activeDateData);
+                    });
+            } else {
+                renderSafeTeaReport(activeDateData);
+            }
         }
     };
 
     window.shareDateLink = function() {
-        if (!activeDateData || !activeDateData.share_code) { if (typeof showToast === 'function') showToast('No active date link available'); return; }
-        var url = window.location.origin + '/date-status?code=' + activeDateData.share_code;
+        var code = activeDateData && (activeDateData.share_code || activeDateData.shareCode);
+        if (!code) { if (typeof showToast === 'function') showToast('No active date link available'); return; }
+        var url = 'https://www.getsafetea.app/date-status?code=' + code;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url).then(function() { if (typeof showToast === 'function') showToast('Share link copied!'); });
         }
     };
 
     window.shareReportSMS = function() {
-        if (!activeDateData || !activeDateData.share_code) return;
-        var url = window.location.origin + '/date-status?code=' + activeDateData.share_code;
-        var msg = 'SafeTea Date Report: I\'m heading on a date. Track my status here: ' + url;
-        window.open('sms:?&body=' + encodeURIComponent(msg));
+        if (!activeDateData) { if (typeof showToast === 'function') showToast('No active date to share'); return; }
+        var c = activeDateData;
+        var name = c.dateName || c.date_name || 'Someone';
+        var venue = c.venueName || c.venue_name || '';
+        var address = c.venueAddress || c.venue_address || '';
+        var transport = c.transportation || '';
+        var timeStr = c.scheduledTime || c.scheduled_time;
+        var dateTime = timeStr ? formatDateTime(timeStr) : '';
+        var code = c.shareCode || c.share_code || '';
+        var trackUrl = 'https://www.getsafetea.app/date-status?code=' + code;
+
+        var msg = 'SafeTea Report\n';
+        msg += 'Meeting: ' + name + '\n';
+        if (venue) msg += 'Where: ' + venue + '\n';
+        if (address) msg += 'Address: ' + address + '\n';
+        if (dateTime) msg += 'When: ' + dateTime + '\n';
+        if (transport) msg += 'Getting there: ' + transport + '\n';
+        msg += '\nTrack live: ' + trackUrl;
+        msg += '\nSent via SafeTea';
+
+        window.open('sms:?body=' + encodeURIComponent(msg), '_blank');
+        if (typeof showToast === 'function') showToast('Opening messaging app...');
     };
 
     window.shareReportInbox = function() {
-        if (typeof showToast === 'function') showToast('Share via inbox coming soon');
+        if (!activeDateData) { if (typeof showToast === 'function') showToast('No active date to share'); return; }
+        var modal = document.createElement('div');
+        modal.id = 'dc-share-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center';
+        modal.innerHTML =
+            '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;max-width:440px;width:90%">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-envelope" style="color:#E8A0B5"></i> Send Report to Inbox</h3>' +
+                '<div style="margin-bottom:12px"><label style="display:block;font-size:12px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Search for a SafeTea user</label>' +
+                '<input type="text" id="dc-share-search" placeholder="Search by name..." oninput="searchUsersForShare(this.value)" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none"></div>' +
+                '<div id="dc-share-results" style="max-height:200px;overflow-y:auto"></div>' +
+                '<button onclick="document.getElementById(\'dc-share-modal\').remove()" style="margin-top:12px;width:100%;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.searchUsersForShare = function(query) {
+        var results = document.getElementById('dc-share-results');
+        if (!query || query.length < 2) { results.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center">Type at least 2 characters...</p>'; return; }
+        fetch('/api/users/search?q=' + encodeURIComponent(query), { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data || !data.users || data.users.length === 0) {
+                    results.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center">No users found</p>';
+                    return;
+                }
+                var html = '';
+                data.users.forEach(function(u) {
+                    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="sendReportInbox(' + u.id + ',\'' + escapeHtmlSafe(u.display_name || '') + '\')">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1A1A2E;font-size:14px">' + (u.display_name ? u.display_name[0].toUpperCase() : '?') + '</div>' +
+                        '<div><div style="color:#fff;font-weight:500;font-size:14px">' + escapeHtmlSafe(u.display_name || '') + '</div></div>' +
+                        '<i class="fas fa-paper-plane" style="margin-left:auto;color:#E8A0B5"></i></div>';
+                });
+                results.innerHTML = html;
+            })
+            .catch(function() { results.innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">Search failed</p>'; });
+    };
+
+    window.sendReportInbox = function(userId, userName) {
+        if (!activeDateData) return;
+        fetch('/api/dates/report', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ checkoutId: activeDateData.id, shareMethod: 'inbox', recipientUserId: userId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                if (typeof showToast === 'function') showToast('SafeTea Report sent to ' + userName + '\'s inbox!');
+                var modal = document.getElementById('dc-share-modal');
+                if (modal) modal.remove();
+            } else {
+                if (typeof showToast === 'function') showToast(data.error || 'Failed to send to inbox');
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Failed to send to inbox'); });
     };
 
     window.closeReport = function() {
@@ -851,6 +1028,9 @@
     };
 
     // ============ INBOX / MESSAGING ============
+    var currentThreadUserId = null;
+    var inboxLoaded = false;
+
     window.openComposeModal = function() {
         var modal = document.getElementById('compose-modal');
         if (modal) modal.style.display = 'flex';
@@ -900,9 +1080,215 @@
         var body = document.getElementById('compose-body').value.trim();
         if (!body) { if (typeof showToast === 'function') showToast('Write a message'); return; }
 
-        if (typeof showToast === 'function') showToast('Messaging is coming soon!');
-        closeComposeModal();
+        var btn = document.getElementById('compose-send-btn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...'; }
+
+        fetch('/api/messages', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ recipient_id: composeRecipientId, content: body })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message'; }
+            if (!res.ok) {
+                if (typeof showToast === 'function') showToast(res.data.error || 'Failed to send');
+                return;
+            }
+            if (typeof showToast === 'function') showToast('Message sent!');
+            document.getElementById('compose-body').value = '';
+            clearComposeRecipient();
+            closeComposeModal();
+            loadConversations();
+            // Open the thread with the recipient
+            openConversation(composeRecipientId);
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message'; }
+            if (typeof showToast === 'function') showToast('Network error — try again');
+        });
     };
+
+    // Load conversations list
+    window.loadConversations = function() {
+        var container = document.getElementById('inbox-conversations');
+        if (!container) return;
+
+        fetch('/api/messages', { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var convos = data.conversations || [];
+                if (convos.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#8080A0"><i class="fas fa-envelope-open" style="font-size:32px;display:block;margin-bottom:12px;color:#E8A0B5"></i><p style="font-size:14px;margin:0">No conversations yet</p><p style="font-size:12px;margin-top:4px">Send a message to get started!</p></div>';
+                    return;
+                }
+                var html = '';
+                convos.forEach(function(c) {
+                    var name = c.other_custom_name || c.other_name || 'User';
+                    var initials = name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+                    var color = c.other_avatar_color || '#E8A0B5';
+                    var preview = c.last_message || '';
+                    if (preview.length > 50) preview = preview.substring(0, 50) + '...';
+                    var time = formatConvoTime(c.last_message_at);
+                    var unread = parseInt(c.unread_count) || 0;
+                    var isActive = currentThreadUserId === c.other_user_id;
+
+                    html += '<div class="convo-item' + (isActive ? ' active' : '') + '" onclick="openConversation(' + c.other_user_id + ')">';
+                    html += '<div class="convo-avatar" style="background:' + color + '">' + escapeHtmlSafe(initials) + '</div>';
+                    html += '<div class="convo-info">';
+                    html += '<div class="convo-name">' + escapeHtmlSafe(name);
+                    if (unread > 0) html += ' <span class="convo-unread">' + unread + '</span>';
+                    html += '</div>';
+                    html += '<div class="convo-preview">' + escapeHtmlSafe(preview) + '</div>';
+                    html += '</div>';
+                    html += '<div class="convo-time">' + escapeHtmlSafe(time) + '</div>';
+                    html += '</div>';
+                });
+                container.innerHTML = html;
+            })
+            .catch(function() {
+                container.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#8080A0"><p style="font-size:14px">Failed to load conversations</p><button onclick="loadConversations()" style="margin-top:8px;background:rgba(232,160,181,0.15);color:#E8A0B5;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">Retry</button></div>';
+            });
+    };
+
+    // Open a conversation thread
+    window.openConversation = function(userId) {
+        currentThreadUserId = userId;
+        var thread = document.getElementById('inbox-thread');
+        if (!thread) return;
+
+        thread.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8080A0"><i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Loading...</div>';
+
+        // Highlight active convo
+        document.querySelectorAll('.convo-item').forEach(function(el) { el.classList.remove('active'); });
+        var items = document.querySelectorAll('.convo-item');
+        items.forEach(function(el) {
+            if (el.getAttribute('onclick') && el.getAttribute('onclick').indexOf(userId) !== -1) el.classList.add('active');
+        });
+
+        fetch('/api/messages/' + userId, { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var other = data.otherUser || {};
+                var msgs = data.messages || [];
+                var otherName = other.custom_display_name || other.display_name || 'User';
+                var otherColor = other.avatar_color || '#E8A0B5';
+                var otherInitials = otherName.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+                var me = getUser();
+                var myId = me ? me.id : null;
+
+                var html = '<div class="thread-header">';
+                html += '<div class="convo-avatar" style="background:' + otherColor + ';width:36px;height:36px;font-size:13px">' + escapeHtmlSafe(otherInitials) + '</div>';
+                html += '<div class="thread-header-name">' + escapeHtmlSafe(otherName) + '</div>';
+                html += '</div>';
+
+                html += '<div class="thread-messages" id="thread-messages">';
+                if (msgs.length === 0) {
+                    html += '<div style="text-align:center;color:#8080A0;padding:40px;font-size:14px">No messages yet — say hello!</div>';
+                } else {
+                    msgs.forEach(function(m) {
+                        var isSent = m.sender_id === myId;
+                        html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">';
+                        html += escapeHtmlSafe(m.content);
+                        html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
+                        html += '</div>';
+                    });
+                }
+                html += '</div>';
+
+                html += '<div class="thread-input">';
+                html += '<input type="text" id="thread-reply-input" placeholder="Type a message..." onkeydown="if(event.key===\'Enter\')sendThreadReply()">';
+                html += '<button onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>';
+                html += '</div>';
+
+                thread.innerHTML = html;
+
+                // Scroll to bottom
+                var msgContainer = document.getElementById('thread-messages');
+                if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+
+                // Refresh sidebar to clear unread badges
+                loadConversations();
+            })
+            .catch(function() {
+                thread.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><p>Failed to load messages</p><button onclick="openConversation(' + userId + ')" style="margin-top:8px;background:rgba(232,160,181,0.15);color:#E8A0B5;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">Retry</button></div>';
+            });
+    };
+
+    // Send reply in thread
+    window.sendThreadReply = function() {
+        if (!currentThreadUserId) return;
+        var input = document.getElementById('thread-reply-input');
+        if (!input) return;
+        var content = input.value.trim();
+        if (!content) return;
+
+        input.disabled = true;
+
+        fetch('/api/messages', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ recipient_id: currentThreadUserId, content: content })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            input.disabled = false;
+            if (!res.ok) {
+                if (typeof showToast === 'function') showToast(res.data.error || 'Failed to send');
+                return;
+            }
+            input.value = '';
+            // Append the new message to the thread
+            var msgContainer = document.getElementById('thread-messages');
+            if (msgContainer) {
+                var div = document.createElement('div');
+                div.className = 'msg-bubble sent';
+                div.innerHTML = escapeHtmlSafe(content) + '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">Just now</div>';
+                msgContainer.appendChild(div);
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+            }
+            // Refresh conversation list
+            loadConversations();
+        })
+        .catch(function() {
+            input.disabled = false;
+            if (typeof showToast === 'function') showToast('Network error — try again');
+        });
+    };
+
+    // Update unread badge in nav
+    window.updateInboxBadge = function() {
+        fetch('/api/messages/unread/count', { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var count = data.unread || 0;
+                var badge = document.getElementById('inbox-badge');
+                if (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(function() {});
+    };
+
+    // Time formatting helpers
+    function formatConvoTime(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr);
+        var now = new Date();
+        var diff = now - d;
+        if (diff < 60000) return 'now';
+        if (diff < 3600000) return Math.floor(diff / 60000) + 'm';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+        if (diff < 604800000) return Math.floor(diff / 86400000) + 'd';
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function formatMsgTime(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr);
+        return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
 
     // ============ SAVE AVATAR ============
     window.saveAvatar = function() {
@@ -1137,5 +1523,6 @@
     loadVerificationStatus();
     loadWatchZones();
     initAlertsTab();
+    updateInboxBadge();
 
 })();

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Your Identity - SafeTea</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0D0D1A;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .verify-container {
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+    }
+    .verify-card {
+      background: #22223A;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 40px;
+    }
+    .logo-area {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo-area img {
+      height: 40px;
+      margin-bottom: 8px;
+    }
+    .logo-area h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .logo-area p {
+      color: #8080A0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .progress-step {
+      flex: 1;
+      text-align: center;
+    }
+    .progress-step .bar {
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.08);
+      margin-bottom: 8px;
+      transition: background 0.3s;
+    }
+    .progress-step.completed .bar { background: #2ecc71; }
+    .progress-step.active .bar { background: linear-gradient(135deg, #E8A0B5, #D4768E); }
+    .progress-step .label {
+      font-size: 11px;
+      font-weight: 500;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .progress-step.completed .label { color: #2ecc71; }
+    .progress-step.active .label { color: #E8A0B5; }
+
+    /* Step panels */
+    .step-panel {
+      display: none;
+    }
+    .step-panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-panel h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step-panel .step-desc {
+      color: #8080A0;
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* Form elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      color: #8080A0;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #E8A0B5;
+    }    .form-group select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238080A0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+    .form-group select option {
+      background: #141428;
+      color: #fff;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(232,160,181,0.3);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Messages */
+    .error-message {
+      background: rgba(231,76,60,0.1);
+      border: 1px solid rgba(231,76,60,0.3);
+      color: #e74c3c;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .success-message {
+      background: rgba(46,204,113,0.1);
+      border: 1px solid rgba(46,204,113,0.3);
+      color: #2ecc71;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .info-box {
+      background: rgba(232,160,181,0.08);
+      border: 1px solid rgba(232,160,181,0.2);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .info-box p {
+      color: #ccc;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .info-box .icon {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    /* Gender cards */
+    .gender-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .gender-card {
+      background: #141428;
+      border: 2px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .gender-card:hover {
+      border-color: rgba(232,160,181,0.3);
+    }
+    .gender-card.selected {
+      border-color: #E8A0B5;
+      background: rgba(232,160,181,0.05);
+    }
+    .gender-card .radio-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .gender-card.selected .radio-dot {
+      border-color: #E8A0B5;
+    }
+    .gender-card.selected .radio-dot::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #E8A0B5;
+    }
+    .gender-card .gender-label {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .gender-card .gender-desc {
+      font-size: 12px;
+      color: #8080A0;
+      margin-top: 2px;
+    }
+
+    /* Identity step styling */
+    .verify-steps-list {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    .verify-steps-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      color: #bbb;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .verify-steps-list .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(232,160,181,0.15);
+      color: #E8A0B5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* Complete step */
+    .complete-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(46,204,113,0.1);
+      border: 2px solid rgba(46,204,113,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 36px;
+    }
+    .complete-text {
+      text-align: center;
+    }
+    .complete-text h2 {
+      color: #2ecc71;
+      margin-bottom: 8px;
+    }
+    .complete-text p {
+      color: #8080A0;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Skip link */
+    .skip-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      color: #555;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .skip-link:hover { color: #8080A0; }
+
+    /* Waiting state */
+    .waiting-state {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .waiting-state .pulse-ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid #E8A0B5;
+      margin: 0 auto 20px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .waiting-state p {
+      color: #8080A0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="verify-container">
+    <div class="verify-card">
+      <div class="logo-area">
+        <h1>Complete Your Profile</h1>
+        <p>SafeTea requires verification to keep our community safe</p>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar">
+        <div class="progress-step" id="prog-age">
+          <div class="bar"></div>
+          <div class="label">Age</div>
+        </div>
+        <div class="progress-step" id="prog-identity">
+          <div class="bar"></div>
+          <div class="label">Identity</div>
+        </div>
+        <div class="progress-step" id="prog-gender">
+          <div class="bar"></div>
+          <div class="label">Gender</div>
+        </div>
+      </div>
+
+      <div id="error-msg" class="error-message"></div>
+      <div id="success-msg" class="success-message"></div>
+
+      <!-- STEP 1: Age Verification -->
+      <div class="step-panel" id="step-age">
+        <h2>Confirm Your Age</h2>
+        <p class="step-desc">You must be 18 or older to use SafeTea. Your date of birth is used only to confirm your age — we never store it.</p>
+        <div class="form-group">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" max="2008-03-26" />
+        </div>
+        <button class="btn-primary" id="btn-age" onclick="submitAge()">Continue</button>
+      </div>
+
+      <!-- STEP 2: Identity Verification -->
+      <div class="step-panel" id="step-identity">
+        <h2>Verify Your Identity</h2>
+        <p class="step-desc">We use a secure third-party service to confirm you are who you say you are. This helps protect everyone on SafeTea.</p>
+        <div class="info-box">          <div class="icon">🔒</div>
+          <p>You'll be redirected to our verification partner. You'll need a valid government-issued photo ID (driver's license, passport, or state ID).</p>
+        </div>
+        <ul class="verify-steps-list">
+          <li><span class="step-num">1</span> Take a photo of your ID</li>
+          <li><span class="step-num">2</span> Take a quick selfie</li>
+          <li><span class="step-num">3</span> Verification completes automatically</li>
+        </ul>
+        <button class="btn-primary" id="btn-identity" onclick="startIdentityVerification()">Start Verification</button>
+
+        <!-- Waiting state (shown after redirect back) -->
+        <div id="identity-waiting" style="display:none;">
+          <div class="waiting-state">
+            <div class="pulse-ring"></div>
+            <p>Checking verification status...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Gender Selection -->
+      <div class="step-panel" id="step-gender">
+        <h2>Select Your Gender</h2>
+        <p class="step-desc">SafeTea is built to protect women and gender minorities in dating. Please select the option that best describes you.</p>
+        <div class="gender-options">
+          <div class="gender-card" onclick="selectGender('woman', this)">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="gender-label">Woman</div>
+              <div class="gender-desc">I identify as a woman</div>
+            </div>
+          </div>
+          <div class="gender-card" onclick="selectGender('trans_woman', this)">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="gender-label">Trans Woman</div>
+              <div class="gender-desc">I identify as a transgender woman</div>
+            </div>
+          </div>
+          <div class="gender-card" onclick="selectGender('non_binary', this)">
+            <div class="radio-dot"></div>
+            <div>
+              <div class="gender-label">Non-Binary</div>
+              <div class="gender-desc">I identify as non-binary</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-gender" onclick="submitGender()" disabled>Continue</button>
+      </div>
+
+      <!-- STEP 4: Complete -->
+      <div class="step-panel" id="step-complete">
+        <div class="complete-icon">✓</div>
+        <div class="complete-text">
+          <h2>You're Verified!</h2>
+          <p>Your account is now fully verified. Welcome to SafeTea — your safety comes first.</p>
+          <button class="btn-primary" onclick="window.location.href='/dashboard.html'">Go to Dashboard</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let selectedGender = null;
+    let currentStep = 'age'; // age, identity, gender, complete
+
+    // Get auth token
+    function getToken() {
+      return localStorage.getItem('safetea_token');
+    }
+
+    function getUser() {
+      try {
+        return JSON.parse(localStorage.getItem('safetea_user'));
+      } catch { return null; }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function showSuccess(msg) {
+      const el = document.getElementById('success-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (loading) {
+        btn.disabled = true;
+        btn.dataset.originalText = btn.textContent;
+        btn.innerHTML = '<span class="spinner"></span> Please wait...';
+      } else {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || 'Continue';
+      }
+    }
+
+    // Update progress bar
+    function updateProgress(step) {
+      const steps = ['age', 'identity', 'gender'];
+      const idx = steps.indexOf(step);
+
+      steps.forEach((s, i) => {
+        const el = document.getElementById('prog-' + s);
+        el.classList.remove('completed', 'active');
+        if (i < idx) el.classList.add('completed');
+        else if (i === idx) el.classList.add('active');
+      });
+
+      // If complete, mark all as completed
+      if (step === 'complete') {
+        steps.forEach(s => {
+          const el = document.getElementById('prog-' + s);
+          el.classList.remove('active');
+          el.classList.add('completed');
+        });
+      }
+    }
+
+    // Show a specific step
+    function showStep(step) {
+      currentStep = step;
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById('step-' + step);
+      if (panel) panel.classList.add('active');
+      updateProgress(step);
+      // Hide any lingering messages
+      document.getElementById('error-msg').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'none';
+    }
+
+    // ---- STEP 1: Age ----
+    async function submitAge() {
+      const dob = document.getElementById('dob').value;
+      if (!dob) { showError('Please enter your date of birth'); return; }
+
+      // Client-side age check
+      const birth = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      if (age < 18) { showError('You must be 18 or older to use SafeTea'); return; }
+
+      setLoading('btn-age', true);
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/age', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          body: JSON.stringify({ date_of_birth: dob })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Age verification failed');
+
+        showSuccess('Age verified!');
+        // Update local user
+        const user = getUser();
+        if (user) { user.age_verified = true; localStorage.setItem('safetea_user', JSON.stringify(user)); }
+
+        setTimeout(() => {
+          if (data.nextStep) showStep(data.nextStep);
+          else showStep('identity');
+        }, 500);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading('btn-age', false);
+      }
+    }
+
+    // ---- STEP 2: Identity ----
+    async function startIdentityVerification() {
+      setLoading('btn-identity', true);
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/identity', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to start verification');
+
+        if (data.verification_url) {
+          // Store that we're in verification flow
+          localStorage.setItem('safetea_verifying', 'true');
+          // Redirect to Didit verification
+          window.location.href = data.verification_url;
+        } else {
+          throw new Error('No verification URL received');
+        }
+      } catch (err) {
+        showError(err.message);
+        setLoading('btn-identity', false);
+      }
+    }
+
+    // Poll for identity verification result (after returning from Didit)
+    async function pollIdentityStatus(maxAttempts) {
+      const attempts = maxAttempts || 30;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await fetch(API_BASE + '/auth/verify/status', {
+            headers: { 'Authorization': 'Bearer ' + getToken() }
+          });
+          const data = await res.json();
+
+          if (data.steps && data.steps.identity && data.steps.identity.completed) {
+            // Identity verified!
+            const user = getUser();
+            if (user) {
+              user.identity_verified = true;
+              localStorage.setItem('safetea_user', JSON.stringify(user));
+            }
+            localStorage.removeItem('safetea_verifying');
+            showSuccess('Identity verified!');
+
+            setTimeout(() => {
+              if (data.nextStep) showStep(data.nextStep);
+              else if (!data.steps.gender || !data.steps.gender.completed) showStep('gender');
+              else showStep('complete');
+            }, 500);
+            return;
+          }
+        } catch (e) { /* ignore, keep polling */ }
+
+        // Wait 3 seconds between polls
+        await new Promise(r => setTimeout(r, 3000));
+      }
+
+      // Timed out — show retry option
+      document.getElementById('identity-waiting').innerHTML = `
+        <div class="waiting-state">
+          <p style="margin-bottom:16px;">Verification is still processing. This can take a few minutes.</p>
+          <button class="btn-primary" onclick="pollIdentityStatus(20)" style="max-width:200px;margin:0 auto;">Check Again</button>
+        </div>
+      `;
+    }
+
+    // ---- STEP 3: Gender ----
+    function selectGender(gender, card) {
+      selectedGender = gender;
+      document.querySelectorAll('.gender-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      document.getElementById('btn-gender').disabled = false;
+    }
+
+    async function submitGender() {
+      if (!selectedGender) { showError('Please select a gender'); return; }
+
+      setLoading('btn-gender', true);
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/gender', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          body: JSON.stringify({ gender: selectedGender })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gender verification failed');
+
+        // Update local user
+        const user = getUser();
+        if (user) {
+          user.gender_verified = true;
+          user.is_verified = data.fullyVerified || false;
+          localStorage.setItem('safetea_user', JSON.stringify(user));
+        }
+
+        showSuccess('Profile complete!');
+        setTimeout(() => showStep('complete'), 500);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading('btn-gender', false);
+      }
+    }
+
+    // ---- INIT ----
+    async function init() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // Check if returning from Didit verification
+      const wasVerifying = localStorage.getItem('safetea_verifying');
+
+      // Fetch current verification status from server
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/status', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('safetea_token');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Failed to load verification status');
+        }
+
+        const data = await res.json();
+
+        // If fully verified, go to dashboard
+        if (data.verified) {
+          window.location.href = '/dashboard.html';
+          return;
+        }
+
+        // If returning from Didit, show identity step with polling
+        if (wasVerifying && data.steps && !data.steps.identity.completed) {
+          showStep('identity');
+          document.getElementById('btn-identity').style.display = 'none';
+          document.getElementById('identity-waiting').style.display = 'block';
+          pollIdentityStatus(30);
+          return;
+        }
+
+        // Show the next required step
+        if (data.nextStep) {
+          showStep(data.nextStep);
+        } else if (!data.steps.age.completed) {
+          showStep('age');
+        } else if (!data.steps.identity.completed) {
+          showStep('identity');
+        } else if (!data.steps.gender.completed) {
+          showStep('gender');
+        } else {
+          showStep('complete');
+        }
+
+      } catch (err) {
+        // If status endpoint fails, default to age step
+        showError('Could not load verification status. Starting from the beginning.');
+        showStep('age');
+      }
+    }
+
+    // Run on page load
+    init();
+  </script>
+</body>
+</html>

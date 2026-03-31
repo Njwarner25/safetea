@@ -2834,6 +2834,10 @@
             btn.style.fontWeight = isCurrent ? '600' : '500';
             if (isCurrent) { btn.style.border = 'none'; } else { btn.style.border = '1px solid rgba(255,255,255,0.08)'; }
         });
+        // Initialize Name Watch when its tab is selected
+        if (sub === 'namewatch' && typeof initNameWatch === 'function') {
+            initNameWatch();
+        }
         // Scroll to top
         window.scrollTo(0, 0);
     }

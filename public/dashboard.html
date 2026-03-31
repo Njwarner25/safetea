@@ -2244,46 +2244,6 @@
                     </div>
                 </div>
 
-                <!-- ====== ALERTS IN YOUR AREA ====== -->
-                <div style="margin-top:24px;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-                        <h3 style="color:#fff;font-size:18px;margin:0;display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚨</span> Alerts in Your Area</h3>
-                        <div style="display:flex;gap:8px">
-                            <select id="alert-radius" onchange="refreshAreaAlerts()" style="background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
-                                <option value="0.25">&frac14; mile</option>
-                                <option value="0.5" selected>&frac12; mile</option>
-                                <option value="1">1 mile</option>
-                            </select>
-                            <select id="alert-days" onchange="refreshAreaAlerts()" style="background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
-                                <option value="7">Past 7 days</option>
-                                <option value="30" selected>Past 30 days</option>
-                                <option value="90">Past 90 days</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Women's-safety-relevant crime data from public city records near your location or watch zones.</p>
-
-                    <div id="area-alerts-loading" style="display:none;text-align:center;padding:24px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Scanning area for safety alerts...</div>
-                    <div id="area-alerts-prompt" style="text-align:center;padding:20px">
-                        <button onclick="detectLocationAndFetch()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-location-crosshairs"></i> Use My Location</button>
-                        <p style="color:#666;font-size:12px;margin-top:8px">Or alerts will load from your watch zones</p>
-                    </div>
-                    <div id="area-alerts-summary" style="display:none"></div>
-                    <div id="area-alerts-list" style="display:none"></div>
-                    <div id="area-alerts-empty" style="display:none;text-align:center;padding:24px;color:#8080A0">
-                        <i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;display:block;margin-bottom:12px"></i>
-                        <p>No safety alerts in this area for the selected time period.</p>
-                    </div>
-
-                    <!-- Watch Zones -->
-                    <div style="margin-top:20px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                            <h4 style="color:#fff;font-size:15px;margin:0"><i class="fas fa-map-pin" style="color:#E8A0B5"></i> Your Watch Zones</h4>
-                            <button onclick="addWatchZone()" style="background:rgba(232,160,181,0.15);color:#E8A0B5;border:1px solid rgba(232,160,181,0.3);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-plus"></i> Add Zone</button>
-                        </div>
-                        <div id="watch-zones-list" style="color:#8080A0;font-size:13px">Loading watch zones...</div>
-                    </div>
-                </div>
             </div>
 
             <!-- HUB: NAME WATCH (moved from standalone tab) -->

@@ -403,7 +403,7 @@
         fetch('/api/screening/background', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ name: name, city: city, state: state, age: age ? parseInt(age) : undefined })
+            body: JSON.stringify({ fullName: name, city: city, state: state, age: age ? parseInt(age) : undefined })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -823,7 +823,7 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 var display = document.getElementById('generated-name-display');
-                if (display && data.name) display.textContent = data.name;
+                if (display && data.display_name) display.textContent = data.display_name;
             })
             .catch(function() {
                 var names = ['TeaLover', 'SafeSipper', 'GuardianGal', 'BoldBrew', 'WatchfulEye', 'TrustedTea', 'ShieldSis'];
@@ -903,6 +903,234 @@
         if (typeof showToast === 'function') showToast('Messaging is coming soon!');
         closeComposeModal();
     };
+
+    // ============ SAVE AVATAR ============
+    window.saveAvatar = function() {
+        var type = document.querySelector('input[name="avatar-type"]:checked');
+        if (!type) return;
+        var avatarType = type.value;
+
+        var payload = { avatar_type: avatarType };
+
+        if (avatarType === 'custom') {
+            var customName = document.getElementById('edit-custom-name').value.trim();
+            if (!customName) { if (typeof showToast === 'function') showToast('Enter a custom display name'); return; }
+            payload.custom_display_name = customName;
+        } else if (avatarType === 'generated') {
+            var genName = document.getElementById('generated-name-display').textContent;
+            if (!genName || genName === 'Click generate...') { if (typeof showToast === 'function') showToast('Generate a name first'); return; }
+            payload.custom_display_name = genName;
+        } else if (avatarType === 'upload') {
+            var previewImg = document.getElementById('avatar-preview-img');
+            if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
+                payload.avatar_url = previewImg.src;
+            }
+        }
+
+        // Get selected color
+        var activeColor = document.querySelector('.color-swatch.active');
+        if (activeColor) payload.avatar_color = activeColor.getAttribute('data-color');
+
+        fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.user) {
+                localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                renderProfile(data.user);
+                if (typeof showToast === 'function') showToast('Avatar saved!');
+            } else if (data.error) {
+                if (typeof showToast === 'function') showToast(data.error);
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Failed to save avatar'); });
+    };
+
+    // ============ SAVE PROFILE ============
+    window.saveProfile = function() {
+        var name = document.getElementById('edit-name').value.trim();
+        var city = document.getElementById('edit-city').value.trim();
+        var bio = document.getElementById('edit-bio').value.trim();
+
+        var payload = {};
+        if (name) payload.display_name = name;
+        if (city) payload.city = city;
+        if (bio !== undefined) payload.bio = bio;
+
+        if (Object.keys(payload).length === 0) {
+            if (typeof showToast === 'function') showToast('No changes to save');
+            return;
+        }
+
+        fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify(payload)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.user) {
+                localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                renderProfile(data.user);
+                if (typeof showToast === 'function') showToast('Profile saved!');
+            } else if (data.error) {
+                if (typeof showToast === 'function') showToast(data.error);
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Failed to save profile'); });
+    };
+
+    // ============ CHANGE PASSWORD ============
+    window.changePassword = function() {
+        var current = document.getElementById('current-password').value;
+        var newPw = document.getElementById('new-password').value;
+        var confirm = document.getElementById('confirm-password').value;
+
+        if (!current || !newPw) { if (typeof showToast === 'function') showToast('Fill in all password fields'); return; }
+        if (newPw.length < 8) { if (typeof showToast === 'function') showToast('New password must be at least 8 characters'); return; }
+        if (newPw !== confirm) { if (typeof showToast === 'function') showToast('Passwords do not match'); return; }
+
+        fetch('/api/auth/change-password', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ currentPassword: current, newPassword: newPw })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof showToast === 'function') showToast('Password updated!');
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } else {
+                if (typeof showToast === 'function') showToast(data.error || 'Failed to change password');
+            }
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Failed to change password'); });
+    };
+
+    // ============ ALERTS TAB — GEO ALERTS ============
+    var tabAlertLat = null;
+    var tabAlertLon = null;
+
+    window.detectTabLocation = function() {
+        var loading = document.getElementById('tab-alerts-loading');
+        var prompt = document.getElementById('tab-alerts-prompt');
+        if (loading) loading.style.display = 'block';
+        if (prompt) prompt.style.display = 'none';
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    tabAlertLat = pos.coords.latitude;
+                    tabAlertLon = pos.coords.longitude;
+                    fetchTabAlerts();
+                },
+                function() {
+                    if (loading) loading.style.display = 'none';
+                    if (prompt) prompt.style.display = 'block';
+                    if (typeof showToast === 'function') showToast('Location access denied. Enable it in your browser settings.');
+                },
+                { timeout: 10000 }
+            );
+        } else {
+            if (loading) loading.style.display = 'none';
+            if (prompt) prompt.style.display = 'block';
+            if (typeof showToast === 'function') showToast('Geolocation not supported by your browser');
+        }
+    };
+
+    window.refreshTabAlerts = function() {
+        if (tabAlertLat && tabAlertLon) fetchTabAlerts();
+    };
+
+    function fetchTabAlerts() {
+        var loading = document.getElementById('tab-alerts-loading');
+        var summaryEl = document.getElementById('tab-alerts-summary');
+        var listEl = document.getElementById('tab-alerts-list');
+        var emptyEl = document.getElementById('tab-alerts-empty');
+        var promptEl = document.getElementById('tab-alerts-prompt');
+
+        if (loading) loading.style.display = 'block';
+        if (summaryEl) summaryEl.style.display = 'none';
+        if (listEl) listEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (promptEl) promptEl.style.display = 'none';
+
+        var radius = document.getElementById('tab-alert-radius');
+        var days = document.getElementById('tab-alert-days');
+        var r = radius ? radius.value : '2';
+        var d = days ? days.value : '30';
+
+        fetch('/api/alerts/area?lat=' + tabAlertLat + '&lon=' + tabAlertLon + '&radius=' + r + '&days=' + d + '&limit=30', {
+            headers: { 'Authorization': 'Bearer ' + getToken() }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (loading) loading.style.display = 'none';
+
+            if (!data.alerts || data.alerts.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            if (summaryEl) {
+                summaryEl.style.display = 'block';
+                summaryEl.innerHTML = '<div style="background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;color:#F0D0C0">' +
+                    '<strong>' + data.total + '</strong> safety incident' + (data.total !== 1 ? 's' : '') +
+                    ' within <strong>' + data.radius_miles + ' mi</strong> in the last <strong>' + data.days_back + ' days</strong></div>';
+            }
+
+            if (listEl) {
+                listEl.style.display = 'block';
+                var html = '';
+                data.alerts.forEach(function(alert) {
+                    var cat = CATEGORY_MAP[alert.crime_type] || { label: alert.crime_type, severity: 'medium', icon: '\u26A0\uFE0F' };
+                    var dist = parseFloat(alert.distance_miles).toFixed(2);
+                    var timeAgo = getTimeAgoFromDate(alert.occurred_at);
+                    var sevStyle = cat.severity === 'high' ? 'border-left:3px solid #e74c3c' : 'border-left:3px solid #f1c40f';
+                    html += '<div style="background:#1A1A2E;border-radius:8px;padding:12px 16px;margin-bottom:8px;' + sevStyle + '">';
+                    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+                    html += '<span style="font-size:16px">' + cat.icon + '</span>';
+                    html += '<strong style="color:#fff;font-size:14px">' + escapeHtmlSafe(cat.label) + '</strong>';
+                    html += '<span style="margin-left:auto;color:#8080A0;font-size:12px">' + dist + ' mi away</span>';
+                    html += '</div>';
+                    html += '<div style="color:#8080A0;font-size:12px">' + timeAgo;
+                    if (alert.description) html += ' — ' + escapeHtmlSafe(alert.description.substring(0, 100));
+                    html += '</div></div>';
+                });
+                listEl.innerHTML = html;
+            }
+        })
+        .catch(function() {
+            if (loading) loading.style.display = 'none';
+            if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.innerHTML = '<p style="color:#8080A0;text-align:center;padding:16px">Unable to load alerts. Please try again.</p>'; }
+        });
+    }
+
+    // ============ COLOR SWATCHES ============
+    (function initColorSwatches() {
+        var container = document.getElementById('color-swatches');
+        if (!container) return;
+        var colors = ['#E8A0B5', '#C77DBA', '#9B59B6', '#3498DB', '#1ABC9C', '#2ECC71', '#F39C12', '#E74C3C', '#6C7B95', '#D35400'];
+        var user = getUser();
+        var current = (user && user.avatar_color) || '#E8A0B5';
+        colors.forEach(function(c) {
+            var el = document.createElement('div');
+            el.className = 'color-swatch' + (c === current ? ' active' : '');
+            el.setAttribute('data-color', c);
+            el.style.cssText = 'width:32px;height:32px;border-radius:50%;background:' + c + ';cursor:pointer;border:3px solid ' + (c === current ? '#fff' : 'transparent') + ';display:inline-block;margin-right:8px';
+            el.onclick = function() {
+                container.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); s.style.borderColor = 'transparent'; });
+                el.classList.add('active');
+                el.style.borderColor = '#fff';
+            };
+            container.appendChild(el);
+        });
+    })();
 
     // ============ INIT ============
     loadProfile();

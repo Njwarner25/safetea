@@ -1977,12 +1977,38 @@
                 <div style="text-align:center;padding:20px;color:#8080A0;font-size:14px"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>No Name Watch alerts yet.<br><span style="font-size:12px">Add names in <a href="#" onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100);return false" style="color:#E8A0B5">Name Watch</a> to get notified when they're mentioned.</span></div>
             </div>
         </div>
-        <div class="alerts-section" style="max-width:720px;margin:0 auto;padding:0 24px 24px">
-            <div class="alerts-header">
-                <h2><i class="fas fa-bell" style="color:#E8A0B5"></i> Alerts in Your Area</h2>
-            </div>
-            <div id="alerts-full-list">
-                <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading alerts...</div>
+        <!-- Geo Alerts Section -->
+        <div style="max-width:720px;margin:0 auto;padding:0 24px 24px">
+            <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+                    <h2 style="color:#fff;font-size:18px;margin:0;display:flex;align-items:center;gap:10px"><span style="font-size:20px">🚨</span> Safety Alerts Near You</h2>
+                    <div style="display:flex;gap:8px">
+                        <select id="tab-alert-radius" onchange="refreshTabAlerts()" style="background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
+                            <option value="0.5" selected>&frac12; mile</option>
+                            <option value="1">1 mile</option>
+                            <option value="2">2 miles</option>
+                            <option value="5">5 miles</option>
+                        </select>
+                        <select id="tab-alert-days" onchange="refreshTabAlerts()" style="background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
+                            <option value="7">Past 7 days</option>
+                            <option value="30" selected>Past 30 days</option>
+                            <option value="90">Past 90 days</option>
+                        </select>
+                    </div>
+                </div>
+                <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Women's-safety-relevant crime data from public city records near your location.</p>
+
+                <div id="tab-alerts-loading" style="display:none;text-align:center;padding:24px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Scanning area for safety alerts...</div>
+                <div id="tab-alerts-prompt" style="text-align:center;padding:24px">
+                    <button onclick="detectTabLocation()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-location-crosshairs"></i> Use My Location</button>
+                    <p style="color:#666;font-size:12px;margin-top:8px">Enable location to see nearby safety alerts</p>
+                </div>
+                <div id="tab-alerts-summary" style="display:none"></div>
+                <div id="tab-alerts-list" style="display:none"></div>
+                <div id="tab-alerts-empty" style="display:none;text-align:center;padding:24px;color:#8080A0">
+                    <i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;display:block;margin-bottom:12px"></i>
+                    <p>No safety alerts in this area for the selected time period.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -2977,13 +3003,18 @@
     function loadCities() {
         fetch('/api/cities')
             .then(function(r) { return r.json(); })
-            .then(function(cities) {
+            .then(function(data) {
+                var raw = data.cities || data || [];
+                // Normalize: ensure each city has .name
+                var cities = raw.map(function(c) {
+                    return { id: c.id, name: c.name || c.city || c.city_name || 'Unknown', state: c.state, votes: c.votes || c.vote_count || 0 };
+                });
                 communityState.cities = cities;
                 renderCityPickerGrid(cities);
                 // Auto-select saved city
                 var userCity = localStorage.getItem('safetea-city');
                 if (userCity) {
-                    var city = cities.find(function(c) { return c.id === parseInt(userCity); });
+                    var city = cities.find(function(c) { return c.id == userCity; });
                     if (city) {
                         communityState.selectedCity = city;
                         communityState.pendingCity = city;

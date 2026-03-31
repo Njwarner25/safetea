@@ -12,9 +12,14 @@ module.exports = async function handler(req, res) {
 
     try {
         const body = await parseBody(req);
-        const { plan } = body;
+        const { plan, billing } = body;
 
-        if (!plan || !PRICES[plan]) {
+        // Support yearly billing: "plus_yearly", "pro_yearly"
+        const priceKey = (billing === 'yearly' && PRICES[plan + '_yearly'])
+            ? plan + '_yearly'
+            : plan;
+
+        if (!plan || !PRICES[priceKey]) {
             return res.status(400).json({ error: 'Invalid plan. Must be "plus" or "pro".' });
         }
 
@@ -37,7 +42,7 @@ module.exports = async function handler(req, res) {
                 await stripe.subscriptions.update(user.stripe_subscription_id, {
                     items: [{
                         id: sub.items.data[0].id,
-                        price: PRICES[plan]
+                        price: PRICES[priceKey]
                     }],
                     metadata: { plan: plan }
                 });
@@ -50,7 +55,7 @@ module.exports = async function handler(req, res) {
             customer: customerId,
             mode: 'subscription',
             payment_method_types: ['card'],
-            line_items: [{ price: PRICES[plan], quantity: 1 }],
+            line_items: [{ price: PRICES[priceKey], quantity: 1 }],
             metadata: { plan: plan, user_id: String(user.id) },
             success_url: APP_URL + '/dashboard.html?tab=profile&upgrade=success',
             cancel_url: APP_URL + '/dashboard.html?tab=profile'

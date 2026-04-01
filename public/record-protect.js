@@ -141,7 +141,21 @@
         picker.innerHTML =
             '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;max-width:360px;width:100%">' +
                 '<h3 style="color:#fff;font-size:16px;margin-bottom:4px;text-align:center"><i class="fas fa-phone" style="color:#E8A0B5"></i> Fake Call</h3>' +
-                '<p style="color:#8080A0;font-size:12px;text-align:center;margin-bottom:16px">Call from "' + callerName + '" in...</p>' +
+                '<p style="color:#8080A0;font-size:12px;text-align:center;margin-bottom:16px">Set up your call</p>' +
+
+                '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Who\'s calling?</label>' +
+                '<input id="fc-picker-name" type="text" value="' + callerName + '" placeholder="e.g., Mom, Sarah" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box">' +
+
+                '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Voice</label>' +
+                '<select id="fc-picker-voice" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:16px;-webkit-appearance:auto">' +
+                    '<option value="mom"' + (voiceOption === 'mom' ? ' selected' : '') + '>Concerned Mom</option>' +
+                    '<option value="bestfriend"' + (voiceOption === 'bestfriend' ? ' selected' : '') + '>Best Friend</option>' +
+                    '<option value="sister"' + (voiceOption === 'sister' ? ' selected' : '') + '>Older Sister</option>' +
+                    '<option value="dad"' + (voiceOption === 'dad' ? ' selected' : '') + '>Dad</option>' +
+                    '<option value="roommate"' + (voiceOption === 'roommate' ? ' selected' : '') + '>Roommate</option>' +
+                '</select>' +
+
+                '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Ring in...</label>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">' +
                     '<button class="fc-delay-btn" data-delay="15" style="background:#22223A;border:1px solid rgba(232,160,181,0.2);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">15 sec</button>' +
                     '<button class="fc-delay-btn" data-delay="30" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">30 sec</button>' +
@@ -158,8 +172,13 @@
         picker.querySelectorAll('.fc-delay-btn').forEach(function(btn) {
             btn.onclick = function() {
                 var d = parseInt(btn.getAttribute('data-delay'), 10);
+                var name = document.getElementById('fc-picker-name').value || 'Mom';
+                var voice = document.getElementById('fc-picker-voice').value || 'mom';
+                localStorage.setItem('safetea_fakecall_settings', JSON.stringify({
+                    callerName: name, voiceOption: voice, defaultDelay: d
+                }));
                 picker.remove();
-                startFakeCallCountdown(d, callerName, voiceOption, user);
+                startFakeCallCountdown(d, name, voice, user);
             };
         });
     }
@@ -179,7 +198,7 @@
             return fetch('/api/dates/fake-call-voice', {
                 method: 'POST',
                 headers: authHeaders(),
-                body: JSON.stringify({ script: scriptData.script, voice: voiceOption })
+                body: JSON.stringify({ script: scriptData.script, persona: voiceOption })
             }).then(function(r) { return r.json(); }).catch(function() { return null; });
         });
 
@@ -189,8 +208,59 @@
     }
 
     function showFakeIncomingCall(callerName, audioPromise) {
-        // Vibrate if supported
-        if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+        // Vibrate pattern (repeating)
+        var vibrateInterval = null;
+        if (navigator.vibrate) {
+            navigator.vibrate([500, 200, 500, 200, 500]);
+            vibrateInterval = setInterval(function() {
+                if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+            }, 3000);
+        }
+
+        // Ringtone via Web Audio API (US phone ring: 440+480 Hz)
+        var ringtone = null;
+        try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                var actx = new AudioCtx();
+                var gainNode = actx.createGain();
+                gainNode.gain.value = 0.25;
+                gainNode.connect(actx.destination);
+                var ringActive = true;
+
+                function playRingBurst() {
+                    if (!ringActive) return;
+                    var o1 = actx.createOscillator();
+                    var o2 = actx.createOscillator();
+                    o1.frequency.value = 440;
+                    o2.frequency.value = 480;
+                    o1.connect(gainNode);
+                    o2.connect(gainNode);
+                    var now = actx.currentTime;
+                    o1.start(now);
+                    o2.start(now);
+                    o1.stop(now + 1.5);
+                    o2.stop(now + 1.5);
+                }
+
+                playRingBurst();
+                var ringInterval = setInterval(playRingBurst, 3000);
+
+                ringtone = {
+                    stop: function() {
+                        ringActive = false;
+                        clearInterval(ringInterval);
+                        try { actx.close(); } catch(e) {}
+                    }
+                };
+            }
+        } catch(e) {}
+
+        function stopRinging() {
+            if (ringtone) ringtone.stop();
+            if (vibrateInterval) clearInterval(vibrateInterval);
+            if (navigator.vibrate) navigator.vibrate(0);
+        }
 
         var overlay = document.createElement('div');
         overlay.id = 'fake-call-overlay';
@@ -199,7 +269,7 @@
         var initial = callerName.charAt(0).toUpperCase();
         overlay.innerHTML =
             '<div style="text-align:center">' +
-                '<div style="width:80px;height:80px;background:linear-gradient(135deg,#E8A0B5,#D4768E);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:700;color:#fff">' + initial + '</div>' +
+                '<div style="width:80px;height:80px;background:linear-gradient(135deg,#E8A0B5,#D4768E);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:700;color:#fff;animation:fcRingPulse 1.5s ease-in-out infinite">' + initial + '</div>' +
                 '<p style="color:#fff;font-size:24px;font-weight:600;margin-bottom:4px">' + callerName + '</p>' +
                 '<p style="color:#8080A0;font-size:14px;margin-bottom:60px">Incoming Call...</p>' +
             '</div>' +
@@ -214,10 +284,18 @@
                 '</div>' +
             '</div>';
 
+        var ringStyle = document.createElement('style');
+        ringStyle.textContent = '@keyframes fcRingPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(232,160,181,0.4)}50%{transform:scale(1.05);box-shadow:0 0 0 20px rgba(232,160,181,0)}}';
+        overlay.appendChild(ringStyle);
+
         document.body.appendChild(overlay);
 
-        document.getElementById('fc-decline').onclick = function() { overlay.remove(); };
+        document.getElementById('fc-decline').onclick = function() {
+            stopRinging();
+            overlay.remove();
+        };
         document.getElementById('fc-accept').onclick = function() {
+            stopRinging();
             overlay.remove();
             showFakeActiveCall(callerName, audioPromise);
         };
@@ -237,7 +315,7 @@
             '</div>' +
             '<div style="display:flex;gap:32px">' +
                 '<div style="text-align:center">' +
-                    '<button style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:default;display:flex;align-items:center;justify-content:center"><i class="fas fa-microphone-slash" style="font-size:18px;color:#8080A0"></i></button>' +
+                    '<button id="fc-mute-btn" style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-microphone-slash" style="font-size:18px;color:#8080A0;transition:color 0.2s"></i></button>' +
                     '<p style="color:#8080A0;font-size:10px;margin-top:6px">Mute</p>' +
                 '</div>' +
                 '<div style="text-align:center">' +
@@ -245,7 +323,7 @@
                     '<p style="color:#8080A0;font-size:10px;margin-top:6px">End</p>' +
                 '</div>' +
                 '<div style="text-align:center">' +
-                    '<button style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:default;display:flex;align-items:center;justify-content:center"><i class="fas fa-volume-up" style="font-size:18px;color:#8080A0"></i></button>' +
+                    '<button id="fc-speaker-btn" style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-volume-up" style="font-size:18px;color:#8080A0;transition:color 0.2s"></i></button>' +
                     '<p style="color:#8080A0;font-size:10px;margin-top:6px">Speaker</p>' +
                 '</div>' +
             '</div>';
@@ -262,6 +340,7 @@
 
         // Play audio if available
         var audio = null;
+        var isMuted = false;
         if (audioPromise) {
             audioPromise.then(function(voiceData) {
                 if (voiceData && voiceData.audio) {
@@ -275,6 +354,23 @@
             }).catch(function() {});
         }
 
+        // Mute button — toggles audio mute
+        document.getElementById('fc-mute-btn').onclick = function() {
+            isMuted = !isMuted;
+            this.style.background = isMuted ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.1)';
+            this.querySelector('i').style.color = isMuted ? '#E8A0B5' : '#8080A0';
+            if (audio) audio.muted = isMuted;
+        };
+
+        // Speaker button — visual toggle
+        var speakerOn = false;
+        document.getElementById('fc-speaker-btn').onclick = function() {
+            speakerOn = !speakerOn;
+            this.style.background = speakerOn ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.1)';
+            this.querySelector('i').style.color = speakerOn ? '#E8A0B5' : '#8080A0';
+        };
+
+        // End call button
         document.getElementById('fc-end-call').onclick = function() {
             clearInterval(timerInt);
             if (audio) { audio.pause(); audio = null; }

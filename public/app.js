@@ -1470,6 +1470,68 @@
         .catch(function() { if (typeof showToast === 'function') showToast('Failed to change password'); });
     };
 
+    // ============ SUBSCRIPTION MANAGEMENT ============
+    window.loadSubscriptionStatus = function() {
+        var section = document.getElementById('subscription-section');
+        if (!section) return;
+        var user = getUser();
+        var isPaid = user && (user.subscription_tier === 'plus' || user.subscription_tier === 'pro' || user.subscription_tier === 'premium');
+        if (!isPaid) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+
+        fetch('/api/subscriptions/status', { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var statusText = document.getElementById('sub-status-text');
+                var cancelNotice = document.getElementById('sub-cancel-notice');
+                var cancelBtn = document.getElementById('btn-cancel-sub');
+                var endDate = document.getElementById('sub-end-date');
+
+                if (data.cancel_at_period_end) {
+                    var end = data.current_period_end ? new Date(data.current_period_end * 1000).toLocaleDateString() : 'end of billing period';
+                    if (statusText) statusText.textContent = 'Cancels on ' + end;
+                    if (cancelNotice) { cancelNotice.style.display = 'block'; }
+                    if (endDate) endDate.textContent = end;
+                    if (cancelBtn) cancelBtn.style.display = 'none';
+                } else if (data.current_period_end) {
+                    var renew = new Date(data.current_period_end * 1000).toLocaleDateString();
+                    if (statusText) statusText.textContent = 'Renews on ' + renew;
+                    if (cancelNotice) cancelNotice.style.display = 'none';
+                    if (cancelBtn) cancelBtn.style.display = 'block';
+                } else {
+                    if (statusText) statusText.textContent = 'Active';
+                    if (cancelBtn) cancelBtn.style.display = 'block';
+                }
+            })
+            .catch(function() {});
+    };
+
+    window.cancelSubscription = function() {
+        if (!confirm('Are you sure you want to cancel your SafeTea+ subscription? You\'ll keep access until the end of your current billing period.')) return;
+
+        var btn = document.getElementById('btn-cancel-sub');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...'; }
+
+        fetch('/api/subscriptions/cancel', {
+            method: 'POST',
+            headers: authHeaders()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-times-circle"></i> Cancel Subscription'; }
+            if (data.cancel_at_period_end) {
+                if (typeof showToast === 'function') showToast('Subscription cancelled — access continues until end of billing period');
+                loadSubscriptionStatus();
+            } else if (data.error) {
+                if (typeof showToast === 'function') showToast(data.error);
+            }
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-times-circle"></i> Cancel Subscription'; }
+            if (typeof showToast === 'function') showToast('Failed to cancel — try again');
+        });
+    };
+
     // ============ ALERTS TAB — GEO ALERTS ============
     var tabAlertLat = null;
     var tabAlertLon = null;
@@ -1688,6 +1750,7 @@
     loadWatchZones();
     initAlertsTab();
     updateInboxBadge();
+    loadSubscriptionStatus();
     if (typeof initRecordProtect === 'function') initRecordProtect();
 
     // Handle Stripe checkout success redirect

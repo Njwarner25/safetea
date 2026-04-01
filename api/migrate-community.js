@@ -65,7 +65,7 @@ module.exports = async function handler(req, res) {
       { name: 'Miami', slug: 'miami', emoji: '🌴' },
       { name: 'Houston', slug: 'houston', emoji: '🤠' },
       { name: 'Atlanta', slug: 'atlanta', emoji: '🍑' },
-      { name: 'Boston', slug: 'boston', emoji: '🎓' }
+      { name: 'Philadelphia', slug: 'philadelphia', emoji: '🔔' }
     ];
 
     for (const city of cities) {

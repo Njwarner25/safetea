@@ -21,7 +21,8 @@
         { "path": "/api/cron/checkin-reminders", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" },
         { "path": "/api/cron/unlock-cities", "schedule": "0 5 * * *" },
-        { "path": "/api/cron/lift-suspensions", "schedule": "0 1 * * *" }
+        { "path": "/api/cron/lift-suspensions", "schedule": "0 1 * * *" },
+        { "path": "/api/cron/weekly-report", "schedule": "0 8 * * 1" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -83,6 +84,7 @@
         { "source": "/api/admin/warn", "destination": "/api/admin/warn" },
         { "source": "/api/admin/ai-enforce", "destination": "/api/admin/ai-enforce" },
         { "source": "/api/admin/moderators", "destination": "/api/admin/moderators" },
+        { "source": "/api/admin/reports", "destination": "/api/admin/reports" },
         { "source": "/api/admin/stats", "destination": "/api/admin/stats" },
         { "source": "/api/admin/feedback", "destination": "/api/admin/feedback" },
         { "source": "/api/admin/setup", "destination": "/api/admin/setup" },
@@ -135,11 +137,26 @@
         { "source": "/api/cron/checkin-reminders", "destination": "/api/cron/checkin-reminders" },
         { "source": "/api/cron/expire-referrals", "destination": "/api/cron/expire-referrals" },
         { "source": "/api/cron/stripe-sync", "destination": "/api/cron/stripe-sync" },
+        { "source": "/api/cron/weekly-report", "destination": "/api/cron/weekly-report" },
         { "source": "/api/cron/lift-suspensions", "destination": "/api/cron/lift-suspensions" },
         { "source": "/api/moderation/analyze-leak", "destination": "/api/moderation/analyze-leak" },
         { "source": "/api/moderation/appeal", "destination": "/api/moderation/appeal" },
         { "source": "/api/moderation/status", "destination": "/api/moderation/status" },
         { "source": "/api/migrate-moderation", "destination": "/api/migrate-moderation" },
+        { "source": "/api/migrate-rooms", "destination": "/api/migrate-rooms" },
+        { "source": "/api/rooms/create", "destination": "/api/rooms/create" },
+        { "source": "/api/rooms/my-rooms", "destination": "/api/rooms/my-rooms" },
+        { "source": "/api/rooms/join", "destination": "/api/rooms/join" },
+        { "source": "/api/rooms/details", "destination": "/api/rooms/details" },
+        { "source": "/api/rooms/feed", "destination": "/api/rooms/feed" },
+        { "source": "/api/rooms/post", "destination": "/api/rooms/post" },
+        { "source": "/api/rooms/settings", "destination": "/api/rooms/settings" },
+        { "source": "/api/rooms/regenerate-code", "destination": "/api/rooms/regenerate-code" },
+        { "source": "/api/rooms/members", "destination": "/api/rooms/members" },
+        { "source": "/api/rooms/like", "destination": "/api/rooms/like" },
+        { "source": "/api/rooms/replies", "destination": "/api/rooms/replies" },
+        { "source": "/api/rooms/leave", "destination": "/api/rooms/leave" },
+        { "source": "/api/rooms/pin", "destination": "/api/rooms/pin" },
         { "source": "/api/(.*)", "destination": "/api/$1" }
     ]
 }

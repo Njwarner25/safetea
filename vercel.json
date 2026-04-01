@@ -89,6 +89,7 @@
         { "source": "/api/admin/reports", "destination": "/api/admin/reports" },
         { "source": "/api/admin/stats", "destination": "/api/admin/stats" },
         { "source": "/api/admin/feedback", "destination": "/api/admin/feedback" },
+        { "source": "/api/admin/room-reports", "destination": "/api/admin/room-reports" },
         { "source": "/api/admin/setup", "destination": "/api/admin/setup" },
         { "source": "/api/alerts/area", "destination": "/api/alerts/area" },
         { "source": "/api/watch-zones", "destination": "/api/watch-zones" },

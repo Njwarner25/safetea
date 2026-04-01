@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { checkForFullNames } = require('../_utils/check-fullname');
 const { sendNameWatchMatchEmail } = require('../../services/email');
 const { sendPushNotification } = require('../../services/push');
 
@@ -16,6 +17,29 @@ module.exports = async function handler(req, res) {
 
   if (!postBody || postBody.trim().length < 3) {
     return res.status(400).json({ error: 'Post body is required (min 3 characters)' });
+  }
+
+  // Full name detection — block posts containing full first+last names
+  try {
+    const nameCheck = await checkForFullNames(postBody);
+    if (nameCheck.fullNameDetected) {
+      // Log the block for moderation reports
+      run(
+        `INSERT INTO moderation_logs (user_id, action, reason, category, details, created_at)
+         VALUES ($1, 'full_name_blocked', $2, 'privacy', $3, NOW())`,
+        [user.id, 'Post blocked: full name detected', JSON.stringify({ names: nameCheck.detectedNames })]
+      ).catch(function(err) { console.error('[NameBlock] Log failed:', err.message); });
+
+      return res.status(400).json({
+        error: 'full_name_detected',
+        type: 'full_name_detected',
+        names: nameCheck.detectedNames,
+        suggestion: nameCheck.suggestion,
+        message: 'Your post contains a full name. Use first name + last initial instead.'
+      });
+    }
+  } catch (nameErr) {
+    console.error('[NameBlock] Check failed, allowing post:', nameErr.message);
   }
 
   try {

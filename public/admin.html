@@ -196,6 +196,8 @@
             <a data-section="moderation"><i class="fas fa-shield-alt"></i> Content Moderation</a>
             <a data-section="moderators"><i class="fas fa-user-shield"></i> Moderators</a>
             <a data-section="cities"><i class="fas fa-city"></i> City Feeds</a>
+            <a data-section="room-reports"><i class="fas fa-door-open"></i> Room Reports</a>
+            <a data-section="feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
             <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
             <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
         </nav>
@@ -395,12 +397,68 @@
 
             <!-- REPORTS -->
             <div id="section-reports" class="section">
-                <div class="placeholder"><i class="fas fa-chart-bar"></i><h2>Reports & Analytics</h2><p>Exportable data and trend analysis.</p></div>
+                <div style="padding:24px">
+                    <h2 style="color:#fff;font-size:20px;margin-bottom:16px;display:flex;align-items:center;gap:10px"><i class="fas fa-chart-bar" style="color:#E8A0B5"></i> Weekly Moderation Reports</h2>
+                    <div id="reports-list" style="display:flex;flex-direction:column;gap:12px">
+                        <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px"></i>Loading reports...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROOM REPORTS -->
+            <div id="section-room-reports" class="section">
+                <div class="card" style="margin-bottom:20px">
+                    <h3><i class="fas fa-flag"></i> Room Post Reports</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:4px">Posts reported by room members for review.</p>
+                </div>
+                <div id="room-reports-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading reports...</div>
+                </div>
+            </div>
+
+            <!-- FEEDBACK -->
+            <div id="section-feedback" class="section">
+                <div class="card" style="margin-bottom:20px">
+                    <h3><i class="fas fa-comment-dots"></i> User Feedback</h3>
+                    <div style="display:flex;gap:8px;margin-top:12px">
+                        <select class="mod-filter" id="feedback-filter" onchange="loadFeedback()">
+                            <option value="">All</option>
+                            <option value="new">New</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="feedback-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading feedback...</div>
+                </div>
+                <div class="pagination" id="feedback-pagination" style="display:none;margin-top:16px">
+                    <button id="fb-prev" onclick="changeFeedbackPage(-1)"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="fb-page-info">Page 1</span>
+                    <button id="fb-next" onclick="changeFeedbackPage(1)">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
 
             <!-- SETTINGS -->
             <div id="section-settings" class="section">
-                <div class="placeholder"><i class="fas fa-cog"></i><h2>System Settings</h2><p>Feature flags, rate limits, and API configuration.</p></div>
+                <div class="card">
+                    <h3><i class="fas fa-robot"></i> AI Enforcement</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Review a specific post with AI analysis.</p>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <input type="number" class="form-input" id="ai-enforce-post-id" placeholder="Post ID" style="width:150px">
+                        <button class="btn btn-primary" onclick="runAIEnforce()"><i class="fas fa-brain"></i> Analyze Post</button>
+                    </div>
+                    <div id="ai-enforce-result" style="margin-top:16px;display:none"></div>
+                </div>
+                <div class="card" style="margin-top:16px">
+                    <h3><i class="fas fa-trash-alt"></i> Delete User Account</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Permanently delete a user and all their data. This cannot be undone.</p>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <input type="email" class="form-input" id="delete-user-email" placeholder="User email" style="flex:1;max-width:300px">
+                        <button class="btn btn-danger" onclick="deleteUserByEmail()"><i class="fas fa-user-times"></i> Delete User</button>
+                    </div>
+                    <div id="delete-user-result" style="margin-top:12px"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -447,6 +505,9 @@
                 if (section === 'users') loadUsers();
                 if (section === 'moderators') loadModerators();
                 if (section === 'cities') loadCities();
+                if (section === 'reports') loadReports();
+                if (section === 'room-reports') loadRoomReports();
+                if (section === 'feedback') loadFeedback();
             });
         });
 
@@ -829,7 +890,8 @@
                         actionBtns = '<button class="btn btn-sm btn-primary" onclick="liftBan(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-unlock"></i> Lift Ban</button>';
                     } else {
                         statusBadge = '<span style="color:#2ecc71;font-size:11px"><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> Active</span>';
-                        actionBtns = '<button class="btn btn-sm btn-danger" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'permanent\')"><i class="fas fa-ban"></i> Ban</button>' +
+                        actionBtns = '<button class="btn btn-sm btn-ghost" onclick="warnUser(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
+                            '<button class="btn btn-sm btn-danger" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'permanent\')"><i class="fas fa-ban"></i> Ban</button>' +
                             '<button class="btn btn-sm btn-ghost" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'temporary\')"><i class="fas fa-pause-circle"></i> Suspend</button>';
                     }
 
@@ -958,6 +1020,48 @@
         }
 
         // ===== CITY FEEDS =====
+        // ============ REPORTS ============
+        async function loadReports() {
+            const list = document.getElementById('reports-list');
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px"></i>Loading reports...</div>';
+            try {
+                const res = await fetch(API_BASE + '/admin/reports', { headers: authHeaders() });
+                const data = await res.json();
+                if (!data.reports || data.reports.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-file-alt" style="font-size:32px;display:block;margin-bottom:12px;color:#E8A0B5"></i>No reports yet.<br><span style="font-size:13px">Reports are generated every Monday at 8 AM UTC.</span></div>';
+                    return;
+                }
+                var html = '';
+                data.reports.forEach(function(report, idx) {
+                    var date = new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    var raw = report.raw_data;
+                    if (typeof raw === 'string') try { raw = JSON.parse(raw); } catch(e) { raw = {}; }
+                    var statsHtml = '';
+                    if (raw) {
+                        statsHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+                            + '<span style="background:rgba(232,160,181,0.1);color:#E8A0B5;padding:4px 10px;border-radius:6px;font-size:12px">Posts: ' + (raw.total_posts || 0) + '</span>'
+                            + '<span style="background:rgba(231,76,60,0.1);color:#e74c3c;padding:4px 10px;border-radius:6px;font-size:12px">Hidden: ' + (raw.hidden_posts || 0) + '</span>'
+                            + '<span style="background:rgba(241,196,15,0.1);color:#f1c40f;padding:4px 10px;border-radius:6px;font-size:12px">Suspensions: ' + (raw.suspensions || 0) + '</span>'
+                            + '<span style="background:rgba(46,204,113,0.1);color:#2ecc71;padding:4px 10px;border-radius:6px;font-size:12px">Lifted: ' + (raw.lifted_suspensions || 0) + '</span>'
+                            + '<span style="background:rgba(142,68,173,0.1);color:#8e44ad;padding:4px 10px;border-radius:6px;font-size:12px">Name Blocks: ' + (raw.name_blocks || 0) + '</span>'
+                            + '</div>';
+                    }
+                    var escapedText = (report.report_text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">'
+                        + '<div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'" style="padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">'
+                        + '<div><span style="color:#fff;font-weight:600;font-size:15px">' + (report.week_label || 'Report') + '</span><span style="color:#8080A0;font-size:12px;margin-left:12px">' + date + '</span></div>'
+                        + '<i class="fas fa-chevron-down" style="color:#8080A0;font-size:12px"></i></div>'
+                        + '<div style="display:none;padding:0 20px 20px;border-top:1px solid rgba(255,255,255,0.04)">'
+                        + statsHtml
+                        + '<pre style="background:#1A1A2E;border-radius:8px;padding:16px;font-family:Courier New,monospace;font-size:12px;line-height:1.7;color:#C8C8E0;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto">' + escapedText + '</pre>'
+                        + '</div></div>';
+                });
+                list.innerHTML = html;
+            } catch (err) {
+                list.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c"><i class="fas fa-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:8px"></i>Failed to load reports.</div>';
+            }
+        }
+
         async function loadCities() {
             const list = document.getElementById('cities-list');
             list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>';
@@ -1050,6 +1154,282 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById('section-cities').classList.add('active');
             document.getElementById('page-title').textContent = 'City Feeds';
+        }
+
+        // ===== WARN USER =====
+        async function warnUser(userId, name) {
+            var reason = prompt('Warning reason for "' + name + '" (min 10 characters):');
+            if (!reason || reason.length < 10) {
+                if (reason !== null) showToast('Reason must be at least 10 characters', true);
+                return;
+            }
+            try {
+                var res = await fetch(API_BASE + '/admin/warn', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ user_id: userId, reason: reason })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Warning sent to ' + name + ' (warning #' + (data.warningCount || '?') + ')');
+                loadUsers();
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== DELETE USER =====
+        async function deleteUserByEmail() {
+            var email = document.getElementById('delete-user-email').value.trim();
+            if (!email) { showToast('Enter an email address', true); return; }
+            if (!confirm('PERMANENTLY delete user "' + email + '" and ALL their data? This cannot be undone!')) return;
+            if (!confirm('Are you absolutely sure? Type the email again to confirm.')) return;
+
+            var resultEl = document.getElementById('delete-user-result');
+            resultEl.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Deleting...</span>';
+            try {
+                var res = await fetch(API_BASE + '/admin/delete-user?email=' + encodeURIComponent(email), {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                resultEl.innerHTML = '<span style="color:#2ecc71"><i class="fas fa-check"></i> ' + escapeHtml(data.message || 'User deleted') + '</span>';
+                document.getElementById('delete-user-email').value = '';
+            } catch (err) {
+                resultEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        // ===== ROOM REPORTS =====
+        async function loadRoomReports() {
+            var list = document.getElementById('room-reports-list');
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading reports...</div>';
+            try {
+                var res = await fetch(API_BASE + '/admin/room-reports', { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed to load');
+                var data = await res.json();
+                var reports = data.reports || [];
+                if (reports.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color:#2ecc71"></i><p>No pending room reports. All clear!</p></div>';
+                    return;
+                }
+                list.innerHTML = reports.map(function(r) {
+                    var postBody = escapeHtml((r.post_body || '').substring(0, 200));
+                    return '<div class="post-card" id="rr-' + r.id + '">' +
+                        '<div class="post-card-header">' +
+                            '<div class="post-card-user">' +
+                                '<div class="post-card-avatar" style="background:#9b59b6">' + (r.author_name || '?')[0].toUpperCase() + '</div>' +
+                                '<div class="post-card-meta">' +
+                                    '<div class="post-card-name">' + escapeHtml(r.author_name || 'Unknown') + '</div>' +
+                                    '<div class="post-card-info">Room: ' + escapeHtml(r.room_name || '?') + ' &middot; Post #' + r.post_id + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="post-card-badges">' +
+                                '<span class="flagged-indicator"><i class="fas fa-flag"></i> ' + (r.report_count || 1) + ' report(s)</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="post-card-content">' + postBody + '</div>' +
+                        '<div style="margin:10px 0;font-size:12px;color:#8080A0">' +
+                            '<strong>Reasons:</strong> ' + escapeHtml(r.reasons || 'N/A') +
+                            (r.details ? '<br><strong>Details:</strong> ' + escapeHtml(r.details) : '') +
+                        '</div>' +
+                        '<div class="post-card-actions">' +
+                            '<button class="btn btn-sm btn-approve" onclick="dismissRoomReport(' + r.post_id + ')"><i class="fas fa-check"></i> Dismiss</button>' +
+                            '<button class="btn btn-sm btn-ghost" onclick="removeRoomPost(' + r.post_id + ')"><i class="fas fa-trash"></i> Remove Post</button>' +
+                            '<button class="btn btn-sm btn-danger" onclick="removeAndBanRoomUser(' + r.post_id + ', ' + r.author_id + ', \'' + escapeHtml(r.author_name || '').replace(/'/g, "\\'") + '\')"><i class="fas fa-ban"></i> Remove + Ban</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load room reports.</p></div>';
+                console.error(err);
+            }
+        }
+
+        async function dismissRoomReport(postId) {
+            try {
+                await fetch(API_BASE + '/admin/room-reports', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ postId: postId, action: 'dismiss' })
+                });
+                showToast('Report dismissed');
+                document.getElementById('rr-' + postId)?.remove();
+            } catch (err) { showToast('Failed', true); }
+        }
+
+        async function removeRoomPost(postId) {
+            if (!confirm('Remove this room post?')) return;
+            try {
+                await fetch(API_BASE + '/admin/room-reports', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ postId: postId, action: 'remove' })
+                });
+                showToast('Post removed');
+                document.getElementById('rr-' + postId)?.remove();
+            } catch (err) { showToast('Failed', true); }
+        }
+
+        async function removeAndBanRoomUser(postId, userId, name) {
+            if (!confirm('Remove post AND ban "' + name + '"?')) return;
+            try {
+                await fetch(API_BASE + '/admin/room-reports', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ postId: postId, action: 'remove' })
+                });
+                await fetch(API_BASE + '/admin/ban', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ user_id: userId, reason: 'Reported room post violation — removed by admin', ban_type: 'permanent' })
+                });
+                showToast('Post removed and user banned');
+                document.getElementById('rr-' + postId)?.remove();
+            } catch (err) { showToast('Failed', true); }
+        }
+
+        // ===== FEEDBACK =====
+        var feedbackPage = 1;
+
+        async function loadFeedback() {
+            var list = document.getElementById('feedback-list');
+            list.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading feedback...</div>';
+            var status = document.getElementById('feedback-filter').value;
+            var url = API_BASE + '/admin/feedback?page=' + feedbackPage + '&limit=20';
+            if (status) url += '&status=' + status;
+
+            try {
+                var res = await fetch(url, { headers: authHeaders() });
+                if (!res.ok) throw new Error('Failed');
+                var data = await res.json();
+                var items = data.feedback || [];
+                if (items.length === 0) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No feedback found.</p></div>';
+                    document.getElementById('feedback-pagination').style.display = 'none';
+                    return;
+                }
+                list.innerHTML = items.map(function(fb) {
+                    var statusColor = fb.status === 'new' ? '#f1c40f' : fb.status === 'reviewed' ? '#3498db' : '#2ecc71';
+                    var statusLabel = (fb.status || 'new').toUpperCase();
+                    return '<div class="post-card" style="margin-bottom:10px">' +
+                        '<div class="post-card-header">' +
+                            '<div class="post-card-user">' +
+                                '<div class="post-card-avatar" style="background:' + (fb.avatar_color || '#E8A0B5') + '">' + (fb.avatar_initial || '?') + '</div>' +
+                                '<div class="post-card-meta">' +
+                                    '<div class="post-card-name">' + escapeHtml(fb.display_name || fb.email || 'Anonymous') + '</div>' +
+                                    '<div class="post-card-info">' + (fb.type || 'general') + ' &middot; ' + timeAgo(fb.created_at) + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<span style="background:rgba(0,0,0,0.2);color:' + statusColor + ';padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">' + statusLabel + '</span>' +
+                        '</div>' +
+                        '<div class="post-card-content" style="margin-bottom:10px">' + escapeHtml(fb.message || '') + '</div>' +
+                        (fb.admin_notes ? '<div style="font-size:12px;color:#8080A0;margin-bottom:10px"><strong>Admin notes:</strong> ' + escapeHtml(fb.admin_notes) + '</div>' : '') +
+                        '<div class="post-card-actions">' +
+                            (fb.status !== 'reviewed' ? '<button class="btn btn-sm btn-ghost" onclick="updateFeedback(' + fb.id + ', \'reviewed\')"><i class="fas fa-eye"></i> Mark Reviewed</button>' : '') +
+                            (fb.status !== 'resolved' ? '<button class="btn btn-sm btn-approve" onclick="updateFeedback(' + fb.id + ', \'resolved\')"><i class="fas fa-check"></i> Resolve</button>' : '') +
+                            '<button class="btn btn-sm btn-ghost" onclick="addFeedbackNote(' + fb.id + ')"><i class="fas fa-sticky-note"></i> Add Note</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+
+                if (data.pagination && data.pagination.totalPages > 1) {
+                    document.getElementById('feedback-pagination').style.display = 'flex';
+                    document.getElementById('fb-page-info').textContent = 'Page ' + data.pagination.page + ' of ' + data.pagination.totalPages;
+                    document.getElementById('fb-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('fb-next').disabled = data.pagination.page >= data.pagination.totalPages;
+                } else {
+                    document.getElementById('feedback-pagination').style.display = 'none';
+                }
+            } catch (err) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load feedback.</p></div>';
+                console.error(err);
+            }
+        }
+
+        function changeFeedbackPage(delta) {
+            feedbackPage = Math.max(1, feedbackPage + delta);
+            loadFeedback();
+        }
+
+        async function updateFeedback(id, status) {
+            try {
+                await fetch(API_BASE + '/admin/feedback', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id: id, status: status })
+                });
+                showToast('Feedback updated');
+                loadFeedback();
+            } catch (err) { showToast('Failed', true); }
+        }
+
+        async function addFeedbackNote(id) {
+            var note = prompt('Add admin note:');
+            if (!note) return;
+            try {
+                await fetch(API_BASE + '/admin/feedback', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id: id, admin_notes: note })
+                });
+                showToast('Note added');
+                loadFeedback();
+            } catch (err) { showToast('Failed', true); }
+        }
+
+        // ===== AI ENFORCE =====
+        async function runAIEnforce() {
+            var postId = document.getElementById('ai-enforce-post-id').value;
+            if (!postId) { showToast('Enter a post ID', true); return; }
+            var result = document.getElementById('ai-enforce-result');
+            result.style.display = 'block';
+            result.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Analyzing post with AI...</span>';
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-enforce', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ post_id: parseInt(postId) })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                var recColor = data.recommendation === 'approve' ? '#2ecc71' : data.recommendation === 'warn' ? '#f1c40f' : '#e74c3c';
+                result.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
+                    '<div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">' +
+                        '<span style="font-size:22px;font-weight:700;color:' + recColor + '">' + (data.severity_score || '?') + '/10</span>' +
+                        '<span style="background:rgba(0,0,0,0.2);color:' + recColor + ';padding:4px 12px;border-radius:6px;font-weight:700;text-transform:uppercase;font-size:12px">' + escapeHtml(data.recommendation || '?') + '</span>' +
+                    '</div>' +
+                    '<p style="color:#C0C0D0;font-size:13px;line-height:1.6;margin-bottom:12px">' + escapeHtml(data.reasoning || '') + '</p>' +
+                    (data.flags && data.flags.length > 0 ? '<div style="margin-bottom:12px">' + data.flags.map(function(f) { return '<span style="background:rgba(231,76,60,0.1);color:#e74c3c;padding:3px 8px;border-radius:4px;font-size:11px;margin-right:4px">' + escapeHtml(f) + '</span>'; }).join('') + '</div>' : '') +
+                    '<div style="display:flex;gap:8px">' +
+                        '<button class="btn btn-sm btn-approve" onclick="applyAIDecision(' + postId + ', \'approve\')"><i class="fas fa-check"></i> Approve</button>' +
+                        '<button class="btn btn-sm btn-ghost" style="color:#f1c40f" onclick="applyAIDecision(' + postId + ', \'warn\')"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
+                        '<button class="btn btn-sm btn-flag" onclick="applyAIDecision(' + postId + ', \'remove\')"><i class="fas fa-trash"></i> Remove</button>' +
+                        '<button class="btn btn-sm btn-danger" onclick="applyAIDecision(' + postId + ', \'ban\')"><i class="fas fa-ban"></i> Ban User</button>' +
+                    '</div>' +
+                '</div>';
+            } catch (err) {
+                result.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        async function applyAIDecision(postId, action) {
+            if (!confirm('Apply "' + action + '" to post #' + postId + '?')) return;
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-enforce', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ post_id: postId, action: action, reason: 'Admin applied AI recommendation' })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Action applied: ' + action);
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
         }
 
         function handleLogout() {

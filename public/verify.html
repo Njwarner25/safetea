@@ -603,7 +603,7 @@
         if (data.verification_url) {
           // Store that we're in verification flow
           localStorage.setItem('safetea_verifying', 'true');
-          // Redirect to Didit verification
+          // Redirect to verification provider
           window.location.href = data.verification_url;
         } else {
           throw new Error('No verification URL received');
@@ -614,7 +614,7 @@
       }
     }
 
-    // Poll for identity verification result (after returning from Didit)
+    // Poll for identity verification result
     async function pollIdentityStatus(maxAttempts) {
       const attempts = maxAttempts || 30;
       for (let i = 0; i < attempts; i++) {
@@ -705,7 +705,7 @@
         return;
       }
 
-      // Check if returning from Didit verification
+      // Check if returning from identity verification
       const wasVerifying = localStorage.getItem('safetea_verifying');
 
       // Fetch current verification status from server
@@ -731,7 +731,7 @@
           return;
         }
 
-        // If returning from Didit, show identity step with polling
+        // If returning from verification, show identity step with polling
         if (wasVerifying && data.steps && !data.steps.identity.completed) {
           showStep('identity');
           document.getElementById('btn-identity').style.display = 'none';

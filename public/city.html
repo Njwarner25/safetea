@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTea — City Waitlist</title>
+    <link rel="icon" href="/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #1A1A2E; color: #F0D0C0; font-family: 'Inter', sans-serif; min-height: 100vh; }
+        .container { max-width: 560px; margin: 0 auto; padding: 40px 24px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header a { text-decoration: none; }
+        .logo { font-size: 28px; font-weight: 800; color: #E8A0B5; }
+        .city-card { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 40px 32px; text-align: center; }
+        .city-emoji { font-size: 64px; margin-bottom: 16px; }
+        .city-name { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+        .city-state { font-size: 16px; color: #8080A0; margin-bottom: 24px; }
+        .progress-section { margin-bottom: 28px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+        .progress-count { color: #E8A0B5; font-weight: 700; }
+        .progress-goal { color: #8080A0; }
+        .progress-bar { background: rgba(255,255,255,0.08); border-radius: 8px; height: 12px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #E8A0B5, #D4768E); height: 100%; border-radius: 8px; transition: width 0.5s ease; }
+        .signup-form { margin-bottom: 24px; }
+        .signup-input { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 15px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 12px; }
+        .signup-input:focus { border-color: #E8A0B5; }
+        .signup-input::placeholder { color: #666; }
+        .signup-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.2s; }
+        .signup-btn:hover { opacity: 0.9; }
+        .signup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .signup-msg { font-size: 14px; margin-top: 12px; text-align: center; }
+        .social-proof { margin-top: 24px; }
+        .avatars { display: flex; justify-content: center; margin-bottom: 8px; }
+        .avatar-circle { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #22223A; margin-left: -8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; overflow: hidden; }
+        .avatar-circle:first-child { margin-left: 0; }
+        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .social-text { font-size: 13px; color: #8080A0; text-align: center; }
+        .share-section { margin-top: 28px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center; }
+        .share-label { font-size: 14px; color: #8080A0; margin-bottom: 12px; }
+        .share-btns { display: flex; gap: 12px; justify-content: center; }
+        .share-btn { padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: #ccc; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; font-family: 'Inter', sans-serif; transition: border-color 0.2s; }
+        .share-btn:hover { border-color: #E8A0B5; color: #E8A0B5; }
+        .active-banner { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #fff; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 24px; }
+        .active-banner h3 { font-size: 20px; margin-bottom: 8px; }
+        .active-banner a { color: #fff; text-decoration: underline; font-weight: 600; }
+        .footer { text-align: center; margin-top: 40px; color: #555; font-size: 12px; }
+        .footer a { color: #E8A0B5; text-decoration: none; }
+        .loading { text-align: center; padding: 60px 0; color: #8080A0; }
+        .error-state { text-align: center; padding: 60px 0; color: #8080A0; }
+        .error-state h3 { color: #fff; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/"><span class="logo">SafeTea</span></a>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading city data...
+        </div>
+
+        <div id="city-content" style="display:none;"></div>
+
+        <div class="footer">
+            <p>&copy; 2026 SafeTea. All rights reserved.</p>
+            <p style="margin-top:6px;"><a href="/">Home</a> &middot; <a href="/login.html">Log In</a></p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        // Capture referral code from URL
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref');
+        if (ref) localStorage.setItem('safetea_referral_code', ref);
+
+        // Extract slug from URL path
+        var pathParts = window.location.pathname.split('/').filter(Boolean);
+        var slug = pathParts[pathParts.length - 1];
+
+        if (!slug || slug === 'city') {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('city-content').style.display = 'block';
+            document.getElementById('city-content').innerHTML = '<div class="error-state"><h3>No city specified</h3><p>Visit <a href="/" style="color:#E8A0B5">getsafetea.app</a> to find your city.</p></div>';
+            return;
+        }
+
+        fetch('/api/cities/' + encodeURIComponent(slug))
+            .then(function(r) {
+                if (r.status === 404) throw new Error('not_found');
+                return r.json();
+            })
+            .then(function(data) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('city-content').style.display = 'block';
+
+                if (data.active) {
+                    renderActiveCity(data.city);
+                } else {
+                    renderWaitlistCity(data.request, data.recentSignups || []);
+                }
+            })
+            .catch(function(err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('city-content').style.display = 'block';
+                if (err.message === 'not_found') {
+                    document.getElementById('city-content').innerHTML = '<div class="error-state"><h3>City not found</h3><p>This city hasn\'t been requested yet. <a href="/login.html" style="color:#E8A0B5">Log in</a> to request it!</p></div>';
+                } else {
+                    document.getElementById('city-content').innerHTML = '<div class="error-state"><h3>Something went wrong</h3><p>Please try again later.</p></div>';
+                }
+            });
+
+        function renderActiveCity(city) {
+            document.title = 'SafeTea — ' + city.name + ' is Live!';
+            document.getElementById('city-content').innerHTML =
+                '<div class="city-card">' +
+                    '<div class="city-emoji">' + (city.emoji || '🏙️') + '</div>' +
+                    '<div class="city-name">' + escapeHtml(city.name) + '</div>' +
+                    '<div class="city-state">' + escapeHtml(city.state || '') + '</div>' +
+                    '<div class="active-banner">' +
+                        '<h3>This city is live!</h3>' +
+                        '<p><a href="/login.html">Log in or sign up</a> to join the ' + escapeHtml(city.name) + ' community.</p>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        function renderWaitlistCity(request, signups) {
+            document.title = 'SafeTea — Help bring SafeTea to ' + request.city_name;
+            var pct = Math.min(request.progress || 0, 100);
+
+            var avatarsHtml = '';
+            if (signups.length > 0) {
+                avatarsHtml = '<div class="social-proof"><div class="avatars">';
+                signups.slice(0, 8).forEach(function(s) {
+                    if (s.avatar_url) {
+                        avatarsHtml += '<div class="avatar-circle"><img src="' + escapeHtml(s.avatar_url) + '" alt=""></div>';
+                    } else {
+                        var initial = (s.display_name || '?')[0].toUpperCase();
+                        avatarsHtml += '<div class="avatar-circle">' + initial + '</div>';
+                    }
+                });
+                if (request.signup_count > 8) {
+                    avatarsHtml += '<div class="avatar-circle">+' + (request.signup_count - 8) + '</div>';
+                }
+                avatarsHtml += '</div><div class="social-text">' + request.signup_count + ' people want SafeTea here</div></div>';
+            }
+
+            var shareUrl = 'https://getsafetea.app/city/' + request.slug;
+            var shareText = 'Help bring SafeTea to ' + request.city_name + '! Sign up for the waitlist:';
+
+            document.getElementById('city-content').innerHTML =
+                '<div class="city-card">' +
+                    '<div class="city-emoji">' + (request.emoji || '🏙️') + '</div>' +
+                    '<div class="city-name">' + escapeHtml(request.city_name) + '</div>' +
+                    '<div class="city-state">' + escapeHtml(request.state) + '</div>' +
+                    '<div class="progress-section">' +
+                        '<div class="progress-label">' +
+                            '<span class="progress-count">' + request.signup_count + ' signed up</span>' +
+                            '<span class="progress-goal">Goal: ' + request.threshold + '</span>' +
+                        '</div>' +
+                        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+                    '</div>' +
+                    '<div class="signup-form">' +
+                        '<input type="email" id="waitlist-email" class="signup-input" placeholder="Enter your email to join the waitlist">' +
+                        '<button onclick="submitWaitlistSignup()" id="waitlist-btn" class="signup-btn">Join the Waitlist</button>' +
+                        '<div id="waitlist-msg" class="signup-msg" style="display:none;"></div>' +
+                    '</div>' +
+                    avatarsHtml +
+                    '<div class="share-section">' +
+                        '<div class="share-label">Share to help unlock ' + escapeHtml(request.city_name) + '</div>' +
+                        '<div class="share-btns">' +
+                            '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(shareUrl) + '" target="_blank">Twitter</a>' +
+                            '<button class="share-btn" onclick="copyShareLink(\'' + escapeHtml(shareUrl) + '\')">Copy Link</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        window.submitWaitlistSignup = function() {
+            var email = document.getElementById('waitlist-email').value.trim();
+            var msg = document.getElementById('waitlist-msg');
+            var btn = document.getElementById('waitlist-btn');
+
+            if (!email || !email.includes('@')) {
+                msg.textContent = 'Please enter a valid email.';
+                msg.style.color = '#e74c3c';
+                msg.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Signing up...';
+
+            var body = { slug: slug, email: email };
+            var referralCode = localStorage.getItem('safetea_referral_code');
+            if (referralCode) body.referral_code = referralCode;
+
+            fetch('/api/cities/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.textContent = 'Join the Waitlist';
+                if (data.already_signed_up) {
+                    msg.textContent = 'You\'re already on the waitlist!';
+                    msg.style.color = '#E8A0B5';
+                } else if (data.already_unlocked) {
+                    msg.innerHTML = 'This city is already live! <a href="/login.html" style="color:#E8A0B5">Log in</a> to join.';
+                    msg.style.color = '#2ecc71';
+                } else if (data.success) {
+                    msg.textContent = 'You\'re in! ' + data.signup_count + '/' + data.threshold + ' (' + data.progress + '%)';
+                    msg.style.color = '#2ecc71';
+                    // Update progress bar
+                    var fill = document.querySelector('.progress-fill');
+                    if (fill) fill.style.width = Math.min(data.progress, 100) + '%';
+                    var countEl = document.querySelector('.progress-count');
+                    if (countEl) countEl.textContent = data.signup_count + ' signed up';
+                } else {
+                    msg.textContent = data.error || 'Something went wrong.';
+                    msg.style.color = '#e74c3c';
+                }
+                msg.style.display = 'block';
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = 'Join the Waitlist';
+                msg.textContent = 'Network error. Try again.';
+                msg.style.color = '#e74c3c';
+                msg.style.display = 'block';
+            });
+        };
+
+        window.copyShareLink = function(url) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    var btns = document.querySelectorAll('.share-btn');
+                    btns[btns.length - 1].textContent = 'Copied!';
+                    setTimeout(function() { btns[btns.length - 1].textContent = 'Copy Link'; }, 2000);
+                });
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+    })();
+    </script>
+</body>
+</html>

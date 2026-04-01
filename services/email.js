@@ -79,7 +79,7 @@ function sendWelcomeEmail(to, displayName) {
         <li>Share and read dating experiences in your city's community feed</li>
         <li>Use <strong>Name Watch</strong> to monitor names and get alerts</li>
         <li>Run <strong>Red Flag Scans</strong> on conversations</li>
-        <li>Check the <strong>Sex Offender Registry</strong> and run background checks</li>
+        <li>Access the <strong>Safety Resource Hub</strong> for trusted safety resources</li>
         <li>Use <strong>Date Check-In</strong> to share your location with trusted contacts</li>
       </ul>
       <div style="text-align:center;margin:24px 0;">
@@ -163,6 +163,22 @@ function sendDateCheckInReminderEmail(to, displayName, dateName, venue) {
   });
 }
 
+function sendCityUnlockEmail(to, cityName, signupCount) {
+  return sendEmail({
+    to,
+    subject: `🎉 ${cityName} is now live on SafeTea!`,
+    html: wrapHtml(`
+      <h2 style="color:#fff;font-size:20px;margin:0 0 16px;">Your City is Live!</h2>
+      <p>Great news! <strong style="color:#E8A0B5;">${cityName}</strong> has officially launched on SafeTea.</p>
+      <p>Thanks to you and <strong>${signupCount}</strong> other people who requested it, ${cityName} is now an active SafeTea community.</p>
+      <div style="text-align:center;margin:24px 0;">
+        <a href="https://getsafetea.app/login.html" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Join ${cityName} Now</a>
+      </div>
+      <p style="color:#8080A0;font-size:13px;">You're receiving this because you signed up for the ${cityName} waitlist.</p>
+    `)
+  });
+}
+
 module.exports = {
   sendEmail,
   wrapHtml,
@@ -170,5 +186,6 @@ module.exports = {
   sendNameWatchMatchEmail,
   sendRemovalStatusEmail,
   sendStrikeBanEmail,
-  sendDateCheckInReminderEmail
+  sendDateCheckInReminderEmail,
+  sendCityUnlockEmail
 };

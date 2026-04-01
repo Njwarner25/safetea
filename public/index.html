@@ -816,7 +816,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
 <section class="section" id="cities" style="padding:80px 0">
   <div class="container">
     <div class="section-content-centered" style="margin-bottom:40px">
-      <h2 style="font-size:2.2rem;font-weight:800;color:#fff;margin-bottom:12px">Live in 8 Cities</h2>
+      <h2 id="cities-heading" style="font-size:2.2rem;font-weight:800;color:#fff;margin-bottom:12px">Live in 8 Cities</h2>
       <p class="section-body" style="max-width:500px;margin:0 auto;color:#8080A0">SafeTea communities are active and growing. Find yours.</p>
     </div>
     <div id="cities-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;max-width:800px;margin:0 auto">
@@ -829,9 +829,11 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
       <a href="login.html" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 16px;text-align:center;text-decoration:none;display:block"><div style="font-size:32px;margin-bottom:8px">🏛️</div><div style="font-size:15px;font-weight:600;color:#fff">Boston</div></a>
       <a href="login.html" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 16px;text-align:center;text-decoration:none;display:block"><div style="font-size:32px;margin-bottom:8px">🗽</div><div style="font-size:15px;font-weight:600;color:#fff">New York</div></a>
     </div>
-    <div style="text-align:center;margin-top:32px">
+    <!-- Requested Cities / Waitlist -->
+    <div id="requested-cities-landing" style="margin-top:32px;max-width:500px;margin-left:auto;margin-right:auto;"></div>
+    <div style="text-align:center;margin-top:24px">
       <p style="color:#8080A0;font-size:14px;margin-bottom:8px">Don't see your city?</p>
-      <a href="login.html" class="btn btn-primary">Join Your City</a>
+      <a href="login.html" class="btn btn-primary">Join &amp; Request Yours</a>
     </div>
   </div>
 </section>
@@ -842,6 +844,9 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
     .then(function(cities){
       var grid=document.getElementById('cities-grid');
       if(!cities||!cities.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#8080A0">Coming soon!</div>';return;}
+      // Update heading with dynamic count
+      var heading=document.getElementById('cities-heading');
+      if(heading) heading.textContent='Live in '+cities.length+' Cit'+(cities.length===1?'y':'ies');
       var html='';
       cities.forEach(function(c){
         html+='<a href="login.html" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px 16px;text-align:center;text-decoration:none;transition:all 0.2s;display:block"';
@@ -857,6 +862,29 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
     .catch(function(){
       document.getElementById('cities-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:#8080A0">Cities loading failed. <a href="login.html" style="color:#E8A0B5">Join anyway &rarr;</a></div>';
     });
+
+  // Load requested/waitlist cities
+  fetch('https://www.getsafetea.app/api/cities/requested')
+    .then(function(r){return r.json()})
+    .then(function(data){
+      var container=document.getElementById('requested-cities-landing');
+      var requests=(data.cityRequests||[]).filter(function(c){return c.status==='pending';});
+      if(!requests.length){container.innerHTML='';return;}
+      var html='<div style="text-align:center;margin-bottom:16px"><p style="color:#E8A0B5;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Coming Soon</p><p style="color:#8080A0;font-size:13px">Help unlock these cities by signing up</p></div>';
+      requests.slice(0,5).forEach(function(c){
+        var pct=Math.round((c.signup_count/c.threshold)*100);
+        html+='<a href="/city/'+c.slug+'" style="display:block;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-bottom:10px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'rgba(232,160,181,0.3)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.06)\'">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+        html+='<span style="color:#fff;font-weight:600;font-size:14px">'+(c.emoji||'🏙️')+' '+c.city_name+', '+c.state+'</span>';
+        html+='<span style="color:#8080A0;font-size:13px">'+c.signup_count+'/'+c.threshold+'</span>';
+        html+='</div>';
+        html+='<div style="background:rgba(255,255,255,0.06);border-radius:6px;height:6px;overflow:hidden">';
+        html+='<div style="background:linear-gradient(90deg,#E8A0B5,#D4768E);height:100%;width:'+Math.min(pct,100)+'%;border-radius:6px"></div>';
+        html+='</div></a>';
+      });
+      container.innerHTML=html;
+    })
+    .catch(function(){});
 })();
 </script>
 

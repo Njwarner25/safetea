@@ -19,7 +19,8 @@
         { "path": "/api/cron/fetch-crime-alerts", "schedule": "0 4 * * *" },
         { "path": "/api/cron/ai-moderate", "schedule": "*/30 * * * *" },
         { "path": "/api/cron/checkin-reminders", "schedule": "*/15 * * * *" },
-        { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" }
+        { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" },
+        { "path": "/api/cron/unlock-cities", "schedule": "0 5 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -89,6 +90,13 @@
         { "source": "/api/community/stats", "destination": "/api/community/stats" },
         { "source": "/api/community/post", "destination": "/api/community/post" },
         { "source": "/api/community", "destination": "/api/community/index" },
+        { "source": "/api/cities/request", "destination": "/api/cities/request" },
+        { "source": "/api/cities/signup", "destination": "/api/cities/signup" },
+        { "source": "/api/cities/requested", "destination": "/api/cities/requested" },
+        { "source": "/api/cities/:slug", "destination": "/api/cities/[slug]" },
+        { "source": "/api/migrate-city-expansion", "destination": "/api/migrate-city-expansion" },
+        { "source": "/api/cron/unlock-cities", "destination": "/api/cron/unlock-cities" },
+        { "source": "/city/:slug", "destination": "/public/city.html" },
         { "source": "/api/cities", "destination": "/api/cities" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },

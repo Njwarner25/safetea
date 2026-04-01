@@ -1933,7 +1933,29 @@
             <div class="city-picker-grid" id="city-picker-grid">
                 <div style="text-align:center;padding:20px;color:#aaa;grid-column:span 2;"><i class="fas fa-spinner fa-spin"></i> Loading cities...</div>
             </div>
+            <!-- Don't see your city? -->
+            <div id="city-request-section" style="margin-top:16px;padding:20px;border:2px dashed #e0d0d8;border-radius:16px;text-align:center;background:rgba(232,160,181,0.04);">
+                <p style="font-size:15px;color:#888;margin:0 0 8px;">Don't see your city?</p>
+                <button onclick="openCityRequestModal()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Request Your City</button>
+                <div id="requested-cities-list" style="margin-top:16px;text-align:left;"></div>
+            </div>
+
             <button class="city-picker-continue" id="city-continue-btn" disabled onclick="confirmCitySelection()">Continue</button>
+        </div>
+    </div>
+
+    <!-- City Request Modal -->
+    <div id="city-request-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:20px;padding:32px 28px;max-width:400px;width:90%;margin:0 auto;position:relative;top:50%;transform:translateY(-50%);">
+            <h3 style="font-size:20px;font-weight:700;color:#333;margin:0 0 6px;">Request a New City</h3>
+            <p style="font-size:14px;color:#888;margin:0 0 20px;">We'll open it when 100 people sign up!</p>
+            <input type="text" id="request-city-name" placeholder="City name (e.g. Denver)" style="width:100%;padding:12px 16px;border:1px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:12px;box-sizing:border-box;font-family:'Inter',sans-serif;">
+            <input type="text" id="request-city-state" placeholder="State (e.g. CO)" style="width:100%;padding:12px 16px;border:1px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:20px;box-sizing:border-box;font-family:'Inter',sans-serif;">
+            <div style="display:flex;gap:12px;">
+                <button onclick="closeCityRequestModal()" style="flex:1;padding:12px;border:1px solid #e0e0e0;border-radius:10px;background:#fff;color:#666;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+                <button onclick="submitCityRequest()" id="city-request-submit-btn" style="flex:1;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Submit</button>
+            </div>
+            <p id="city-request-msg" style="font-size:13px;color:#888;margin:12px 0 0;text-align:center;display:none;"></p>
         </div>
     </div>
 
@@ -3205,6 +3227,109 @@
     function closeCityPicker() {
         document.getElementById('city-picker').classList.remove('show');
     }
+
+    // ─── City Request / Expansion ───
+    function openCityRequestModal() {
+        document.getElementById('city-request-modal').style.display = 'block';
+        document.getElementById('request-city-name').value = '';
+        document.getElementById('request-city-state').value = '';
+        document.getElementById('city-request-msg').style.display = 'none';
+    }
+
+    function closeCityRequestModal() {
+        document.getElementById('city-request-modal').style.display = 'none';
+    }
+
+    function submitCityRequest() {
+        var name = document.getElementById('request-city-name').value.trim();
+        var state = document.getElementById('request-city-state').value.trim();
+        var msg = document.getElementById('city-request-msg');
+        var btn = document.getElementById('city-request-submit-btn');
+
+        if (!name || !state) {
+            msg.textContent = 'Please fill in both fields.';
+            msg.style.color = '#e74c3c';
+            msg.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        var token = localStorage.getItem('safetea_token');
+        var user = window._currentUser || {};
+        var body = { city_name: name, state: state, email: user.email || '' };
+        var ref = localStorage.getItem('safetea_referral_code');
+        if (ref) body.referral_code = ref;
+
+        fetch('/api/cities/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : ''
+            },
+            body: JSON.stringify(body)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.textContent = 'Submit';
+            if (data.already_active) {
+                msg.textContent = data.city.name + ' is already live! Select it from the grid.';
+                msg.style.color = '#2ecc71';
+                msg.style.display = 'block';
+                loadCities();
+            } else if (data.success) {
+                msg.textContent = data.cityRequest.city_name + ' requested! ' + data.cityRequest.signup_count + '/' + data.cityRequest.threshold + ' signups.';
+                msg.style.color = '#2ecc71';
+                msg.style.display = 'block';
+                loadRequestedCities();
+            } else {
+                msg.textContent = data.error || 'Something went wrong.';
+                msg.style.color = '#e74c3c';
+                msg.style.display = 'block';
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.textContent = 'Submit';
+            msg.textContent = 'Network error. Try again.';
+            msg.style.color = '#e74c3c';
+            msg.style.display = 'block';
+        });
+    }
+
+    function loadRequestedCities() {
+        fetch('/api/cities/requested')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var list = document.getElementById('requested-cities-list');
+                var requests = (data.cityRequests || []).filter(function(c) { return c.status === 'pending'; });
+                if (requests.length === 0) { list.innerHTML = ''; return; }
+                var html = '<p style="font-size:13px;color:#999;margin:0 0 10px;font-weight:600;">Coming Soon</p>';
+                requests.slice(0, 5).forEach(function(c) {
+                    var pct = Math.round((c.signup_count / c.threshold) * 100);
+                    html += '<div style="margin-bottom:10px;">' +
+                        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">' +
+                            '<span style="color:#555;font-weight:600;">' + (c.emoji || '🏙️') + ' ' + escapeHtml(c.city_name) + ', ' + escapeHtml(c.state) + '</span>' +
+                            '<span style="color:#999;">' + c.signup_count + '/' + c.threshold + '</span>' +
+                        '</div>' +
+                        '<div style="background:#f0e8ec;border-radius:6px;height:8px;overflow:hidden;">' +
+                            '<div style="background:linear-gradient(90deg,#E8A0B5,#D4768E);height:100%;width:' + Math.min(pct, 100) + '%;border-radius:6px;transition:width 0.3s;"></div>' +
+                        '</div>' +
+                    '</div>';
+                });
+                list.innerHTML = html;
+            })
+            .catch(function() {});
+    }
+
+    // Hook into openCityPicker to also load requested cities
+    var _origOpenCityPicker = openCityPicker;
+    openCityPicker = function() {
+        _origOpenCityPicker();
+        loadRequestedCities();
+    };
 
     // Feed sort mode: 'hot' (engagement+recency like FB) or 'recent' (newest first)
     var feedSortMode = 'hot';

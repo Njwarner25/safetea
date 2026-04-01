@@ -1,4 +1,5 @@
 const { getMany, getOne, run } = require('./db');
+const { sendPushNotification } = require('../../services/push');
 
 // Generate search terms from a display name
 function generateSearchTerms(name) {
@@ -57,6 +58,16 @@ async function checkNewPostAgainstWatchedNames(postId, postContent, postCity) {
                              WHERE id = $1`,
                             [wn.id]
                         );
+
+                        // Send inbox system message
+                        run(
+                            `INSERT INTO messages (sender_id, recipient_id, content, is_system, system_type, created_at)
+                             VALUES ($1, $1, $2, true, 'namewatch', NOW())`,
+                            [wn.user_id, 'Name Watch Alert: A watched name was mentioned in a new post in your area. Check your Alerts tab.']
+                        ).catch(() => {});
+
+                        // Send push notification
+                        sendPushNotification(wn.user_id, 'Name Watch Alert', 'A watched name was mentioned in a new post', { type: 'namewatch' }).catch(() => {});
                     } catch (e) { /* ignore duplicate */ }
                     break;
                 }
@@ -98,10 +109,25 @@ async function scanExistingPosts(watchedNameId, searchTerms, userCity) {
             'SELECT COUNT(*) as count FROM name_watch_matches WHERE watched_name_id = $1',
             [watchedNameId]
         );
+        const matchTotal = parseInt(countResult.count);
         await run(
             'UPDATE watched_names SET match_count = $1 WHERE id = $2',
-            [parseInt(countResult.count), watchedNameId]
+            [matchTotal, watchedNameId]
         );
+
+        // Send ONE summary inbox message if historical matches were found
+        if (matchTotal > 0) {
+            const wn = await getOne('SELECT user_id, display_name FROM watched_names WHERE id = $1', [watchedNameId]);
+            if (wn) {
+                run(
+                    `INSERT INTO messages (sender_id, recipient_id, content, is_system, system_type, created_at)
+                     VALUES ($1, $1, $2, true, 'namewatch', NOW())`,
+                    [wn.user_id, 'Name Watch: Found ' + matchTotal + ' existing post(s) mentioning "' + (wn.display_name || 'your watched name') + '". Check your Alerts tab.']
+                ).catch(() => {});
+
+                sendPushNotification(wn.user_id, 'Name Watch', 'Found ' + matchTotal + ' existing post(s) matching your watched name', { type: 'namewatch' }).catch(() => {});
+            }
+        }
     } catch (err) {
         console.error('Scan existing posts error:', err);
     }

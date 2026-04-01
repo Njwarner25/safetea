@@ -19,6 +19,7 @@ module.exports = async function handler(req, res) {
             created_at,
             is_read,
             recipient_id,
+            is_system,
             ROW_NUMBER() OVER (
               PARTITION BY LEAST(sender_id, recipient_id), GREATEST(sender_id, recipient_id)
               ORDER BY created_at DESC
@@ -33,7 +34,8 @@ module.exports = async function handler(req, res) {
           u.avatar_color AS other_avatar_color,
           MAX(CASE WHEN r.rn = 1 THEN r.content END) AS last_message,
           MAX(r.created_at) AS last_message_at,
-          COUNT(*) FILTER (WHERE r.is_read = false AND r.recipient_id = $1) AS unread_count
+          COUNT(*) FILTER (WHERE r.is_read = false AND r.recipient_id = $1) AS unread_count,
+          BOOL_OR(r.is_system) AS is_system
         FROM ranked r
         JOIN users u ON u.id = r.other_id
         GROUP BY r.other_id, u.display_name, u.custom_display_name, u.avatar_color

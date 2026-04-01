@@ -52,6 +52,7 @@
         { "source": "/api/referral/track", "destination": "/api/referral/track" },
         { "source": "/api/referral", "destination": "/api/referral" },
         { "source": "/api/refund", "destination": "/api/refund" },
+        { "source": "/api/notifications/register", "destination": "/api/notifications/register" },
         { "source": "/api/messages/unread/count", "destination": "/api/messages/unread/count" },
         { "source": "/api/messages/:userId", "destination": "/api/messages/[userId]" },
         { "source": "/api/messages", "destination": "/api/messages" },

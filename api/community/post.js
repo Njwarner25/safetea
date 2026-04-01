@@ -1,6 +1,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { sendNameWatchMatchEmail } = require('../../services/email');
+const { sendPushNotification } = require('../../services/push');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -74,6 +75,16 @@ async function checkNameWatchMatches(postId, postBody, postCity) {
           [wn.id, postId, wn.name]
         );
         matchCount++;
+
+        // Send inbox system message
+        var alertMsg = 'Name Watch Alert: "' + wn.name + '" was mentioned in a new post in ' + (postCity || 'your area') + '. Check your Alerts tab.';
+        run(
+          'INSERT INTO messages (sender_id, recipient_id, content, is_system, system_type, created_at) VALUES ($1, $1, $2, true, $3, NOW())',
+          [wn.user_id, alertMsg, 'namewatch']
+        ).catch(function(err) { console.error('[NameWatch] Inbox message failed:', err.message); });
+
+        // Send push notification
+        sendPushNotification(wn.user_id, 'Name Watch Alert', '"' + wn.name + '" was mentioned in a new post', { type: 'namewatch' }).catch(function() {});
 
         if (wn.email) {
           const snippet = postBody.length > 150 ? postBody.substring(0, 150) + '...' : postBody;

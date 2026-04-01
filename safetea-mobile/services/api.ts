@@ -252,6 +252,42 @@ class ApiClient {
     });
   }
 
+  // Push Notifications
+  async registerPushToken(token: string, platform: string) {
+    return this.request('/notifications/register', {
+      method: 'POST',
+      body: JSON.stringify({ token, platform }),
+    });
+  }
+
+  // Name Watch
+  async getWatchedNames() {
+    return this.request<any>('/namewatch');
+  }
+
+  async addWatchedName(name: string) {
+    return this.request<any>('/namewatch', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async deleteWatchedName(id: number) {
+    return this.request<any>('/namewatch?id=' + id, {
+      method: 'DELETE',
+    });
+  }
+
+  async getNameWatchUnread() {
+    return this.request<any>('/namewatch/unread');
+  }
+
+  async markAllNameWatchRead() {
+    return this.request<any>('/namewatch/read-all', {
+      method: 'POST',
+    });
+  }
+
   // Scam database — fetch entries from community reports
   async getScamReports(category?: string, search?: string) {
     const params = new URLSearchParams();

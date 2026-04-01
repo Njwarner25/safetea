@@ -198,6 +198,30 @@ const CITY_FETCHERS = {
     }));
   },
 
+  boston: async (daysBack) => {
+    const { url, headers } = buildSocrataQuery(
+      'https://data.boston.gov/api/3/action/datastore_search_sql',
+      '', '', [], daysBack, process.env.BOSTON_SOCRATA_TOKEN
+    );
+    // Boston uses CKAN, not standard Socrata — custom query
+    const since = new Date(Date.now() - daysBack * 86400000).toISOString().split('T')[0];
+    const sqlQuery = `SELECT * FROM "12cb3883-56f5-47de-afa5-3b1cf61b257b" WHERE "OCCURRED_ON_DATE" >= '${since}' AND "OFFENSE_DESCRIPTION" IN ('ASSAULT - AGGRAVATED','ASSAULT - AGGRAVATED - BATTERY','RAPE','INDECENT ASSAULT','KIDNAPPING','KIDNAPPING/ENTICING','HARASSMENT','STALKING','HUMAN TRAFFICKING - INVOLUNTARY SERVITUDE','HUMAN TRAFFICKING - COMMERCIAL SEX ACTS') ORDER BY "OCCURRED_ON_DATE" DESC LIMIT 5000`;
+    const bostonUrl = `https://data.boston.gov/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sqlQuery)}`;
+    const res = await fetch(bostonUrl);
+    const data = await res.json();
+    const records = (data.result && data.result.records) || [];
+    return records.map(r => ({
+      city: 'boston',
+      source_id: `boston_${r.INCIDENT_NUMBER}`,
+      raw_category: r.OFFENSE_DESCRIPTION,
+      description: r.OFFENSE_DESCRIPTION,
+      latitude: parseFloat(r.Lat),
+      longitude: parseFloat(r.Long),
+      occurred_at: r.OCCURRED_ON_DATE,
+      block_address: r.STREET
+    }));
+  },
+
   philadelphia: async (daysBack) => {
     const since = new Date(Date.now() - daysBack * 86400000).toISOString().split('T')[0];
     const sql = `SELECT * FROM incidents_part1_part2 WHERE dispatch_date >= '${since}' AND text_general_code IN ('Aggravated Assault No Firearm','Aggravated Assault Firearm','Rape','Other Assaults','Kidnapping','Other Sex Offenses','Offenses Against Family and Children') ORDER BY dispatch_date DESC LIMIT 5000`;

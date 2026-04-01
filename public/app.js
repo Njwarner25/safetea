@@ -1177,10 +1177,13 @@
                     return;
                 }
                 var html = '';
+                var me = getUser();
+                var myId = me ? me.id : null;
                 convos.forEach(function(c) {
-                    var name = c.other_custom_name || c.other_name || 'User';
-                    var initials = name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
-                    var color = c.other_avatar_color || '#E8A0B5';
+                    var isSysConvo = (c.other_user_id === myId) || c.is_system;
+                    var name = isSysConvo ? 'SafeTea Alerts' : (c.other_custom_name || c.other_name || 'User');
+                    var initials = isSysConvo ? '\uD83D\uDD14' : name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+                    var color = isSysConvo ? '#E8A0B5' : (c.other_avatar_color || '#E8A0B5');
                     var preview = c.last_message || '';
                     if (preview.length > 50) preview = preview.substring(0, 50) + '...';
                     var time = formatConvoTime(c.last_message_at);
@@ -1188,7 +1191,7 @@
                     var isActive = currentThreadUserId === c.other_user_id;
 
                     html += '<div class="convo-item' + (isActive ? ' active' : '') + '" onclick="openConversation(' + c.other_user_id + ')">';
-                    html += '<div class="convo-avatar" style="background:' + color + '">' + escapeHtmlSafe(initials) + '</div>';
+                    html += '<div class="convo-avatar" style="background:' + color + ';font-size:' + (isSysConvo ? '18px' : '14px') + '">' + (isSysConvo ? '\uD83D\uDD14' : escapeHtmlSafe(initials)) + '</div>';
                     html += '<div class="convo-info">';
                     html += '<div class="convo-name">' + escapeHtmlSafe(name);
                     if (unread > 0) html += ' <span class="convo-unread">' + unread + '</span>';
@@ -1225,35 +1228,50 @@
             .then(function(data) {
                 var other = data.otherUser || {};
                 var msgs = data.messages || [];
-                var otherName = other.custom_display_name || other.display_name || 'User';
-                var otherColor = other.avatar_color || '#E8A0B5';
-                var otherInitials = otherName.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+                var isSystemThread = data.is_system || false;
                 var me = getUser();
                 var myId = me ? me.id : null;
 
+                // Detect system thread (self-conversation)
+                if (parseInt(userId) === myId) isSystemThread = true;
+
+                var otherName = isSystemThread ? 'SafeTea Alerts' : (other.custom_display_name || other.display_name || 'User');
+                var otherColor = other.avatar_color || '#E8A0B5';
+                var otherInitials = isSystemThread ? '\uD83D\uDD14' : otherName.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+
                 var html = '<div class="thread-header">';
-                html += '<div class="convo-avatar" style="background:' + otherColor + ';width:36px;height:36px;font-size:13px">' + escapeHtmlSafe(otherInitials) + '</div>';
+                html += '<div class="convo-avatar" style="background:' + otherColor + ';width:36px;height:36px;font-size:' + (isSystemThread ? '18px' : '13px') + '">' + (isSystemThread ? '\uD83D\uDD14' : escapeHtmlSafe(otherInitials)) + '</div>';
                 html += '<div class="thread-header-name">' + escapeHtmlSafe(otherName) + '</div>';
                 html += '</div>';
 
                 html += '<div class="thread-messages" id="thread-messages">';
                 if (msgs.length === 0) {
-                    html += '<div style="text-align:center;color:#8080A0;padding:40px;font-size:14px">No messages yet — say hello!</div>';
+                    html += '<div style="text-align:center;color:#8080A0;padding:40px;font-size:14px">' + (isSystemThread ? 'No alerts yet. You\'ll see Name Watch and system notifications here.' : 'No messages yet \u2014 say hello!') + '</div>';
                 } else {
                     msgs.forEach(function(m) {
-                        var isSent = m.sender_id === myId;
-                        html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">';
-                        html += escapeHtmlSafe(m.content);
-                        html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
-                        html += '</div>';
+                        if (isSystemThread) {
+                            html += '<div class="msg-bubble received" style="background:rgba(232,160,181,0.08);border-left:3px solid #E8A0B5">';
+                            html += escapeHtmlSafe(m.content);
+                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
+                            html += '</div>';
+                        } else {
+                            var isSent = m.sender_id === myId;
+                            html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">';
+                            html += escapeHtmlSafe(m.content);
+                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
+                            html += '</div>';
+                        }
                     });
                 }
                 html += '</div>';
 
-                html += '<div class="thread-input">';
-                html += '<input type="text" id="thread-reply-input" placeholder="Type a message..." onkeydown="if(event.key===\'Enter\')sendThreadReply()">';
-                html += '<button onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>';
-                html += '</div>';
+                // No reply box for system threads
+                if (!isSystemThread) {
+                    html += '<div class="thread-input">';
+                    html += '<input type="text" id="thread-reply-input" placeholder="Type a message..." onkeydown="if(event.key===\'Enter\')sendThreadReply()">';
+                    html += '<button onclick="sendThreadReply()"><i class="fas fa-paper-plane"></i></button>';
+                    html += '</div>';
+                }
 
                 thread.innerHTML = html;
 

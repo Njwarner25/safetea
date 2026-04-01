@@ -258,8 +258,27 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE removal_requests ALTER COLUMN requester_id DROP NOT NULL`; } catch(e) {}
         try { await sql`ALTER TABLE removal_requests DROP CONSTRAINT IF EXISTS removal_requests_requester_id_post_id_key`; } catch(e) {}
 
+        // ============================================================
+        // SYSTEM MESSAGES + PUSH TOKENS (v6 migration)
+        // ============================================================
+
+        // Add system message columns to messages table
+        try { await sql`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE messages ADD COLUMN IF NOT EXISTS system_type VARCHAR(50)`; } catch(e) {}
+
+        // Push notification tokens table
+        await sql`CREATE TABLE IF NOT EXISTS push_tokens (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            token VARCHAR(255) NOT NULL,
+            platform VARCHAR(10) DEFAULT 'ios',
+            created_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(user_id, token)
+        )`;
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_push_tokens_user ON push_tokens(user_id)`; } catch(e) {}
+
         return res.status(200).json({
-            message: 'Migration complete (v5: phone auth + verification + Name Watch + messages + moderation + photo removal public)'
+            message: 'Migration complete (v6: phone auth + verification + Name Watch + messages + moderation + photo removal + system messages + push tokens)'
         });
     } catch (error) {
         console.error('Migration error:', error);

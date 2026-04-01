@@ -50,6 +50,13 @@
         {
           "microphonePermission": "SafeTea uses the microphone for audio features."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E8A0B5"
+        }
       ]
     ],
     "experiments": {

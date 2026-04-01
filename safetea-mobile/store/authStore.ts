@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../services/api';
+import { registerForPushNotifications } from '../services/notifications';
 
 export type UserRole = 'member' | 'junior_mod' | 'mod' | 'senior_mod' | 'city_lead' | 'admin';
 export type UserTier = 'free' | 'plus' | 'pro';
@@ -59,6 +60,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
           isOnboarded: true,
         });
+
+        // Register for push notifications (non-blocking)
+        registerForPushNotifications().catch(() => {});
+
         return true;
       }
       set({ isLoading: false });

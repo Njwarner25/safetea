@@ -479,92 +479,318 @@
         alertsFullList.innerHTML = '<div style="text-align:center;padding:24px;color:#8080A0"><i class="fas fa-location-crosshairs" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>Enable location in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'search\')},100);return false" style="color:#E8A0B5">Safety Resources</a> to see alerts near you.</div>';
     }
 
-    // ============ PHOTO VERIFICATION (CATFISH CHECK) ============
-    window.handleCatfishFile = function(input) {
+    // ============ PHOTO VERIFICATION (Enhanced Multi-Photo) ============
+    var pvPhotos = [null, null, null, null]; // Up to 4 base64 data URLs
+    var pvActiveSlot = 0;
+
+    window.pvAddPhoto = function(slot) {
+        pvActiveSlot = slot;
+        document.getElementById('pv-file-input').click();
+    };
+
+    window.pvHandleFile = function(input) {
         var file = input.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { if (typeof showToast === 'function') showToast('File too large (max 5MB)'); return; }
+        if (file.size > 10 * 1024 * 1024) { if (typeof showToast === 'function') showToast('Photo must be under 10MB'); return; }
 
         var reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('cf-image-data').value = e.target.result;
-            document.getElementById('cf-image-url').value = '';
-            var preview = document.getElementById('cf-preview');
-            var previewImg = document.getElementById('cf-preview-img');
-            if (preview && previewImg) {
-                previewImg.src = e.target.result;
-                preview.style.display = 'block';
-            }
+            pvPhotos[pvActiveSlot] = e.target.result;
+            pvRenderGrid();
         };
         reader.readAsDataURL(file);
+        input.value = '';
     };
 
-    window.handleCatfishFileDrop = function(event) {
-        var file = event.dataTransfer.files[0];
-        if (file) {
-            var input = document.getElementById('cf-file-input');
-            var dt = new DataTransfer();
-            dt.items.add(file);
-            input.files = dt.files;
-            handleCatfishFile(input);
+    window.pvRemovePhoto = function(slot, ev) {
+        ev.stopPropagation();
+        pvPhotos[slot] = null;
+        pvRenderGrid();
+    };
+
+    function pvRenderGrid() {
+        var grid = document.getElementById('pv-photo-grid');
+        if (!grid) return;
+        var slots = grid.querySelectorAll('.pv-slot');
+        var count = 0;
+        for (var i = 0; i < 4; i++) {
+            var slot = slots[i];
+            if (pvPhotos[i]) {
+                count++;
+                slot.innerHTML = '<img src="' + pvPhotos[i] + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px">' +
+                    '<div onclick="pvRemovePhoto(' + i + ', event)" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.7);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px">&times;</div>';
+                slot.style.border = '2px solid rgba(232,160,181,0.4)';
+            } else {
+                slot.innerHTML = '<i class="fas fa-plus" style="font-size:22px;color:rgba(232,160,181,' + (count > 0 || i === 0 ? '1' : '0.4') + ')"></i><span style="font-size:10px;color:#8080A0;margin-top:4px">Add</span>';
+                slot.style.border = '2px dashed rgba(232,160,181,' + (i === 0 ? '0.3' : '0.15') + ')';
+            }
         }
-    };
+        var btn = document.getElementById('pv-analyze-btn');
+        if (btn) btn.disabled = count === 0;
+    }
 
-    window.runCatfishCheck = function() {
-        var imageData = document.getElementById('cf-image-data').value;
-        var imageUrl = document.getElementById('cf-image-url').value;
-        var profileName = document.getElementById('cf-profile-name').value.trim();
-        var platform = document.getElementById('cf-platform').value;
-        var results = document.getElementById('catfish-results');
+    function pvUpdateStep(stepId, status) {
+        var el = document.getElementById(stepId);
+        if (!el) return;
+        if (status === 'done') {
+            el.style.color = '#2ecc71';
+            el.querySelector('i').className = 'fas fa-check-circle';
+        } else if (status === 'active') {
+            el.style.color = '#E8A0B5';
+            el.querySelector('i').className = 'fas fa-spinner fa-spin';
+        } else if (status === 'skip') {
+            el.style.color = '#555';
+            el.querySelector('i').className = 'fas fa-minus-circle';
+        }
+    }
 
-        if (!imageData && !imageUrl) { if (typeof showToast === 'function') showToast('Upload a photo or paste an image URL'); return; }
+    window.runPhotoVerification = function() {
+        var images = [];
+        for (var i = 0; i < 4; i++) {
+            if (pvPhotos[i]) images.push(pvPhotos[i]);
+        }
+        if (images.length === 0) { if (typeof showToast === 'function') showToast('Upload at least one photo'); return; }
 
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Verifying photo authenticity...</div>';
+        // Show progress
+        document.getElementById('pv-upload-section').style.display = 'none';
+        document.getElementById('pv-progress-section').style.display = 'block';
+        document.getElementById('pv-report-section').style.display = 'none';
+        document.getElementById('pv-progress-bar').style.width = '10%';
 
-        fetch('/api/screening/catfish', {
+        // Reset steps
+        ['pv-step-ai', 'pv-step-consistency', 'pv-step-screenshot', 'pv-step-report'].forEach(function(s) {
+            var el = document.getElementById(s);
+            if (el) { el.style.color = '#555'; el.querySelector('i').className = 'fas fa-circle'; el.querySelector('i').style.fontSize = '8px'; }
+        });
+
+        pvUpdateStep('pv-step-ai', 'active');
+
+        // Animate progress during API call
+        var progress = 10;
+        var progressInterval = setInterval(function() {
+            progress = Math.min(progress + 3, 85);
+            document.getElementById('pv-progress-bar').style.width = progress + '%';
+            if (progress >= 25 && progress < 30) pvUpdateStep('pv-step-ai', 'done');
+            if (progress >= 30 && progress < 35) pvUpdateStep('pv-step-consistency', 'active');
+            if (progress >= 50 && progress < 55) pvUpdateStep('pv-step-consistency', 'done');
+            if (progress >= 55 && progress < 60) pvUpdateStep('pv-step-screenshot', 'active');
+            if (progress >= 70 && progress < 75) pvUpdateStep('pv-step-screenshot', 'done');
+            if (progress >= 75 && progress < 80) pvUpdateStep('pv-step-report', 'active');
+        }, 500);
+
+        fetch('/api/photos/verify', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ imageData: imageData || undefined, imageUrl: imageUrl || undefined, profileName: profileName, platform: platform })
+            body: JSON.stringify({ images: images })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
-            if (!data.scan) { results.innerHTML = '<p style="color:#8080A0">No results</p>'; return; }
+            clearInterval(progressInterval);
+            document.getElementById('pv-progress-bar').style.width = '100%';
+            pvUpdateStep('pv-step-ai', 'done');
+            pvUpdateStep('pv-step-consistency', images.length >= 2 ? 'done' : 'skip');
+            pvUpdateStep('pv-step-screenshot', 'done');
+            pvUpdateStep('pv-step-report', 'done');
 
-            var scan = data.scan;
-            var riskColors = { high_risk: '#e74c3c', medium_risk: '#f1c40f', low_risk: '#f39c12', likely_safe: '#2ecc71' };
-            var color = riskColors[scan.riskLevel] || '#8080A0';
-
-            var html = '<div style="text-align:center;padding:20px;background:rgba(' + (scan.riskLevel === 'likely_safe' ? '46,204,113' : scan.riskLevel === 'high_risk' ? '231,76,60' : '241,196,15') + ',0.08);border:1px solid ' + color + ';border-radius:12px;margin-bottom:16px">';
-            html += '<div style="font-size:32px;margin-bottom:8px">' + (scan.riskLabel ? scan.riskLabel.split(' ')[0] : '') + '</div>';
-            html += '<div style="font-size:18px;font-weight:700;color:' + color + '">' + escapeHtmlSafe(scan.riskLabel || '') + '</div>';
-            html += '<div style="font-size:36px;font-weight:800;color:' + color + ';margin:8px 0">' + scan.catfishScore + '/100</div>';
-            html += '</div>';
-
-            if (scan.redFlags && scan.redFlags.length > 0) {
-                html += '<h4 style="color:#e74c3c;font-size:14px;margin-bottom:8px">🚩 Red Flags</h4>';
-                scan.redFlags.forEach(function(f) {
-                    var sColor = f.severity === 'critical' ? '#e74c3c' : f.severity === 'high' ? '#e74c3c' : '#f1c40f';
-                    html += '<div style="background:#1A1A2E;border-left:3px solid ' + sColor + ';border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-weight:600;font-size:13px">' + escapeHtmlSafe(f.label) + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(f.description || '') + '</div></div>';
-                });
-            }
-
-            if (scan.greenFlags && scan.greenFlags.length > 0) {
-                html += '<h4 style="color:#2ecc71;font-size:14px;margin:16px 0 8px">✅ Green Flags</h4>';
-                scan.greenFlags.forEach(function(f) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #2ecc71;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(f.label) + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(f.description || '') + '</div></div>';
-                });
-            }
-
-            results.innerHTML = html;
+            setTimeout(function() {
+                document.getElementById('pv-progress-section').style.display = 'none';
+                if (data.error) {
+                    if (data.upgrade) {
+                        pvShowUpgrade();
+                    } else {
+                        pvShowError(data.error);
+                    }
+                } else {
+                    pvShowReport(data);
+                }
+            }, 800);
         })
-        .catch(function() {
-            results.innerHTML = '<p style="color:#FF6B6B">Analysis failed. Please try again.</p>';
+        .catch(function(err) {
+            clearInterval(progressInterval);
+            document.getElementById('pv-progress-section').style.display = 'none';
+            pvShowError('Analysis failed. Please try again.');
         });
+    };
+
+    function pvShowUpgrade() {
+        var section = document.getElementById('pv-report-section');
+        section.style.display = 'block';
+        section.innerHTML = '<div style="text-align:center;padding:40px 20px;background:#22223A;border-radius:12px;border:1px solid rgba(232,160,181,0.15)">' +
+            '<i class="fas fa-lock" style="font-size:36px;color:#E8A0B5;display:block;margin-bottom:16px"></i>' +
+            '<h3 style="color:#fff;margin-bottom:8px">SafeTea+ Required</h3>' +
+            '<p style="color:#8080A0;font-size:14px;margin-bottom:20px">Photo Verification is available with SafeTea+ ($7.99/mo)</p>' +
+            '<button onclick="switchTab(\'settings\')" style="background:linear-gradient(135deg,#E8A0B5,#9b59b6);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Upgrade to SafeTea+</button>' +
+            '<br><button onclick="pvReset()" style="background:none;border:none;color:#8080A0;margin-top:12px;cursor:pointer;font-size:13px">Go Back</button></div>';
+    }
+
+    function pvShowError(msg) {
+        var section = document.getElementById('pv-report-section');
+        section.style.display = 'block';
+        section.innerHTML = '<div style="text-align:center;padding:30px;background:#22223A;border-radius:12px;border:1px solid rgba(231,76,60,0.2)">' +
+            '<i class="fas fa-exclamation-circle" style="font-size:28px;color:#e74c3c;margin-bottom:12px;display:block"></i>' +
+            '<p style="color:#FF6B6B;font-size:14px">' + escapeHtmlSafe(msg) + '</p>' +
+            '<button onclick="pvReset()" style="background:#E8A0B5;color:#fff;border:none;padding:10px 24px;border-radius:8px;margin-top:12px;cursor:pointer;font-size:13px;font-weight:500">Try Again</button></div>';
+    }
+
+    function pvShowReport(data) {
+        var section = document.getElementById('pv-report-section');
+        section.style.display = 'block';
+
+        var riskConfig = {
+            low: { emoji: '🟢', label: 'LOW RISK', color: '#2ecc71', bg: 'rgba(46,204,113,0.08)', border: 'rgba(46,204,113,0.3)' },
+            moderate: { emoji: '🟡', label: 'MODERATE RISK', color: '#f1c40f', bg: 'rgba(241,196,15,0.08)', border: 'rgba(241,196,15,0.3)' },
+            high: { emoji: '🔴', label: 'HIGH RISK', color: '#e74c3c', bg: 'rgba(231,76,60,0.08)', border: 'rgba(231,76,60,0.3)' }
+        };
+        var rc = riskConfig[data.overallRisk] || riskConfig.low;
+
+        var html = '';
+
+        // Overall risk header
+        html += '<div style="text-align:center;padding:24px;background:' + rc.bg + ';border:1px solid ' + rc.border + ';border-radius:14px;margin-bottom:20px">';
+        html += '<div style="font-size:14px;color:#8080A0;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Verification Report</div>';
+        html += '<div style="font-size:28px;margin-bottom:4px">' + rc.emoji + '</div>';
+        html += '<div style="font-size:20px;font-weight:800;color:' + rc.color + '">' + rc.label + '</div>';
+        html += '</div>';
+
+        // Layer 1: AI Generation
+        var aiLayer = data.layers && data.layers.aiGeneration;
+        if (aiLayer && aiLayer.length > 0) {
+            html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px">';
+            html += '<h4 style="color:#fff;font-size:14px;margin-bottom:10px">🤖 AI Generation Check</h4>';
+            for (var a = 0; a < aiLayer.length; a++) {
+                var ai = aiLayer[a];
+                if (ai.error) {
+                    html += '<p style="color:#8080A0;font-size:13px">Photo ' + (a + 1) + ': Analysis unavailable</p>';
+                    continue;
+                }
+                var aiIcon = ai.likelyAIGenerated ? '🔴' : (ai.filterDetected && ai.filterType !== 'none') ? '⚠️' : '✅';
+                var aiColor = ai.likelyAIGenerated ? '#e74c3c' : (ai.filterDetected && ai.filterType !== 'none') ? '#f1c40f' : '#2ecc71';
+                if (aiLayer.length > 1) html += '<div style="font-size:11px;color:#555;margin-bottom:2px">Photo ' + (a + 1) + '</div>';
+                html += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">';
+                html += '<span>' + aiIcon + '</span>';
+                html += '<div><span style="color:' + aiColor + ';font-weight:600;font-size:13px">' + escapeHtmlSafe(ai.summary || 'Analysis complete') + '</span>';
+                if (ai.confidence) html += '<span style="color:#555;font-size:11px;margin-left:6px">(' + Math.round(ai.confidence * 100) + '% confidence)</span>';
+                if (ai.artifactsFound && ai.artifactsFound.length > 0) {
+                    html += '<div style="margin-top:4px">';
+                    ai.artifactsFound.forEach(function(art) {
+                        html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(art) + '</div>';
+                    });
+                    html += '</div>';
+                }
+                html += '</div></div>';
+            }
+            html += '</div>';
+        }
+
+        // Layer 2: Consistency
+        var conLayer = data.layers && data.layers.consistency;
+        if (conLayer && !conLayer.skipped) {
+            html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px">';
+            html += '<h4 style="color:#fff;font-size:14px;margin-bottom:10px">👤 Consistency Check</h4>';
+            if (conLayer.error) {
+                html += '<p style="color:#8080A0;font-size:13px">Consistency analysis unavailable</p>';
+            } else {
+                var conIcon = conLayer.samePerson === true ? '✅' : conLayer.samePerson === false ? '🔴' : '⚠️';
+                var conColor = conLayer.samePerson === true ? '#2ecc71' : conLayer.samePerson === false ? '#e74c3c' : '#f1c40f';
+                html += '<div style="display:flex;align-items:flex-start;gap:8px">';
+                html += '<span>' + conIcon + '</span>';
+                html += '<div><span style="color:' + conColor + ';font-weight:600;font-size:13px">' + escapeHtmlSafe(conLayer.summary || '') + '</span>';
+                if (conLayer.confidence) html += '<span style="color:#555;font-size:11px;margin-left:6px">(' + Math.round(conLayer.confidence * 100) + '% confidence)</span>';
+                if (conLayer.discrepancies && conLayer.discrepancies.length > 0) {
+                    html += '<div style="margin-top:6px">';
+                    conLayer.discrepancies.forEach(function(d) { html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(d) + '</div>'; });
+                    html += '</div>';
+                }
+                if (conLayer.matchingFeatures && conLayer.matchingFeatures.length > 0) {
+                    html += '<div style="margin-top:4px;color:#555;font-size:11px">Matching: ' + conLayer.matchingFeatures.map(function(f) { return escapeHtmlSafe(f); }).join(', ') + '</div>';
+                }
+                html += '</div></div>';
+            }
+            html += '</div>';
+        } else if (conLayer && conLayer.skipped) {
+            html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px">';
+            html += '<h4 style="color:#fff;font-size:14px;margin-bottom:6px">👤 Consistency Check</h4>';
+            html += '<p style="color:#555;font-size:13px">Upload 2+ photos to compare facial consistency</p></div>';
+        }
+
+        // Layer 3: Screenshot Analysis
+        var ssLayer = data.layers && data.layers.screenshot;
+        if (ssLayer && ssLayer.length > 0) {
+            html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px">';
+            html += '<h4 style="color:#fff;font-size:14px;margin-bottom:10px">📱 Screenshot Analysis</h4>';
+            for (var s = 0; s < ssLayer.length; s++) {
+                var ss = ssLayer[s];
+                var ssIcon = ss.overallRisk === 'high' ? '🔴' : ss.overallRisk === 'moderate' ? '🟡' : '✅';
+                var ssColor = ss.overallRisk === 'high' ? '#e74c3c' : ss.overallRisk === 'moderate' ? '#f1c40f' : '#2ecc71';
+                if (ss.platform && ss.platform !== 'unknown') {
+                    html += '<div style="font-size:11px;color:#555;margin-bottom:2px">Platform: ' + escapeHtmlSafe(ss.platform) + '</div>';
+                }
+                html += '<div style="color:' + ssColor + ';font-weight:600;font-size:13px;margin-bottom:6px">' + ssIcon + ' ' + escapeHtmlSafe(ss.summary || '') + '</div>';
+                if (ss.photoRedFlags && ss.photoRedFlags.length > 0) {
+                    ss.photoRedFlags.forEach(function(f) { html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(f) + '</div>'; });
+                }
+                if (ss.bioRedFlags && ss.bioRedFlags.length > 0) {
+                    ss.bioRedFlags.forEach(function(f) { html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(f) + '</div>'; });
+                }
+                if (ss.messageRedFlags && ss.messageRedFlags.length > 0) {
+                    ss.messageRedFlags.forEach(function(f) { html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(f) + '</div>'; });
+                }
+                if (ss.positiveSignals && ss.positiveSignals.length > 0) {
+                    html += '<div style="margin-top:4px">';
+                    ss.positiveSignals.forEach(function(p) { html += '<div style="color:#2ecc71;font-size:12px">✓ ' + escapeHtmlSafe(p) + '</div>'; });
+                    html += '</div>';
+                }
+            }
+            html += '</div>';
+        }
+
+        // Layer 4: Reverse Image Search (coming soon)
+        html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px">';
+        html += '<h4 style="color:#fff;font-size:14px;margin-bottom:6px">🔍 Reverse Image Search</h4>';
+        html += '<p style="color:#555;font-size:13px;margin-bottom:6px">Coming soon — we\'re building the ability to check if these photos appear elsewhere online.</p>';
+        html += '<p style="color:#8080A0;font-size:12px">Manual check: <a href="https://images.google.com" target="_blank" style="color:#E8A0B5">Google Images</a> · <a href="https://tineye.com" target="_blank" style="color:#E8A0B5">TinEye</a></p>';
+        html += '</div>';
+
+        // Recommendations
+        if (data.recommendations && data.recommendations.length > 0) {
+            html += '<div style="background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);border-radius:12px;padding:16px;margin-bottom:12px">';
+            html += '<h4 style="color:#E8A0B5;font-size:14px;margin-bottom:8px">💡 Recommendations</h4>';
+            data.recommendations.forEach(function(r) {
+                html += '<div style="color:#8080A0;font-size:13px;padding:4px 0;line-height:1.5">• ' + escapeHtmlSafe(r) + '</div>';
+            });
+            html += '</div>';
+        }
+
+        // Disclaimer
+        html += '<div style="background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.1);border-radius:10px;padding:12px 14px;margin-bottom:16px">';
+        html += '<p style="color:#8080A0;font-size:11px;margin:0;line-height:1.5">⚠️ <strong style="color:#f1c40f">AI-Generated Analysis</strong> — This report was generated by an automated system and may not be fully accurate. Use your own judgment alongside these results.</p>';
+        html += '</div>';
+
+        // Usage info
+        if (data.checksRemaining !== undefined) {
+            html += '<div style="text-align:center;color:#555;font-size:12px;margin-bottom:12px">' + data.checksUsed + '/' + data.checksLimit + ' checks used this month · ' + data.checksRemaining + ' remaining</div>';
+        }
+
+        // Action buttons
+        html += '<div style="display:flex;gap:10px;margin-top:16px">';
+        html += '<button onclick="pvReset()" style="flex:1;background:#22223A;color:#E8A0B5;border:1px solid rgba(232,160,181,0.2);padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">New Check</button>';
+        html += '</div>';
+
+        section.innerHTML = html;
+
+        // Update usage counter on main screen
+        if (data.checksRemaining !== undefined) {
+            var counter = document.getElementById('pv-checks-remaining');
+            if (counter) counter.textContent = data.checksRemaining;
+        }
+    }
+
+    window.pvReset = function() {
+        pvPhotos = [null, null, null, null];
+        document.getElementById('pv-upload-section').style.display = 'block';
+        document.getElementById('pv-progress-section').style.display = 'none';
+        document.getElementById('pv-report-section').style.display = 'none';
+        pvRenderGrid();
     };
 
     // ============ DATE CHECK-OUT / CHECK-IN ============

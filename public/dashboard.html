@@ -2419,39 +2419,75 @@
                 </div>
             </div>
 
-            <!-- HUB: CATFISH CHECK -->
+            <!-- HUB: PHOTO VERIFICATION (Enhanced) -->
             <div id="hub-catfish" class="hub-sub" style="display:none">
                 <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
-                <div class="catfish-section">
+
+                <!-- Upload Section -->
+                <div id="pv-upload-section">
                     <div style="margin-bottom:20px">
-                        <h2><i class="fas fa-camera" style="color:#E8A0B5"></i> Photo Verification</h2>
-                        <p style="color:#8080A0;font-size:14px;margin-top:4px">Verify profile photos before you meet — AI-powered analysis for authenticity, metadata, and reverse image search.</p>
+                        <h2 style="color:#fff;font-size:20px;font-weight:700"><i class="fas fa-camera" style="color:#E8A0B5"></i> Photo Verification</h2>
+                        <p style="color:#8080A0;font-size:14px;margin-top:4px;line-height:1.5">Upload photos to verify authenticity. We'll check for AI-generated images, edited photos, and inconsistencies.</p>
                     </div>
+
+                    <div id="pv-usage-counter" style="background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+                        <span style="color:#8080A0;font-size:13px"><i class="fas fa-chart-bar" style="color:#E8A0B5;margin-right:6px"></i> <span id="pv-checks-remaining">--</span> checks remaining this month</span>
+                        <span style="color:#555;font-size:11px">10/month</span>
+                    </div>
+
                     <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
-                        <div class="dc-form-group"><label>Upload Photo *</label>
-                            <div id="cf-upload-area" style="border:2px dashed rgba(232,160,181,0.3);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:all 0.3s;background:rgba(20,20,40,0.5)" onclick="document.getElementById('cf-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#E8A0B5';this.style.background='rgba(232,160,181,0.08)'" ondragleave="this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(20,20,40,0.5)'" ondrop="event.preventDefault();handleCatfishFileDrop(event);this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(20,20,40,0.5)'">
-                                <i class="fas fa-camera" style="font-size:28px;color:#E8A0B5;display:block;margin-bottom:10px"></i>
-                                <span style="color:#F0D0C0;font-size:14px;font-weight:500">Tap to upload or drag a photo</span>
-                                <span style="display:block;color:#8080A0;font-size:12px;margin-top:4px">JPG, PNG, or WEBP up to 5MB</span>
+                        <!-- Photo Grid (1-4 photos) -->
+                        <label style="color:#F0D0C0;font-size:13px;font-weight:500;margin-bottom:10px;display:block">Upload 1-4 photos</label>
+                        <div id="pv-photo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+                            <div class="pv-slot" data-slot="0" onclick="pvAddPhoto(0)" style="aspect-ratio:1;border:2px dashed rgba(232,160,181,0.3);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;background:rgba(20,20,40,0.5);position:relative;overflow:hidden" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(232,160,181,0.3)'">
+                                <i class="fas fa-plus" style="font-size:22px;color:#E8A0B5"></i>
+                                <span style="font-size:10px;color:#8080A0;margin-top:4px">Add</span>
                             </div>
-                            <input type="file" id="cf-file-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleCatfishFile(this)">
-                            <input type="hidden" id="cf-image-url" value="">
-                            <input type="hidden" id="cf-image-data" value="">
+                            <div class="pv-slot" data-slot="1" onclick="pvAddPhoto(1)" style="aspect-ratio:1;border:2px dashed rgba(232,160,181,0.15);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;background:rgba(20,20,40,0.3);position:relative;overflow:hidden" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(232,160,181,0.15)'">
+                                <i class="fas fa-plus" style="font-size:22px;color:rgba(232,160,181,0.4)"></i>
+                                <span style="font-size:10px;color:#555;margin-top:4px">Add</span>
+                            </div>
+                            <div class="pv-slot" data-slot="2" onclick="pvAddPhoto(2)" style="aspect-ratio:1;border:2px dashed rgba(232,160,181,0.15);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;background:rgba(20,20,40,0.3);position:relative;overflow:hidden" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(232,160,181,0.15)'">
+                                <i class="fas fa-plus" style="font-size:22px;color:rgba(232,160,181,0.4)"></i>
+                                <span style="font-size:10px;color:#555;margin-top:4px">Add</span>
+                            </div>
+                            <div class="pv-slot" data-slot="3" onclick="pvAddPhoto(3)" style="aspect-ratio:1;border:2px dashed rgba(232,160,181,0.15);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;background:rgba(20,20,40,0.3);position:relative;overflow:hidden" onmouseover="this.style.borderColor='#E8A0B5'" onmouseout="this.style.borderColor='rgba(232,160,181,0.15)'">
+                                <i class="fas fa-plus" style="font-size:22px;color:rgba(232,160,181,0.4)"></i>
+                                <span style="font-size:10px;color:#555;margin-top:4px">Add</span>
+                            </div>
                         </div>
-                        <div class="dc-form-group"><label>Profile Name (optional)</label><input type="text" id="cf-profile-name" placeholder="Their display name"></div>
-                        <div class="dc-form-group"><label>Platform</label>
-                            <select id="cf-platform" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px">
-                                <option value="">Select platform</option>
-                                <option>Tinder</option><option>Hinge</option><option>Bumble</option>
-                                <option>OkCupid</option><option>Match</option><option>Instagram</option>
-                                <option>Facebook</option><option>Other</option>
-                            </select>
+                        <input type="file" id="pv-file-input" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none" onchange="pvHandleFile(this)">
+
+                        <p style="color:#555;font-size:11px;margin-bottom:16px;line-height:1.4">Screenshots of dating profiles work great. JPEG, PNG, HEIC, WebP up to 10MB each.</p>
+
+                        <div style="background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.1);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+                            <p style="color:#8080A0;font-size:12px;margin:0;line-height:1.5"><i class="fas fa-lock" style="color:#E8A0B5;margin-right:6px"></i> Photos are analyzed and immediately deleted. We do not store any uploaded images.</p>
                         </div>
-                        <button class="btn-search" onclick="runCatfishCheck()"><i class="fas fa-camera"></i> Analyze Photo</button>
-                        <div id="cf-preview" style="margin-top:12px;display:none"><img id="cf-preview-img" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid rgba(255,255,255,0.1)"></div>
-                        <div id="catfish-results" class="search-results" style="margin-top:16px"></div>
+
+                        <button id="pv-analyze-btn" class="btn-search" onclick="runPhotoVerification()" style="width:100%;padding:14px;font-size:15px;font-weight:600" disabled><i class="fas fa-search"></i> Analyze Photos</button>
                     </div>
                 </div>
+
+                <!-- Progress Section (hidden by default) -->
+                <div id="pv-progress-section" style="display:none">
+                    <div style="text-align:center;padding:40px 20px">
+                        <div style="font-size:28px;margin-bottom:12px"><i class="fas fa-search" style="color:#E8A0B5"></i></div>
+                        <h3 style="color:#fff;font-size:18px;margin-bottom:8px">Analyzing...</h3>
+                        <div style="background:rgba(255,255,255,0.06);border-radius:8px;height:8px;overflow:hidden;margin:16px auto;max-width:300px">
+                            <div id="pv-progress-bar" style="height:100%;background:linear-gradient(90deg,#E8A0B5,#9b59b6);border-radius:8px;width:0%;transition:width 0.5s ease"></div>
+                        </div>
+                        <div id="pv-progress-steps" style="text-align:left;max-width:300px;margin:20px auto 0">
+                            <div id="pv-step-ai" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:#555;font-size:13px"><i class="fas fa-circle" style="font-size:8px"></i> AI generation check</div>
+                            <div id="pv-step-consistency" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:#555;font-size:13px"><i class="fas fa-circle" style="font-size:8px"></i> Photo consistency check</div>
+                            <div id="pv-step-screenshot" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:#555;font-size:13px"><i class="fas fa-circle" style="font-size:8px"></i> Screenshot analysis</div>
+                            <div id="pv-step-report" style="display:flex;align-items:center;gap:8px;padding:8px 0;color:#555;font-size:13px"><i class="fas fa-circle" style="font-size:8px"></i> Generating report</div>
+                        </div>
+                        <p style="color:#555;font-size:12px;margin-top:20px">This usually takes 15-30 seconds</p>
+                    </div>
+                </div>
+
+                <!-- Report Section (hidden by default) -->
+                <div id="pv-report-section" style="display:none"></div>
             </div>
 
             <!-- Tea Talk removed from Home — lives exclusively in SafeTea Hub -->

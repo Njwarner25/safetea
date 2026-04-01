@@ -664,7 +664,7 @@
                             ${recLabel(post.ai_recommendation)}
                         </div>
                     </div>
-                    <div class="post-card-content">${escapeHtml(post.content)}</div>
+                    <div class="post-card-content">${escapeHtml(post.body || post.content || '')}</div>
                     ${flagsHtml}
                     ${reasoningHtml}
                     <div class="post-card-actions">

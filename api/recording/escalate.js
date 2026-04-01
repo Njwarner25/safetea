@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   const body = await parseBody(req);
-  const { sessionKey } = body;
+  const { sessionKey, level } = body;
 
   if (!sessionKey) {
     return res.status(400).json({ error: 'Missing sessionKey' });
@@ -59,10 +59,14 @@ module.exports = async function handler(req, res) {
         : null;
       const recordingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
 
+      const escalationLevel = parseInt(level) || 1;
+      const minutesLabel = escalationLevel >= 2 ? '30+' : '15+';
+      const urgencyPrefix = escalationLevel >= 2 ? '🚨 URGENT — SECOND ALERT' : '⚠️ NO RESPONSE';
+
       const message =
-        `⚠️ NO RESPONSE — SafeTea\n` +
+        `${urgencyPrefix} — SafeTea\n` +
         `━━━━━━━━━━━━━━━━━\n` +
-        `${displayName}'s recording has been active for 3+ minutes with no check-in.\n\n` +
+        `${displayName}'s recording has been active for ${minutesLabel} minutes with no check-in.\n\n` +
         (gpsLink ? `GPS: ${gpsLink}\n` : '') +
         `Recording: ${recordingUrl}\n\n` +
         `Please check on them immediately or call 911.\n` +

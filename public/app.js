@@ -223,6 +223,12 @@
             navAvatar.textContent = initial;
             if (user.avatar_color) navAvatar.style.background = user.avatar_color;
         }
+
+        // Show admin panel link for admin/moderator users
+        var adminLink = document.getElementById('admin-link');
+        if (adminLink) {
+            adminLink.style.display = (user.role === 'admin' || user.role === 'moderator') ? 'inline-block' : 'none';
+        }
     }
 
     function escapeHtmlSafe(text) {

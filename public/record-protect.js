@@ -535,7 +535,7 @@
                 fetch('/api/recording/escalate', {
                     method: 'POST',
                     headers: authHeaders(),
-                    body: JSON.stringify({ sessionKey: state.sessionKey })
+                    body: JSON.stringify({ sessionKey: state.sessionKey, level: 1 })
                 }).catch(function() {});
                 var statusEl = document.getElementById('rp-chunk-status');
                 if (statusEl) statusEl.textContent = 'Escalation alert sent to contacts (15 min)';
@@ -547,7 +547,7 @@
                 fetch('/api/recording/escalate', {
                     method: 'POST',
                     headers: authHeaders(),
-                    body: JSON.stringify({ sessionKey: state.sessionKey })
+                    body: JSON.stringify({ sessionKey: state.sessionKey, level: 2 })
                 }).catch(function() {});
                 var statusEl = document.getElementById('rp-chunk-status');
                 if (statusEl) statusEl.textContent = 'Second escalation sent (30 min)';

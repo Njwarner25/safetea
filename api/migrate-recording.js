@@ -30,6 +30,9 @@ module.exports = async function handler(req, res) {
 
     await run(`CREATE INDEX IF NOT EXISTS idx_chunks_session ON recording_chunks(session_key, chunk_number)`);
 
+    // Add transcript column
+    try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS transcript TEXT`); } catch(e) {}
+
     return res.status(200).json({ success: true, message: 'Recording tables created' });
   } catch (err) {
     console.error('Recording migration error:', err);

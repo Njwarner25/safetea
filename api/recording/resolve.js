@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
+const { transcribeAudio } = require('./transcribe');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -75,6 +76,11 @@ module.exports = async function handler(req, res) {
         }
       }
     }
+
+    // Trigger transcription in background (non-blocking)
+    transcribeAudio(sessionKey).catch(function(err) {
+      console.error('[Resolve] Background transcription failed:', err.message);
+    });
 
     // Count total chunks
     const chunkCount = await getOne(

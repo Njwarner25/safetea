@@ -45,6 +45,7 @@
         { "source": "/api/recording/session", "destination": "/api/recording/session" },
         { "source": "/api/recording/location", "destination": "/api/recording/location" },
         { "source": "/api/recording/resolve", "destination": "/api/recording/resolve" },
+        { "source": "/api/recording/transcribe", "destination": "/api/recording/transcribe" },
         { "source": "/api/migrate-recording", "destination": "/api/migrate-recording" },
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },

@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
+const { transcribeAudio } = require('./transcribe');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -63,12 +64,28 @@ module.exports = async function handler(req, res) {
       const minutesLabel = escalationLevel >= 2 ? '30+' : '15+';
       const urgencyPrefix = escalationLevel >= 2 ? '🚨 URGENT — SECOND ALERT' : '⚠️ NO RESPONSE';
 
+      // Try to get transcript (may already be generated)
+      let transcriptExcerpt = '';
+      try {
+        const tResult = await transcribeAudio(sessionKey);
+        if (tResult.success && tResult.transcript && tResult.transcript !== '(No speech detected)') {
+          // Include first 200 chars of transcript
+          const excerpt = tResult.transcript.length > 200
+            ? tResult.transcript.substring(0, 200) + '...'
+            : tResult.transcript;
+          transcriptExcerpt = `\nAudio transcript:\n"${excerpt}"\n`;
+        }
+      } catch (e) {
+        console.error('[Escalate] Transcript fetch failed:', e.message);
+      }
+
       const message =
         `${urgencyPrefix} — SafeTea\n` +
         `━━━━━━━━━━━━━━━━━\n` +
         `${displayName}'s recording has been active for ${minutesLabel} minutes with no check-in.\n\n` +
         (gpsLink ? `GPS: ${gpsLink}\n` : '') +
-        `Recording: ${recordingUrl}\n\n` +
+        `Recording + Audio: ${recordingUrl}\n` +
+        transcriptExcerpt + `\n` +
         `Please check on them immediately or call 911.\n` +
         `━━━━━━━━━━━━━━━━━`;
 

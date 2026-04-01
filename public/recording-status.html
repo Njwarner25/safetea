@@ -94,9 +94,32 @@
                 <p style="margin-top:8px"><strong>What to do:</strong> Save this page. Try to contact them. If no response, call 911.</p>
             </div>
 
+            <!-- Transcript -->
+            <div id="transcript-section" class="audio-section" style="display:none">
+                <h3><i class="fas fa-file-alt" style="color:#E8A0B5"></i> Audio Transcript</h3>
+                <div id="transcript-content" style="color:#C0C0D0;font-size:13px;line-height:1.8;white-space:pre-wrap;max-height:300px;overflow-y:auto;padding:12px;background:#141428;border-radius:10px"></div>
+                <button id="transcribe-btn" class="download-btn" style="background:linear-gradient(135deg,#5BA0D0,#4A8BBF);margin-top:10px;display:none">
+                    <i class="fas fa-language"></i> Generate Transcript
+                </button>
+            </div>
+
             <!-- Audio -->
             <div id="audio-section" class="audio-section">
                 <h3><i class="fas fa-headphones" style="color:#E8A0B5"></i> Audio Recording</h3>
+                <!-- Combined player -->
+                <div id="combined-player" style="display:none;background:#141428;border-radius:10px;padding:14px;margin-bottom:12px">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                        <button id="play-all-btn" style="width:40px;height:40px;background:linear-gradient(135deg,#E8A0B5,#D4768E);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i></button>
+                        <div style="flex:1">
+                            <div style="font-size:13px;color:#fff;font-weight:600" id="player-label">Play Full Recording</div>
+                            <div style="font-size:11px;color:#8080A0" id="player-progress">0 / 0 chunks</div>
+                        </div>
+                        <span id="player-timer" style="font-size:13px;color:#8080A0;font-variant-numeric:tabular-nums">00:00</span>
+                    </div>
+                    <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+                        <div id="player-bar" style="height:100%;background:#E8A0B5;width:0%;transition:width 0.3s"></div>
+                    </div>
+                </div>
                 <div id="chunks-container"></div>
                 <button id="download-all" class="download-btn" style="display:none">
                     <i class="fas fa-download"></i> Download All Audio
@@ -192,10 +215,99 @@
                     // Last updated
                     document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
 
+                    // Transcript
+                    var transcriptSection = document.getElementById('transcript-section');
+                    var transcriptContent = document.getElementById('transcript-content');
+                    var transcribeBtn = document.getElementById('transcribe-btn');
+                    transcriptSection.style.display = 'block';
+
+                    if (s.transcript) {
+                        transcriptContent.textContent = s.transcript;
+                        transcribeBtn.style.display = 'none';
+                    } else if (data.chunks && data.chunks.length > 0) {
+                        transcriptContent.innerHTML = '<span style="color:#8080A0">Transcript not yet generated.</span>';
+                        transcribeBtn.style.display = 'block';
+                        transcribeBtn.onclick = function() {
+                            transcribeBtn.disabled = true;
+                            transcribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transcribing audio...';
+                            fetch('/api/recording/transcribe?key=' + encodeURIComponent(key))
+                                .then(function(r) { return r.json(); })
+                                .then(function(tData) {
+                                    if (tData.transcript) {
+                                        transcriptContent.textContent = tData.transcript;
+                                        transcribeBtn.style.display = 'none';
+                                    } else {
+                                        transcriptContent.textContent = '(No speech detected in recording)';
+                                        transcribeBtn.style.display = 'none';
+                                    }
+                                })
+                                .catch(function() {
+                                    transcribeBtn.disabled = false;
+                                    transcribeBtn.innerHTML = '<i class="fas fa-language"></i> Generate Transcript';
+                                    transcriptContent.innerHTML = '<span style="color:#e74c3c">Transcription failed. Try again.</span>';
+                                });
+                        };
+                    } else {
+                        transcriptSection.style.display = 'none';
+                    }
+
                     // Audio chunks
                     var chunksContainer = document.getElementById('chunks-container');
                     if (data.chunks && data.chunks.length > 0) {
-                        var chunksHtml = '';
+                        // Combined sequential player
+                        var combinedPlayer = document.getElementById('combined-player');
+                        combinedPlayer.style.display = 'block';
+                        var playAllBtn = document.getElementById('play-all-btn');
+                        var playerLabel = document.getElementById('player-label');
+                        var playerProgress = document.getElementById('player-progress');
+                        var playerTimer = document.getElementById('player-timer');
+                        var playerBar = document.getElementById('player-bar');
+                        var isPlaying = false;
+                        var currentChunkIdx = 0;
+                        var currentAudio = null;
+
+                        playerProgress.textContent = '0 / ' + data.chunks.length + ' chunks';
+
+                        function playChunk(idx) {
+                            if (idx >= data.chunks.length) {
+                                isPlaying = false;
+                                playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                                playerLabel.textContent = 'Recording Complete';
+                                playerBar.style.width = '100%';
+                                return;
+                            }
+                            currentChunkIdx = idx;
+                            playerProgress.textContent = (idx + 1) + ' / ' + data.chunks.length + ' chunks';
+                            playerBar.style.width = ((idx / data.chunks.length) * 100) + '%';
+
+                            currentAudio = new Audio('data:audio/webm;base64,' + data.chunks[idx].audioData);
+                            currentAudio.play().catch(function() {});
+                            currentAudio.ontimeupdate = function() {
+                                var m = Math.floor(currentAudio.currentTime / 60);
+                                var sec = Math.floor(currentAudio.currentTime % 60);
+                                playerTimer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+                            };
+                            currentAudio.onended = function() {
+                                playChunk(idx + 1);
+                            };
+                        }
+
+                        playAllBtn.onclick = function() {
+                            if (isPlaying) {
+                                isPlaying = false;
+                                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                                playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                                playerLabel.textContent = 'Play Full Recording';
+                            } else {
+                                isPlaying = true;
+                                playAllBtn.innerHTML = '<i class="fas fa-pause" style="color:#fff;font-size:14px"></i>';
+                                playerLabel.textContent = 'Playing...';
+                                playChunk(0);
+                            }
+                        };
+
+                        // Individual chunk players
+                        var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Individual Chunks:</div>';
                         data.chunks.forEach(function(chunk, i) {
                             var audioSrc = 'data:audio/webm;base64,' + chunk.audioData;
                             chunksHtml += '<div class="chunk-player">' +

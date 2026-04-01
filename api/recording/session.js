@@ -46,6 +46,7 @@ module.exports = async function handler(req, res) {
         escalatedAt: session.escalated_at,
         stoppedAt: session.stopped_at,
         createdAt: session.created_at,
+        transcript: session.transcript || null,
       },
       chunks: chunks.map(function(c) {
         return {

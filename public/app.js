@@ -17,6 +17,143 @@
         window.location.href = '/login';
     }
 
+    // ============ SUSPENSION/BAN CHECK ============
+    if (token) {
+        fetch('/api/moderation/status', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'suspended' || data.status === 'banned') {
+                    showSuspensionScreen(data);
+                }
+            })
+            .catch(function() {});
+    }
+
+    function showSuspensionScreen(data) {
+        var isPermanent = data.status === 'banned';
+        var overlay = document.createElement('div');
+        overlay.id = 'suspension-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#1A1A2E;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;';
+
+        var endsText = '';
+        if (!isPermanent && data.days_remaining !== null) {
+            endsText = '<p style="color:#8080A0;margin:8px 0 0;">Suspension ends: ' +
+                new Date(data.ends_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) +
+                ' (' + data.days_remaining + ' day' + (data.days_remaining !== 1 ? 's' : '') + ' remaining)</p>';
+        }
+
+        var appealHtml = '';
+        if (data.can_appeal) {
+            appealHtml = '<button onclick="openAppealForm(' + data.violation_id + ')" style="display:block;width:100%;padding:14px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:20px;font-family:Inter,sans-serif;">Appeal This Decision</button>';
+        } else if (data.appeal_status === 'denied') {
+            appealHtml = '<p style="color:#e74c3c;font-size:13px;margin-top:16px;">Your appeal has been reviewed and denied. This decision is final.</p>';
+        } else if (data.appeal_status === 'pending') {
+            appealHtml = '<p style="color:#E8A0B5;font-size:13px;margin-top:16px;">Your appeal is being reviewed.</p>';
+        }
+
+        overlay.innerHTML = '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:40px 32px;max-width:440px;width:100%;text-align:center;">' +
+            '<div style="font-size:48px;margin-bottom:16px;">' + (isPermanent ? '🚫' : '⏸️') + '</div>' +
+            '<h2 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 12px;">' +
+                (isPermanent ? 'Account Permanently Banned' : 'Account Suspended') + '</h2>' +
+            '<p style="color:#F0D0C0;font-size:15px;margin:0 0 16px;">Your SafeTea account has been ' +
+                (isPermanent ? 'permanently banned' : 'suspended for 30 days') +
+                ' for violating community guidelines.</p>' +
+            '<div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);border-radius:10px;padding:16px;margin:16px 0;text-align:left;">' +
+                '<p style="color:#e74c3c;font-weight:600;font-size:13px;margin:0 0 6px;">Reason:</p>' +
+                '<p style="color:#ccc;font-size:14px;margin:0;">' + (data.reason || 'Violation of community guidelines') + '</p>' +
+            '</div>' +
+            endsText +
+            (data.can_appeal ? '<p style="color:#8080A0;font-size:13px;margin-top:12px;">You may appeal this decision within 7 days.</p>' : '') +
+            appealHtml +
+            '<button onclick="localStorage.clear();window.location.href=\'/login\'" style="display:block;width:100%;padding:12px;background:transparent;color:#8080A0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;cursor:pointer;margin-top:12px;font-family:Inter,sans-serif;">Log Out</button>' +
+        '</div>' +
+        '<div id="appeal-form-container" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;padding:24px;">' +
+            '<div style="background:#22223A;border-radius:20px;padding:32px 28px;max-width:440px;width:100%;">' +
+                '<h3 style="color:#fff;font-size:18px;margin:0 0 12px;">Appeal Your ' + (isPermanent ? 'Ban' : 'Suspension') + '</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin:0 0 16px;">Explain why you believe this decision should be reversed. You may only submit one appeal.</p>' +
+                '<textarea id="appeal-text" maxlength="1000" placeholder="Write your appeal..." style="width:100%;height:120px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;padding:14px;font-size:14px;font-family:Inter,sans-serif;resize:none;box-sizing:border-box;"></textarea>' +
+                '<p style="color:#666;font-size:12px;margin:4px 0 16px;text-align:right;"><span id="appeal-char-count">0</span>/1000</p>' +
+                '<div style="display:flex;gap:12px;">' +
+                    '<button onclick="closeAppealForm()" style="flex:1;padding:12px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#ccc;font-size:14px;cursor:pointer;font-family:Inter,sans-serif;">Cancel</button>' +
+                    '<button id="submit-appeal-btn" onclick="submitAppeal()" style="flex:1;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">Submit Appeal</button>' +
+                '</div>' +
+                '<p id="appeal-msg" style="font-size:13px;margin:12px 0 0;text-align:center;display:none;"></p>' +
+            '</div>' +
+        '</div>';
+
+        document.body.appendChild(overlay);
+    }
+
+    window._appealViolationId = null;
+
+    window.openAppealForm = function(violationId) {
+        window._appealViolationId = violationId;
+        var container = document.getElementById('appeal-form-container');
+        if (container) container.style.display = 'flex';
+        var textarea = document.getElementById('appeal-text');
+        if (textarea) {
+            textarea.oninput = function() {
+                var ct = document.getElementById('appeal-char-count');
+                if (ct) ct.textContent = textarea.value.length;
+            };
+        }
+    };
+
+    window.closeAppealForm = function() {
+        var container = document.getElementById('appeal-form-container');
+        if (container) container.style.display = 'none';
+    };
+
+    window.submitAppeal = function() {
+        var text = document.getElementById('appeal-text').value.trim();
+        var msg = document.getElementById('appeal-msg');
+        var btn = document.getElementById('submit-appeal-btn');
+
+        if (!text || text.length < 10) {
+            msg.textContent = 'Please write at least 10 characters.';
+            msg.style.color = '#e74c3c';
+            msg.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        fetch('/api/moderation/appeal', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ violation_id: window._appealViolationId, text: text })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.textContent = 'Submit Appeal';
+            if (data.success) {
+                if (data.appeal.status === 'approved') {
+                    msg.textContent = 'Appeal approved! Your account has been reinstated.';
+                    msg.style.color = '#2ecc71';
+                    msg.style.display = 'block';
+                    setTimeout(function() { window.location.reload(); }, 2000);
+                } else {
+                    msg.textContent = 'Appeal denied: ' + (data.appeal.reason || 'The original decision stands.');
+                    msg.style.color = '#e74c3c';
+                    msg.style.display = 'block';
+                }
+            } else {
+                msg.textContent = data.error || 'Failed to submit appeal.';
+                msg.style.color = '#e74c3c';
+                msg.style.display = 'block';
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.textContent = 'Submit Appeal';
+            msg.textContent = 'Network error. Try again.';
+            msg.style.color = '#e74c3c';
+            msg.style.display = 'block';
+        });
+    };
+
     // ============ LOAD PROFILE ============
     function loadProfile() {
         var user = getUser();

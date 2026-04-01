@@ -1,25 +1,25 @@
 /**
- * Vercel Cron Job: Auto-delete posts with photos after 7 days
+ * Vercel Cron Job: Expire photos after 10 days
  *
- * Add to vercel.json "crons" array:
  * { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" }
  *
- * This runs daily at 3 AM UTC.
- * Performs soft deletes on posts and associated photos.
+ * Runs daily at 3 AM UTC.
+ * - Expires photos that have passed their expires_at date
+ * - Deletes image_data (base64) from expired photos to free storage
+ * - Updates parent posts with photo_status = 'expired'
+ * - Also handles legacy posts with context-based photos (7-day fallback)
  */
 
 const { getMany, run } = require('../_utils/db');
 const { cors } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
-  // SECURITY: Verify the cron request is coming from Vercel using CRON_SECRET
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     console.error('CRITICAL: CRON_SECRET environment variable is not set.');
     return res.status(500).json({ error: 'CRON_SECRET not configured' });
   }
 
-  // Check Authorization header: Bearer <CRON_SECRET>
   const authHeader = req.headers.authorization || '';
   const providedSecret = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
@@ -28,82 +28,106 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Allow CORS for cron requests (optional, but follows pattern)
   cors(res, req);
 
-  // Only allow GET requests for cron jobs
   if (req.method !== 'GET' && req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed. Use GET or POST.' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Get all posts with photos that are older than 7 days
-    // Posts can include photos in their "context" field (JSONB array of photo objects)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    let photosExpired = 0;
+    let postsUpdated = 0;
+    let legacyPhotosDeleted = 0;
 
-    const postsToDelete = await getMany(
-      `SELECT id, user_id, context
-       FROM posts
-       WHERE is_deleted = false
-       AND created_at < $1
-       AND context IS NOT NULL
-       AND jsonb_array_length(context) > 0`,
-      [sevenDaysAgo.toISOString()]
+    // --- Method 1: Expire photos with expires_at timestamp ---
+    const expiredPhotos = await getMany(
+      `SELECT id, user_id, context_id
+       FROM photos
+       WHERE (status = 'active' OR status IS NULL)
+       AND is_deleted = false
+       AND expires_at IS NOT NULL
+       AND expires_at <= NOW()`
     );
 
-    let postsDeleted = 0;
-    let photosDeleted = 0;
-
-    // Process each post
-    for (const post of postsToDelete) {
+    for (const photo of expiredPhotos) {
       try {
-        // Soft delete the post
+        // Clear image data and mark as expired
         await run(
-          `UPDATE posts
-           SET is_deleted = true, deleted_at = NOW()
+          `UPDATE photos
+           SET image_data = NULL, status = 'expired', expired_at = NOW(), is_deleted = true, deleted_at = NOW()
            WHERE id = $1`,
+          [photo.id]
+        );
+        photosExpired++;
+
+        // Update parent post if linked via context_id
+        if (photo.context_id) {
+          await run(
+            `UPDATE posts SET photo_status = 'expired' WHERE id = $1`,
+            [photo.context_id]
+          ).catch(() => {});
+          postsUpdated++;
+        }
+      } catch (err) {
+        console.error(`Error expiring photo ${photo.id}:`, err);
+      }
+    }
+
+    // --- Method 2: Legacy fallback — soft-delete posts with photos older than 10 days ---
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+    const legacyPosts = await getMany(
+      `SELECT id, user_id, context
+       FROM posts
+       WHERE hidden IS NOT TRUE
+       AND created_at < $1
+       AND image_url IS NOT NULL
+       AND image_url != ''
+       AND (photo_status IS NULL OR photo_status != 'expired')`,
+      [tenDaysAgo.toISOString()]
+    ).catch(() => []);
+
+    for (const post of legacyPosts) {
+      try {
+        await run(
+          `UPDATE posts SET photo_status = 'expired', image_url = NULL WHERE id = $1`,
           [post.id]
         );
-        postsDeleted++;
+        postsUpdated++;
 
-        // Extract photo IDs from context and soft delete them
+        // Also expire associated photos from context
         if (post.context && Array.isArray(post.context)) {
           for (const item of post.context) {
             if (item.photo_id) {
               await run(
-                `UPDATE photos
-                 SET is_deleted = true, deleted_at = NOW()
-                 WHERE id = $1`,
+                `UPDATE photos SET image_data = NULL, status = 'expired', expired_at = NOW(), is_deleted = true, deleted_at = NOW() WHERE id = $1`,
                 [item.photo_id]
               );
-              photosDeleted++;
+              legacyPhotosDeleted++;
             }
           }
         }
       } catch (err) {
-        console.error(`Error deleting post ${post.id}:`, err);
-        // Continue with next post instead of failing the entire job
+        console.error(`Error processing legacy post ${post.id}:`, err);
       }
     }
 
-    const message = `Cleanup completed: ${postsDeleted} posts and ${photosDeleted} photos soft-deleted`;
+    const message = `Cleanup: ${photosExpired} photos expired, ${postsUpdated} posts updated, ${legacyPhotosDeleted} legacy photos cleaned`;
     console.log(message);
 
     return res.status(200).json({
       success: true,
       message,
       stats: {
-        posts_deleted: postsDeleted,
-        photos_deleted: photosDeleted,
-        cutoff_date: sevenDaysAgo.toISOString(),
+        photos_expired: photosExpired,
+        posts_updated: postsUpdated,
+        legacy_photos_deleted: legacyPhotosDeleted,
+        cutoff_date: tenDaysAgo.toISOString(),
       },
     });
   } catch (err) {
     console.error('Photo cleanup cron job error:', err);
-    return res.status(500).json({
-      error: 'Failed to execute photo cleanup',
-      details: err.message,
-    });
+    return res.status(500).json({ error: 'Failed to execute photo cleanup', details: err.message });
   }
 };

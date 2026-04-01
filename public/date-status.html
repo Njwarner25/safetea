@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Date Status - SafeTea</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
@@ -31,11 +32,42 @@
         .error-msg { text-align: center; color: #FF6B6B; padding: 40px 20px; }
         .loading { text-align: center; padding: 60px 20px; color: #8080A0; }
         .branding { text-align: center; margin-top: 24px; font-size: 12px; color: #555; }
+
+        /* SOS Banner */
+        .sos-banner {
+            background: linear-gradient(135deg, #FF2222 0%, #CC0000 100%);
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: sosPulse 2s ease-in-out infinite;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .sos-banner-title { font-size: 18px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
+        .sos-banner-sub { font-size: 13px; opacity: 0.9; }
+        @keyframes sosPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 34, 34, 0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(255, 34, 34, 0); }
+        }
+
+        /* Leaflet map */
+        #sos-map {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo"><img src="logo.png" alt="SafeTea"></div>
+
+        <div id="sos-banner" style="display:none"></div>
+        <div id="sos-map"></div>
 
         <div id="loading" class="loading">Loading date status...</div>
         <div id="error" class="error-msg" style="display:none"></div>
@@ -44,9 +76,12 @@
         <div class="branding">Powered by SafeTea — Stay Safe</div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
+        let sosMap = null;
+        let sosMarker = null;
 
         if (!code) {
             document.getElementById('loading').style.display = 'none';
@@ -69,11 +104,75 @@
                 }
 
                 renderStatus(data.date);
+                checkSOS();
             } catch (err) {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('error').textContent = 'Failed to load status. Please try again.';
             }
+        }
+
+        async function checkSOS() {
+            try {
+                const res = await fetch('/api/dates/sos?code=' + encodeURIComponent(code));
+                const data = await res.json();
+                if (data.success && data.sos) {
+                    showSOSBanner(data.sos);
+                    if (data.sos.latitude && data.sos.longitude) {
+                        showSOSMap(data.sos.latitude, data.sos.longitude);
+                    }
+                }
+            } catch { /* silent */ }
+
+            // Also poll live location
+            pollLocation();
+        }
+
+        function showSOSBanner(sos) {
+            var banner = document.getElementById('sos-banner');
+            var time = new Date(sos.createdAt).toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            banner.innerHTML =
+                '<div class="sos-banner-title">SOS ALERT</div>' +
+                '<div class="sos-banner-sub">' + (sos.userName || 'User') + ' triggered an emergency alert at ' + time + '</div>';
+            banner.style.display = 'block';
+            banner.className = 'sos-banner';
+        }
+
+        function showSOSMap(lat, lng) {
+            var mapEl = document.getElementById('sos-map');
+            mapEl.style.display = 'block';
+
+            if (!sosMap) {
+                sosMap = L.map('sos-map').setView([lat, lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19,
+                }).addTo(sosMap);
+
+                var sosIcon = L.divIcon({
+                    html: '<div style="background:#FF2222;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 10px rgba(255,34,34,0.6);"></div>',
+                    className: '',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8],
+                });
+                sosMarker = L.marker([lat, lng], { icon: sosIcon }).addTo(sosMap);
+                sosMarker.bindPopup('Last known location').openPopup();
+            } else {
+                sosMarker.setLatLng([lat, lng]);
+                sosMap.setView([lat, lng], 15);
+            }
+        }
+
+        function pollLocation() {
+            setInterval(async function() {
+                try {
+                    var res = await fetch('/api/dates/location?code=' + encodeURIComponent(code));
+                    var data = await res.json();
+                    if (data.success && data.location && data.location.latitude && data.location.longitude) {
+                        showSOSMap(parseFloat(data.location.latitude), parseFloat(data.location.longitude));
+                    }
+                } catch { /* silent */ }
+            }, 10000);
         }
 
         function fmtDate(str) {

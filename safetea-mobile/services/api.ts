@@ -228,6 +228,30 @@ class ApiClient {
     });
   }
 
+  // SOS — Emergency alert
+  async sosAlert(type: string, latitude?: number, longitude?: number) {
+    return this.request<any>('/dates/sos', {
+      method: 'POST',
+      body: JSON.stringify({ type, latitude, longitude }),
+    });
+  }
+
+  // Fake Call — AI script generation
+  async generateFakeCallScript(callerName: string, context: string) {
+    return this.request<{ script: string }>('/dates/fake-call-script', {
+      method: 'POST',
+      body: JSON.stringify({ callerName, context }),
+    });
+  }
+
+  // Fake Call — Voice synthesis
+  async synthesizeFakeCallVoice(script: string, persona?: string) {
+    return this.request<{ audio: string }>('/dates/fake-call-voice', {
+      method: 'POST',
+      body: JSON.stringify({ script, persona }),
+    });
+  }
+
   // Scam database — fetch entries from community reports
   async getScamReports(category?: string, search?: string) {
     const params = new URLSearchParams();

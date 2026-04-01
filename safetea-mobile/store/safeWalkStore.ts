@@ -31,12 +31,14 @@ interface SafeWalkState {
   trustedContacts: TrustedContact[];
   activeSession: DateSession | null;
   pastSessions: DateSession[];
+  sosActive: boolean;
 
   addContact: (contact: TrustedContact) => void;
   removeContact: (id: string) => void;
   startSession: (session: DateSession) => void;
   endSession: () => void;
   triggerPanic: () => void;
+  triggerSOS: (type: string) => void;
   respondToCheckIn: (checkInId: string, status: CheckInStatus) => void;
 }
 
@@ -44,6 +46,7 @@ export const useSafeWalkStore = create<SafeWalkState>((set, get) => ({
   trustedContacts: [],
   activeSession: null,
   pastSessions: [],
+  sosActive: false,
 
   addContact: (contact) => set((state) => ({
     trustedContacts: [...state.trustedContacts, contact],
@@ -71,6 +74,18 @@ export const useSafeWalkStore = create<SafeWalkState>((set, get) => ({
   triggerPanic: () => set((state) => {
     if (!state.activeSession) return state;
     return {
+      sosActive: true,
+      activeSession: {
+        ...state.activeSession,
+        status: 'panic',
+      },
+    };
+  }),
+
+  triggerSOS: (type: string) => set((state) => {
+    if (!state.activeSession) return state;
+    return {
+      sosActive: true,
       activeSession: {
         ...state.activeSession,
         status: 'panic',

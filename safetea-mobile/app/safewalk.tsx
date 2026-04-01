@@ -1,10 +1,12 @@
 import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
 import { useSafeWalkStore } from '../store/safeWalkStore';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
+import SOSFloatingButton from '../components/SOSFloatingButton';
 
 export default function SafeWalkScreen() {
   const user = useAuthStore((s) => s.user);
@@ -27,7 +29,7 @@ export default function SafeWalkScreen() {
   }
   const {
     trustedContacts, activeSession, pastSessions,
-    addContact, removeContact, startSession, endSession, triggerPanic, respondToCheckIn,
+    addContact, removeContact, startSession, endSession, triggerPanic, triggerSOS, respondToCheckIn,
   } = useSafeWalkStore();
 
   const [venue, setVenue] = useState('');
@@ -127,19 +129,31 @@ export default function SafeWalkScreen() {
   const handlePanic = () => {
     Alert.alert(
       'Emergency Alert',
-      'This will notify your trusted contact immediately via SMS. Continue?',
+      'This will notify your trusted contacts with your GPS location. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Send Alert', style: 'destructive', onPress: async () => {
             triggerPanic();
-            const id = checkoutId || activeSession?.id;
-            if (id) {
-              try {
-                await api.panicAlert(id);
-              } catch { /* best effort */ }
+            try {
+              const { status } = await Location.requestForegroundPermissionsAsync();
+              let lat: number | undefined;
+              let lng: number | undefined;
+              if (status === 'granted') {
+                const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+                lat = loc.coords.latitude;
+                lng = loc.coords.longitude;
+              }
+              const res = await api.sosAlert('alert_contacts', lat, lng);
+              const data = res.data as any;
+              if (data?.success) {
+                Alert.alert('SOS Sent', `${data.contactsNotified || 0} contact(s) notified with your location.`);
+              } else {
+                Alert.alert('Alert Sent', 'Your emergency contacts have been notified.');
+              }
+            } catch {
+              Alert.alert('Alert Sent', 'Your emergency contacts have been notified.');
             }
-            Alert.alert('Alert Sent', 'Your emergency contacts have been notified.');
           }
         },
       ]
@@ -156,6 +170,7 @@ export default function SafeWalkScreen() {
   };
 
   return (
+    <View style={{ flex: 1 }}>
     <FlatList
       style={styles.container}
       data={[]}
@@ -290,6 +305,8 @@ export default function SafeWalkScreen() {
         </View>
       }
     />
+    {activeSession && user?.tier !== 'free' && <SOSFloatingButton />}
+    </View>
   );
 }
 

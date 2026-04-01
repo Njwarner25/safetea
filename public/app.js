@@ -333,221 +333,10 @@
         var alertsFullList = document.getElementById('alerts-full-list');
         if (!alertsFullList) return;
         // Set a default message
-        alertsFullList.innerHTML = '<div style="text-align:center;padding:24px;color:#8080A0"><i class="fas fa-location-crosshairs" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>Enable location in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'search\')},100);return false" style="color:#E8A0B5">Safety Search</a> to see alerts near you.</div>';
+        alertsFullList.innerHTML = '<div style="text-align:center;padding:24px;color:#8080A0"><i class="fas fa-location-crosshairs" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>Enable location in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'search\')},100);return false" style="color:#E8A0B5">Safety Resources</a> to see alerts near you.</div>';
     }
 
-    // ============ SAFETY SEARCH ============
-    // Search tab switching
-    document.querySelectorAll('.search-tab').forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            document.querySelectorAll('.search-tab').forEach(function(t) { t.classList.remove('active'); });
-            document.querySelectorAll('.search-panel').forEach(function(p) { p.classList.remove('active'); p.style.display = 'none'; });
-            this.classList.add('active');
-            var target = this.getAttribute('data-search');
-            var panel = document.getElementById('search-' + target);
-            if (panel) { panel.classList.add('active'); panel.style.display = 'block'; }
-        });
-    });
-
-    window.searchOffenders = function() {
-        var first = document.getElementById('so-first-name').value.trim();
-        var last = document.getElementById('so-last-name').value.trim();
-        var city = document.getElementById('so-city').value.trim();
-        var state = document.getElementById('so-state').value;
-        var results = document.getElementById('offender-results');
-
-        if (!last) { if (typeof showToast === 'function') showToast('Last name is required'); return; }
-
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching registries...</div>';
-
-        var params = 'last=' + encodeURIComponent(last);
-        if (first) params += '&first=' + encodeURIComponent(first);
-        if (city) params += '&city=' + encodeURIComponent(city);
-        if (state) params += '&state=' + encodeURIComponent(state);
-
-        fetch('/api/screening/offender?' + params, { headers: { 'Authorization': 'Bearer ' + getToken() } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
-
-                var html = '';
-                if (data.results && data.results.length > 0) {
-                    html += '<div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);border-radius:10px;padding:12px;margin-bottom:16px;color:#e74c3c;font-weight:600"><i class="fas fa-exclamation-triangle"></i> ' + data.results.length + ' potential match(es) found</div>';
-                    data.results.forEach(function(r) {
-                        html += '<div style="background:#1A1A2E;border-radius:8px;padding:14px;margin-bottom:8px;border-left:3px solid #e74c3c">';
-                        html += '<div style="font-weight:600;color:#fff;font-size:14px">' + escapeHtmlSafe(r.title) + '</div>';
-                        html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet) + '</div>';
-                        html += '<a href="' + r.link + '" target="_blank" style="color:#E8A0B5;font-size:12px;display:inline-block;margin-top:6px">View Source →</a>';
-                        html += '</div>';
-                    });
-                } else {
-                    html += '<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:10px;padding:12px;margin-bottom:16px;color:#2ecc71;font-weight:600;text-align:center"><i class="fas fa-check-circle"></i> No registry matches found for "' + escapeHtmlSafe(data.query || last) + '"</div>';
-                }
-
-                if (data.registry_links && data.registry_links.length > 0) {
-                    html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)"><h4 style="color:#fff;font-size:13px;margin-bottom:8px">Direct Registry Links</h4>';
-                    data.registry_links.forEach(function(link) {
-                        html += '<a href="' + link.url + '" target="_blank" style="display:block;color:#E8A0B5;font-size:13px;padding:6px 0"><i class="fas fa-external-link-alt"></i> ' + escapeHtmlSafe(link.name) + '</a>';
-                    });
-                    html += '</div>';
-                }
-
-                results.innerHTML = html;
-            })
-            .catch(function() {
-                results.innerHTML = '<p style="color:#FF6B6B">Search failed. Please try again.</p>';
-            });
-    };
-
-    window.runBackgroundCheck = function() {
-        var name = document.getElementById('bg-name').value.trim();
-        var city = document.getElementById('bg-city').value.trim();
-        var state = document.getElementById('bg-state').value.trim();
-        var age = document.getElementById('bg-age').value;
-        var results = document.getElementById('background-results');
-
-        if (!name) { if (typeof showToast === 'function') showToast('Full name is required'); return; }
-
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Running background check...</div>';
-
-        fetch('/api/screening/background', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ fullName: name, city: city, state: state, age: age ? parseInt(age) : undefined })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.error) { results.innerHTML = '<p style="color:#FF6B6B">' + escapeHtmlSafe(data.error) + '</p>'; return; }
-
-            var s = data.sections || {};
-            var html = '<div style="margin-bottom:16px">';
-
-            // Risk assessment banner
-            if (data.riskAssessment) {
-                var ra = data.riskAssessment;
-                var rColor = ra.level === 'high' ? '#e74c3c' : ra.level === 'medium' ? '#f1c40f' : '#2ecc71';
-                var rIcon = ra.level === 'high' ? 'exclamation-triangle' : ra.level === 'medium' ? 'exclamation-circle' : 'check-circle';
-                html += '<div style="background:rgba(' + (ra.level === 'high' ? '231,76,60' : ra.level === 'medium' ? '241,196,15' : '46,204,113') + ',0.1);border:1px solid ' + rColor + ';border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">';
-                html += '<div style="font-size:28px;font-weight:800;color:' + rColor + '">' + ra.score + '/100</div>';
-                html += '<div style="font-size:14px;font-weight:600;color:' + rColor + ';text-transform:uppercase"><i class="fas fa-' + rIcon + '"></i> ' + ra.level + ' risk</div>';
-                if (ra.flags && ra.flags.length > 0) {
-                    html += '<div style="margin-top:8px;font-size:12px;color:#8080A0">' + ra.flags.map(function(f) { return escapeHtmlSafe(f); }).join(' · ') + '</div>';
-                }
-                html += '</div>';
-            }
-
-            // Social profiles
-            var profiles = (s.socialMedia && s.socialMedia.profiles) || [];
-            if (profiles.length > 0) {
-                html += '<h4 style="color:#fff;font-size:14px;margin-bottom:8px"><i class="fas fa-user-circle" style="color:#E8A0B5"></i> Social Profiles (' + profiles.length + ')</h4>';
-                profiles.forEach(function(p) {
-                    html += '<a href="' + escapeHtmlSafe(p.url) + '" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;text-decoration:none;color:#fff;font-size:13px">';
-                    html += '<i class="' + (p.icon || 'fas fa-link') + '" style="color:' + (p.color || '#E8A0B5') + ';font-size:16px"></i>';
-                    html += '<div><strong>' + escapeHtmlSafe(p.platform || 'Profile') + '</strong><br><span style="color:#8080A0;font-size:11px">' + escapeHtmlSafe(p.snippet || p.url) + '</span></div></a>';
-                });
-            }
-
-            // Mugshots
-            var mugshots = (s.mugshots && s.mugshots.results) || [];
-            if (mugshots.length > 0) {
-                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-camera"></i> Mugshots / Arrest Photos (' + mugshots.length + ')</h4>';
-                mugshots.forEach(function(r) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
-                    if (r.url) html += '<a href="' + escapeHtmlSafe(r.url) + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
-                    html += '</div>';
-                });
-            }
-
-            // Criminal records
-            var criminal = (s.criminalRecords && s.criminalRecords.results) || [];
-            if (criminal.length > 0) {
-                html += '<h4 style="color:#e74c3c;font-size:14px;margin:16px 0 8px"><i class="fas fa-gavel"></i> Criminal Records (' + criminal.length + ')</h4>';
-                criminal.forEach(function(r) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #e74c3c;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
-                    if (r.url) html += '<a href="' + escapeHtmlSafe(r.url) + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
-                    html += '</div>';
-                });
-            }
-
-            // Court records
-            var court = (s.courtRecords && s.courtRecords.results) || [];
-            if (court.length > 0) {
-                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-balance-scale"></i> Court Records (' + court.length + ')</h4>';
-                court.forEach(function(r) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px;font-weight:600">' + escapeHtmlSafe(r.title || 'Record') + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div>';
-                    if (r.url) html += '<a href="' + escapeHtmlSafe(r.url) + '" target="_blank" style="color:#E8A0B5;font-size:12px;margin-top:4px;display:inline-block">View →</a>';
-                    html += '</div>';
-                });
-            }
-
-            // Data broker exposure
-            var brokers = (s.dataBrokers && s.dataBrokers.sites) || [];
-            if (brokers.length > 0) {
-                html += '<h4 style="color:#f1c40f;font-size:14px;margin:16px 0 8px"><i class="fas fa-database"></i> Data Broker Exposure (' + brokers.length + ' sites)</h4>';
-                html += '<div style="font-size:12px;color:#8080A0;margin-bottom:8px">' + escapeHtmlSafe(s.dataBrokers.note || '') + '</div>';
-                brokers.forEach(function(d) {
-                    html += '<div style="background:#1A1A2E;border-left:3px solid #f1c40f;border-radius:8px;padding:12px;margin-bottom:6px">';
-                    html += '<div style="color:#fff;font-size:13px">' + escapeHtmlSafe(d.site || d.title) + '</div>';
-                    if (d.url) html += '<a href="' + escapeHtmlSafe(d.url) + '" target="_blank" style="color:#E8A0B5;font-size:12px">View →</a>';
-                    html += '</div>';
-                });
-            }
-
-            // News
-            var news = (s.news && s.news.results) || [];
-            if (news.length > 0) {
-                html += '<h4 style="color:#3498db;font-size:14px;margin:16px 0 8px"><i class="fas fa-newspaper"></i> News & Articles (' + news.length + ')</h4>';
-                news.forEach(function(r) {
-                    html += '<a href="' + escapeHtmlSafe(r.url) + '" target="_blank" style="display:block;background:#1A1A2E;border-radius:8px;padding:12px;margin-bottom:6px;text-decoration:none">';
-                    html += '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtmlSafe(r.title || '') + '</div>';
-                    html += '<div style="color:#8080A0;font-size:12px;margin-top:4px">' + escapeHtmlSafe(r.snippet || '') + '</div></a>';
-                });
-            }
-
-            // No results at all
-            var totalResults = profiles.length + mugshots.length + criminal.length + court.length + brokers.length + news.length;
-            if (totalResults === 0) {
-                html += '<div style="text-align:center;padding:20px;color:#8080A0"><i class="fas fa-search" style="font-size:24px;display:block;margin-bottom:8px"></i>No significant results found for "' + escapeHtmlSafe(name) + '"</div>';
-            }
-
-            html += '</div>';
-            results.innerHTML = html;
-        })
-        .catch(function() {
-            results.innerHTML = '<p style="color:#FF6B6B">Background check failed. Please try again.</p>';
-        });
-    };
-
-    window.loadCommunityMentions = function() {
-        var name = document.getElementById('bg-name').value.trim();
-        var results = document.getElementById('community-mentions-results');
-        if (!name) { if (typeof showToast === 'function') showToast('Enter a name first'); return; }
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Searching posts...</div>';
-
-        fetch('/api/community?search=' + encodeURIComponent(name), { headers: { 'Authorization': 'Bearer ' + getToken() } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.posts && data.posts.length > 0) {
-                    var html = '<div style="background:rgba(241,196,15,0.08);border:1px solid rgba(241,196,15,0.2);border-radius:8px;padding:10px;margin-bottom:12px;color:#f1c40f;font-size:13px"><i class="fas fa-exclamation-triangle"></i> ' + data.posts.length + ' mention(s) found</div>';
-                    data.posts.forEach(function(p) {
-                        html += '<div style="background:#1A1A2E;border-radius:8px;padding:12px;margin-bottom:8px"><div style="color:#fff;font-size:13px">' + escapeHtmlSafe(p.content ? p.content.substring(0, 200) : '') + '</div>';
-                        html += '<div style="color:#8080A0;font-size:11px;margin-top:4px">' + escapeHtmlSafe(p.category || '') + ' — ' + (typeof getTimeAgo === 'function' ? getTimeAgo(p.created_at) : '') + '</div></div>';
-                    });
-                    results.innerHTML = html;
-                } else {
-                    results.innerHTML = '<div style="text-align:center;padding:12px;color:#8080A0;font-size:13px"><i class="fas fa-check-circle" style="color:#2ecc71"></i> No community mentions found for "' + escapeHtmlSafe(name) + '"</div>';
-                }
-            })
-            .catch(function() { results.innerHTML = '<p style="color:#8080A0">Could not search posts.</p>'; });
-    };
-
-    // ============ CATFISH CHECK ============
+    // ============ PHOTO VERIFICATION (CATFISH CHECK) ============
     window.handleCatfishFile = function(input) {
         var file = input.files[0];
         if (!file) return;
@@ -587,7 +376,7 @@
 
         if (!imageData && !imageUrl) { if (typeof showToast === 'function') showToast('Upload a photo or paste an image URL'); return; }
 
-        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Analyzing photo for catfish signals...</div>';
+        results.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Verifying photo authenticity...</div>';
 
         fetch('/api/screening/catfish', {
             method: 'POST',
@@ -820,9 +609,49 @@
     };
 
     window.triggerSOS = function() {
-        if (confirm('This will alert your trusted contacts with an SOS message. Are you sure?')) {
-            if (typeof showToast === 'function') showToast('SOS alert sent to your trusted contacts!');
+        if (!confirm('This will alert your trusted contacts with your GPS location. Are you sure?')) return;
+
+        var sendSOS = function(lat, lng) {
+            var token = localStorage.getItem('safetea_token');
+            fetch('/api/dates/sos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ type: 'alert_contacts', latitude: lat || null, longitude: lng || null })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    if (typeof showToast === 'function') showToast('SOS sent! ' + (data.contactsNotified || 0) + ' contact(s) notified.');
+                } else {
+                    if (typeof showToast === 'function') showToast(data.error || 'SOS failed. Please try again.');
+                }
+            })
+            .catch(function() {
+                if (typeof showToast === 'function') showToast('Network error. Please try calling 911 directly.');
+            });
+        };
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(pos) { sendSOS(pos.coords.latitude, pos.coords.longitude); },
+                function() { sendSOS(null, null); },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        } else {
+            sendSOS(null, null);
         }
+    };
+
+    window.triggerCall911 = function() {
+        if (!confirm('This will call 911. Are you sure?')) return;
+        // Log the event
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/dates/sos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ type: 'call_911' })
+        }).catch(function() {});
+        window.open('tel:911', '_self');
     };
 
     function reportRow(icon, label, value) {
@@ -1147,7 +976,7 @@
         }
         html += '</div>';
 
-        // Pro card
+        // SafeTea Pro card
         var proActive = currentTier === 'pro';
         html += '<div style="background:#22223A;border:' + (proActive ? '2px solid #9b59b6' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
@@ -1156,14 +985,14 @@
         html += '</div>';
         html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
         html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Everything in SafeTea+</div>';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Background Checks</div>';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Catfish Detection</div>';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Photo Verification</div>';
+        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Safety Resource Hub</div>';
         html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Priority Support</div>';
         html += '</div>';
         if (proActive) {
             html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(155,89,182,0.1);border-radius:8px;color:#9b59b6;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
         } else {
-            html += '<button onclick="startCheckout(\'pro\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to Pro</button>';
+            html += '<button onclick="startCheckout(\'pro\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to SafeTea Pro</button>';
         }
         html += '</div>';
 

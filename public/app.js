@@ -1627,6 +1627,7 @@
     loadWatchZones();
     initAlertsTab();
     updateInboxBadge();
+    if (typeof initRecordProtect === 'function') initRecordProtect();
 
     // Handle Stripe checkout success redirect
     (function checkUpgradeSuccess() {

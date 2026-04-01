@@ -8,7 +8,7 @@
                 { "key": "X-Content-Type-Options", "value": "nosniff" },
                 { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
                 { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-                { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" },
+                { "key": "Permissions-Policy", "value": "camera=(), microphone=(self), geolocation=(self)" },
                 { "key": "X-DNS-Prefetch-Control", "value": "off" },
                 { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com https://js.stripe.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https: data:; connect-src 'self' https://*.googleapis.com https://nominatim.openstreetmap.org https://api.stripe.com https://serpapi.com https://www.openstreetmap.org; frame-src https://www.openstreetmap.org https://www.google.com https://js.stripe.com" }
             ]
@@ -34,6 +34,12 @@
         { "source": "/api/dates/migrate-sos", "destination": "/api/dates/migrate-sos" },
         { "source": "/api/dates/fake-call-script", "destination": "/api/dates/fake-call-script" },
         { "source": "/api/dates/fake-call-voice", "destination": "/api/dates/fake-call-voice" },
+        { "source": "/api/recording/start", "destination": "/api/recording/start" },
+        { "source": "/api/recording/chunk", "destination": "/api/recording/chunk" },
+        { "source": "/api/recording/stop", "destination": "/api/recording/stop" },
+        { "source": "/api/recording/escalate", "destination": "/api/recording/escalate" },
+        { "source": "/api/recording/session", "destination": "/api/recording/session" },
+        { "source": "/api/migrate-recording", "destination": "/api/migrate-recording" },
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
         { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },

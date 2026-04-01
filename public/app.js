@@ -1972,6 +1972,8 @@
         if (sub === 'teatalk') hubLoadCommunityPosts();
         if (sub === 'referral') hubLoadReferralPosts();
         if (sub === 'growreferral') loadGrowReferral();
+        if (sub === 'sororityrooms') initSororityRooms();
+        if (sub === 'roomview') loadRoomView();
     };
 
     // ==================== COMMUNITY MENTIONS ====================
@@ -2111,6 +2113,10 @@
         }).then(function(data) {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            if (data && data.type === 'full_name_detected') {
+                showFullNameBlockModal(data.names, data.suggestion);
+                return;
+            }
             if (data && data.error) { showToast(data.error, true); return; }
             document.getElementById('hub-community-body').value = '';
             if (document.getElementById('hub-community-city')) document.getElementById('hub-community-city').value = '';
@@ -2122,6 +2128,28 @@
             btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
             showToast('Failed to submit post.', true);
         });
+    };
+
+    // ==================== FULL NAME BLOCK MODAL ====================
+    window.showFullNameBlockModal = function(names, suggestion) {
+        var existing = document.getElementById('fullname-block-modal');
+        if (existing) existing.remove();
+        var nameList = (names || []).map(function(n) { return '<strong style="color:#E8A0B5">' + n + '</strong>'; }).join(', ');
+        var modal = document.createElement('div');
+        modal.id = 'fullname-block-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;';
+        modal.innerHTML = '<div style="background:#22223A;border-radius:16px;padding:32px;max-width:440px;width:100%;text-align:center;border:1px solid rgba(232,160,181,0.2)">'
+            + '<div style="font-size:48px;margin-bottom:16px">&#9888;&#65039;</div>'
+            + '<h3 style="color:#fff;font-size:20px;margin-bottom:12px">Full Name Detected</h3>'
+            + '<p style="color:#C8C8E0;font-size:14px;line-height:1.6;margin-bottom:16px">Your post contains a full name: ' + nameList + '</p>'
+            + '<p style="color:#C8C8E0;font-size:14px;line-height:1.6;margin-bottom:8px">To protect privacy, please use <strong style="color:#E8A0B5">first name + last initial</strong> instead.</p>'
+            + (suggestion ? '<div style="background:#1A1A2E;border-radius:10px;padding:12px;margin:16px 0;border-left:3px solid #E8A0B5;text-align:left"><span style="color:#8080A0;font-size:12px;display:block;margin-bottom:4px">Suggested edit:</span><span style="color:#fff;font-size:14px">' + suggestion + '</span></div>' : '')
+            + '<p style="color:#8080A0;font-size:12px;margin-bottom:20px">Read our <a href="/guidelines" style="color:#E8A0B5" target="_blank">Community Guidelines</a> for more info.</p>'
+            + '<div style="display:flex;gap:10px;justify-content:center">'
+            + '<button onclick="document.getElementById(\'fullname-block-modal\').remove()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Edit My Post</button>'
+            + '<button onclick="document.getElementById(\'fullname-block-modal\').remove();var ta=document.getElementById(\'hub-community-body\');if(ta)ta.value=\'\'" style="background:rgba(255,255,255,0.06);color:#C8C8E0;border:1px solid rgba(255,255,255,0.1);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel Post</button>'
+            + '</div></div>';
+        document.body.appendChild(modal);
     };
 
     // ==================== REFER A GOOD ONE ====================
@@ -2491,6 +2519,471 @@
     if (typeof initRecordProtect === 'function') initRecordProtect();
 
     // Handle Stripe checkout success redirect
+    // ==================== SORORITY ROOMS ====================
+    var currentRoomId = null;
+    var currentRoomData = null;
+    var currentRoomFeedType = 'tea_talk';
+
+    window.initSororityRooms = function() {
+        loadMyRooms();
+    };
+
+    function loadMyRooms() {
+        var container = document.getElementById('sr-my-rooms');
+        var emptyState = document.getElementById('sr-empty-state');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading your rooms...</div>';
+        if (emptyState) emptyState.style.display = 'none';
+
+        apiFetch('/rooms/my-rooms').then(function(data) {
+            if (!data || !data.rooms || data.rooms.length === 0) {
+                container.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+            if (emptyState) emptyState.style.display = 'none';
+            var html = '';
+            data.rooms.forEach(function(room) {
+                var pendingBadge = (room.my_role === 'admin' || room.my_role === 'co_admin') && parseInt(room.pending_count) > 0
+                    ? '<span style="background:#e74c3c;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:8px">' + room.pending_count + ' pending</span>'
+                    : '';
+                var roleBadge = room.my_role === 'admin' ? '<span style="color:#f39c12;font-size:10px;font-weight:600;margin-left:6px"><i class="fas fa-crown"></i> Admin</span>' :
+                    room.my_role === 'co_admin' ? '<span style="color:#9b59b6;font-size:10px;font-weight:600;margin-left:6px"><i class="fas fa-star"></i> Co-Admin</span>' : '';
+                html += '<div onclick="openRoom(' + room.id + ')" style="display:flex;align-items:center;gap:14px;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.borderColor=\'rgba(155,89,182,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.borderColor=\'rgba(255,255,255,0.06)\'">' +
+                    '<div style="width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;background:linear-gradient(135deg,' + (room.color_primary || '#9b59b6') + ',' + (room.color_secondary || '#8e44ad') + ');flex-shrink:0">' + escapeHtmlSafe(room.greek_letters) + '</div>' +
+                    '<div style="flex:1;min-width:0">' +
+                        '<div style="font-weight:600;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtmlSafe(room.name) + roleBadge + pendingBadge + '</div>' +
+                        '<div style="font-size:12px;color:#8080A0;margin-top:2px">' + (room.chapter || room.university || room.scope) + ' &middot; ' + room.member_count + ' members</div>' +
+                    '</div>' +
+                    '<i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>' +
+                '</div>';
+            });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">Failed to load rooms.</p>';
+        });
+    }
+
+    window.openRoom = function(roomId) {
+        currentRoomId = roomId;
+        currentRoomFeedType = 'tea_talk';
+        switchHubTab('roomview');
+    };
+
+    function loadRoomView() {
+        if (!currentRoomId) return;
+        apiFetch('/rooms/details?id=' + currentRoomId).then(function(data) {
+            if (!data || !data.room) { showToast('Room not found', true); return; }
+            currentRoomData = data;
+            var room = data.room;
+            var myRole = data.myRole;
+
+            // Header
+            document.getElementById('rv-logo').textContent = room.greek_letters || '';
+            document.getElementById('rv-logo').style.background = 'linear-gradient(135deg,' + (room.color_primary || '#9b59b6') + ',' + (room.color_secondary || '#8e44ad') + ')';
+            document.getElementById('rv-name').textContent = room.name;
+            document.getElementById('rv-chapter').textContent = [room.chapter, room.university].filter(Boolean).join(' — ') || '';
+            document.getElementById('rv-member-count').innerHTML = '<i class="fas fa-users"></i> ' + data.memberCount + ' members';
+            var scopeLabels = { chapter: 'Chapter', university: 'University', regional: 'Regional', national: 'National' };
+            document.getElementById('rv-scope').innerHTML = '<i class="fas fa-globe"></i> ' + (scopeLabels[room.scope] || 'Chapter');
+
+            // Info panel
+            document.getElementById('rv-description').textContent = room.description || 'No description set.';
+            document.getElementById('rv-invite-code').value = room.invite_code;
+
+            // Members list
+            var membersHtml = '<h4 style="color:#fff;font-size:13px;margin-bottom:10px"><i class="fas fa-users" style="color:#9b59b6"></i> Members (' + data.members.length + ')</h4>';
+            data.members.slice(0, 20).forEach(function(m) {
+                var mBadge = m.role === 'admin' ? ' <i class="fas fa-crown" style="color:#f39c12;font-size:10px"></i>' : m.role === 'co_admin' ? ' <i class="fas fa-star" style="color:#9b59b6;font-size:10px"></i>' : '';
+                membersHtml += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0">' +
+                    '<div style="width:28px;height:28px;border-radius:50%;background:' + hubGetAvatarColor(m.display_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + (m.display_name || '?')[0].toUpperCase() + '</div>' +
+                    '<span style="color:#ccc;font-size:13px">' + escapeHtmlSafe(m.display_name || 'Anonymous') + mBadge + '</span>' +
+                '</div>';
+            });
+            if (data.members.length > 20) membersHtml += '<div style="color:#8080A0;font-size:12px;padding:4px 0">+ ' + (data.members.length - 20) + ' more</div>';
+            document.getElementById('rv-members-list').innerHTML = membersHtml;
+
+            // Admin panel
+            var adminPanel = document.getElementById('rv-admin-panel');
+            var leaveBtn = document.getElementById('rv-leave-btn');
+            if (myRole === 'admin' || myRole === 'co_admin') {
+                adminPanel.style.display = 'block';
+                renderPendingMembers(data.pending);
+                leaveBtn.style.display = myRole === 'admin' ? 'none' : 'block';
+            } else {
+                adminPanel.style.display = 'none';
+                leaveBtn.style.display = 'block';
+            }
+
+            // Load feed
+            switchRoomFeedTab(currentRoomFeedType);
+        }).catch(function() {
+            showToast('Failed to load room', true);
+        });
+    }
+
+    function renderPendingMembers(pending) {
+        var el = document.getElementById('rv-pending-list');
+        if (!pending || pending.length === 0) {
+            el.innerHTML = '<div style="color:#8080A0;font-size:12px">No pending requests.</div>';
+            return;
+        }
+        var html = '<h5 style="color:#f39c12;font-size:12px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-clock"></i> Pending Requests (' + pending.length + ')</h5>';
+        pending.forEach(function(m) {
+            html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.15);border-radius:10px;padding:10px 12px;margin-bottom:8px">' +
+                '<div style="width:32px;height:32px;border-radius:50%;background:' + hubGetAvatarColor(m.display_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">' + (m.display_name || '?')[0].toUpperCase() + '</div>' +
+                '<div style="flex:1">' +
+                    '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtmlSafe(m.display_name || 'Anonymous') + '</div>' +
+                    '<div style="color:#8080A0;font-size:11px">' + getTimeAgoFromDate(m.requested_at) + '</div>' +
+                '</div>' +
+                '<button onclick="roomMemberAction(' + m.membership_id + ',\'approve\')" style="background:#2ecc71;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Approve</button>' +
+                '<button onclick="roomMemberAction(' + m.membership_id + ',\'deny\')" style="background:none;border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Deny</button>' +
+            '</div>';
+        });
+        el.innerHTML = html;
+    }
+
+    window.switchRoomFeedTab = function(type) {
+        currentRoomFeedType = type;
+        var teaBtn = document.getElementById('rv-tab-tea');
+        var goodBtn = document.getElementById('rv-tab-good');
+        if (type === 'tea_talk') {
+            teaBtn.style.background = '#9b59b6'; teaBtn.style.color = '#fff'; teaBtn.style.border = 'none';
+            goodBtn.style.background = '#22223A'; goodBtn.style.color = '#8080A0'; goodBtn.style.border = '1px solid rgba(255,255,255,0.08)';
+        } else {
+            goodBtn.style.background = '#2ecc71'; goodBtn.style.color = '#fff'; goodBtn.style.border = 'none';
+            teaBtn.style.background = '#22223A'; teaBtn.style.color = '#8080A0'; teaBtn.style.border = '1px solid rgba(255,255,255,0.08)';
+        }
+        loadRoomFeed();
+    };
+
+    function loadRoomFeed() {
+        var container = document.getElementById('rv-feed');
+        if (!container || !currentRoomId) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+        apiFetch('/rooms/feed?roomId=' + currentRoomId + '&type=' + currentRoomFeedType + '&limit=20').then(function(data) {
+            if (!data || !data.posts || data.posts.length === 0) {
+                var emptyIcon = currentRoomFeedType === 'tea_talk' ? 'fa-mug-hot' : 'fa-thumbs-up';
+                var emptyText = currentRoomFeedType === 'tea_talk' ? 'No tea yet. Be the first to spill!' : 'No good guys posted yet.';
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas ' + emptyIcon + '" style="font-size:24px;display:block;margin-bottom:8px;color:#9b59b6"></i>' + emptyText + '</div>';
+                return;
+            }
+            var html = '';
+            data.posts.forEach(function(post) { html += roomRenderPost(post); });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">Failed to load feed.</p>';
+        });
+    }
+
+    function roomRenderPost(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = hubGetAvatarColor(authorName);
+        var likeCount = parseInt(post.like_count) || 0;
+        var replyCount = parseInt(post.reply_count) || 0;
+        var userLiked = post.user_liked === true || post.user_liked === 't';
+        var heartIcon = userLiked ? 'fas fa-heart' : 'far fa-heart';
+        var heartStyle = userLiked ? 'color:#e74c3c' : 'color:#8080A0';
+        var pinnedHtml = post.pinned ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(241,196,15,0.15);color:#f1c40f;margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : '';
+        var typeBadge = post.type === 'good_guys'
+            ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(46,204,113,0.15);color:#2ecc71">Good Guy</span> '
+            : '';
+        var u = getUser();
+        var isAuthor = u && post.author_id === u.id;
+        var isRoomAdmin = currentRoomData && (currentRoomData.myRole === 'admin' || currentRoomData.myRole === 'co_admin');
+
+        return '<div id="rp-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:18px;margin-bottom:10px">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' +
+                '<div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
+                '<div style="flex:1">' +
+                    '<div style="font-weight:600;font-size:13px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + typeBadge + pinnedHtml + '</div>' +
+                    '<div style="font-size:11px;color:#666;margin-top:1px">' + getTimeAgoFromDate(post.created_at) + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:14px">' + hubFormatBody(post.body) + '</div>' +
+            '<div style="display:flex;gap:14px;align-items:center">' +
+                '<button onclick="roomToggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="rl-' + post.id + '">' + likeCount + '</span></button>' +
+                '<button onclick="roomShowReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + '</button>' +
+                (isRoomAdmin ? '<button onclick="roomPinPost(' + post.id + ')" style="margin-left:auto;background:none;border:none;color:#f1c40f;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-thumbtack"></i></button>' : '') +
+                (isAuthor || isRoomAdmin ? '<button onclick="roomDeletePost(' + post.id + ')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
+            '</div>' +
+            '<div id="rr-' + post.id + '" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px"></div>' +
+        '</div>';
+    }
+
+    window.roomToggleLike = function(postId) {
+        apiFetch('/rooms/like?postId=' + postId, { method: 'POST' }).then(function(data) {
+            if (!data) return;
+            var countEl = document.getElementById('rl-' + postId);
+            if (countEl) {
+                var count = parseInt(countEl.textContent) || 0;
+                countEl.textContent = data.liked ? count + 1 : Math.max(0, count - 1);
+            }
+        });
+    };
+
+    window.roomShowReplies = function(postId) {
+        var container = document.getElementById('rr-' + postId);
+        if (!container) return;
+        if (container.style.display === 'block') { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        container.innerHTML = '<div style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Loading replies...</div>';
+
+        apiFetch('/rooms/replies?postId=' + postId).then(function(data) {
+            var html = '';
+            if (data && data.replies) {
+                data.replies.forEach(function(r) {
+                    html += '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+                        '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(r.author_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + (r.author_name || '?')[0].toUpperCase() + '</div>' +
+                        '<div><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(r.author_name || 'Anonymous') + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span><div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
+                    '</div>';
+                });
+            }
+            html += '<div style="display:flex;gap:8px;margin-top:10px">' +
+                '<input type="text" id="rri-' + postId + '" placeholder="Reply..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:\'Inter\',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor=\'#9b59b6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.08)\'">' +
+                '<button onclick="roomSubmitReply(' + postId + ')" style="background:#9b59b6;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reply</button>' +
+            '</div>';
+            container.innerHTML = html;
+        });
+    };
+
+    window.roomSubmitReply = function(postId) {
+        var input = document.getElementById('rri-' + postId);
+        if (!input || !input.value.trim()) return;
+        apiFetch('/rooms/replies?postId=' + postId, {
+            method: 'POST',
+            body: JSON.stringify({ text: input.value.trim() })
+        }).then(function(data) {
+            if (data && data.id) {
+                roomShowReplies(postId); // Close
+                setTimeout(function() { roomShowReplies(postId); }, 100); // Re-open with new reply
+            }
+        });
+    };
+
+    window.roomPinPost = function(postId) {
+        apiFetch('/rooms/pin?postId=' + postId, { method: 'POST' }).then(function(data) {
+            if (data) loadRoomFeed();
+        });
+    };
+
+    window.roomDeletePost = function(postId) {
+        if (!confirm('Delete this post?')) return;
+        apiFetch('/rooms/post?postId=' + postId, { method: 'DELETE' }).then(function(data) {
+            if (data && data.success) {
+                var el = document.getElementById('rp-' + postId);
+                if (el) el.remove();
+            }
+        });
+    };
+
+    window.submitRoomPost = function() {
+        var textEl = document.getElementById('rv-post-text');
+        if (!textEl || !textEl.value.trim()) { showToast('Write something first', true); return; }
+
+        apiFetch('/rooms/post', {
+            method: 'POST',
+            body: JSON.stringify({ roomId: currentRoomId, type: currentRoomFeedType, text: textEl.value.trim() })
+        }).then(function(data) {
+            if (data && data.id) {
+                textEl.value = '';
+                loadRoomFeed();
+                showToast('Posted!');
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        }).catch(function() { showToast('Failed to post', true); });
+    };
+
+    window.toggleRoomInfo = function() {
+        var panel = document.getElementById('rv-info-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.copyRoomInviteCode = function() {
+        var code = document.getElementById('rv-invite-code');
+        if (code) {
+            navigator.clipboard.writeText(code.value).then(function() { showToast('Invite code copied!'); });
+        }
+    };
+
+    // Create Room
+    window.showCreateRoomModal = function() {
+        document.getElementById('modal-create-room').style.display = 'flex';
+        document.getElementById('cr-error').style.display = 'none';
+    };
+
+    window.submitCreateRoom = function() {
+        var name = document.getElementById('cr-name').value.trim();
+        var letters = document.getElementById('cr-letters').value.trim();
+        if (!name || !letters) {
+            var errEl = document.getElementById('cr-error');
+            errEl.textContent = 'Room name and Greek letters are required.';
+            errEl.style.display = 'block';
+            return;
+        }
+        var btn = document.getElementById('cr-submit-btn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        apiFetch('/rooms/create', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: name,
+                greekLetters: letters,
+                chapter: document.getElementById('cr-chapter').value.trim() || null,
+                university: document.getElementById('cr-university').value.trim() || null,
+                scope: document.getElementById('cr-scope').value,
+                description: document.getElementById('cr-description').value.trim() || null,
+                colorPrimary: document.getElementById('cr-color1').value,
+                colorSecondary: document.getElementById('cr-color2').value
+            })
+        }).then(function(data) {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Create Room';
+            if (data && data.id) {
+                closeModal('modal-create-room');
+                showToast('Room created! Invite code: ' + data.invite_code);
+                // Clear form
+                ['cr-name','cr-letters','cr-chapter','cr-university','cr-description'].forEach(function(id) { document.getElementById(id).value = ''; });
+                loadMyRooms();
+                openRoom(data.id);
+            } else if (data && data.error) {
+                var errEl = document.getElementById('cr-error');
+                errEl.textContent = data.error;
+                errEl.style.display = 'block';
+            }
+        }).catch(function() {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Create Room';
+            showToast('Failed to create room', true);
+        });
+    };
+
+    // Join Room
+    window.showJoinRoomModal = function() {
+        document.getElementById('modal-join-room').style.display = 'flex';
+        document.getElementById('jr-error').style.display = 'none';
+        document.getElementById('jr-success').style.display = 'none';
+        document.getElementById('jr-code').value = '';
+    };
+
+    window.submitJoinRoom = function() {
+        var code = document.getElementById('jr-code').value.trim();
+        if (!code) {
+            var e = document.getElementById('jr-error');
+            e.textContent = 'Enter an invite code.';
+            e.style.display = 'block';
+            return;
+        }
+        var btn = document.getElementById('jr-submit-btn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Requesting...';
+
+        apiFetch('/rooms/join', {
+            method: 'POST',
+            body: JSON.stringify({ inviteCode: code })
+        }).then(function(data) {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Request to Join';
+            document.getElementById('jr-error').style.display = 'none';
+            if (data && data.message) {
+                var s = document.getElementById('jr-success');
+                s.textContent = data.message + (data.roomName ? ' (' + data.roomName + ')' : '');
+                s.style.display = 'block';
+                setTimeout(function() { closeModal('modal-join-room'); loadMyRooms(); }, 2000);
+            } else if (data && data.error) {
+                var e = document.getElementById('jr-error');
+                e.textContent = data.error;
+                e.style.display = 'block';
+            }
+        }).catch(function() {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Request to Join';
+            showToast('Failed to join', true);
+        });
+    };
+
+    // Member Actions (admin)
+    window.roomMemberAction = function(membershipId, action, muteDuration) {
+        apiFetch('/rooms/members?roomId=' + currentRoomId, {
+            method: 'PUT',
+            body: JSON.stringify({ membershipId: membershipId, action: action, muteDuration: muteDuration || '24h' })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Member ' + data.action);
+                loadRoomView(); // Refresh
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        });
+    };
+
+    // Room Settings
+    window.showRoomSettingsModal = function() {
+        if (!currentRoomData || !currentRoomData.room) return;
+        var r = currentRoomData.room;
+        document.getElementById('rs-name').value = r.name || '';
+        document.getElementById('rs-description').value = r.description || '';
+        document.getElementById('rs-color1').value = r.color_primary || '#9b59b6';
+        document.getElementById('rs-color2').value = r.color_secondary || '#1A1A2E';
+        document.getElementById('rs-error').style.display = 'none';
+        document.getElementById('modal-room-settings').style.display = 'flex';
+    };
+
+    window.submitRoomSettings = function() {
+        apiFetch('/rooms/settings', {
+            method: 'PUT',
+            body: JSON.stringify({
+                roomId: currentRoomId,
+                name: document.getElementById('rs-name').value.trim(),
+                description: document.getElementById('rs-description').value.trim(),
+                colorPrimary: document.getElementById('rs-color1').value,
+                colorSecondary: document.getElementById('rs-color2').value
+            })
+        }).then(function(data) {
+            if (data && data.id) {
+                closeModal('modal-room-settings');
+                showToast('Settings saved');
+                loadRoomView();
+            } else if (data && data.error) {
+                var e = document.getElementById('rs-error');
+                e.textContent = data.error;
+                e.style.display = 'block';
+            }
+        });
+    };
+
+    // Regenerate Code
+    window.regenerateRoomCode = function() {
+        if (!confirm('This will invalidate the current invite code. Continue?')) return;
+        apiFetch('/rooms/regenerate-code?roomId=' + currentRoomId, { method: 'POST' }).then(function(data) {
+            if (data && data.inviteCode) {
+                document.getElementById('rv-invite-code').value = data.inviteCode;
+                showToast('New code: ' + data.inviteCode);
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        });
+    };
+
+    // Leave Room
+    window.leaveRoom = function() {
+        if (!confirm('Are you sure you want to leave this room?')) return;
+        apiFetch('/rooms/leave?roomId=' + currentRoomId, { method: 'POST' }).then(function(data) {
+            if (data && data.success) {
+                showToast('You left the room');
+                currentRoomId = null;
+                currentRoomData = null;
+                switchHubTab('sororityrooms');
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        });
+    };
+
+    // Close modal helper
+    window.closeModal = window.closeModal || function(id) {
+        var el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    };
+
     (function checkUpgradeSuccess() {
         var params = new URLSearchParams(window.location.search);
         if (params.get('upgrade') === 'success') {

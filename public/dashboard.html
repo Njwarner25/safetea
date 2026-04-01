@@ -1944,6 +1944,7 @@
         <div class="post-modal">
             <h3>Share with your community</h3>
             <textarea id="community-post-text" placeholder="What do you want your city to know?"></textarea>
+            <div style="text-align:right;margin:-4px 0 8px"><a href="/guidelines" target="_blank" style="color:#8080A0;font-size:11px;text-decoration:none"><i class="fas fa-book" style="margin-right:4px"></i>Community Guidelines</a></div>
             <div class="post-modal-photo-section">
                 <label class="post-modal-photo-btn" for="post-photo-input">
                     <i class="fas fa-camera"></i> Add Photo
@@ -2175,6 +2176,20 @@
                             <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SOS — Record & Protect <span style="font-size:10px;background:rgba(232,160,181,0.2);color:#E8A0B5;padding:2px 6px;border-radius:4px;font-weight:500;margin-left:6px">SafeTea+</span></h4>
                             <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Fake Call, Record & Alert, or Call 911 — your complete emergency toolkit.</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ====== SORORITY ROOMS (community card) ====== -->
+                <div style="margin-bottom:20px">
+                    <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-users" style="color:#9b59b6;font-size:13px"></i> Community</h3>
+
+                    <div onclick="switchHubTab('sororityrooms')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(155,89,182,0.1),rgba(155,89,182,0.04));border:1px solid rgba(155,89,182,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(155,89,182,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(155,89,182,0.2)'">
+                        <div style="min-width:44px;height:44px;background:rgba(155,89,182,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="font-size:20px;color:#9b59b6"></i></div>
+                        <div style="flex:1">
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Sorority Rooms</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Private spaces for your chapter. Share tea, hype good guys, and stay connected.</p>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </div>
                 </div>
 
@@ -2544,6 +2559,201 @@
                 </div>
             </div>
 
+            <!-- HUB: SORORITY ROOMS -->
+            <div id="hub-sororityrooms" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
+
+                <!-- Sorority Rooms Header -->
+                <div style="margin-bottom:20px">
+                    <h2 style="color:#fff;font-size:20px;display:flex;align-items:center;gap:10px"><i class="fas fa-door-open" style="color:#9b59b6"></i> Sorority Rooms</h2>
+                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Private, invite-only spaces for your chapter and sisters.</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+                    <button onclick="showCreateRoomModal()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-plus"></i> Create Room</button>
+                    <button onclick="showJoinRoomModal()" style="background:#22223A;color:#9b59b6;border:1px solid rgba(155,89,182,0.3);padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-key"></i> Join Room</button>
+                </div>
+
+                <!-- My Rooms List -->
+                <div id="sr-my-rooms" style="margin-bottom:20px">
+                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading your rooms...</div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="sr-empty-state" style="display:none;text-align:center;padding:40px 20px">
+                    <div style="width:64px;height:64px;background:rgba(155,89,182,0.12);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-door-open" style="font-size:28px;color:#9b59b6"></i></div>
+                    <h3 style="color:#fff;font-size:18px;margin-bottom:8px">No Rooms Yet</h3>
+                    <p style="color:#8080A0;font-size:14px;line-height:1.5;max-width:300px;margin:0 auto">Create a private room for your sorority chapter or join one with an invite code.</p>
+                </div>
+            </div>
+
+            <!-- HUB: ROOM VIEW (individual room) -->
+            <div id="hub-roomview" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('sororityrooms')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Rooms</button>
+
+                <!-- Room Header (branded) -->
+                <div id="rv-header" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;margin-bottom:16px">
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+                        <div id="rv-logo" style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;background:linear-gradient(135deg,#9b59b6,#8e44ad)"></div>
+                        <div style="flex:1">
+                            <h2 id="rv-name" style="color:#fff;font-size:18px;font-weight:700;margin-bottom:2px"></h2>
+                            <div id="rv-chapter" style="color:#8080A0;font-size:13px"></div>
+                        </div>
+                        <button id="rv-info-btn" onclick="toggleRoomInfo()" style="background:rgba(155,89,182,0.12);border:none;color:#9b59b6;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:14px"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                    <div style="display:flex;gap:12px;font-size:12px;color:#8080A0">
+                        <span id="rv-member-count"><i class="fas fa-users"></i> 0 members</span>
+                        <span id="rv-scope"><i class="fas fa-globe"></i> Chapter</span>
+                    </div>
+                </div>
+
+                <!-- Room Info Panel (hidden by default) -->
+                <div id="rv-info-panel" style="display:none;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;margin-bottom:16px">
+                    <h3 style="color:#fff;font-size:15px;margin-bottom:12px"><i class="fas fa-info-circle" style="color:#9b59b6"></i> Room Info</h3>
+                    <div id="rv-description" style="color:#8080A0;font-size:13px;line-height:1.6;margin-bottom:16px"></div>
+                    <div style="margin-bottom:16px">
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Invite Code</label>
+                        <div style="display:flex;gap:8px">
+                            <input type="text" id="rv-invite-code" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#9b59b6;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px">
+                            <button onclick="copyRoomInviteCode()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <div id="rv-members-list" style="margin-bottom:16px"></div>
+                    <div id="rv-admin-panel" style="display:none;margin-bottom:16px">
+                        <h4 style="color:#fff;font-size:14px;margin-bottom:10px"><i class="fas fa-crown" style="color:#f39c12"></i> Admin Panel</h4>
+                        <div id="rv-pending-list" style="margin-bottom:12px"></div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <button onclick="showRoomSettingsModal()" style="background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.2);color:#9b59b6;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-cog"></i> Settings</button>
+                            <button onclick="regenerateRoomCode()" style="background:rgba(241,196,15,0.12);border:1px solid rgba(241,196,15,0.2);color:#f1c40f;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sync-alt"></i> New Code</button>
+                        </div>
+                    </div>
+                    <button onclick="leaveRoom()" id="rv-leave-btn" style="width:100%;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:12px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sign-out-alt"></i> Leave Room</button>
+                </div>
+
+                <!-- Feed Type Tabs -->
+                <div style="display:flex;gap:8px;margin-bottom:16px">
+                    <button id="rv-tab-tea" onclick="switchRoomFeedTab('tea_talk')" style="flex:1;background:#9b59b6;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
+                    <button id="rv-tab-good" onclick="switchRoomFeedTab('good_guys')" style="flex:1;background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-thumbs-up"></i> Good Guys</button>
+                </div>
+
+                <!-- Create Post in Room -->
+                <div class="create-post" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px">
+                    <textarea id="rv-post-text" placeholder="Share with your sisters..." rows="3" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
+                    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                        <button onclick="submitRoomPost()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                </div>
+
+                <!-- Room Feed -->
+                <div id="rv-feed">
+                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading feed...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CREATE ROOM MODAL -->
+    <div id="modal-create-room" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
+        <div style="background:#1A1A2E;border:1px solid rgba(155,89,182,0.2);border-radius:16px;padding:24px;max-width:440px;width:90%;max-height:85vh;overflow-y:auto;margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h3 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:8px"><i class="fas fa-plus-circle" style="color:#9b59b6"></i> Create Room</h3>
+                <button onclick="closeModal('modal-create-room')" style="background:none;border:none;color:#8080A0;font-size:18px;cursor:pointer">&times;</button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px">
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Room Name *</label>
+                    <input type="text" id="cr-name" placeholder="e.g. AKA - UChicago" maxlength="100" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                </div>
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Greek Letters *</label>
+                    <input type="text" id="cr-letters" placeholder="e.g. AKA, DST, ZTA" maxlength="20" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Chapter</label>
+                        <input type="text" id="cr-chapter" placeholder="e.g. Beta Chapter" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                    </div>
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">University / City</label>
+                        <input type="text" id="cr-university" placeholder="e.g. University of Chicago" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                    </div>
+                </div>
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Scope</label>
+                    <select id="cr-scope" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+                        <option value="chapter">Chapter Only (local)</option>
+                        <option value="university">University-Wide (all chapters)</option>
+                        <option value="regional">Regional (multi-campus)</option>
+                        <option value="national">National (all chapters)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Description</label>
+                    <textarea id="cr-description" placeholder="What is this room for?" rows="2" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Primary Color</label>
+                        <input type="color" id="cr-color1" value="#9b59b6" style="width:100%;height:40px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:2px;cursor:pointer">
+                    </div>
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Secondary Color</label>
+                        <input type="color" id="cr-color2" value="#1A1A2E" style="width:100%;height:40px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:2px;cursor:pointer">
+                    </div>
+                </div>
+                <div id="cr-error" style="display:none;color:#e74c3c;font-size:13px;background:rgba(231,76,60,0.1);padding:10px;border-radius:8px"></div>
+                <button id="cr-submit-btn" onclick="submitCreateRoom()" style="width:100%;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:4px"><i class="fas fa-plus"></i> Create Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOIN ROOM MODAL -->
+    <div id="modal-join-room" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
+        <div style="background:#1A1A2E;border:1px solid rgba(155,89,182,0.2);border-radius:16px;padding:24px;max-width:400px;width:90%;margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h3 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:8px"><i class="fas fa-key" style="color:#9b59b6"></i> Join Room</h3>
+                <button onclick="closeModal('modal-join-room')" style="background:none;border:none;color:#8080A0;font-size:18px;cursor:pointer">&times;</button>
+            </div>
+            <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Enter the invite code shared by your room admin.</p>
+            <input type="text" id="jr-code" placeholder="SAFETEA-AKA-XXXX" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 14px;color:#9b59b6;font-family:'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-align:center;outline:none;box-sizing:border-box;margin-bottom:12px" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+            <div id="jr-error" style="display:none;color:#e74c3c;font-size:13px;background:rgba(231,76,60,0.1);padding:10px;border-radius:8px;margin-bottom:12px"></div>
+            <div id="jr-success" style="display:none;color:#2ecc71;font-size:13px;background:rgba(46,204,113,0.1);padding:10px;border-radius:8px;margin-bottom:12px"></div>
+            <button id="jr-submit-btn" onclick="submitJoinRoom()" style="width:100%;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sign-in-alt"></i> Request to Join</button>
+        </div>
+    </div>
+
+    <!-- ROOM SETTINGS MODAL -->
+    <div id="modal-room-settings" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
+        <div style="background:#1A1A2E;border:1px solid rgba(155,89,182,0.2);border-radius:16px;padding:24px;max-width:440px;width:90%;max-height:80vh;overflow-y:auto;margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h3 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:8px"><i class="fas fa-cog" style="color:#9b59b6"></i> Room Settings</h3>
+                <button onclick="closeModal('modal-room-settings')" style="background:none;border:none;color:#8080A0;font-size:18px;cursor:pointer">&times;</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Room Name</label>
+                    <input type="text" id="rs-name" maxlength="100" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div>
+                    <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Description</label>
+                    <textarea id="rs-description" rows="2" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;box-sizing:border-box"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Primary Color</label>
+                        <input type="color" id="rs-color1" style="width:100%;height:40px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:2px;cursor:pointer">
+                    </div>
+                    <div>
+                        <label style="color:#8080A0;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Secondary Color</label>
+                        <input type="color" id="rs-color2" style="width:100%;height:40px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:2px;cursor:pointer">
+                    </div>
+                </div>
+                <div id="rs-error" style="display:none;color:#e74c3c;font-size:13px;background:rgba(231,76,60,0.1);padding:10px;border-radius:8px"></div>
+                <button onclick="submitRoomSettings()" style="width:100%;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
         </div>
     </div>
 
@@ -3504,6 +3714,10 @@
         .then(function(data) {
             btn.textContent = 'Post';
             btn.disabled = false;
+            if (data.error === 'full_name_detected' || data.type === 'full_name_detected') {
+                showFullNameBlockModal(data.names, data.suggestion);
+                return;
+            }
             if (data.error) {
                 showToast(data.error);
                 return;
@@ -3517,6 +3731,27 @@
             btn.disabled = false;
             showToast('Failed to post. Try again.');
         });
+    }
+
+    function showFullNameBlockModal(names, suggestion) {
+        var existing = document.getElementById('fullname-block-modal');
+        if (existing) existing.remove();
+        var nameList = (names || []).map(function(n) { return '<strong style="color:#E8A0B5">' + n + '</strong>'; }).join(', ');
+        var modal = document.createElement('div');
+        modal.id = 'fullname-block-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;';
+        modal.innerHTML = '<div style="background:#22223A;border-radius:16px;padding:32px;max-width:440px;width:100%;text-align:center;border:1px solid rgba(232,160,181,0.2)">'
+            + '<div style="font-size:48px;margin-bottom:16px">&#9888;&#65039;</div>'
+            + '<h3 style="color:#fff;font-size:20px;margin-bottom:12px">Full Name Detected</h3>'
+            + '<p style="color:#C8C8E0;font-size:14px;line-height:1.6;margin-bottom:16px">Your post contains a full name: ' + nameList + '</p>'
+            + '<p style="color:#C8C8E0;font-size:14px;line-height:1.6;margin-bottom:8px">To protect privacy, please use <strong style="color:#E8A0B5">first name + last initial</strong> instead.</p>'
+            + (suggestion ? '<div style="background:#1A1A2E;border-radius:10px;padding:12px;margin:16px 0;border-left:3px solid #E8A0B5;text-align:left"><span style="color:#8080A0;font-size:12px;display:block;margin-bottom:4px">Suggested edit:</span><span style="color:#fff;font-size:14px">' + suggestion + '</span></div>' : '')
+            + '<p style="color:#8080A0;font-size:12px;margin-bottom:20px">Read our <a href="/guidelines" style="color:#E8A0B5" target="_blank">Community Guidelines</a> for more info.</p>'
+            + '<div style="display:flex;gap:10px;justify-content:center">'
+            + '<button onclick="document.getElementById(\'fullname-block-modal\').remove()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">Edit My Post</button>'
+            + '<button onclick="document.getElementById(\'fullname-block-modal\').remove();closePostModal()" style="background:rgba(255,255,255,0.06);color:#C8C8E0;border:1px solid rgba(255,255,255,0.1);padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:Inter,sans-serif">Cancel Post</button>'
+            + '</div></div>';
+        document.body.appendChild(modal);
     }
 
     // Close modals on overlay/background click

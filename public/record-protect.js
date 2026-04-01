@@ -91,6 +91,11 @@
                     '</div>' +
                 '</div>' +
 
+                // Emergency Contacts link
+                '<div id="sos-contacts-link" style="text-align:center;margin-bottom:12px">' +
+                    '<a href="#" style="color:#E8A0B5;font-size:12px;text-decoration:none"><i class="fas fa-user-shield"></i> Manage Emergency Contacts</a>' +
+                '</div>' +
+
                 // Cancel
                 '<button id="sos-cancel" style="width:100%;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:14px;border-radius:12px;font-size:14px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-times"></i> Cancel</button>' +
             '</div>';
@@ -105,6 +110,7 @@
         // Wire up handlers
         document.getElementById('sos-cancel').onclick = function() { backdrop.remove(); };
         backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
+        document.getElementById('sos-contacts-link').onclick = function(e) { e.preventDefault(); backdrop.remove(); window.showEmergencyContacts(); };
 
         if (paid) {
             document.getElementById('sos-opt-fakecall').onclick = function() { backdrop.remove(); triggerFakeCall(); };
@@ -959,6 +965,130 @@
             try { var s = JSON.parse(localStorage.getItem('safetea_fakecall_settings')); if (s && s.phoneOS) testOS = s.phoneOS; } catch(e) {}
             showFakeIncomingCall(name, Promise.resolve(null), testOS);
         };
+    };
+
+    // ============ EMERGENCY CONTACTS MANAGEMENT ============
+    window.showEmergencyContacts = function() {
+        var backdrop = document.createElement('div');
+        backdrop.id = 'ec-modal';
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+
+        backdrop.innerHTML =
+            '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto">' +
+                '<h3 style="color:#fff;font-size:17px;margin-bottom:4px"><i class="fas fa-user-shield" style="color:#e74c3c"></i> Emergency Contacts</h3>' +
+                '<p style="color:#8080A0;font-size:12px;margin-bottom:20px">Up to 2 contacts who get notified during Record & Alert</p>' +
+
+                '<div id="ec-list" style="margin-bottom:16px">' +
+                    '<p style="color:#555;font-size:12px;text-align:center">Loading...</p>' +
+                '</div>' +
+
+                '<div id="ec-add-form" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:16px">' +
+                    '<p style="color:#C0C0D0;font-size:13px;font-weight:600;margin-bottom:10px"><i class="fas fa-plus-circle" style="color:#E8A0B5"></i> Add Contact</p>' +
+                    '<input id="ec-name" type="text" placeholder="Name (e.g. Mom, Sarah)" maxlength="100" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:8px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
+                    '<input id="ec-phone" type="tel" placeholder="Phone number" maxlength="20" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
+                    '<button id="ec-add-btn" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Add Contact</button>' +
+                '</div>' +
+
+                '<button id="ec-close" style="width:100%;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px;border-radius:10px;font-size:14px;cursor:pointer;font-family:\'Inter\',sans-serif">Done</button>' +
+            '</div>';
+
+        document.body.appendChild(backdrop);
+        backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
+        document.getElementById('ec-close').onclick = function() { backdrop.remove(); };
+
+        // Load contacts
+        loadEmergencyContacts();
+
+        // Add contact handler
+        document.getElementById('ec-add-btn').onclick = function() {
+            var name = document.getElementById('ec-name').value.trim();
+            var phone = document.getElementById('ec-phone').value.trim();
+            if (!name || !phone) {
+                if (typeof showToast === 'function') showToast('Please enter both name and phone number');
+                return;
+            }
+            var btn = document.getElementById('ec-add-btn');
+            btn.textContent = 'Adding...';
+            btn.disabled = true;
+            fetch('/api/recording/contacts', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ contactName: name, contactPhone: phone })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.textContent = 'Add Contact';
+                btn.disabled = false;
+                if (data.success) {
+                    document.getElementById('ec-name').value = '';
+                    document.getElementById('ec-phone').value = '';
+                    loadEmergencyContacts();
+                    if (typeof showToast === 'function') showToast('Contact added');
+                } else {
+                    if (typeof showToast === 'function') showToast(data.error || 'Failed to add contact');
+                }
+            })
+            .catch(function() {
+                btn.textContent = 'Add Contact';
+                btn.disabled = false;
+                if (typeof showToast === 'function') showToast('Network error');
+            });
+        };
+    };
+
+    function loadEmergencyContacts() {
+        var list = document.getElementById('ec-list');
+        if (!list) return;
+        fetch('/api/recording/contacts', { headers: authHeaders() })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.contacts || data.contacts.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:16px 0">' +
+                    '<i class="fas fa-user-plus" style="font-size:24px;color:#333;margin-bottom:8px;display:block"></i>' +
+                    '<p style="color:#555;font-size:12px">No emergency contacts yet.<br>Add up to 2 contacts below.</p>' +
+                '</div>';
+                // Show add form
+                var form = document.getElementById('ec-add-form');
+                if (form) form.style.display = 'block';
+                return;
+            }
+            var html = '';
+            data.contacts.forEach(function(c) {
+                html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">' +
+                    '<div style="display:flex;align-items:center;gap:10px">' +
+                        '<div style="width:36px;height:36px;background:rgba(231,76,60,0.12);border-radius:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user" style="font-size:14px;color:#e74c3c"></i></div>' +
+                        '<div>' +
+                            '<p style="color:#fff;font-size:13px;font-weight:600;margin:0">' + c.contact_name + '</p>' +
+                            '<p style="color:#8080A0;font-size:11px;margin:0">' + c.contact_phone + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button onclick="removeEmergencyContact(' + c.id + ')" style="background:rgba(231,76,60,0.1);border:none;width:30px;height:30px;border-radius:15px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-trash-alt" style="font-size:12px;color:#e74c3c"></i></button>' +
+                '</div>';
+            });
+            list.innerHTML = html;
+            // Hide add form if already 2 contacts
+            var form = document.getElementById('ec-add-form');
+            if (form) form.style.display = data.contacts.length >= 2 ? 'none' : 'block';
+        })
+        .catch(function() {
+            list.innerHTML = '<p style="color:#e74c3c;font-size:12px;text-align:center">Failed to load contacts</p>';
+        });
+    }
+
+    window.removeEmergencyContact = function(contactId) {
+        if (!confirm('Remove this emergency contact?')) return;
+        fetch('/api/recording/contacts?id=' + contactId, {
+            method: 'DELETE',
+            headers: authHeaders()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                loadEmergencyContacts();
+                if (typeof showToast === 'function') showToast('Contact removed');
+            }
+        })
+        .catch(function() {});
     };
 
     // ============ INIT ============

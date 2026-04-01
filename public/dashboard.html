@@ -1789,6 +1789,106 @@
         /* Pink badge colors stay pink */
         /* Green success colors stay green */
 
+        /* ===== ROOMS / SORORITY — Light Mode ===== */
+        [data-theme="light"] #hub-sororityrooms div[style*="background:#22223A"],
+        [data-theme="light"] #hub-sororityrooms div[style*="background: #22223A"] {
+            background: var(--st-surface) !important;
+            border: 1px solid var(--st-border) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+        }
+        [data-theme="light"] #hub-sororityrooms div[style*="background:#1A1A2E"],
+        [data-theme="light"] #hub-sororityrooms div[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-sororityrooms input[style*="background:#141428"],
+        [data-theme="light"] #hub-sororityrooms input[style*="background:#1A1A2E"],
+        [data-theme="light"] #hub-sororityrooms textarea[style*="background:#141428"],
+        [data-theme="light"] #hub-sororityrooms textarea[style*="background:#1A1A2E"],
+        [data-theme="light"] #hub-sororityrooms select[style*="background:#141428"] {
+            background: var(--st-surface-soft) !important;
+            border-color: var(--st-border) !important;
+            color: var(--st-text) !important;
+        }
+        /* Room post cards — fix white-on-white borders */
+        [data-theme="light"] #hub-sororityrooms div[style*="border:1px solid rgba(255,255,255"] {
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-sororityrooms img[style*="border:1px solid rgba(255,255,255"] {
+            border-color: var(--st-border) !important;
+        }
+        /* Room post text */
+        [data-theme="light"] #hub-sororityrooms div[style*="color:#ccc"],
+        [data-theme="light"] #hub-sororityrooms span[style*="color:#ccc"],
+        [data-theme="light"] #hub-sororityrooms p[style*="color:#ccc"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #hub-sororityrooms div[style*="color:#666"],
+        [data-theme="light"] #hub-sororityrooms span[style*="color:#666"] {
+            color: #888 !important;
+        }
+        /* Room reply borders */
+        [data-theme="light"] #hub-sororityrooms div[style*="border-top:1px solid rgba(255,255,255"] {
+            border-top-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-sororityrooms div[style*="border-bottom:1px solid rgba(255,255,255"] {
+            border-bottom-color: var(--st-border) !important;
+        }
+
+        /* ===== Photo Verification — Light Mode ===== */
+        [data-theme="light"] #hub-catfish div[style*="border:1px solid rgba(255,255,255"],
+        [data-theme="light"] #hub-catfish div[style*="border:2px dashed rgba(255,255,255"] {
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #hub-catfish div[style*="background:rgba(255,255,255,0.04)"],
+        [data-theme="light"] #hub-catfish div[style*="background:rgba(255,255,255,0.03)"] {
+            background: var(--st-surface-soft) !important;
+        }
+
+        /* ===== Global: invisible light-mode borders fix ===== */
+        [data-theme="light"] div[style*="border:1px solid rgba(255,255,255,0.06)"],
+        [data-theme="light"] div[style*="border:1px solid rgba(255,255,255,0.08)"],
+        [data-theme="light"] div[style*="border:1px solid rgba(255,255,255,0.1)"] {
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] div[style*="border-top:1px solid rgba(255,255,255"] {
+            border-top-color: var(--st-border) !important;
+        }
+        [data-theme="light"] div[style*="border-bottom:1px solid rgba(255,255,255"] {
+            border-bottom-color: var(--st-border) !important;
+        }
+        /* Semi-transparent white backgrounds → light surface */
+        [data-theme="light"] div[style*="background:rgba(255,255,255,0.04)"],
+        [data-theme="light"] div[style*="background:rgba(255,255,255,0.06)"],
+        [data-theme="light"] div[style*="background:rgba(255,255,255,0.08)"] {
+            background: var(--st-surface-soft) !important;
+        }
+        /* Button text that's white in dark mode */
+        [data-theme="light"] button[style*="color:#8080A0"] {
+            color: #777 !important;
+        }
+        /* Community feed post cards */
+        [data-theme="light"] #tab-community div[style*="border:1px solid rgba(255,255,255"] {
+            border-color: var(--st-border) !important;
+        }
+        [data-theme="light"] #tab-community div[style*="color:#ccc"] {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] #tab-community div[style*="color:#666"],
+        [data-theme="light"] #tab-community span[style*="color:#666"] {
+            color: #888 !important;
+        }
+        /* Home section titles */
+        [data-theme="light"] .home-section-title {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .home-card-title {
+            color: var(--st-text) !important;
+        }
+        [data-theme="light"] .home-card-desc {
+            color: var(--st-text-soft) !important;
+        }
+
     </style>
 </head>
 <body>

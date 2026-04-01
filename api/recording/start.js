@@ -51,19 +51,27 @@ module.exports = async function handler(req, res) {
       [sessionKey, user.id, latitude || null, longitude || null]
     );
 
-    // Send SMS to trusted contacts
+    // Send SMS to trusted contacts (recording_contacts first, then date_trusted_contacts fallback)
     let contactsNotified = 0;
-    const activeCheckout = await getOne(
-      `SELECT * FROM date_checkouts WHERE user_id = $1 AND status IN ('checked_out', 'active') ORDER BY created_at DESC LIMIT 1`,
-      [user.id]
-    );
-
     let contacts = [];
-    if (activeCheckout) {
+    try {
       contacts = await getMany(
-        `SELECT * FROM date_trusted_contacts WHERE checkout_id = $1`,
-        [activeCheckout.id]
+        'SELECT contact_name, contact_phone FROM recording_contacts WHERE user_id = $1',
+        [user.id]
       );
+    } catch (e) { /* table may not exist yet */ }
+
+    if (contacts.length === 0) {
+      const activeCheckout = await getOne(
+        `SELECT * FROM date_checkouts WHERE user_id = $1 AND status IN ('checked_out', 'active') ORDER BY created_at DESC LIMIT 1`,
+        [user.id]
+      );
+      if (activeCheckout) {
+        contacts = await getMany(
+          `SELECT * FROM date_trusted_contacts WHERE checkout_id = $1`,
+          [activeCheckout.id]
+        );
+      }
     }
 
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;

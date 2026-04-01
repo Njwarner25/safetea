@@ -253,8 +253,8 @@ module.exports = async function handler(req, res) {
         }
 
         const newPost = await getOne(
-          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at, last_activity_at)
-           VALUES ($1, $2, $3, $4, $5, 'community', $6, $6) RETURNING id`,
+          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', $6) RETURNING id`,
           [userId, post.title, post.body, post.category, cityName, postDate.toISOString()]
         );
         postIds.push({ id: newPost.id, category: post.category });

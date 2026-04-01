@@ -30,6 +30,7 @@
         { "source": "/api/dates/share", "destination": "/api/dates/share" },
         { "source": "/api/dates/report", "destination": "/api/dates/report" },
         { "source": "/api/dates/location", "destination": "/api/dates/location" },
+        { "source": "/api/dates/delete", "destination": "/api/dates/delete" },
         { "source": "/api/dates/sos", "destination": "/api/dates/sos" },
         { "source": "/api/dates/migrate-sos", "destination": "/api/dates/migrate-sos" },
         { "source": "/api/dates/fake-call-script", "destination": "/api/dates/fake-call-script" },

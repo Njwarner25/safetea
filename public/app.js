@@ -588,24 +588,86 @@
         fetch('/api/dates/checkin', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ dateId: dateId })
+            body: JSON.stringify({ checkoutId: dateId })
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.error) { if (typeof showToast === 'function') showToast(data.error); return; }
             if (typeof showToast === 'function') showToast('Checked in safely! Your contacts have been notified.');
             if (activeDateTimer) clearInterval(activeDateTimer);
-            activeDateData = null;
 
-            // Reset UI
+            // Show completed date card with save/delete options
             var active = document.getElementById('dc-active');
-            var form = document.getElementById('dc-form');
             var homeActive = document.getElementById('home-active-date');
             if (active) active.style.display = 'none';
-            if (form) form.style.display = 'block';
             if (homeActive) homeActive.style.display = 'none';
+            showCompletedDate(activeDateData);
+            activeDateData = null;
         })
         .catch(function() { if (typeof showToast === 'function') showToast('Check-in failed. Please try again.'); });
+    };
+
+    function showCompletedDate(date) {
+        // Remove any existing completed card
+        var existing = document.getElementById('dc-completed');
+        if (existing) existing.remove();
+
+        var card = document.createElement('div');
+        card.id = 'dc-completed';
+        card.className = 'datecheck-card';
+        card.style.cssText = 'border:1px solid rgba(46,204,113,0.3);background:rgba(46,204,113,0.05);margin-bottom:16px';
+        card.innerHTML =
+            '<div style="text-align:center;margin-bottom:16px">' +
+                '<div style="font-size:48px;margin-bottom:8px">&#10004;&#65039;</div>' +
+                '<h3 style="color:#2ecc71;font-weight:700;margin:0 0 4px">Checked In Safely</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin:0">Your trusted contacts have been notified.</p>' +
+            '</div>' +
+            '<div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:16px">' +
+                '<div style="color:#fff;font-weight:600;font-size:15px">' + (date.date_name || date.dateName || 'Date') + '</div>' +
+                '<div style="color:#8080A0;font-size:13px;margin-top:2px">' + (date.venue_name || date.venueName || '') + '</div>' +
+                '<div style="color:#8080A0;font-size:12px;margin-top:2px">' + new Date(date.created_at || date.createdAt || Date.now()).toLocaleDateString() + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px">' +
+                '<button class="dc-btn dc-btn-success" style="flex:1" onclick="saveDateRecord(' + date.id + ')"><i class="fas fa-bookmark"></i> Save Date</button>' +
+                '<button class="dc-btn dc-btn-outline" style="flex:1;border-color:rgba(231,76,60,0.3);color:#e74c3c" onclick="deleteDateRecord(' + date.id + ')"><i class="fas fa-trash-alt"></i> Delete</button>' +
+            '</div>' +
+            '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="dismissCompletedDate()"><i class="fas fa-times"></i> Dismiss</button>';
+
+        // Insert before the form
+        var form = document.getElementById('dc-form');
+        if (form && form.parentNode) {
+            form.parentNode.insertBefore(card, form);
+        }
+    }
+
+    window.saveDateRecord = function(checkoutId) {
+        if (typeof showToast === 'function') showToast('Date saved to your history!');
+        dismissCompletedDate();
+    };
+
+    window.deleteDateRecord = function(checkoutId) {
+        if (!confirm('Delete this date record permanently? This cannot be undone.')) return;
+        fetch('/api/dates/delete', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ checkoutId: checkoutId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.error) { if (typeof showToast === 'function') showToast(data.error); return; }
+            if (typeof showToast === 'function') showToast('Date record deleted.');
+            dismissCompletedDate();
+            // Refresh history if visible
+            if (typeof loadDateHistory === 'function') loadDateHistory();
+        })
+        .catch(function() { if (typeof showToast === 'function') showToast('Failed to delete. Please try again.'); });
+    };
+
+    window.dismissCompletedDate = function() {
+        var completed = document.getElementById('dc-completed');
+        var form = document.getElementById('dc-form');
+        if (completed) completed.remove();
+        if (form) form.style.display = 'block';
     };
 
     window.triggerSOS = function() {

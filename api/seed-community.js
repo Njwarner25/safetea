@@ -136,22 +136,24 @@ module.exports = async function handler(req, res) {
           { author: 'BurbankBella', category: 'good-guys', title: 'Spilled wine on my dress — pure class', body: 'Good guy sighting! Went on a date and I accidentally spilled wine on my dress. I was mortified. This man didn\'t even flinch. He laughed it off, gave me his jacket to cover the stain, and said "now we have a great story." No judgment, no awkwardness. Pure class.' }
         ]
       },
-      'Boston': {
+      'Philadelphia': {
         accounts: [
-          { name: 'BackBayBabe', color: '#E8A0B5' },
-          { name: 'SomervilleSis', color: '#A0C4E8' },
-          { name: 'CambridgeCareful', color: '#C4E8A0' },
-          { name: 'BeaconHillBae', color: '#E8C4A0' },
-          { name: 'JPJewel', color: '#C4A0E8' },
-          { name: 'SouthieSweetie', color: '#A0E8C4' },
-          { name: 'BrooklineBelle', color: '#E8A0C4' }
+          { name: 'RittenhouseRose', color: '#E8A0B5' },
+          { name: 'FishTownFemme', color: '#A0C4E8' },
+          { name: 'ManayunkMaven', color: '#C4E8A0' },
+          { name: 'OldCityOpal', color: '#E8C4A0' },
+          { name: 'SouthPhillySis', color: '#C4A0E8' },
+          { name: 'NoLibsNikki', color: '#A0E8C4' },
+          { name: 'UniversityCityU', color: '#E8A0C4' }
         ],
         posts: [
-          { author: 'BackBayBabe', category: 'tea-talk', title: 'Did NOT go to Harvard', body: 'Back Bay area warning. Guy on Hinge, says he went to Harvard. He did not go to Harvard. He went to a community college near Harvard. There is a difference. If he\'s lying about THAT what else is fabricated? Also his photos are from like 2020 based on the mask in one of them. Update your pics king. 📸' },
-          { author: 'SomervilleSis', category: 'tea-talk', title: '"Well actually" x7', body: 'Anyone dealt with a Somerville guy who\'s super into "intellectual conversation" but gets condescending the second you disagree with him? Had a date where he literally said "well actually" SEVEN times. I counted. After the seventh one I said "well actually I have to go." 😂' },
-          { author: 'CambridgeCareful', category: 'tea-talk', title: 'Called me "paranoid" for not liking empty bar', body: 'Putting this out there for safety. Met a guy from Cambridge area on Bumble. First date was great, very public, felt safe. Second date he insisted on a "quiet bar" that turned out to be basically empty. When I said I wasn\'t comfortable he got defensive and said I was "paranoid." Trust your gut. If a location doesn\'t feel right, leave. You don\'t owe anyone an explanation.' },
-          { author: 'BeaconHillBae', category: 'good-guys', title: 'He actually communicates', body: 'Can we normalize men who communicate? This guy I\'ve been seeing from Beacon Hill area texts me back within a reasonable time, tells me when he\'s busy instead of disappearing, and actually follows through on plans. After dating in Boston for 3 years this feels revolutionary. Low bar but he\'s clearing it with room to spare. 💚' },
-          { author: 'JPJewel', category: 'good-guys', title: 'Switched seats so I could see the door', body: 'Major green flag. On our first date he asked "is there anything that would make you more comfortable tonight?" No one has EVER asked me that. I told him I like sitting where I can see the door (anxiety thing) and he immediately switched seats without making it a big deal. That\'s awareness. That\'s empathy. That\'s a good one.' }
+          { author: 'RittenhouseRose', category: 'tea-talk', title: 'Rittenhouse Square "finance bro" warning', body: 'Ladies in Rittenhouse be careful with a guy on Hinge who claims he works in finance on Market Street. Very smooth talker, always picks expensive restaurants then "accidentally" leaves his card in the car. Three different girls from my friend group have been through the same thing with him. He is running a whole operation. Block on sight. 💳🚩' },
+          { author: 'FishTownFemme', category: 'tea-talk', title: 'Showed me pics of his ex the whole date', body: 'Fishtown area warning. Went on what was supposed to be a chill date at a coffee shop. This man pulled out his phone and showed me pictures of his ex for 20 minutes straight. Talking about how much he misses her. Sir this is a DATE. I am not your therapist. I wished him well and left. Emotionally unavailable doesn\'t even begin to cover it. 😩' },
+          { author: 'ManayunkMaven', category: 'tea-talk', title: 'Lied about his height AND his age', body: 'Has anyone matched with a guy near Manayunk who\'s on both Hinge and Bumble? He\'s listed as 6\'0 on one and 5\'9 on the other. Age is different on each app too. When I asked about it he said "those apps auto-fill wrong." No they don\'t. If the first thing you do is lie about the basics, I cannot trust anything else. Unmatched.' },
+          { author: 'OldCityOpal', category: 'good-guys', title: 'Walked me home even though it was out of his way', body: 'Giving a shoutout to a genuinely good man I met on Bumble. After our date in Old City he walked me all the way home even though his car was parked in the opposite direction. When I said he didn\'t have to he said "I\'d rather know you got home safe than save myself 15 minutes." We\'re 4 dates in and he has been nothing but consistent. They DO exist. 💚' },
+          { author: 'SouthPhillySis', category: 'good-guys', title: 'He remembered the little things', body: 'Appreciation post. This guy remembered that I mentioned I was nervous about a work presentation — on our second date. Texted me the morning of to wish me luck. After the presentation he asked how it went. Nobody has ever paid that much attention to what I say. It\'s the little things. Don\'t settle for someone who doesn\'t listen. 🥺' },
+          { author: 'NoLibsNikki', category: 'tea-talk', title: 'Followed me on Instagram after I said no', body: 'Northern Liberties area — went on one date with a guy who seemed nice. Decided there wasn\'t a spark and politely told him. He then found and followed me on Instagram, Twitter, AND LinkedIn. When I blocked him he made a new account. Had to make everything private. Please be careful about how much personal info you share early on. 😤' },
+          { author: 'UniversityCityU', category: 'good-guys', title: 'He asked for consent before every step', body: 'Green flag alert from University City area. This man asked "is it okay if I hold your hand?" on our third date. Asked before he kissed me. Asked before putting his arm around me. Some people might think that\'s too much but after dating men who just assumed, this felt like HEAVEN. Consent is the bare minimum but he made it feel special. Keeping this one. 💛' }
         ]
       },
       'New York': {

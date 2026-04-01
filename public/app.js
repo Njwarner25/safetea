@@ -2984,6 +2984,45 @@
         if (el) el.style.display = 'none';
     };
 
+    // ==================== AUTO-JOIN ROOM (from /join page) ====================
+    (function checkJoinRoom() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('joinroom') !== '1') return;
+
+        var roomCode = localStorage.getItem('safetea_join_room');
+        var refCode = localStorage.getItem('safetea_join_ref');
+
+        // Track referral if present
+        if (refCode) {
+            var u = getUser();
+            if (u) {
+                apiFetch('/referral/track', {
+                    method: 'POST',
+                    body: JSON.stringify({ referralCode: refCode, newUserId: u.id })
+                }).catch(function() {});
+            }
+            localStorage.removeItem('safetea_join_ref');
+        }
+
+        // Auto-join room if invite code present
+        if (roomCode) {
+            apiFetch('/rooms/join', {
+                method: 'POST',
+                body: JSON.stringify({ inviteCode: roomCode })
+            }).then(function(data) {
+                if (data && data.message) {
+                    showToast(data.message + (data.roomName ? ' (' + data.roomName + ')' : ''));
+                } else if (data && data.error) {
+                    if (data.error.indexOf('already') === -1) showToast(data.error, true);
+                }
+            }).catch(function() {});
+            localStorage.removeItem('safetea_join_room');
+        }
+
+        // Clean URL
+        window.history.replaceState({}, '', '/dashboard.html' + (params.get('tab') ? '?tab=' + params.get('tab') : ''));
+    })();
+
     (function checkUpgradeSuccess() {
         var params = new URLSearchParams(window.location.search);
         if (params.get('upgrade') === 'success') {

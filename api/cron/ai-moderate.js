@@ -37,7 +37,8 @@ Auto-action rules:
 - action: "warn" for minor rule violations
 - action: null for content that's fine or just needs human review`;
 
-async function analyzeAndEnforce(post) {
+async function analyzeAndEnforce(post, source) {
+  source = source || 'posts';
   try {
     const userInfo = await getOne(
       'SELECT display_name, warning_count, created_at FROM users WHERE id = $1',
@@ -75,9 +76,10 @@ async function analyzeAndEnforce(post) {
     const raw = data.choices?.[0]?.message?.content || '';
     const result = JSON.parse(raw);
 
-    // Store analysis
+    // Store analysis — use correct table
+    const table = source === 'room_posts' ? 'room_posts' : 'posts';
     await run(
-      `UPDATE posts SET
+      `UPDATE ${table} SET
         ai_credibility_score = $1,
         ai_flags = $2,
         ai_recommendation = $3,
@@ -95,22 +97,31 @@ async function analyzeAndEnforce(post) {
 
     // Auto-enforce
     if (result.action === 'remove') {
-      await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
+      if (source === 'room_posts') {
+        await run('UPDATE room_posts SET deleted_by_ai = true, is_flagged = true WHERE id = $1', [post.id]);
+      } else {
+        await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
+      }
       await run(
         `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
         [post.user_id, `🤖 Your post was removed by SafeTea's AI safety system.\n\nReason: ${result.reasoning}\n\nContact support@getsafetea.app if you believe this was a mistake.`]
       );
-      return { id: post.id, action: 'removed', score: result.credibility_score };
+      return { id: post.id, source, action: 'removed', score: result.credibility_score };
     }
 
     if (result.action === 'ban') {
-      await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
+      if (source === 'room_posts') {
+        await run('UPDATE room_posts SET deleted_by_ai = true, is_flagged = true WHERE id = $1', [post.id]);
+      } else {
+        await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
+      }
       await run(
         `UPDATE users SET banned = true, banned_at = NOW(), ban_reason = $1, ban_type = 'permanent' WHERE id = $2`,
         [result.reasoning || 'AI-detected severe violation', post.user_id]
       );
       await run('UPDATE posts SET hidden = true WHERE user_id = $1', [post.user_id]);
-      return { id: post.id, action: 'banned', score: result.credibility_score };
+      await run('UPDATE room_posts SET deleted_by_ai = true WHERE author_id = $1', [post.user_id]);
+      return { id: post.id, source, action: 'banned', score: result.credibility_score };
     }
 
     if (result.action === 'warn') {
@@ -119,12 +130,12 @@ async function analyzeAndEnforce(post) {
         `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
         [post.user_id, `⚠️ AI Safety Alert: Your post was flagged.\n\nReason: ${result.reasoning}\n\nPlease follow community guidelines.`]
       );
-      return { id: post.id, action: 'warned', score: result.credibility_score };
+      return { id: post.id, source, action: 'warned', score: result.credibility_score };
     }
 
     // Flag low-scoring posts for admin review
     if (result.credibility_score <= 3) {
-      await run('UPDATE posts SET is_flagged = true WHERE id = $1', [post.id]);
+      await run(`UPDATE ${table} SET is_flagged = true WHERE id = $1`, [post.id]);
     }
 
     return { id: post.id, action: 'analyzed', score: result.credibility_score, recommendation: result.recommendation };
@@ -167,8 +178,15 @@ module.exports = async function handler(req, res) {
        LIMIT 10`
     );
 
+    // Also scan unreviewed room posts
+    const roomUnanalyzed = await getMany(
+      `SELECT id, body, type AS category, NULL AS city, author_id AS user_id FROM room_posts
+       WHERE ai_analyzed_at IS NULL AND deleted_by_admin = false AND deleted_by_ai = false
+       ORDER BY created_at DESC LIMIT 10`
+    );
+
     const allPosts = [...unanalyzed, ...reported];
-    // Deduplicate
+    // Deduplicate main posts
     const seen = new Set();
     const uniquePosts = allPosts.filter(p => {
       if (seen.has(p.id)) return false;
@@ -178,9 +196,16 @@ module.exports = async function handler(req, res) {
 
     const results = [];
     for (const post of uniquePosts) {
-      const result = await analyzeAndEnforce(post);
+      const result = await analyzeAndEnforce(post, 'posts');
       results.push(result);
       // Small delay to avoid rate limiting
+      await new Promise(r => setTimeout(r, 200));
+    }
+
+    // Process room posts
+    for (const rp of roomUnanalyzed) {
+      const result = await analyzeAndEnforce(rp, 'room_posts');
+      results.push(result);
       await new Promise(r => setTimeout(r, 200));
     }
 

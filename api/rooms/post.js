@@ -1,5 +1,6 @@
 const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
+const { checkForFullNames } = require('../_utils/check-fullname');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -35,6 +36,16 @@ module.exports = async function handler(req, res) {
         return res.status(403).json({
           error: 'You are muted in this room',
           mutedUntil: membership.muted_until
+        });
+      }
+
+      // Full name blocking — same rules as main feed
+      const nameCheck = await checkForFullNames(text.trim());
+      if (nameCheck.fullNameDetected) {
+        return res.status(400).json({
+          error: 'Your post contains full names. Please use first name + last initial instead.',
+          detected: nameCheck.detectedNames,
+          suggestion: nameCheck.suggestion
         });
       }
 

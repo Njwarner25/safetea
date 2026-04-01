@@ -78,6 +78,14 @@ module.exports = async function handler(req, res) {
       UNIQUE(post_id, user_id)
     )`);
 
+    // AI moderation columns for room_posts
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMPTZ`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_credibility_score INTEGER`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_flags TEXT[]`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_recommendation VARCHAR(20)`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_reasoning TEXT`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE`); } catch(e) {}
+
     // Indexes
     await run(`CREATE INDEX IF NOT EXISTS idx_room_memberships_room ON room_memberships(room_id, status)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_room_memberships_user ON room_memberships(user_id, status)`);

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join SafeTea</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0D0D1A; color:#fff; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .join-card { background:#1A1A2E; border:1px solid rgba(155,89,182,0.2); border-radius:20px; padding:32px 28px; max-width:420px; width:100%; }
+        .join-logo { width:56px; height:56px; background:linear-gradient(135deg,#9b59b6,#8e44ad); border-radius:16px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+        .join-logo i { font-size:24px; color:#fff; }
+        h1 { text-align:center; font-size:22px; font-weight:700; margin-bottom:6px; }
+        .subtitle { text-align:center; color:#8080A0; font-size:14px; margin-bottom:24px; line-height:1.5; }
+        .room-preview { background:rgba(155,89,182,0.08); border:1px solid rgba(155,89,182,0.2); border-radius:14px; padding:16px; margin-bottom:24px; display:none; }
+        .room-preview .room-header { display:flex; align-items:center; gap:12px; }
+        .room-preview .room-badge { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; }
+        .room-preview .room-name { font-weight:600; font-size:15px; }
+        .room-preview .room-info { color:#8080A0; font-size:12px; margin-top:2px; }
+        .join-actions { display:flex; flex-direction:column; gap:10px; }
+        .btn { width:100%; padding:14px; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; border:none; display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; }
+        .btn-primary { background:linear-gradient(135deg,#9b59b6,#8e44ad); color:#fff; }
+        .btn-secondary { background:#22223A; color:#E8A0B5; border:1px solid rgba(232,160,181,0.2); }
+        .btn:hover { opacity:0.9; }
+        .divider { text-align:center; color:#8080A0; font-size:12px; margin:6px 0; }
+        .status-msg { text-align:center; font-size:13px; margin-top:16px; padding:10px; border-radius:8px; display:none; }
+        .status-msg.success { display:block; color:#2ecc71; background:rgba(46,204,113,0.1); }
+        .status-msg.error { display:block; color:#e74c3c; background:rgba(231,76,60,0.1); }
+    </style>
+</head>
+<body>
+    <div class="join-card">
+        <div class="join-logo"><i class="fas fa-shield-heart"></i></div>
+        <h1>You're Invited to SafeTea</h1>
+        <p class="subtitle" id="join-subtitle">Join the women's dating safety community.</p>
+
+        <!-- Room Preview (shown when ?room= param exists) -->
+        <div class="room-preview" id="room-preview">
+            <div class="room-header">
+                <div class="room-badge" id="rp-badge" style="background:linear-gradient(135deg,#9b59b6,#8e44ad)"></div>
+                <div>
+                    <div class="room-name" id="rp-name"></div>
+                    <div class="room-info" id="rp-info"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="join-actions">
+            <a href="/login" class="btn btn-primary" id="btn-login"><i class="fas fa-sign-in-alt"></i> Log In & Join</a>
+            <div class="divider">or</div>
+            <a href="/login" class="btn btn-secondary" id="btn-signup"><i class="fas fa-user-plus"></i> Create Account</a>
+        </div>
+
+        <div class="status-msg" id="status-msg"></div>
+    </div>
+
+    <script>
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var roomCode = params.get('room');
+        var refCode = params.get('ref');
+
+        // Store codes for post-login/signup processing
+        if (roomCode) localStorage.setItem('safetea_join_room', roomCode);
+        if (refCode) localStorage.setItem('safetea_join_ref', refCode);
+
+        // Build login/signup URLs with return param
+        var returnUrl = '/dashboard.html?joinroom=1';
+        document.getElementById('btn-login').href = '/login?redirect=' + encodeURIComponent(returnUrl);
+        document.getElementById('btn-signup').href = '/login?signup=1&redirect=' + encodeURIComponent(returnUrl);
+
+        // If user already logged in, try to join directly
+        var token = localStorage.getItem('safetea_token');
+        if (token && roomCode) {
+            document.getElementById('join-subtitle').textContent = 'Processing your invite...';
+            fetch('/api/rooms/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ inviteCode: roomCode })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                var msg = document.getElementById('status-msg');
+                if (data.message) {
+                    msg.className = 'status-msg success';
+                    msg.textContent = data.message + (data.roomName ? ' (' + data.roomName + ')' : '');
+                    setTimeout(function() { window.location.href = '/dashboard.html?tab=hub'; }, 2000);
+                } else if (data.error) {
+                    msg.className = 'status-msg error';
+                    msg.textContent = data.error;
+                    if (data.error.indexOf('already') !== -1) {
+                        setTimeout(function() { window.location.href = '/dashboard.html?tab=hub'; }, 2000);
+                    }
+                }
+            }).catch(function() {});
+        }
+
+        // Update subtitle if room code present
+        if (roomCode) {
+            document.getElementById('join-subtitle').textContent = 'You\'ve been invited to join a Sorority Room on SafeTea.';
+            document.getElementById('room-preview').style.display = 'block';
+            // Parse room code for display
+            var parts = roomCode.split('-');
+            var letters = parts.length >= 3 ? parts[1] : roomCode;
+            document.getElementById('rp-badge').textContent = letters;
+            document.getElementById('rp-name').textContent = 'Sorority Room';
+            document.getElementById('rp-info').textContent = 'Invite code: ' + roomCode;
+        }
+    })();
+    </script>
+</body>
+</html>

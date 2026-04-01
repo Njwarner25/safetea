@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const roomId = url.searchParams.get('roomId');
-    const type = url.searchParams.get('type'); // 'tea_talk' or 'good_guys'
+    const type = url.searchParams.get('type');
     const limit = Math.min(parseInt(url.searchParams.get('limit')) || 20, 50);
     const offset = parseInt(url.searchParams.get('offset')) || 0;
 
@@ -35,16 +35,18 @@ module.exports = async function handler(req, res) {
     }
 
     const posts = await getMany(
-      `SELECT p.*,
+      `SELECT p.id, p.room_id, p.author_id, p.type, p.body, p.image_data,
+              p.pinned, p.created_at, p.bump_count, p.last_bumped_at,
               u.display_name AS author_name, u.avatar_type, u.avatar_color, u.avatar_initial, u.avatar_url,
               (SELECT COUNT(*) FROM room_replies WHERE post_id = p.id) AS reply_count,
-              (SELECT COUNT(*) FROM room_post_likes WHERE post_id = p.id) AS like_count,
-              EXISTS(SELECT 1 FROM room_post_likes WHERE post_id = p.id AND user_id = $2) AS user_liked
+              (SELECT COUNT(*) FROM room_post_likes WHERE post_id = p.id AND reaction = 'like') AS like_count,
+              (SELECT COUNT(*) FROM room_post_likes WHERE post_id = p.id AND reaction = 'dislike') AS dislike_count,
+              (SELECT reaction FROM room_post_likes WHERE post_id = p.id AND user_id = $2) AS user_reaction
        FROM room_posts p
        JOIN users u ON u.id = p.author_id
        WHERE p.room_id = $1 AND p.deleted_by_admin = FALSE AND p.deleted_by_ai = FALSE
        ${typeFilter}
-       ORDER BY p.pinned DESC, p.created_at DESC
+       ORDER BY p.pinned DESC, COALESCE(p.last_bumped_at, p.created_at) DESC
        LIMIT $3 OFFSET $4`,
       params
     );

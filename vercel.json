@@ -157,6 +157,8 @@
         { "source": "/api/rooms/regenerate-code", "destination": "/api/rooms/regenerate-code" },
         { "source": "/api/rooms/members", "destination": "/api/rooms/members" },
         { "source": "/api/rooms/like", "destination": "/api/rooms/like" },
+        { "source": "/api/rooms/bump", "destination": "/api/rooms/bump" },
+        { "source": "/api/rooms/report", "destination": "/api/rooms/report" },
         { "source": "/api/rooms/replies", "destination": "/api/rooms/replies" },
         { "source": "/api/rooms/leave", "destination": "/api/rooms/leave" },
         { "source": "/api/rooms/pin", "destination": "/api/rooms/pin" },

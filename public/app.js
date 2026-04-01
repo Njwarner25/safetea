@@ -2903,15 +2903,41 @@
         });
     }
 
+    // Room post photo state
+    var rvPostPhotoData = null;
+
+    window.rvHandlePostPhoto = function(input) {
+        var file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Photo must be under 5MB', true); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            rvPostPhotoData = e.target.result;
+            var preview = document.getElementById('rv-post-photo-preview');
+            var img = document.getElementById('rv-post-photo-img');
+            if (preview && img) { img.src = e.target.result; preview.style.display = 'inline-block'; }
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    };
+
+    window.rvRemovePostPhoto = function() {
+        rvPostPhotoData = null;
+        var preview = document.getElementById('rv-post-photo-preview');
+        if (preview) preview.style.display = 'none';
+    };
+
     function roomRenderPost(post) {
         var authorName = post.author_name || 'Anonymous';
         var initial = authorName[0].toUpperCase();
         var avatarColor = hubGetAvatarColor(authorName);
         var likeCount = parseInt(post.like_count) || 0;
+        var dislikeCount = parseInt(post.dislike_count) || 0;
         var replyCount = parseInt(post.reply_count) || 0;
-        var userLiked = post.user_liked === true || post.user_liked === 't';
-        var heartIcon = userLiked ? 'fas fa-heart' : 'far fa-heart';
-        var heartStyle = userLiked ? 'color:#e74c3c' : 'color:#8080A0';
+        var bumpCount = parseInt(post.bump_count) || 0;
+        var userReaction = post.user_reaction || null;
+        var likeActive = userReaction === 'like';
+        var dislikeActive = userReaction === 'dislike';
         var pinnedHtml = post.pinned ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(241,196,15,0.15);color:#f1c40f;margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : '';
         var typeBadge = post.type === 'good_guys'
             ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(46,204,113,0.15);color:#2ecc71">Good Guy</span> '
@@ -2919,6 +2945,13 @@
         var u = getUser();
         var isAuthor = u && post.author_id === u.id;
         var isRoomAdmin = currentRoomData && (currentRoomData.myRole === 'admin' || currentRoomData.myRole === 'co_admin');
+
+        var imageHtml = '';
+        if (post.image_data) {
+            imageHtml = '<div style="margin-bottom:14px"><img src="' + post.image_data + '" style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)"></div>';
+        }
+
+        var bumpLabel = bumpCount > 0 ? ' ' + bumpCount : '';
 
         return '<div id="rp-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:18px;margin-bottom:10px">' +
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' +
@@ -2929,9 +2962,13 @@
                 '</div>' +
             '</div>' +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:14px">' + hubFormatBody(post.body) + '</div>' +
-            '<div style="display:flex;gap:14px;align-items:center">' +
-                '<button onclick="roomToggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="rl-' + post.id + '">' + likeCount + '</span></button>' +
+            imageHtml +
+            '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+                '<button onclick="roomReact(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + (likeActive ? 'color:#2ecc71' : 'color:#8080A0') + '"><i class="' + (likeActive ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="rl-' + post.id + '">' + likeCount + '</span></button>' +
+                '<button onclick="roomReact(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + (dislikeActive ? 'color:#e74c3c' : 'color:#8080A0') + '"><i class="' + (dislikeActive ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="rd-' + post.id + '">' + dislikeCount + '</span></button>' +
                 '<button onclick="roomShowReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + '</button>' +
+                '<button onclick="roomBumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#f39c12" title="Bump this post to the top"><i class="fas fa-arrow-up"></i>' + bumpLabel + '</button>' +
+                (!isAuthor ? '<button onclick="roomReportPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#8080A0" title="Report"><i class="fas fa-flag"></i></button>' : '') +
                 (isRoomAdmin ? '<button onclick="roomPinPost(' + post.id + ')" style="margin-left:auto;background:none;border:none;color:#f1c40f;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-thumbtack"></i></button>' : '') +
                 (isAuthor || isRoomAdmin ? '<button onclick="roomDeletePost(' + post.id + ')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
             '</div>' +
@@ -2939,13 +2976,41 @@
         '</div>';
     }
 
-    window.roomToggleLike = function(postId) {
-        apiFetch('/rooms/like?postId=' + postId, { method: 'POST' }).then(function(data) {
+    window.roomReact = function(postId, reaction) {
+        apiFetch('/rooms/like?postId=' + postId, {
+            method: 'POST',
+            body: JSON.stringify({ reaction: reaction })
+        }).then(function(data) {
             if (!data) return;
-            var countEl = document.getElementById('rl-' + postId);
-            if (countEl) {
-                var count = parseInt(countEl.textContent) || 0;
-                countEl.textContent = data.liked ? count + 1 : Math.max(0, count - 1);
+            // Refresh the feed to reflect accurate counts
+            loadRoomFeed();
+        });
+    };
+
+    window.roomBumpPost = function(postId) {
+        apiFetch('/rooms/bump?postId=' + postId, { method: 'POST' }).then(function(data) {
+            if (data && data.success) {
+                showToast('Post bumped!');
+                loadRoomFeed();
+            }
+        });
+    };
+
+    window.roomReportPost = function(postId) {
+        var reason = prompt('Why are you reporting this post?\n\nChoose: harassment, doxxing, spam, inappropriate, misinformation, threat, other');
+        if (!reason) return;
+        reason = reason.toLowerCase().trim();
+        var validReasons = ['harassment', 'doxxing', 'spam', 'inappropriate', 'misinformation', 'threat', 'other'];
+        if (!validReasons.includes(reason)) { showToast('Invalid reason. Use: ' + validReasons.join(', '), true); return; }
+
+        apiFetch('/rooms/report', {
+            method: 'POST',
+            body: JSON.stringify({ postId: postId, reason: reason })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Report submitted. Thank you.');
+            } else if (data && data.error) {
+                showToast(data.error, true);
             }
         });
     };
@@ -2959,34 +3024,47 @@
 
         apiFetch('/rooms/replies?postId=' + postId).then(function(data) {
             var html = '';
-            if (data && data.replies) {
+            if (data && data.replies && data.replies.length > 0) {
                 data.replies.forEach(function(r) {
                     html += '<div style="display:flex;gap:10px;margin-bottom:8px">' +
                         '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(r.author_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + (r.author_name || '?')[0].toUpperCase() + '</div>' +
-                        '<div><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(r.author_name || 'Anonymous') + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span><div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
+                        '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(r.author_name || 'Anonymous') + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span><div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
                     '</div>';
                 });
+            } else {
+                html += '<div style="color:#555;font-size:12px;margin-bottom:8px">No replies yet</div>';
             }
             html += '<div style="display:flex;gap:8px;margin-top:10px">' +
-                '<input type="text" id="rri-' + postId + '" placeholder="Reply..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:\'Inter\',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor=\'#9b59b6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.08)\'">' +
+                '<input type="text" id="rri-' + postId + '" placeholder="Write a reply..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:\'Inter\',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor=\'#9b59b6\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.08)\'" onkeydown="if(event.key===\'Enter\')roomSubmitReply(' + postId + ')">' +
                 '<button onclick="roomSubmitReply(' + postId + ')" style="background:#9b59b6;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reply</button>' +
             '</div>';
             container.innerHTML = html;
+            // Focus the input
+            var inp = document.getElementById('rri-' + postId);
+            if (inp) inp.focus();
         });
     };
 
     window.roomSubmitReply = function(postId) {
         var input = document.getElementById('rri-' + postId);
         if (!input || !input.value.trim()) return;
+        var text = input.value.trim();
+        input.disabled = true;
         apiFetch('/rooms/replies?postId=' + postId, {
             method: 'POST',
-            body: JSON.stringify({ text: input.value.trim() })
+            body: JSON.stringify({ text: text })
         }).then(function(data) {
             if (data && data.id) {
-                roomShowReplies(postId); // Close
-                setTimeout(function() { roomShowReplies(postId); }, 100); // Re-open with new reply
+                // Re-open replies to show new one
+                var container = document.getElementById('rr-' + postId);
+                if (container) container.style.display = 'none';
+                roomShowReplies(postId);
+                showToast('Reply posted!');
+            } else if (data && data.error) {
+                showToast(data.error, true);
+                input.disabled = false;
             }
-        });
+        }).catch(function() { showToast('Failed to reply', true); input.disabled = false; });
     };
 
     window.roomPinPost = function(postId) {
@@ -3001,6 +3079,7 @@
             if (data && data.success) {
                 var el = document.getElementById('rp-' + postId);
                 if (el) el.remove();
+                showToast('Post deleted');
             }
         });
     };
@@ -3009,18 +3088,33 @@
         var textEl = document.getElementById('rv-post-text');
         if (!textEl || !textEl.value.trim()) { showToast('Write something first', true); return; }
 
+        var postData = { roomId: currentRoomId, type: currentRoomFeedType, text: textEl.value.trim() };
+        if (rvPostPhotoData) {
+            postData.image = rvPostPhotoData;
+        }
+
+        var btn = document.querySelector('.create-post button[onclick="submitRoomPost()"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...'; }
+
         apiFetch('/rooms/post', {
             method: 'POST',
-            body: JSON.stringify({ roomId: currentRoomId, type: currentRoomFeedType, text: textEl.value.trim() })
+            body: JSON.stringify(postData)
         }).then(function(data) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post'; }
             if (data && data.id) {
                 textEl.value = '';
+                rvPostPhotoData = null;
+                var preview = document.getElementById('rv-post-photo-preview');
+                if (preview) preview.style.display = 'none';
                 loadRoomFeed();
                 showToast('Posted!');
             } else if (data && data.error) {
                 showToast(data.error, true);
             }
-        }).catch(function() { showToast('Failed to post', true); });
+        }).catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post'; }
+            showToast('Failed to post', true);
+        });
     };
 
     window.toggleRoomInfo = function() {

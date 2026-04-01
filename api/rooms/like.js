@@ -1,4 +1,4 @@
-const { cors, authenticate } = require('../_utils/auth');
+const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
 
 module.exports = async function handler(req, res) {
@@ -14,6 +14,10 @@ module.exports = async function handler(req, res) {
     const postId = url.searchParams.get('postId');
     if (!postId) return res.status(400).json({ error: 'Post ID is required' });
 
+    const body = await parseBody(req);
+    // reaction: 'like' or 'dislike'. Default 'like' for backwards compat
+    var reaction = (body.reaction === 'dislike') ? 'dislike' : 'like';
+
     const post = await getOne('SELECT room_id FROM room_posts WHERE id = $1', [postId]);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
@@ -24,21 +28,29 @@ module.exports = async function handler(req, res) {
     );
     if (!membership) return res.status(403).json({ error: 'You are not a member of this room' });
 
-    // Toggle like
+    // Check existing reaction
     const existing = await getOne(
-      'SELECT id FROM room_post_likes WHERE post_id = $1 AND user_id = $2',
+      'SELECT id, reaction FROM room_post_likes WHERE post_id = $1 AND user_id = $2',
       [postId, user.id]
     );
 
     if (existing) {
-      await run('DELETE FROM room_post_likes WHERE id = $1', [existing.id]);
-      return res.status(200).json({ liked: false });
+      if (existing.reaction === reaction) {
+        // Same reaction — toggle off (remove)
+        await run('DELETE FROM room_post_likes WHERE id = $1', [existing.id]);
+        return res.status(200).json({ reaction: null, removed: true });
+      } else {
+        // Different reaction — switch it
+        await run('UPDATE room_post_likes SET reaction = $1 WHERE id = $2', [reaction, existing.id]);
+        return res.status(200).json({ reaction: reaction, switched: true });
+      }
     } else {
+      // New reaction
       await run(
-        'INSERT INTO room_post_likes (post_id, user_id) VALUES ($1, $2)',
-        [postId, user.id]
+        'INSERT INTO room_post_likes (post_id, user_id, reaction) VALUES ($1, $2, $3)',
+        [postId, user.id, reaction]
       );
-      return res.status(200).json({ liked: true });
+      return res.status(200).json({ reaction: reaction });
     }
   } catch (err) {
     console.error('Room like error:', err);

@@ -2676,7 +2676,13 @@
                 <!-- Create Post in Room -->
                 <div class="create-post" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px">
                     <textarea id="rv-post-text" placeholder="Share with your sisters..." rows="3" style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
-                    <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                    <div id="rv-post-photo-preview" style="display:none;margin-top:10px;position:relative;display:inline-block">
+                        <img id="rv-post-photo-img" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid rgba(255,255,255,0.1)">
+                        <button onclick="rvRemovePostPhoto()" style="position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(0,0,0,0.7);border-radius:50%;border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+                        <button onclick="document.getElementById('rv-photo-input').click()" style="background:none;border:1px solid rgba(155,89,182,0.3);color:#9b59b6;padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-camera"></i> Add Photo</button>
+                        <input type="file" id="rv-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="rvHandlePostPhoto(this)">
                         <button onclick="submitRoomPost()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-paper-plane"></i> Post</button>
                     </div>
                 </div>

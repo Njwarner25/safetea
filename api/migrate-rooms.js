@@ -86,6 +86,27 @@ module.exports = async function handler(req, res) {
     try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS ai_reasoning TEXT`); } catch(e) {}
     try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT FALSE`); } catch(e) {}
 
+    // Bump feature for posts
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS bump_count INTEGER DEFAULT 0`); } catch(e) {}
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS last_bumped_at TIMESTAMPTZ`); } catch(e) {}
+
+    // Image data on posts (base64 inline, no external storage)
+    try { await run(`ALTER TABLE room_posts ADD COLUMN IF NOT EXISTS image_data TEXT`); } catch(e) {}
+
+    // Reaction type on likes (like/dislike)
+    try { await run(`ALTER TABLE room_post_likes ADD COLUMN IF NOT EXISTS reaction VARCHAR(10) DEFAULT 'like'`); } catch(e) {}
+
+    // Room post reports
+    await run(`CREATE TABLE IF NOT EXISTS room_post_reports (
+      id SERIAL PRIMARY KEY,
+      post_id INTEGER REFERENCES room_posts(id) ON DELETE CASCADE,
+      reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      reason VARCHAR(50) NOT NULL,
+      details TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(post_id, reporter_id)
+    )`);
+
     // Indexes
     await run(`CREATE INDEX IF NOT EXISTS idx_room_memberships_room ON room_memberships(room_id, status)`);
     await run(`CREATE INDEX IF NOT EXISTS idx_room_memberships_user ON room_memberships(user_id, status)`);

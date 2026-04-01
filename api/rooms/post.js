@@ -15,9 +15,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = await parseBody(req);
-      const { roomId, type, text, photoId } = body;
+      const { roomId, type, text, image } = body;
 
-      if (!roomId || !text?.trim()) {
+      if (!roomId || !text || !text.trim()) {
         return res.status(400).json({ error: 'Room ID and text are required' });
       }
 
@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Full name blocking — same rules as main feed
+      // Full name blocking
       const nameCheck = await checkForFullNames(text.trim());
       if (nameCheck.fullNameDetected) {
         return res.status(400).json({
@@ -49,17 +49,32 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      // Validate image if provided (max 5MB base64)
+      var imageData = null;
+      if (image) {
+        var stripped = image.replace(/^data:image\/\w+;base64,/, '');
+        try {
+          var buf = Buffer.from(stripped, 'base64');
+          if (buf.length > 5 * 1024 * 1024) {
+            return res.status(400).json({ error: 'Image must be under 5MB' });
+          }
+          imageData = image; // Store with data URL prefix
+        } catch (e) {
+          return res.status(400).json({ error: 'Invalid image data' });
+        }
+      }
+
       const post = await getOne(
-        `INSERT INTO room_posts (room_id, author_id, type, body, photo_id)
+        `INSERT INTO room_posts (room_id, author_id, type, body, image_data)
          VALUES ($1, $2, $3, $4, $5)
-         RETURNING *`,
-        [roomId, user.id, postType, text.trim(), photoId || null]
+         RETURNING id, room_id, author_id, type, body, pinned, created_at, bump_count`,
+        [roomId, user.id, postType, text.trim(), imageData]
       );
 
       return res.status(201).json(post);
     } catch (err) {
       console.error('Room post create error:', err);
-      return res.status(500).json({ error: 'Internal server error' });
+      return res.status(500).json({ error: 'Failed to create post' });
     }
   }
 
@@ -85,10 +100,8 @@ module.exports = async function handler(req, res) {
       }
 
       if (isRoomAdmin && !isAuthor) {
-        // Room admin deleting someone else's post — mark as admin-deleted
         await run('UPDATE room_posts SET deleted_by_admin = TRUE WHERE id = $1', [postId]);
       } else {
-        // Author deleting own post — hard delete
         await run('DELETE FROM room_posts WHERE id = $1', [postId]);
       }
 

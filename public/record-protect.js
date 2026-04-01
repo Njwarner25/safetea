@@ -312,33 +312,19 @@
                 '<div style="background:#1A1A2E;border:1px solid rgba(231,76,60,0.3);border-radius:16px;padding:28px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">' +
                     '<div style="text-align:center;margin-bottom:20px">' +
                         '<div style="width:56px;height:56px;background:rgba(231,76,60,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">' +
-                            '<i class="fas fa-microphone" style="font-size:24px;color:#e74c3c"></i>' +
+                            '<i class="fas fa-exclamation-triangle" style="font-size:24px;color:#e74c3c"></i>' +
                         '</div>' +
-                        '<h3 style="color:#fff;font-size:18px;margin-bottom:8px">Record & Protect</h3>' +
-                        '<p style="color:#8080A0;font-size:13px">Emergency audio recording for your safety</p>' +
+                        '<h3 style="color:#fff;font-size:18px;margin-bottom:4px">Important: Recording laws vary by state</h3>' +
                     '</div>' +
-                    '<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.15);border-radius:12px;padding:16px;margin-bottom:16px">' +
-                        '<h4 style="color:#e74c3c;font-size:14px;margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> Important Legal Notice</h4>' +
-                        '<p style="color:#C0C0D0;font-size:12px;line-height:1.6;margin-bottom:8px">' +
-                            'By using Record & Protect, you acknowledge:' +
-                        '</p>' +
-                        '<ul style="color:#C0C0D0;font-size:12px;line-height:1.8;padding-left:16px;margin:0">' +
-                            '<li>Recording laws vary by state. Some states require all-party consent.</li>' +
-                            '<li>You are responsible for knowing and following your local recording laws.</li>' +
-                            '<li>Audio is uploaded to SafeTea servers and shared with your trusted contacts.</li>' +
-                            '<li>Your GPS location will be captured and shared with trusted contacts.</li>' +
-                            '<li>This feature is intended for personal safety emergencies only.</li>' +
-                        '</ul>' +
+                    '<div style="color:#C0C0D0;font-size:13px;line-height:1.7;margin-bottom:20px">' +
+                        '<p style="margin-bottom:12px">SafeTea\'s Record & Protect feature captures audio and shares your live location with trusted contacts.</p>' +
+                        '<p style="margin-bottom:12px">Some states require all parties to consent to audio recording (including Illinois, California, Florida, and others). You are solely responsible for knowing and following the recording laws in your location.</p>' +
+                        '<p style="margin-bottom:12px">SafeTea provides this tool for personal safety documentation. How you use recordings \u2014 including whether to share them with law enforcement or other parties \u2014 is your decision and responsibility.</p>' +
+                        '<p style="margin:0">Recordings are encrypted and stored securely. Only you control access.</p>' +
                     '</div>' +
-                    '<div style="background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.15);border-radius:12px;padding:16px;margin-bottom:20px">' +
-                        '<h4 style="color:#E8A0B5;font-size:14px;margin-bottom:8px"><i class="fas fa-info-circle"></i> Outcry Witness</h4>' +
-                        '<p style="color:#C0C0D0;font-size:12px;line-height:1.6">' +
-                            'Your trusted contacts will be informed about being a potential "outcry witness" — the first person a victim discloses abuse to. In many states, an outcry witness\'s testimony carries special evidentiary weight in court.' +
-                        '</p>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:10px">' +
-                        '<button id="rp-legal-cancel" style="flex:1;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px;border-radius:10px;font-size:14px;cursor:pointer;font-family:\'Inter\',sans-serif">Cancel</button>' +
-                        '<button id="rp-legal-accept" style="flex:1;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">I Understand & Accept</button>' +
+                    '<div style="display:flex;flex-direction:column;gap:10px">' +
+                        '<button id="rp-legal-accept" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">I Understand \u2014 Continue</button>' +
+                        '<button id="rp-legal-laws" style="width:100%;background:rgba(255,255,255,0.06);color:#E8A0B5;border:1px solid rgba(232,160,181,0.2);padding:14px;border-radius:10px;font-size:14px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-gavel"></i> View Recording Laws by State</button>' +
                     '</div>' +
                 '</div>';
 
@@ -349,9 +335,8 @@
                 backdrop.remove();
                 resolve(true);
             };
-            document.getElementById('rp-legal-cancel').onclick = function() {
-                backdrop.remove();
-                resolve(false);
+            document.getElementById('rp-legal-laws').onclick = function() {
+                window.open('https://www.justia.com/50-state-surveys/recording-phone-calls-and-conversations/', '_blank');
             };
             backdrop.addEventListener('click', function(e) {
                 if (e.target === backdrop) { backdrop.remove(); resolve(false); }

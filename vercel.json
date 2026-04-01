@@ -85,6 +85,7 @@
         { "source": "/api/admin/moderators", "destination": "/api/admin/moderators" },
         { "source": "/api/admin/stats", "destination": "/api/admin/stats" },
         { "source": "/api/admin/feedback", "destination": "/api/admin/feedback" },
+        { "source": "/api/admin/setup", "destination": "/api/admin/setup" },
         { "source": "/api/alerts/area", "destination": "/api/alerts/area" },
         { "source": "/api/watch-zones", "destination": "/api/watch-zones" },
         { "source": "/api/community/name-mentions", "destination": "/api/community/name-mentions" },

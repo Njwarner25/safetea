@@ -285,8 +285,8 @@
         .community-topbar-icon:hover { background: rgba(255,255,255,0.12); color: #fff; }
         .community-topbar-badge { position: absolute; top: -2px; right: -2px; width: 18px; height: 18px; border-radius: 50%; background: #E8A0B5; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
         /* Community Header */
-        .community-city-label { color: #E8A0B5; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
-        .community-city-label:hover { text-decoration: underline; }
+        .community-city-label { color: #E8A0B5; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; background: linear-gradient(135deg, rgba(232,160,181,0.12), rgba(232,160,181,0.04)); border: 1px solid rgba(232,160,181,0.25); border-radius: 20px; padding: 8px 16px; transition: all 0.2s; }
+        .community-city-label:hover { border-color: rgba(232,160,181,0.5); background: linear-gradient(135deg, rgba(232,160,181,0.18), rgba(232,160,181,0.08)); }
         .community-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 16px; }
         /* Category Tabs */
         .community-category-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -2083,10 +2083,6 @@
                 </div>
                 <div class="community-topbar-right">
                     <div class="community-topbar-avatar" id="comm-user-avatar">N</div>
-                    <div class="community-topbar-icon" onclick="switchTab('profile')">
-                        <i class="fas fa-cog"></i>
-                        <span class="community-topbar-badge" id="comm-settings-badge" style="display:none">0</span>
-                    </div>
                     <div class="community-topbar-icon" onclick="switchTab('alerts')">
                         <i class="fas fa-bell"></i>
                         <span class="community-topbar-badge" id="comm-notif-badge" style="display:none">0</span>
@@ -2098,6 +2094,7 @@
             <div class="community-city-label" onclick="openCityPicker()">
                 <i class="fas fa-map-marker-alt"></i>
                 <span id="community-city-name">Choose City</span>
+                <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.6"></i>
             </div>
             <h1 class="community-title" id="community-title"><img src="/logo.png" alt="" style="height:28px;vertical-align:middle;margin-right:6px">SafeTea Hub</h1>
 
@@ -2194,8 +2191,15 @@
     <div class="post-modal-overlay" id="post-modal">
         <div class="post-modal">
             <h3>Share with your community</h3>
-            <textarea id="community-post-text" placeholder="What do you want your city to know?"></textarea>
-            <div style="text-align:right;margin:-4px 0 8px"><a href="/guidelines" target="_blank" style="color:#8080A0;font-size:11px;text-decoration:none"><i class="fas fa-book" style="margin-right:4px"></i>Community Guidelines</a></div>
+            <!-- Post Tag Pills -->
+            <div id="post-tag-pills" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+                <button type="button" class="post-tag-pill" data-tag="warning" onclick="togglePostTag(this)" style="padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid rgba(231,76,60,0.3);background:transparent;color:#e74c3c;transition:all 0.2s"><i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>Warning</button>
+                <button type="button" class="post-tag-pill" data-tag="tip" onclick="togglePostTag(this)" style="padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid rgba(52,152,219,0.3);background:transparent;color:#3498db;transition:all 0.2s"><i class="fas fa-lightbulb" style="margin-right:4px"></i>Tip</button>
+                <button type="button" class="post-tag-pill" data-tag="question" onclick="togglePostTag(this)" style="padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid rgba(155,89,182,0.3);background:transparent;color:#9b59b6;transition:all 0.2s"><i class="fas fa-question-circle" style="margin-right:4px"></i>Question</button>
+                <button type="button" class="post-tag-pill" data-tag="shoutout" onclick="togglePostTag(this)" style="padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border:1px solid rgba(46,204,113,0.3);background:transparent;color:#2ecc71;transition:all 0.2s"><i class="fas fa-heart" style="margin-right:4px"></i>Shoutout</button>
+            </div>
+            <textarea id="community-post-text" placeholder="What do you want your city to know?" maxlength="2000" oninput="updatePostCharCount()"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:-4px 0 8px"><span id="post-char-count" style="color:#8080A0;font-size:11px">0 / 2,000</span><a href="/guidelines" target="_blank" style="color:#8080A0;font-size:11px;text-decoration:none"><i class="fas fa-book" style="margin-right:4px"></i>Community Guidelines</a></div>
             <div class="post-modal-photo-section">
                 <label class="post-modal-photo-btn" for="post-photo-input">
                     <i class="fas fa-camera"></i> Add Photo
@@ -2429,6 +2433,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ====== RED FLAG SCANNER BANNER ====== -->
+                <a href="/redflag" style="display:block;text-decoration:none;color:inherit;margin-bottom:20px;background:linear-gradient(135deg,rgba(231,76,60,0.06),rgba(232,160,181,0.06));border:2px solid rgba(231,76,60,0.2);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(231,76,60,0.4)';this.style.boxShadow='0 8px 24px rgba(231,76,60,0.12)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.2)';this.style.boxShadow='none'">
+                    <div style="display:flex;align-items:center;gap:16px">
+                        <div style="min-width:52px;height:52px;background:linear-gradient(135deg,rgba(231,76,60,0.15),rgba(232,160,181,0.1));border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-camera" style="font-size:22px;color:#e74c3c"></i></div>
+                        <div style="flex:1">
+                            <h4 style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px">Red Flag Scanner <i class="fas fa-arrow-right" style="font-size:12px;margin-left:6px;color:#E8A0B5"></i></h4>
+                            <p style="color:#8080A0;font-size:13px;line-height:1.5;margin:0">Screenshot a conversation and our AI scans for manipulation, gaslighting, and red flags.</p>
+                        </div>
+                    </div>
+                </a>
 
                 <!-- ====== SORORITY ROOMS (community card) ====== -->
                 <div style="margin-bottom:20px">
@@ -3206,13 +3221,19 @@
 
             <!-- Help & Contact -->
             <div class="profile-form" style="margin-top:24px">
-                <h3><i class="fas fa-key" style="color:#E8A0B5"></i> Change Password</h3>
-                <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+                <h3 onclick="toggleChangePassword()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between"><span><i class="fas fa-key" style="color:#E8A0B5"></i> Change Password</span><i id="pw-chevron" class="fas fa-chevron-down" style="font-size:12px;color:#8080A0;transition:transform 0.2s"></i></h3>
+                <div id="change-password-form" style="display:none;flex-direction:column;gap:12px;margin-top:12px">
                     <input type="password" id="current-password" placeholder="Current password" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none">
                     <input type="password" id="new-password" placeholder="New password (min 8 chars)" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none">
                     <input type="password" id="confirm-password" placeholder="Confirm new password" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:inherit;outline:none">
                     <button onclick="changePassword()" style="align-self:flex-end;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-lock"></i> Update Password</button>
                 </div>
+            </div>
+
+            <!-- Trust Signal -->
+            <div style="margin-top:20px;padding:14px 18px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:12px;display:flex;align-items:center;gap:12px">
+                <i class="fas fa-shield-alt" style="color:#2ecc71;font-size:18px;flex-shrink:0"></i>
+                <div style="font-size:13px;color:#8080A0;line-height:1.5">Your data is encrypted and never shared. <a href="/privacy" target="_blank" style="color:#E8A0B5;text-decoration:none">Privacy Policy</a></div>
             </div>
 
             <div class="profile-form" style="margin-top:24px">
@@ -3246,14 +3267,51 @@
     <div class="toast" id="toast"></div>
 
     <!-- ====== FLOATING SOS BUTTON ====== -->
-    <div id="sos-floating-btn" onclick="showSOSActionSheet()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+    <div id="sos-floating-btn" style="position:fixed;bottom:90px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
         <span style="color:#fff;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;letter-spacing:0.5px">SOS</span>
     </div>
     <style>
         @keyframes sosPulse { 0%,100%{box-shadow:0 4px 20px rgba(231,76,60,0.4)} 50%{box-shadow:0 4px 30px rgba(231,76,60,0.6)} }
         #sos-floating-btn.sos-locked { background:linear-gradient(135deg,#555,#444);animation:none;box-shadow:0 4px 12px rgba(0,0,0,0.3); }
         #sos-floating-btn.sos-locked::after { content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;bottom:-2px;right:-2px;background:#22223A;color:#8080A0;font-size:9px;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;border:2px solid #1A1A2E; }
+        #sos-floating-btn.sos-holding { transform:scale(0.92)!important;box-shadow:0 2px 10px rgba(231,76,60,0.6),0 0 20px rgba(231,76,60,0.3)!important; }
     </style>
+    <script>
+    // SOS press-and-hold (1 second)
+    (function() {
+        var btn = document.getElementById('sos-floating-btn');
+        var holdTimer = null;
+        var fired = false;
+
+        function startHold(e) {
+            e.preventDefault();
+            fired = false;
+            btn.classList.add('sos-holding');
+            holdTimer = setTimeout(function() {
+                fired = true;
+                btn.classList.remove('sos-holding');
+                if (navigator.vibrate) navigator.vibrate(50);
+                showSOSActionSheet();
+            }, 1000);
+        }
+
+        function endHold(e) {
+            e.preventDefault();
+            btn.classList.remove('sos-holding');
+            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+            if (!fired && typeof showToast === 'function') {
+                showToast('Hold SOS for 1 second to activate');
+            }
+        }
+
+        btn.addEventListener('mousedown', startHold);
+        btn.addEventListener('touchstart', startHold, { passive: false });
+        btn.addEventListener('mouseup', endHold);
+        btn.addEventListener('mouseleave', function() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; btn.classList.remove('sos-holding'); } });
+        btn.addEventListener('touchend', endHold);
+        btn.addEventListener('touchcancel', function() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; btn.classList.remove('sos-holding'); } });
+    })();
+    </script>
 
     <div class="mobile-tab-bar">
         <a data-tab="hub" class="active" onclick="switchTab('hub')"><i class="fas fa-shield-alt"></i><span>Home</span></a>
@@ -3688,7 +3746,7 @@
     }
 
     function updateCommunityHeader(city) {
-        document.getElementById('community-city-name').textContent = city.name;
+        document.getElementById('community-city-name').textContent = city.name + ' Chapter';
         document.getElementById('community-title').innerHTML = '<img src="/logo.png" alt="" style="height:28px;vertical-align:middle;margin-right:6px">' + escapeHtml(city.name) + ' SafeTea Hub';
     }
 
@@ -3882,7 +3940,7 @@
                 '</div>' +
                 '<button class="community-post-more">&middot;&middot;&middot;</button>' +
             '</div>' +
-            '<div class="community-post-body">' + formatPostContent(post.content) + '</div>' +
+            '<div class="community-post-body">' + formatPostContent(post.body || post.content) + '</div>' +
             imageHtml +
             '<div class="community-post-actions">' +
                 '<button class="community-post-action"><i class="far fa-heart"></i> ' + (post.like_count || 0) + '</button>' +
@@ -3952,6 +4010,14 @@
         document.getElementById('post-modal').classList.remove('show');
         document.getElementById('community-post-text').value = '';
         removePostPhoto();
+        selectedPostTag = null;
+        document.querySelectorAll('.post-tag-pill').forEach(function(p) {
+            var colors = { warning: '#e74c3c', tip: '#3498db', question: '#9b59b6', shoutout: '#2ecc71' };
+            p.style.background = 'transparent';
+            p.style.color = colors[p.getAttribute('data-tag')];
+        });
+        var counter = document.getElementById('post-char-count');
+        if (counter) { counter.textContent = '0 / 2,000'; counter.style.color = '#8080A0'; }
     }
 
     // Photo upload handling
@@ -3981,6 +4047,35 @@
         document.getElementById('post-photo-input').value = '';
     }
 
+    var selectedPostTag = null;
+
+    function togglePostTag(btn) {
+        var tag = btn.getAttribute('data-tag');
+        var pills = document.querySelectorAll('.post-tag-pill');
+        if (selectedPostTag === tag) {
+            selectedPostTag = null;
+            pills.forEach(function(p) { p.style.background = 'transparent'; p.style.color = p.getAttribute('data-tag') === 'warning' ? '#e74c3c' : p.getAttribute('data-tag') === 'tip' ? '#3498db' : p.getAttribute('data-tag') === 'question' ? '#9b59b6' : '#2ecc71'; });
+        } else {
+            selectedPostTag = tag;
+            var colors = { warning: '#e74c3c', tip: '#3498db', question: '#9b59b6', shoutout: '#2ecc71' };
+            pills.forEach(function(p) {
+                var t = p.getAttribute('data-tag');
+                if (t === tag) { p.style.background = colors[t]; p.style.color = '#fff'; }
+                else { p.style.background = 'transparent'; p.style.color = colors[t]; }
+            });
+        }
+    }
+
+    function updatePostCharCount() {
+        var textarea = document.getElementById('community-post-text');
+        var counter = document.getElementById('post-char-count');
+        var len = textarea.value.length;
+        counter.textContent = len.toLocaleString() + ' / 2,000';
+        if (len >= 1950) counter.style.color = '#e74c3c';
+        else if (len >= 1800) counter.style.color = '#f39c12';
+        else counter.style.color = '#8080A0';
+    }
+
     function submitCommunityPost() {
         var content = document.getElementById('community-post-text').value.trim();
         if (!content) return;
@@ -3993,6 +4088,7 @@
         btn.disabled = true;
 
         var postData = { body: content, category: category, city: city.name };
+        if (selectedPostTag) postData.tag = selectedPostTag;
         // If there's a photo, include as base64
         if (communityState.postPhotoDataUrl) {
             postData.image = communityState.postPhotoDataUrl;
@@ -4012,7 +4108,7 @@
                 return;
             }
             if (data.error) {
-                showToast(data.error);
+                showToast('Could not post: ' + (data.message || data.error) + '. Please try again.');
                 return;
             }
             closePostModal();
@@ -4022,7 +4118,7 @@
         .catch(function(err) {
             btn.textContent = 'Post';
             btn.disabled = false;
-            showToast('Failed to post. Try again.');
+            showToast('Network error — check your connection and try again.');
         });
     }
 

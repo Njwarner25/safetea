@@ -119,11 +119,25 @@
         } else {
             var upgradeHandler = function() {
                 backdrop.remove();
-                if (typeof showUpgradePrompt === 'function') {
-                    showUpgradePrompt();
-                } else if (typeof showToast === 'function') {
-                    showToast('SOS features require SafeTea+ ($7.99/mo). Upgrade to unlock.');
-                }
+                // SOS-specific upgrade pitch
+                var pitch = document.createElement('div');
+                pitch.id = 'sos-upgrade-pitch';
+                pitch.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px';
+                pitch.innerHTML =
+                    '<div style="background:#1A1A2E;border:1px solid rgba(232,160,181,0.2);border-radius:20px;max-width:400px;width:100%;padding:28px 24px;text-align:center">' +
+                        '<div style="width:56px;height:56px;background:rgba(231,76,60,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><span style="color:#e74c3c;font-weight:800;font-size:16px">SOS</span></div>' +
+                        '<h3 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px">Unlock Emergency Tools</h3>' +
+                        '<p style="color:#8080A0;font-size:13px;margin-bottom:20px;line-height:1.5">SafeTea+ gives you a complete safety toolkit for every date.</p>' +
+                        '<div style="text-align:left;margin-bottom:20px">' +
+                            '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="min-width:36px;height:36px;background:rgba(232,160,181,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone" style="color:#E8A0B5;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Fake Call</div><div style="color:#8080A0;font-size:11px">AI-generated excuse to leave any situation</div></div></div>' +
+                            '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="min-width:36px;height:36px;background:rgba(231,76,60,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microphone" style="color:#e74c3c;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Record & Alert</div><div style="color:#8080A0;font-size:11px">Audio recording + GPS alerts to trusted contacts</div></div></div>' +
+                            '<div style="display:flex;align-items:center;gap:12px;padding:10px 0"><div style="min-width:36px;height:36px;background:rgba(231,76,60,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="color:#e74c3c;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Call 911</div><div style="color:#8080A0;font-size:11px">One-tap emergency services with location sharing</div></div></div>' +
+                        '</div>' +
+                        '<button onclick="document.getElementById(\'sos-upgrade-pitch\').remove();if(typeof showUpgradePrompt===\'function\')showUpgradePrompt()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif;margin-bottom:10px">Subscribe to SafeTea+ — $7.99/mo</button>' +
+                        '<button onclick="document.getElementById(\'sos-upgrade-pitch\').remove()" style="width:100%;padding:10px;border:none;background:transparent;color:#8080A0;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif">Maybe Later</button>' +
+                    '</div>';
+                document.body.appendChild(pitch);
+                pitch.addEventListener('click', function(e) { if (e.target === pitch) pitch.remove(); });
             };
             document.getElementById('sos-opt-fakecall').onclick = upgradeHandler;
             document.getElementById('sos-opt-record').onclick = upgradeHandler;

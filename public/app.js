@@ -1393,18 +1393,18 @@
         html += '<div style="color:#fff;font-size:22px;font-weight:800">' + plusPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + plusPer + '</span>' + saveBadge + '</div>';
         html += '</div>';
         html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In/Out with SafeWalk</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SafeTea Reports & Sharing</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Name Watch Alerts</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SMS Notifications</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Photo Verification</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Safety Resource Hub</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Priority Support</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Know who you\'re meeting — background & identity checks</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SOS tools — Fake Call, Record & Alert, one-tap 911</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In with live GPS tracking for contacts</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Name Watch — get alerts when someone is mentioned</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SMS notifications to your trusted circle</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>AI photo verification — catch catfish before you meet</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Priority support from the SafeTea team</div>';
         html += '</div>';
         if (plusActive) {
             html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(232,160,181,0.1);border-radius:8px;color:#E8A0B5;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
         } else {
-            html += '<button onclick="startCheckout(\'plus\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to SafeTea+</button>';
+            html += '<button onclick="startCheckout(\'plus\')" style="width:100%;margin-top:14px;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Subscribe to SafeTea+ — ' + plusPrice + plusPer + '</button>';
         }
         html += '</div>';
 
@@ -1808,6 +1808,19 @@
             }
         })
         .catch(function() { if (typeof showToast === 'function') showToast('Failed to save profile'); });
+    };
+
+    // ============ TOGGLE CHANGE PASSWORD ============
+    window.toggleChangePassword = function() {
+        var form = document.getElementById('change-password-form');
+        var chevron = document.getElementById('pw-chevron');
+        if (form.style.display === 'none' || !form.style.display) {
+            form.style.display = 'flex';
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            form.style.display = 'none';
+            chevron.style.transform = 'rotate(0deg)';
+        }
     };
 
     // ============ CHANGE PASSWORD ============
@@ -2779,7 +2792,7 @@
                     '<div style="width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;background:linear-gradient(135deg,' + (room.color_primary || '#9b59b6') + ',' + (room.color_secondary || '#8e44ad') + ');flex-shrink:0">' + escapeHtmlSafe(room.greek_letters) + '</div>' +
                     '<div style="flex:1;min-width:0">' +
                         '<div style="font-weight:600;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtmlSafe(room.name) + roleBadge + pendingBadge + '</div>' +
-                        '<div style="font-size:12px;color:#8080A0;margin-top:2px">' + (room.chapter || room.university || room.scope) + ' &middot; ' + room.member_count + ' members</div>' +
+                        '<div style="font-size:12px;color:#8080A0;margin-top:2px">' + (room.chapter || room.university || room.scope) + ' &middot; ' + room.member_count + ' ' + (room.member_count == 1 ? 'member' : 'members') + '</div>' +
                     '</div>' +
                     '<i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>' +
                 '</div>';
@@ -2809,7 +2822,7 @@
             document.getElementById('rv-logo').style.background = 'linear-gradient(135deg,' + (room.color_primary || '#9b59b6') + ',' + (room.color_secondary || '#8e44ad') + ')';
             document.getElementById('rv-name').textContent = room.name;
             document.getElementById('rv-chapter').textContent = [room.chapter, room.university].filter(Boolean).join(' — ') || '';
-            document.getElementById('rv-member-count').innerHTML = '<i class="fas fa-users"></i> ' + data.memberCount + ' members';
+            document.getElementById('rv-member-count').innerHTML = '<i class="fas fa-users"></i> ' + data.memberCount + ' ' + (data.memberCount == 1 ? 'member' : 'members');
             var scopeLabels = { chapter: 'Chapter', university: 'University', regional: 'Regional', national: 'National' };
             document.getElementById('rv-scope').innerHTML = '<i class="fas fa-globe"></i> ' + (scopeLabels[room.scope] || 'Chapter');
 

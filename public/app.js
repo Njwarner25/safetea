@@ -1288,21 +1288,8 @@
 
     // ============ IDENTITY VERIFICATION ============
     window.startIdentityVerification = function() {
-        fetch('/api/auth/verify/identity', {
-            method: 'POST',
-            headers: authHeaders()
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.verificationUrl) {
-                window.open(data.verificationUrl, '_blank');
-            } else if (data.error) {
-                if (typeof showToast === 'function') showToast(data.error);
-            } else {
-                if (typeof showToast === 'function') showToast('Identity verification initiated. Check your email.');
-            }
-        })
-        .catch(function() { if (typeof showToast === 'function') showToast('Verification failed. Please try again.'); });
+        // Redirect to the dedicated verification page with selfie camera flow
+        window.location.href = '/verify.html';
     };
 
     // ============ AVATAR CUSTOMIZATION ============
@@ -2157,29 +2144,266 @@
         return u && (post.user_id === u.id || u.role === 'admin' || u.role === 'moderator');
     }
 
-    // ==================== TOGGLE LIKE ====================
-    window.toggleLike = function(postId) {
-        var btn = document.getElementById('like-btn-' + postId);
-        if (!btn) return;
-        var icon = btn.querySelector('i');
-        var isLiked = icon && icon.classList.contains('fa-heart') && icon.classList.contains('fas');
-        var method = isLiked ? 'DELETE' : 'POST';
+    // ==================== VOTE SYSTEM (LIKE / DISLIKE) ====================
+    var _voteDebounce = {};
+    window.votePost = function(postId, voteType) {
+        if (_voteDebounce[postId]) return;
+        _voteDebounce[postId] = true;
+        setTimeout(function() { delete _voteDebounce[postId]; }, 300);
 
-        apiFetch('/posts/like?id=' + postId, { method: method }).then(function(data) {
-            if (!data) return;
-            var countEl = document.getElementById('like-count-' + postId);
-            if (countEl) countEl.textContent = data.like_count;
-            if (icon) {
+        var likeBtn = document.getElementById('like-btn-' + postId);
+        var dislikeBtn = document.getElementById('dislike-btn-' + postId);
+        var likeIcon = likeBtn ? likeBtn.querySelector('i') : null;
+        var dislikeIcon = dislikeBtn ? dislikeBtn.querySelector('i') : null;
+        var isLiked = likeIcon && likeIcon.classList.contains('fas');
+        var isDisliked = dislikeIcon && dislikeIcon.classList.contains('fas');
+
+        if (voteType === 'like') {
+            var method = isLiked ? 'DELETE' : 'POST';
+            apiFetch('/posts/like?id=' + postId, { method: method }).then(function(data) {
+                if (!data) return;
+                var lc = document.getElementById('like-count-' + postId);
+                var dc = document.getElementById('dislike-count-' + postId);
+                if (lc) lc.textContent = data.like_count;
+                if (dc && data.dislike_count !== undefined) dc.textContent = data.dislike_count;
                 if (data.liked) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    btn.style.color = '#e74c3c';
+                    if (likeIcon) { likeIcon.classList.remove('far'); likeIcon.classList.add('fas'); }
+                    if (likeBtn) likeBtn.style.color = '#E8A0B5';
+                    if (dislikeIcon) { dislikeIcon.classList.remove('fas'); dislikeIcon.classList.add('far'); }
+                    if (dislikeBtn) dislikeBtn.style.color = '#8080A0';
                 } else {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                    btn.style.color = '';
+                    if (likeIcon) { likeIcon.classList.remove('fas'); likeIcon.classList.add('far'); }
+                    if (likeBtn) likeBtn.style.color = '#8080A0';
                 }
+                if (likeBtn) { likeBtn.style.transform = 'scale(1.2)'; setTimeout(function() { likeBtn.style.transform = ''; }, 200); }
+            });
+        } else if (voteType === 'dislike') {
+            var method2 = isDisliked ? 'DELETE' : 'POST';
+            apiFetch('/posts/dislike?id=' + postId, { method: method2 }).then(function(data) {
+                if (!data) return;
+                var lc = document.getElementById('like-count-' + postId);
+                var dc = document.getElementById('dislike-count-' + postId);
+                if (lc) lc.textContent = data.like_count;
+                if (dc) dc.textContent = data.dislike_count;
+                if (data.disliked) {
+                    if (dislikeIcon) { dislikeIcon.classList.remove('far'); dislikeIcon.classList.add('fas'); }
+                    if (dislikeBtn) dislikeBtn.style.color = '#E8A0B5';
+                    if (likeIcon) { likeIcon.classList.remove('fas'); likeIcon.classList.add('far'); }
+                    if (likeBtn) likeBtn.style.color = '#8080A0';
+                } else {
+                    if (dislikeIcon) { dislikeIcon.classList.remove('fas'); dislikeIcon.classList.add('far'); }
+                    if (dislikeBtn) dislikeBtn.style.color = '#8080A0';
+                }
+                if (dislikeBtn) { dislikeBtn.style.transform = 'scale(1.2)'; setTimeout(function() { dislikeBtn.style.transform = ''; }, 200); }
+            });
+        }
+    };
+
+    // Backwards compat wrapper
+    window.toggleLike = function(postId) { window.votePost(postId, 'like'); };
+
+    // ==================== EXPANDABLE REPLIES ====================
+    window.toggleReplies = function(postId) {
+        var container = document.getElementById('replies-' + postId);
+        if (!container) return;
+        if (container.style.display === 'block') { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        container.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:8px"><i class="fas fa-spinner fa-spin"></i> Loading replies...</div>';
+
+        apiFetch('/posts/replies?id=' + postId).then(function(data) {
+            var html = '';
+            var replies = (data && data.replies) ? data.replies : [];
+            var showAll = replies.length <= 3;
+            var visible = showAll ? replies : replies.slice(0, 3);
+            visible.forEach(function(r) {
+                var rName = r.display_name || 'Anonymous';
+                html += '<div style="display:flex;gap:10px;margin-bottom:8px;padding:6px 0">' +
+                    '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(rName) + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + rName[0].toUpperCase() + '</div>' +
+                    '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(rName) + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span>' +
+                    '<div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
+                '</div>';
+            });
+            if (!showAll) {
+                html += '<button onclick="showAllReplies(' + postId + ')" id="expand-replies-' + postId + '" style="background:none;border:none;color:#E8A0B5;font-size:12px;cursor:pointer;padding:4px 0;margin-bottom:8px">View all ' + replies.length + ' replies</button>';
+                html += '<div id="all-replies-' + postId + '" style="display:none">';
+                replies.slice(3).forEach(function(r) {
+                    var rName = r.display_name || 'Anonymous';
+                    html += '<div style="display:flex;gap:10px;margin-bottom:8px;padding:6px 0">' +
+                        '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(rName) + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + rName[0].toUpperCase() + '</div>' +
+                        '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(rName) + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span>' +
+                        '<div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
+                    '</div>';
+                });
+                html += '</div>';
             }
+            if (replies.length === 0) {
+                html += '<div style="color:#555;font-size:12px;margin-bottom:8px">No replies yet. Be the first!</div>';
+            }
+            // Compose box
+            html += '<div style="display:flex;gap:8px;margin-top:10px">' +
+                '<input type="text" id="reply-input-' + postId + '" placeholder="Write a reply..." style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-family:\'Inter\',sans-serif;font-size:13px;outline:none" onfocus="this.style.borderColor=\'#E8A0B5\'" onblur="this.style.borderColor=\'rgba(255,255,255,0.08)\'" onkeydown="if(event.key===\'Enter\')submitPostReply(' + postId + ')">' +
+                '<button onclick="submitPostReply(' + postId + ')" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reply</button>' +
+            '</div>';
+            container.innerHTML = html;
+            var inp = document.getElementById('reply-input-' + postId);
+            if (inp) inp.focus();
+        });
+    };
+
+    window.showAllReplies = function(postId) {
+        var el = document.getElementById('all-replies-' + postId);
+        var btn = document.getElementById('expand-replies-' + postId);
+        if (el) el.style.display = 'block';
+        if (btn) btn.style.display = 'none';
+    };
+
+    window.submitPostReply = function(postId) {
+        var input = document.getElementById('reply-input-' + postId);
+        if (!input || !input.value.trim()) return;
+        var text = input.value.trim();
+        input.disabled = true;
+        apiFetch('/posts/replies?id=' + postId, {
+            method: 'POST',
+            body: JSON.stringify({ body: text })
+        }).then(function(data) {
+            if (data && data.id) {
+                var container = document.getElementById('replies-' + postId);
+                if (container) container.style.display = 'none';
+                window.toggleReplies(postId);
+                // Update reply count in action bar
+                var countEl = document.getElementById('reply-count-' + postId);
+                if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+                showToast('Reply posted!');
+            } else if (data && data.error) {
+                showToast(data.error, true);
+                input.disabled = false;
+            }
+        }).catch(function() { showToast('Failed to reply', true); input.disabled = false; });
+    };
+
+    // ==================== BUMP POST ====================
+    window.bumpPost = function(postId) {
+        apiFetch('/posts/bump?id=' + postId, { method: 'POST' }).then(function(data) {
+            if (!data) return;
+            if (data.error) {
+                showToast(data.error, true);
+                return;
+            }
+            var countEl = document.getElementById('bump-count-' + postId);
+            var btn = document.getElementById('bump-btn-' + postId);
+            if (countEl) countEl.textContent = data.bump_count;
+            if (btn) { btn.style.color = '#E8A0B5'; btn.style.transform = 'scale(1.2)'; setTimeout(function() { btn.style.transform = ''; }, 200); }
+            if (data.trending) showToast('This post is now trending!');
+            else showToast('Post bumped!');
+        }).catch(function() { showToast('Failed to bump post', true); });
+    };
+
+    // ==================== THREE-DOT MENU ====================
+    window.showPostMenu = function(postId, isOwner, feed) {
+        // Close any existing menu
+        var existing = document.getElementById('post-menu-' + postId);
+        if (existing) { existing.remove(); return; }
+        document.querySelectorAll('[id^="post-menu-"]').forEach(function(m) { m.remove(); });
+
+        var menuHtml = '<div id="post-menu-' + postId + '" style="position:absolute;right:0;top:24px;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;min-width:160px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden">';
+        if (isOwner) {
+            menuHtml += '<button onclick="editPostFromMenu(' + postId + ',\'' + (feed || 'community') + '\');document.getElementById(\'post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#fff;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-pencil-alt" style="width:18px;color:#E8A0B5"></i> Edit Post</button>';
+            menuHtml += '<button onclick="deletePost(' + postId + ',\'' + (feed || 'community') + '\');document.getElementById(\'post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-trash" style="width:18px"></i> Delete Post</button>';
+        } else {
+            menuHtml += '<button onclick="showReportModal(' + postId + ');document.getElementById(\'post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-flag" style="width:18px"></i> Report Post</button>';
+        }
+        menuHtml += '</div>';
+
+        var wrapper = document.getElementById('menu-anchor-' + postId);
+        if (wrapper) {
+            wrapper.innerHTML = menuHtml;
+            // Close menu when clicking outside
+            setTimeout(function() {
+                document.addEventListener('click', function closeMenu(e) {
+                    var menu = document.getElementById('post-menu-' + postId);
+                    if (menu && !menu.contains(e.target) && !wrapper.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 10);
+        }
+    };
+
+    window.editPostFromMenu = function(postId, feed) {
+        var postEl = document.getElementById('post-' + postId);
+        if (!postEl) return;
+        var bodyEl = postEl.querySelector('[data-post-body]');
+        var body = bodyEl ? bodyEl.textContent : '';
+        editPost(postId, body, feed);
+    };
+
+    // ==================== REPORT MODAL ====================
+    window.showReportModal = function(postId) {
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'report-post-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content" style="max-width:420px">' +
+                '<h3 style="color:#fff;margin-bottom:4px"><i class="fas fa-flag" style="color:#e74c3c"></i> Report Post</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin-bottom:20px">Help keep our community safe. Select a reason below.</p>' +
+                '<div id="report-reasons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">' +
+                    reportReasonOption('inappropriate', 'Inappropriate Content') +
+                    reportReasonOption('harassment', 'Harassment or Bullying') +
+                    reportReasonOption('spam', 'Spam') +
+                    reportReasonOption('fake_identity', 'Fake Identity') +
+                    reportReasonOption('doxxing', 'Doxxing / Sharing Private Info') +
+                    reportReasonOption('false_info', 'False Information') +
+                    reportReasonOption('threats', 'Threats') +
+                    reportReasonOption('other', 'Other') +
+                '</div>' +
+                '<textarea id="report-details" rows="3" placeholder="Additional details (optional)..." style="width:100%;padding:12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:13px;resize:vertical;font-family:inherit;margin-bottom:16px"></textarea>' +
+                '<button id="report-submit-btn" class="dc-btn dc-btn-primary" style="background:linear-gradient(135deg,#e74c3c,#c0392b);width:100%" onclick="submitReport(' + postId + ')"><i class="fas fa-flag"></i> Submit Report</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px;width:100%" onclick="document.getElementById(\'report-post-modal\').remove()">Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    function reportReasonOption(value, label) {
+        return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.06);border-radius:8px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'rgba(232,160,181,0.3)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'rgba(255,255,255,0.06)\'">' +
+            '<input type="radio" name="report-reason" value="' + value + '" style="accent-color:#E8A0B5" onclick="this.closest(\'label\').style.borderColor=\'#E8A0B5\';document.querySelectorAll(\'#report-reasons label\').forEach(function(l){if(!l.querySelector(\'input\').checked)l.style.borderColor=\'rgba(255,255,255,0.06)\'})">' +
+            '<span style="color:#ccc;font-size:13px">' + label + '</span>' +
+        '</label>';
+    }
+
+    window.submitReport = function(postId) {
+        var reason = document.querySelector('input[name="report-reason"]:checked');
+        if (!reason) { showToast('Please select a reason', true); return; }
+        var details = document.getElementById('report-details').value.trim();
+        var btn = document.getElementById('report-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        apiFetch('/posts/report', {
+            method: 'POST',
+            body: JSON.stringify({ post_id: postId, reason: reason.value, details: details || null })
+        }).then(function(data) {
+            if (data && data.status === 'reported') {
+                showToast('Report submitted. Thank you for keeping our community safe.');
+                var modal = document.getElementById('report-post-modal');
+                if (modal) modal.remove();
+                // If post was auto-hidden (3+ reports), show placeholder
+                if (data.report_count >= 3) {
+                    var postEl = document.getElementById('post-' + postId);
+                    if (postEl) {
+                        postEl.style.opacity = '0.4';
+                        postEl.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0"><i class="fas fa-eye-slash" style="font-size:20px;margin-bottom:8px;display:block"></i>This post has been hidden due to community reports.</div>';
+                    }
+                }
+            } else {
+                showToast((data && data.error) || 'Failed to submit report', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-flag"></i> Submit Report';
+            }
+        }).catch(function() {
+            showToast('Failed to submit report', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-flag"></i> Submit Report';
         });
     };
 
@@ -2297,27 +2521,38 @@
         var badgeHtml = hubGetCategoryBadge(post.category);
         var replyCount = post.reply_count || 0;
         var likeCount = parseInt(post.like_count) || 0;
+        var dislikeCount = parseInt(post.dislike_count) || 0;
+        var bumpCount = parseInt(post.bump_count) || 0;
         var userLiked = post.user_liked === true || post.user_liked === 't';
-        var heartIcon = userLiked ? 'fas fa-heart' : 'far fa-heart';
-        var heartStyle = userLiked ? 'color:#e74c3c' : 'color:#8080A0';
+        var userDisliked = post.user_disliked === true || post.user_disliked === 't';
+        var userBumped = post.user_bumped === true || post.user_bumped === 't';
         var canMod = canModifyPost(post);
+        // Deprioritize posts with high dislike ratio
+        var deprioritized = dislikeCount >= 5 && dislikeCount > likeCount * 2;
+        var trendingBadge = bumpCount >= 5 ? ' <span style="font-size:10px;color:#f39c12;font-weight:600">TRENDING</span>' : '';
 
-        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px' + (deprioritized ? ';opacity:0.5' : '') + '">' +
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div style="flex:1">' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + badgeHtml + '</div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + badgeHtml + trendingBadge + '</div>' +
                     '<div style="font-size:12px;color:#666;margin-top:2px">' + getTimeAgoFromDate(post.created_at) + cityHtml + '</div>' +
                 '</div>' +
             '</div>' +
-            '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
+            '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
             (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px" loading="lazy" onerror="this.style.display=\'none\'"></div>' : '') +
-            '<div style="display:flex;gap:16px;align-items:center">' +
-                '<button id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
-                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +
-                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtmlSafe(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'community\')" style="margin-left:auto;background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
-                (canMod ? '<button onclick="deletePost(' + post.id + ', \'community\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i> Delete</button>' : '') +
+            // Action bar
+            '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
+                '<button id="like-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userLiked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
+                '<button id="dislike-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userDisliked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userDisliked ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="dislike-count-' + post.id + '">' + dislikeCount + '</span></button>' +
+                '<button onclick="toggleReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:#8080A0" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-comment"></i> <span id="reply-count-' + post.id + '">' + replyCount + '</span></button>' +
+                '<button id="bump-btn-' + post.id + '" onclick="bumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userBumped ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-arrow-up"></i> <span id="bump-count-' + post.id + '">' + bumpCount + '</span></button>' +
+                '<div style="margin-left:auto;position:relative" id="menu-anchor-' + post.id + '">' +
+                    '<button onclick="showPostMenu(' + post.id + ',' + canMod + ',\'community\')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
+                '</div>' +
             '</div>' +
+            // Reply container (hidden by default)
+            '<div id="replies-' + post.id + '" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04)"></div>' +
         '</div>';
     }
 
@@ -2428,6 +2663,12 @@
         var avatarColor = hubGetAvatarColor(authorName);
         var personName = post.title || 'Unknown';
         var replyCount = post.reply_count || 0;
+        var likeCount = parseInt(post.like_count) || 0;
+        var dislikeCount = parseInt(post.dislike_count) || 0;
+        var bumpCount = parseInt(post.bump_count) || 0;
+        var userLiked = post.user_liked === true || post.user_liked === 't';
+        var userDisliked = post.user_disliked === true || post.user_disliked === 't';
+        var userBumped = post.user_bumped === true || post.user_bumped === 't';
         var canMod = canModifyPost(post);
 
         return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
@@ -2443,14 +2684,21 @@
                 (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtmlSafe(post.city) + '</span>' : '') +
             '</div>' +
             (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06)" alt="Referral photo"></div>' : '') +
-            '<div style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
-            '<div style="display:flex;gap:16px;align-items:center">' +
-                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</span>' +
-                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' comments</span>' +
-                (post.user_id ? '<button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="margin-left:auto;background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button>' : '') +
-                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtmlSafe(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'referral\')" style="background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i></button>' : '') +
-                (canMod ? '<button onclick="deletePost(' + post.id + ', \'referral\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
+            '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
+            // Ask About Him button
+            (post.user_id ? '<div style="margin-bottom:12px"><button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button></div>' : '') +
+            // Unified action bar
+            '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
+                '<button id="like-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userLiked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
+                '<button id="dislike-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userDisliked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userDisliked ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="dislike-count-' + post.id + '">' + dislikeCount + '</span></button>' +
+                '<button onclick="toggleReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:#8080A0" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-comment"></i> <span id="reply-count-' + post.id + '">' + replyCount + '</span></button>' +
+                '<button id="bump-btn-' + post.id + '" onclick="bumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userBumped ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-arrow-up"></i> <span id="bump-count-' + post.id + '">' + bumpCount + '</span></button>' +
+                '<div style="margin-left:auto;position:relative" id="menu-anchor-' + post.id + '">' +
+                    '<button onclick="showPostMenu(' + post.id + ',' + canMod + ',\'referral\')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
+                '</div>' +
             '</div>' +
+            // Reply container (hidden by default)
+            '<div id="replies-' + post.id + '" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04)"></div>' +
         '</div>';
     }
 

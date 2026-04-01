@@ -25,15 +25,22 @@ module.exports = async function handler(req, res) {
     )`);
   } catch(e) { /* already exists */ }
 
-  // POST = like
+  // POST = like (mutual exclusion: remove any existing dislike)
   if (req.method === 'POST') {
     try {
+      try { await run('DELETE FROM post_dislikes WHERE post_id = $1 AND user_id = $2', [id, user.id]); } catch(e) { /* table may not exist yet */ }
       await run(
         'INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2) ON CONFLICT (post_id, user_id) DO NOTHING',
         [id, user.id]
       );
       const count = await getOne('SELECT COUNT(*) as like_count FROM post_likes WHERE post_id = $1', [id]);
-      return res.status(200).json({ liked: true, like_count: parseInt(count.like_count) });
+      let dislike_count = 0;
+      try {
+        const dc = await getOne('SELECT COUNT(*) as c FROM post_dislikes WHERE post_id = $1', [id]);
+        dislike_count = parseInt(dc.c);
+        await run('UPDATE posts SET dislike_count = $1 WHERE id = $2', [dislike_count, id]);
+      } catch(e) { /* table may not exist yet */ }
+      return res.status(200).json({ liked: true, like_count: parseInt(count.like_count), dislike_count });
     } catch (err) {
       console.error('Like error:', err);
       return res.status(500).json({ error: 'Failed to like post' });

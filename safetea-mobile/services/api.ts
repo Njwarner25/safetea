@@ -150,9 +150,16 @@ class ApiClient {
     return this.request('/alerts/area?lat=' + lat + '&lon=' + lon + '&radius=' + radius + '&days=' + days + '&limit=20');
   }
 
-  // Identity Verification (Didit)
-  async startIdentityVerification() {
-    return this.request<any>('/auth/verify/identity', { method: 'POST' });
+  // Identity Verification
+  async getIdentityChallenge() {
+    return this.request<{ challenge_id: string; instruction: string }>('/auth/verify/identity');
+  }
+
+  async submitIdentityVerification(selfie: string, challengeId: string) {
+    return this.request<any>('/auth/verify/identity', {
+      method: 'POST',
+      body: JSON.stringify({ selfie, challenge_id: challengeId }),
+    });
   }
 
   async getVerificationStatus() {

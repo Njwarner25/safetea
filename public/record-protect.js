@@ -21,6 +21,217 @@
         stealthMode: false
     };
 
+    // ============ FALLBACK SCRIPT LIBRARY ============
+    var FALLBACK_SCRIPTS = {
+        mom: [
+            "Hey honey, it's Mom. Listen, I need you to come home right now. Your dad just got back from the doctor and we need to talk about it as a family. He's okay, but can you leave now? I really need you here.",
+            "Sweetie, are you still out? I locked myself out of the house and your dad's phone is going to voicemail. Can you come let me in? I've been waiting outside for twenty minutes and it's getting cold.",
+            "Hi baby, I'm so sorry to bother you but I just got a call from the alarm company. They said the motion sensor went off at the house. Can you get here as soon as possible? I'm still at work.",
+            "Hey, where are you right now? Grandma just called and she's not feeling well. I think we need to go check on her tonight. Can you meet me at her place? I'll text you the address.",
+            "Hi sweetheart, listen, the dog got out of the yard again and he's running around the neighborhood. I really need your help catching him before it gets too dark. Can you come right now?"
+        ],
+        bestfriend: [
+            "Hey! Oh my god, you will not believe what just happened. I just got into a fender bender on Fifth Street and I'm kind of freaking out. Can you come get me? I don't think my car is drivable. Please hurry.",
+            "Dude, I'm locked out of my apartment and my landlord isn't picking up. I'm sitting on the steps outside. Can you come over? You still have that spare key I gave you, right? I really need it.",
+            "Hey, so I know this is random but I just found out I got the job! The one I've been interviewing for! We HAVE to celebrate tonight. Can you get here in like fifteen minutes? I'll explain everything.",
+            "Okay I need you right now. My ex just showed up at the bar I'm at and I cannot deal with this alone. Can you come meet me? I'll send you my location. Please come quick.",
+            "Hey, are you busy? I really need to talk to someone. I just had the worst fight with my roommate and I kind of need to get out of here for a bit. Can you come pick me up?"
+        ],
+        sister: [
+            "Hey, it's me. Mom and Dad are fighting again and it's getting pretty bad. I really don't want to be here alone right now. Can you come over? I know it's late but I could really use the company.",
+            "Hey sis, I hate to do this but I need a huge favor. My car battery died at the grocery store parking lot and I have frozen food melting in the trunk. Can you come jump my car real quick?",
+            "Listen, I just realized I left my wallet at your place last weekend. I need my ID for something tomorrow morning. Can I come grab it tonight? Or can you bring it to me? I'll buy you dinner.",
+            "Oh my gosh, are you sitting down? I have the biggest news. I can't tell you over the phone, you have to come over right now. Trust me, you're going to want to hear this in person.",
+            "Hey, so the power just went out at my apartment and the building manager isn't responding. It's completely dark and honestly kind of creepy. Can you come hang out until they fix it?"
+        ],
+        dad: [
+            "Hey kiddo, it's Dad. Listen, I'm having trouble with the computer again and I've got an important work email I need to send tonight. Can you swing by and help me out? I'd really appreciate it.",
+            "Hey, are you out right now? I was just driving past the house and I noticed the garage door is wide open. I can't get back there right now. Can you go check on it? Make sure everything's okay.",
+            "Hi, it's me. Your mother wanted me to call you. She made way too much food for dinner tonight and she's insisting you come get some before it goes bad. You know how she gets. Can you come by?",
+            "Hey, I need you to come help me with something in the yard real quick. I'm trying to move the patio furniture before the rain hits tonight and my back is acting up. Won't take long, I promise.",
+            "Hey sport, I just got tickets to the game tomorrow night and I need to know right now if you want to go. They're going fast. Can you call me back in five? Actually, just come over and we'll figure it out."
+        ],
+        roommate: [
+            "Hey, so don't panic but I think the kitchen sink is leaking again. There's water all over the floor and I can't find the shut-off valve. Can you come home and help me? I don't want to make it worse.",
+            "Hey, did you take your keys with you? Because I'm standing outside our apartment and the door is locked. My phone is about to die too. Can you come let me in? I'll be on the steps.",
+            "Okay so I might have accidentally set off the smoke alarm while cooking and the building manager is here asking questions. It would really help if you were here. Can you come back soon?",
+            "Hey, I just saw a really sketchy person hanging around the parking lot by our building. I know it's probably nothing but I'd feel better if you were here. Are you almost home?",
+            "Yo, the internet has been down for like two hours and the cable company says someone needs to be here for the technician between eight and ten. I have to leave for work. Can you come cover?"
+        ]
+    };
+
+    // ============ SCRIPT + AUDIO CACHING ============
+    var CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+    var CACHE_VERSION = 2; // Bump to invalidate old caches (v1 = eleven_turbo_v2, v2 = eleven_flash_v2_5)
+
+    function getCachedCall(persona) {
+        try {
+            var raw = localStorage.getItem('safetea_fakecall_cache_' + persona);
+            if (!raw) return null;
+            var cached = JSON.parse(raw);
+            // Invalidate old cache versions or expired entries
+            if ((cached.v || 1) < CACHE_VERSION || Date.now() - cached.ts > CACHE_TTL_MS) {
+                localStorage.removeItem('safetea_fakecall_cache_' + persona);
+                return null;
+            }
+            return cached;
+        } catch (e) { return null; }
+    }
+
+    function setCachedCall(persona, script, audio) {
+        try {
+            localStorage.setItem('safetea_fakecall_cache_' + persona, JSON.stringify({
+                script: script,
+                audio: audio,
+                ts: Date.now(),
+                v: CACHE_VERSION
+            }));
+        } catch (e) {
+            console.warn('[FakeCall] Cache write failed (storage full?):', e);
+        }
+    }
+
+    function getRandomFallbackScript(persona) {
+        var scripts = FALLBACK_SCRIPTS[persona] || FALLBACK_SCRIPTS.mom;
+        return scripts[Math.floor(Math.random() * scripts.length)];
+    }
+
+    // ============ SPEECH SYNTHESIS FALLBACK ============
+    function speakWithBrowserVoice(script, onEnd) {
+        if (!window.speechSynthesis) { if (onEnd) onEnd(false); return; }
+        try {
+            var utterance = new SpeechSynthesisUtterance(script);
+            var voices = speechSynthesis.getVoices();
+            var englishVoice = voices.find(function(v) { return v.lang.startsWith('en') && !v.localService; })
+                || voices.find(function(v) { return v.lang.startsWith('en'); })
+                || voices[0];
+            if (englishVoice) utterance.voice = englishVoice;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.onend = function() { if (onEnd) onEnd(true); };
+            utterance.onerror = function() { if (onEnd) onEnd(false); };
+            window._fakecallUtterance = utterance;
+            speechSynthesis.speak(utterance);
+        } catch (e) {
+            if (onEnd) onEnd(false);
+        }
+    }
+
+    // ============ VISUAL TRANSCRIPT FALLBACK ============
+    function showCallTranscript(overlay, script) {
+        var container = document.createElement('div');
+        container.id = 'fc-transcript';
+        container.style.cssText = 'position:absolute;bottom:160px;left:20px;right:20px;max-height:200px;overflow-y:auto;text-align:center;pointer-events:none';
+        var words = script.split(' ');
+        var displayed = '';
+        var idx = 0;
+        var textEl = document.createElement('p');
+        textEl.style.cssText = 'color:rgba(255,255,255,0.7);font-size:16px;font-style:italic;line-height:1.6;margin:0';
+        container.appendChild(textEl);
+        overlay.appendChild(container);
+
+        var wordInterval = setInterval(function() {
+            if (idx >= words.length) { clearInterval(wordInterval); return; }
+            displayed += (displayed ? ' ' : '') + words[idx++];
+            textEl.textContent = displayed;
+            container.scrollTop = container.scrollHeight;
+        }, 250);
+
+        return { stop: function() { clearInterval(wordInterval); } };
+    }
+
+    // ============ REALISTIC RINGTONE ============
+    function createRingtone(phoneOS) {
+        try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            var actx = new AudioCtx();
+            var gainNode = actx.createGain();
+            gainNode.gain.value = 0.18;
+            gainNode.connect(actx.destination);
+            var ringActive = true;
+
+            if (phoneOS === 'android') {
+                // Android: rapid two-note alternating trill (A4/C5), triangle waves, two bursts per cycle
+                function playAndroidBurst() {
+                    if (!ringActive) return;
+                    var now = actx.currentTime;
+                    for (var burst = 0; burst < 2; burst++) {
+                        var offset = burst * 1.2;
+                        for (var i = 0; i < 6; i++) {
+                            var osc = actx.createOscillator();
+                            var noteGain = actx.createGain();
+                            osc.type = 'triangle';
+                            osc.frequency.value = (i % 2 === 0) ? 440 : 523.25; // A4 / C5
+                            noteGain.gain.setValueAtTime(0, now + offset + i * 0.12);
+                            noteGain.gain.linearRampToValueAtTime(1, now + offset + i * 0.12 + 0.02);
+                            noteGain.gain.linearRampToValueAtTime(0, now + offset + i * 0.12 + 0.10);
+                            osc.connect(noteGain);
+                            noteGain.connect(gainNode);
+                            osc.start(now + offset + i * 0.12);
+                            osc.stop(now + offset + i * 0.12 + 0.12);
+                        }
+                    }
+                }
+                playAndroidBurst();
+                var ringInterval = setInterval(playAndroidBurst, 4000);
+            } else {
+                // iOS: ascending C-major arpeggio (C5→E5→G5→C6) with sine waves, 2s on / 3s silence
+                function playiOSArpeggio() {
+                    if (!ringActive) return;
+                    var now = actx.currentTime;
+                    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    for (var rep = 0; rep < 3; rep++) {
+                        var repOffset = rep * 0.6;
+                        notes.forEach(function(freq, j) {
+                            var osc = actx.createOscillator();
+                            var noteGain = actx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = freq;
+                            var t = now + repOffset + j * 0.15;
+                            noteGain.gain.setValueAtTime(0, t);
+                            noteGain.gain.linearRampToValueAtTime(1, t + 0.03);
+                            noteGain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                            osc.connect(noteGain);
+                            noteGain.connect(gainNode);
+                            osc.start(t);
+                            osc.stop(t + 0.45);
+                        });
+                    }
+                }
+                playiOSArpeggio();
+                var ringInterval = setInterval(playiOSArpeggio, 5000); // 2s play + 3s silence
+            }
+
+            return {
+                stop: function() {
+                    ringActive = false;
+                    clearInterval(ringInterval);
+                    try { actx.close(); } catch(e) {}
+                }
+            };
+        } catch(e) { return null; }
+    }
+
+    // ============ END CALL GRACEFULLY ============
+    function endCallGracefully(overlay, timerInt, audio, transcriptHandle) {
+        clearInterval(timerInt);
+        if (audio) { audio.pause(); audio.currentTime = 0; }
+        if (window.speechSynthesis) speechSynthesis.cancel();
+        if (window._fakecallUtterance) window._fakecallUtterance = null;
+        if (transcriptHandle) transcriptHandle.stop();
+        window._fakecallTestMode = false;
+        window._fakecallCurrentScript = '';
+        var timerEl = overlay.querySelector('#fc-call-timer');
+        if (timerEl) {
+            timerEl.textContent = 'Call Ended';
+            timerEl.style.color = 'rgba(255,255,255,0.4)';
+        }
+        setTimeout(function() {
+            if (overlay.parentNode) overlay.remove();
+        }, 1500);
+    }
+
     function getToken() { return localStorage.getItem(TOKEN_KEY); }
     function authHeaders() { return { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }; }
     function getUser() {
@@ -233,40 +444,85 @@
     function startFakeCallCountdown(delaySec, callerName, voiceOption, phoneOS, user) {
         if (typeof showToast === 'function') showToast('Fake call in ' + delaySec + ' seconds...');
 
-        // Generate script and audio in background
-        var scriptPromise = fetch('/api/dates/fake-call-script', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({ callerName: callerName, context: 'evening date' })
-        }).then(function(r) {
-            if (!r.ok) throw new Error('Script API returned ' + r.status);
-            return r.json();
-        }).catch(function(err) {
-            console.error('[FakeCall] Script generation failed:', err);
-            return null;
-        });
+        // Check cache first
+        var cached = getCachedCall(voiceOption);
+        var audioPromise;
 
-        var audioPromise = scriptPromise.then(function(scriptData) {
-            if (!scriptData || !scriptData.script) {
-                console.warn('[FakeCall] No script available — call will ring without voice');
-                return null;
-            }
-            return fetch('/api/dates/fake-call-voice', {
+        if (cached && cached.audio) {
+            console.log('[FakeCall] Using cached audio for ' + voiceOption);
+            window._fakecallCurrentScript = cached.script;
+            audioPromise = Promise.resolve({ audio: cached.audio });
+
+            // Prefetch fresh content in background for next time
+            fetchFreshCallContent(callerName, voiceOption);
+        } else {
+            // Normal API flow with fallback
+            var scriptPromise = fetch('/api/dates/fake-call-script', {
                 method: 'POST',
                 headers: authHeaders(),
-                body: JSON.stringify({ script: scriptData.script, persona: voiceOption })
+                body: JSON.stringify({ callerName: callerName, context: 'evening date' })
             }).then(function(r) {
-                if (!r.ok) throw new Error('Voice API returned ' + r.status);
+                if (!r.ok) throw new Error('Script API returned ' + r.status);
                 return r.json();
+            }).catch(function(err) {
+                console.error('[FakeCall] Script generation failed, using fallback:', err);
+                var fallback = getRandomFallbackScript(voiceOption);
+                return { success: true, script: fallback, fallback: true };
             });
-        }).catch(function(err) {
-            console.error('[FakeCall] Voice synthesis failed:', err);
-            return null;
-        });
+
+            audioPromise = scriptPromise.then(function(scriptData) {
+                if (!scriptData || !scriptData.script) {
+                    var fallback = getRandomFallbackScript(voiceOption);
+                    window._fakecallCurrentScript = fallback;
+                    return null;
+                }
+                window._fakecallCurrentScript = scriptData.script;
+                return fetch('/api/dates/fake-call-voice', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ script: scriptData.script, persona: voiceOption })
+                }).then(function(r) {
+                    if (!r.ok) throw new Error('Voice API returned ' + r.status);
+                    return r.json();
+                }).then(function(voiceData) {
+                    // Cache on success
+                    if (voiceData && voiceData.audio) {
+                        setCachedCall(voiceOption, scriptData.script, voiceData.audio);
+                    }
+                    return voiceData;
+                });
+            }).catch(function(err) {
+                console.error('[FakeCall] Voice synthesis failed:', err);
+                return null;
+            });
+        }
 
         setTimeout(function() {
             showFakeIncomingCall(callerName, audioPromise, phoneOS);
         }, delaySec * 1000);
+    }
+
+    // Background prefetch for cache refresh
+    function fetchFreshCallContent(callerName, voiceOption) {
+        fetch('/api/dates/fake-call-script', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ callerName: callerName, context: 'evening date' })
+        }).then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(scriptData) {
+            if (!scriptData || !scriptData.script) return;
+            return fetch('/api/dates/fake-call-voice', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ script: scriptData.script, persona: voiceOption })
+            }).then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(voiceData) {
+                if (voiceData && voiceData.audio) {
+                    setCachedCall(voiceOption, scriptData.script, voiceData.audio);
+                    console.log('[FakeCall] Cache refreshed for ' + voiceOption);
+                }
+            });
+        }).catch(function() {});
     }
 
     // ============ INCOMING CALL SCREEN (iOS / Android) ============
@@ -282,44 +538,8 @@
             }, 3000);
         }
 
-        // Ringtone via Web Audio API
-        var ringtone = null;
-        try {
-            var AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx) {
-                var actx = new AudioCtx();
-                var gainNode = actx.createGain();
-                gainNode.gain.value = 0.2;
-                gainNode.connect(actx.destination);
-                var ringActive = true;
-
-                function playRingBurst() {
-                    if (!ringActive) return;
-                    var o1 = actx.createOscillator();
-                    var o2 = actx.createOscillator();
-                    o1.frequency.value = 440;
-                    o2.frequency.value = 480;
-                    o1.connect(gainNode);
-                    o2.connect(gainNode);
-                    var now = actx.currentTime;
-                    o1.start(now);
-                    o2.start(now);
-                    o1.stop(now + 2);
-                    o2.stop(now + 2);
-                }
-
-                playRingBurst();
-                var ringInterval = setInterval(playRingBurst, 4000);
-
-                ringtone = {
-                    stop: function() {
-                        ringActive = false;
-                        clearInterval(ringInterval);
-                        try { actx.close(); } catch(e) {}
-                    }
-                };
-            }
-        } catch(e) {}
+        // Realistic ringtone via Web Audio API (OS-specific)
+        var ringtone = createRingtone(phoneOS);
 
         function stopRinging() {
             if (ringtone) ringtone.stop();
@@ -387,8 +607,17 @@
 
         document.body.appendChild(overlay);
 
+        // Show TEST MODE badge if in test mode
+        if (window._fakecallTestMode) {
+            var badge = document.createElement('div');
+            badge.style.cssText = 'position:absolute;top:max(20px,env(safe-area-inset-top,20px));left:50%;transform:translateX(-50%);background:rgba(255,165,0,0.9);color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:1px;z-index:1';
+            badge.textContent = 'TEST MODE';
+            overlay.appendChild(badge);
+        }
+
         document.getElementById('fc-decline').onclick = function() {
             stopRinging();
+            window._fakecallTestMode = false;
             overlay.remove();
         };
         document.getElementById('fc-accept').onclick = function() {
@@ -493,18 +722,30 @@
             if (timerEl) timerEl.textContent = String(Math.floor(elapsed / 60)).padStart(2, '0') + ':' + String(elapsed % 60).padStart(2, '0');
         }, 1000);
 
-        // Play voice audio
+        // Play voice audio with fallback chain
         var audio = null;
         var isMuted = false;
+        var transcriptHandle = null;
         var activeStyle = phoneOS === 'android' ? 'rgba(76,175,80,0.2)' : '#fff';
         var activeColor = phoneOS === 'android' ? '#4CAF50' : '#000';
         var inactiveStyle = phoneOS === 'android' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)';
         var inactiveColor = '#fff';
 
+        // Auto-timeout: end call after 45s if no audio is playing
+        var autoTimeout = setTimeout(function() {
+            endCallGracefully(overlay, timerInt, audio, transcriptHandle);
+        }, 45000);
+
+        function cancelAutoTimeout() {
+            if (autoTimeout) { clearTimeout(autoTimeout); autoTimeout = null; }
+        }
+
+        var currentScript = window._fakecallCurrentScript || '';
+
         if (audioPromise) {
             audioPromise.then(function(voiceData) {
                 if (voiceData && voiceData.audio) {
-                    // Reuse the preloaded audio element (already unlocked by user gesture on iOS)
+                    // Primary: ElevenLabs base64 audio
                     if (preloadedAudio) {
                         audio = preloadedAudio;
                         audio.src = 'data:audio/mpeg;base64,' + voiceData.audio;
@@ -513,19 +754,51 @@
                     }
                     audio.play().then(function() {
                         console.log('[FakeCall] Voice audio playing');
+                        cancelAutoTimeout();
                     }).catch(function(err) {
-                        console.error('[FakeCall] Audio play failed:', err);
+                        console.error('[FakeCall] Audio play failed, trying browser voice:', err);
+                        tryBrowserVoice();
                     });
                     audio.onended = function() {
-                        clearInterval(timerInt);
-                        overlay.remove();
+                        endCallGracefully(overlay, timerInt, null, transcriptHandle);
                     };
                 } else {
-                    console.warn('[FakeCall] No voice audio available — showing silent call');
+                    console.warn('[FakeCall] No voice audio — trying browser voice');
+                    tryBrowserVoice();
                 }
             }).catch(function(err) {
                 console.error('[FakeCall] Audio promise rejected:', err);
+                tryBrowserVoice();
             });
+        } else {
+            tryBrowserVoice();
+        }
+
+        // Fallback 2: SpeechSynthesis
+        function tryBrowserVoice() {
+            if (!currentScript) { tryTranscript(); return; }
+            speakWithBrowserVoice(currentScript, function(success) {
+                if (success) {
+                    cancelAutoTimeout();
+                    endCallGracefully(overlay, timerInt, null, transcriptHandle);
+                } else {
+                    tryTranscript();
+                }
+            });
+            // Cancel auto-timeout if synthesis starts
+            if (window.speechSynthesis && window.speechSynthesis.speaking) cancelAutoTimeout();
+        }
+
+        // Fallback 3: Visual transcript
+        function tryTranscript() {
+            if (!currentScript) return;
+            cancelAutoTimeout();
+            transcriptHandle = showCallTranscript(overlay, currentScript);
+            // End call when transcript finishes (approx words * 250ms)
+            var transcriptDuration = currentScript.split(' ').length * 250 + 2000;
+            setTimeout(function() {
+                endCallGracefully(overlay, timerInt, audio, transcriptHandle);
+            }, transcriptDuration);
         }
 
         // Mute button
@@ -546,9 +819,8 @@
 
         // End call button
         document.getElementById('fc-end-call').onclick = function() {
-            clearInterval(timerInt);
-            if (audio) { audio.pause(); audio = null; }
-            overlay.remove();
+            cancelAutoTimeout();
+            endCallGracefully(overlay, timerInt, audio, transcriptHandle);
         };
     }
 
@@ -956,7 +1228,7 @@
                     '<button id="fc-settings-cancel" style="flex:1;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif">Cancel</button>' +
                     '<button id="fc-settings-save" style="flex:1;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-check"></i> Save</button>' +
                 '</div>' +
-                '<button id="fc-test-call" style="width:100%;margin-top:10px;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-phone"></i> Test Call</button>' +
+                '<button id="fc-test-call" style="width:100%;margin-top:10px;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-phone"></i> Test Call (No API Credits)</button>' +
             '</div>';
 
         document.body.appendChild(backdrop);
@@ -974,10 +1246,28 @@
         };
         document.getElementById('fc-test-call').onclick = function() {
             var name = document.getElementById('fc-caller-name').value || 'Mom';
+            var voice = document.getElementById('fc-voice').value || 'mom';
             backdrop.remove();
             var testOS = 'ios';
             try { var s = JSON.parse(localStorage.getItem('safetea_fakecall_settings')); if (s && s.phoneOS) testOS = s.phoneOS; } catch(e) {}
-            showFakeIncomingCall(name, Promise.resolve(null), testOS);
+
+            // Test mode: use fallback script + cached audio or browser voice, no API calls
+            var testScript = getRandomFallbackScript(voice);
+            window._fakecallCurrentScript = testScript;
+            window._fakecallTestMode = true;
+
+            var cached = getCachedCall(voice);
+            var testAudioPromise;
+            if (cached && cached.audio) {
+                testAudioPromise = Promise.resolve({ audio: cached.audio });
+            } else {
+                testAudioPromise = Promise.resolve(null);
+            }
+
+            if (typeof showToast === 'function') showToast('Test call in 3 seconds...');
+            setTimeout(function() {
+                showFakeIncomingCall(name, testAudioPromise, testOS);
+            }, 3000);
         };
     };
 

@@ -402,25 +402,37 @@
         <button class="btn-primary" id="btn-age" onclick="submitAge()">Continue</button>
       </div>
 
-      <!-- STEP 2: Identity Verification -->
+      <!-- STEP 2: Identity Verification (Web-native selfie) -->
       <div class="step-panel" id="step-identity">
         <h2>Verify Your Identity</h2>
-        <p class="step-desc">We use a secure third-party service to confirm you are who you say you are. This helps protect everyone on SafeTea.</p>
-        <div class="info-box">          <div class="icon">🔒</div>
-          <p>You'll be redirected to our verification partner. You'll need a valid government-issued photo ID (driver's license, passport, or state ID).</p>
-        </div>
-        <ul class="verify-steps-list">
-          <li><span class="step-num">1</span> Take a photo of your ID</li>
-          <li><span class="step-num">2</span> Take a quick selfie</li>
-          <li><span class="step-num">3</span> Verification completes automatically</li>
-        </ul>
-        <button class="btn-primary" id="btn-identity" onclick="startIdentityVerification()">Start Verification</button>
+        <p class="step-desc">Take a quick selfie to prove you're a real person. Our AI checks that it's a live photo, not a screenshot or AI image.</p>
 
-        <!-- Waiting state (shown after redirect back) -->
+        <!-- Challenge instruction -->
+        <div class="info-box" id="identity-challenge-box">
+          <div class="icon">📸</div>
+          <p id="identity-challenge-text">Loading challenge...</p>
+        </div>
+
+        <!-- Camera preview -->
+        <div id="selfie-preview-area" style="display:none;margin-bottom:20px">
+          <video id="selfie-video" autoplay playsinline style="width:100%;max-height:300px;border-radius:12px;object-fit:cover;background:#000;transform:scaleX(-1)"></video>
+          <canvas id="selfie-canvas" style="display:none"></canvas>
+          <img id="selfie-captured" style="display:none;width:100%;max-height:300px;border-radius:12px;object-fit:cover;margin-top:8px" />
+        </div>
+
+        <button class="btn-primary" id="btn-open-camera" onclick="openSelfieCamera()">Open Camera</button>
+        <button class="btn-primary" id="btn-capture-selfie" style="display:none" onclick="captureSelfie()">Take Selfie</button>
+        <button class="btn-primary" id="btn-submit-selfie" style="display:none;margin-top:8px" onclick="submitSelfieVerification()">Submit for Verification</button>
+        <button class="btn-primary" id="btn-retake-selfie" style="display:none;margin-top:8px;background:#444" onclick="retakeSelfie()">Retake</button>
+
+        <!-- Result feedback -->
+        <div id="identity-result" style="display:none;margin-top:16px;padding:16px;border-radius:10px"></div>
+
+        <!-- Waiting state -->
         <div id="identity-waiting" style="display:none;">
           <div class="waiting-state">
             <div class="pulse-ring"></div>
-            <p>Checking verification status...</p>
+            <p>Analyzing your selfie...</p>
           </div>
         </div>
       </div>
@@ -542,6 +554,8 @@
       // Hide any lingering messages
       document.getElementById('error-msg').style.display = 'none';
       document.getElementById('success-msg').style.display = 'none';
+      // Load challenge when showing identity step
+      if (step === 'identity') loadIdentityChallenge();
     }
 
     // ---- STEP 1: Age ----
@@ -586,74 +600,149 @@
       }
     }
 
-    // ---- STEP 2: Identity ----
-    async function startIdentityVerification() {
-      setLoading('btn-identity', true);
+    // ---- STEP 2: Identity (Web-native selfie) ----
+    let currentChallengeId = null;
+    let selfieStream = null;
+    let capturedSelfieData = null;
+
+    async function loadIdentityChallenge() {
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/identity', {
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        const data = await res.json();
+        if (data.challenge_id) {
+          currentChallengeId = data.challenge_id;
+          document.getElementById('identity-challenge-text').textContent = data.instruction;
+        }
+      } catch (e) {
+        document.getElementById('identity-challenge-text').textContent = 'Take a selfie clearly showing your face';
+        currentChallengeId = 'peace'; // fallback
+      }
+    }
+
+    async function openSelfieCamera() {
+      try {
+        selfieStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false
+        });
+        const video = document.getElementById('selfie-video');
+        video.srcObject = selfieStream;
+        document.getElementById('selfie-preview-area').style.display = 'block';
+        document.getElementById('btn-open-camera').style.display = 'none';
+        document.getElementById('btn-capture-selfie').style.display = 'block';
+        document.getElementById('selfie-captured').style.display = 'none';
+        video.style.display = 'block';
+      } catch (err) {
+        showError('Camera access denied. Please allow camera access and try again.');
+      }
+    }
+
+    function captureSelfie() {
+      const video = document.getElementById('selfie-video');
+      const canvas = document.getElementById('selfie-canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      // Mirror the capture to match the preview
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+      capturedSelfieData = canvas.toDataURL('image/jpeg', 0.85);
+
+      // Stop camera
+      if (selfieStream) {
+        selfieStream.getTracks().forEach(t => t.stop());
+        selfieStream = null;
+      }
+
+      // Show captured image
+      video.style.display = 'none';
+      const img = document.getElementById('selfie-captured');
+      img.src = capturedSelfieData;
+      img.style.display = 'block';
+      document.getElementById('btn-capture-selfie').style.display = 'none';
+      document.getElementById('btn-submit-selfie').style.display = 'block';
+      document.getElementById('btn-retake-selfie').style.display = 'block';
+    }
+
+    function retakeSelfie() {
+      capturedSelfieData = null;
+      document.getElementById('selfie-captured').style.display = 'none';
+      document.getElementById('btn-submit-selfie').style.display = 'none';
+      document.getElementById('btn-retake-selfie').style.display = 'none';
+      document.getElementById('identity-result').style.display = 'none';
+      openSelfieCamera();
+    }
+
+    async function submitSelfieVerification() {
+      if (!capturedSelfieData || !currentChallengeId) {
+        showError('Please take a selfie first');
+        return;
+      }
+
+      document.getElementById('btn-submit-selfie').style.display = 'none';
+      document.getElementById('btn-retake-selfie').style.display = 'none';
+      document.getElementById('identity-waiting').style.display = 'block';
+
       try {
         const res = await fetch(API_BASE + '/auth/verify/identity', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + getToken()
-          }
+          },
+          body: JSON.stringify({
+            selfie: capturedSelfieData,
+            challenge_id: currentChallengeId
+          })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to start verification');
+        document.getElementById('identity-waiting').style.display = 'none';
 
-        if (data.verification_url) {
-          // Store that we're in verification flow
-          localStorage.setItem('safetea_verifying', 'true');
-          // Redirect to verification provider
-          window.location.href = data.verification_url;
+        if (data.verified) {
+          // Success!
+          const user = getUser();
+          if (user) {
+            user.identity_verified = true;
+            if (data.fullyVerified) user.is_verified = true;
+            localStorage.setItem('safetea_user', JSON.stringify(user));
+          }
+          showSuccess('Identity verified! ' + (data.summary || ''));
+          setTimeout(() => {
+            if (data.nextStep) showStep(data.nextStep);
+            else if (data.fullyVerified) showStep('complete');
+            else showStep('gender');
+          }, 1000);
+        } else if (data.already_verified) {
+          showSuccess('Already verified!');
+          setTimeout(() => showStep('gender'), 500);
         } else {
-          throw new Error('No verification URL received');
+          // Failed — show feedback and retry option
+          const resultEl = document.getElementById('identity-result');
+          resultEl.style.display = 'block';
+          resultEl.style.background = 'rgba(231,76,60,0.1)';
+          resultEl.style.border = '1px solid rgba(231,76,60,0.3)';
+          let issueHtml = '<div style="color:#e74c3c;font-weight:600;margin-bottom:8px">Verification failed</div>';
+          issueHtml += '<div style="color:#ccc;font-size:13px;margin-bottom:8px">' + (data.summary || 'Please try again with a clearer selfie.') + '</div>';
+          if (data.issues && data.issues.length > 0) {
+            issueHtml += '<ul style="color:#aaa;font-size:12px;padding-left:16px;margin:0">';
+            data.issues.forEach(issue => {
+              issueHtml += '<li>' + issue + '</li>';
+            });
+            issueHtml += '</ul>';
+          }
+          resultEl.innerHTML = issueHtml;
+          document.getElementById('btn-retake-selfie').style.display = 'block';
+          // Load a new challenge for retry
+          loadIdentityChallenge();
         }
       } catch (err) {
-        showError(err.message);
-        setLoading('btn-identity', false);
+        document.getElementById('identity-waiting').style.display = 'none';
+        showError('Verification failed. Please try again.');
+        document.getElementById('btn-retake-selfie').style.display = 'block';
       }
-    }
-
-    // Poll for identity verification result
-    async function pollIdentityStatus(maxAttempts) {
-      const attempts = maxAttempts || 30;
-      for (let i = 0; i < attempts; i++) {
-        try {
-          const res = await fetch(API_BASE + '/auth/verify/status', {
-            headers: { 'Authorization': 'Bearer ' + getToken() }
-          });
-          const data = await res.json();
-
-          if (data.steps && data.steps.identity && data.steps.identity.completed) {
-            // Identity verified!
-            const user = getUser();
-            if (user) {
-              user.identity_verified = true;
-              localStorage.setItem('safetea_user', JSON.stringify(user));
-            }
-            localStorage.removeItem('safetea_verifying');
-            showSuccess('Identity verified!');
-
-            setTimeout(() => {
-              if (data.nextStep) showStep(data.nextStep);
-              else if (!data.steps.gender || !data.steps.gender.completed) showStep('gender');
-              else showStep('complete');
-            }, 500);
-            return;
-          }
-        } catch (e) { /* ignore, keep polling */ }
-
-        // Wait 3 seconds between polls
-        await new Promise(r => setTimeout(r, 3000));
-      }
-
-      // Timed out — show retry option
-      document.getElementById('identity-waiting').innerHTML = `
-        <div class="waiting-state">
-          <p style="margin-bottom:16px;">Verification is still processing. This can take a few minutes.</p>
-          <button class="btn-primary" onclick="pollIdentityStatus(20)" style="max-width:200px;margin:0 auto;">Check Again</button>
-        </div>
-      `;
     }
 
     // ---- STEP 3: Gender ----
@@ -731,14 +820,8 @@
           return;
         }
 
-        // If returning from verification, show identity step with polling
-        if (wasVerifying && data.steps && !data.steps.identity.completed) {
-          showStep('identity');
-          document.getElementById('btn-identity').style.display = 'none';
-          document.getElementById('identity-waiting').style.display = 'block';
-          pollIdentityStatus(30);
-          return;
-        }
+        // Legacy: clean up old verifying flag
+        if (wasVerifying) localStorage.removeItem('safetea_verifying');
 
         // Show the next required step
         if (data.nextStep) {

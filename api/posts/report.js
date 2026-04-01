@@ -34,7 +34,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Valid reasons
-    const validReasons = ['inappropriate', 'harassment', 'spam', 'fake_identity', 'explicit_content', 'threats', 'other'];
+    const validReasons = ['inappropriate', 'harassment', 'spam', 'fake_identity', 'explicit_content', 'threats', 'doxxing', 'false_info', 'other'];
     if (!validReasons.includes(reason)) {
       return res.status(400).json({ error: 'Invalid report reason. Valid: ' + validReasons.join(', ') });
     }

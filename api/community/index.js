@@ -33,24 +33,37 @@ module.exports = async function handler(req, res) {
     const limitParam = `$${paramIdx}`;
     params.push(limit);
 
-    // user_liked subquery
+    // user_liked / user_disliked / user_bumped subqueries
     paramIdx++;
     params.push(user.id);
-    const userLikedSelect = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${paramIdx}) AS user_liked`;
+    const userIdParam = paramIdx;
+    const userLikedSelect = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${userIdParam}) AS user_liked`;
+    const userDislikedSelect = `EXISTS(SELECT 1 FROM post_dislikes pd2 WHERE pd2.post_id = p.id AND pd2.user_id = $${userIdParam}) AS user_disliked`;
+    const userBumpedSelect = `EXISTS(SELECT 1 FROM post_bumps pb2 WHERE pb2.post_id = p.id AND pb2.user_id = $${userIdParam}) AS user_bumped`;
 
     const posts = await getMany(
       `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
-              p.feed, p.created_at,
+              p.feed, p.created_at, p.hidden,
+              COALESCE(p.bump_count, 0) AS bump_count,
+              COALESCE(p.dislike_count, 0) AS dislike_count,
+              p.last_bumped_at,
               u.display_name AS author_name,
               u.custom_display_name AS author_custom_name,
               u.avatar_color, u.avatar_initial,
               (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
               (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
-              ${userLikedSelect}
+              ${userLikedSelect},
+              ${userDislikedSelect},
+              ${userBumpedSelect}
        FROM posts p
        LEFT JOIN users u ON u.id = p.user_id
        WHERE ${where}
-       ORDER BY (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id) + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id) DESC, p.created_at DESC
+       ORDER BY
+         COALESCE(p.bump_count, 0) * 2
+         + (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id)
+         + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id)
+         - COALESCE(p.dislike_count, 0) DESC,
+         COALESCE(p.last_bumped_at, p.created_at) DESC
        LIMIT ${limitParam}`,
       params
     );

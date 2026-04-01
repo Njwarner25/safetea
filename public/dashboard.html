@@ -3283,7 +3283,7 @@
         btn.textContent = 'Posting...';
         btn.disabled = true;
 
-        var postData = { content: content, category: category, city: city.name };
+        var postData = { body: content, category: category, city: city.name };
         // If there's a photo, include as base64
         if (communityState.postPhotoDataUrl) {
             postData.image = communityState.postPhotoDataUrl;

@@ -717,21 +717,7 @@
                 border-radius: 1px;
             }
         }
-        /* Floating invite FAB — mobile only */
-        .fab-invite { display: none; }
         @media (max-width: 768px) {
-            .fab-invite {
-                display: flex; position: fixed; bottom: 74px; right: 16px; z-index: 99;
-                background: linear-gradient(135deg, #E8A0B5, #9b59b6);
-                color: #fff; border: none; border-radius: 50px; padding: 12px 20px;
-                font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif;
-                align-items: center; gap: 8px; cursor: pointer;
-                box-shadow: 0 4px 20px rgba(232,160,181,0.4);
-                animation: fab-pulse 2s ease-in-out infinite;
-                transition: transform 0.2s;
-            }
-            .fab-invite:active { transform: scale(0.95); }
-            .fab-invite i { font-size: 16px; }
             @keyframes fab-pulse {
                 0%, 100% { box-shadow: 0 4px 20px rgba(232,160,181,0.4); }
                 50% { box-shadow: 0 4px 30px rgba(232,160,181,0.6); }
@@ -1491,12 +1477,6 @@
         [data-theme="light"] #feed-sort-toggle div { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
         [data-theme="light"] .community-topbar-icon { background: var(--st-surface-muted); }
         [data-theme="light"] .community-quickpost { background: var(--st-surface); }
-
-        /* FAB */
-        [data-theme="light"] .fab-invite {
-            background: linear-gradient(135deg, var(--st-primary), var(--st-primary-dark));
-            box-shadow: 0 4px 20px rgba(217,106,138,0.3);
-        }
 
         /* Scrollbar */
         [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(217,106,138,0.15); }
@@ -2761,8 +2741,6 @@
     </div>
 
     <div class="toast" id="toast"></div>
-
-    <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
 
     <!-- ====== FLOATING SOS BUTTON ====== -->
     <div id="sos-floating-btn" onclick="showSOSActionSheet()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">

@@ -19,7 +19,8 @@
       "buildNumber": "1",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "SafeTea uses your location to share your GPS coordinates with trusted contacts during an SOS alert.",
-        "NSMicrophoneUsageDescription": "SafeTea uses the microphone for audio features."
+        "NSMicrophoneUsageDescription": "SafeTea uses the microphone for audio features.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -38,7 +39,6 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-screen-capture",
       [
         "expo-location",
         {
@@ -57,7 +57,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "safetea-mobile"
+        "projectId": "13404653-99fa-49c1-af47-c981dbd27027"
       }
     }
   }

@@ -1881,6 +1881,600 @@
           }).catch(function() { showToast('Failed to remove name', true); });
     };
 
+    // ============ UTILITY: apiFetch ============
+    function apiFetch(endpoint, options) {
+        options = options || {};
+        var headers = { 'Content-Type': 'application/json' };
+        var t = getToken();
+        if (t) headers['Authorization'] = 'Bearer ' + t;
+        if (options.headers) {
+            for (var k in options.headers) headers[k] = options.headers[k];
+        }
+        return fetch('/api' + endpoint, {
+            method: options.method || 'GET',
+            headers: headers,
+            body: options.body
+        }).then(function(res) {
+            if (res.status === 401) {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+                window.location.href = '/login';
+                return null;
+            }
+            var ct = res.headers.get('content-type') || '';
+            if (ct.indexOf('application/json') === -1) return null;
+            return res.json();
+        });
+    }
+
+    function canModifyPost(post) {
+        var u = getUser();
+        return u && (post.user_id === u.id || u.role === 'admin' || u.role === 'moderator');
+    }
+
+    // ==================== TOGGLE LIKE ====================
+    window.toggleLike = function(postId) {
+        var btn = document.getElementById('like-btn-' + postId);
+        if (!btn) return;
+        var icon = btn.querySelector('i');
+        var isLiked = icon && icon.classList.contains('fa-heart') && icon.classList.contains('fas');
+        var method = isLiked ? 'DELETE' : 'POST';
+
+        apiFetch('/posts/like?id=' + postId, { method: method }).then(function(data) {
+            if (!data) return;
+            var countEl = document.getElementById('like-count-' + postId);
+            if (countEl) countEl.textContent = data.like_count;
+            if (icon) {
+                if (data.liked) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    btn.style.color = '#e74c3c';
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    btn.style.color = '';
+                }
+            }
+        });
+    };
+
+    // ==================== HUB TAB SWITCHER ====================
+    window.switchHubTab = function(sub) {
+        document.querySelectorAll('.hub-tab').forEach(function(btn) {
+            btn.style.background = '#22223A';
+            btn.style.color = '#8080A0';
+            btn.style.border = '1px solid rgba(255,255,255,0.08)';
+        });
+        var activeBtn = document.querySelector('.hub-tab[data-hubsub="' + sub + '"]');
+        if (activeBtn) {
+            activeBtn.style.background = '#E8A0B5';
+            activeBtn.style.color = '#1A1A2E';
+            activeBtn.style.border = 'none';
+        }
+        document.querySelectorAll('.hub-sub').forEach(function(s) {
+            s.style.display = 'none';
+            s.classList.remove('active');
+        });
+        var target = document.getElementById('hub-' + sub);
+        if (target) {
+            target.style.display = 'block';
+            target.classList.add('active');
+        }
+        if (sub === 'namewatch' && typeof initNameWatch === 'function') initNameWatch();
+        if (sub === 'datecheck' && typeof initDateCheck === 'function') initDateCheck();
+        if (sub === 'search') { if (typeof initSearchTabs === 'function') initSearchTabs(); initAreaAlerts(); }
+        if (sub === 'teatalk') hubLoadCommunityPosts();
+        if (sub === 'referral') hubLoadReferralPosts();
+        if (sub === 'growreferral') loadGrowReferral();
+    };
+
+    // ==================== COMMUNITY MENTIONS ====================
+    window.loadCommunityMentions = function() {
+        var name = document.getElementById('bg-name') ? document.getElementById('bg-name').value.trim() : '';
+        var container = document.getElementById('community-mentions-results');
+        if (!name || !container) {
+            showToast('Enter a name in the Background Check form first.', true);
+            return;
+        }
+
+        container.innerHTML = '<div style="text-align:center;padding:16px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Searching community posts...</div>';
+
+        apiFetch('/posts?feed=community&limit=50').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No community posts to search.</p>';
+                return;
+            }
+
+            var searchTerms = name.toLowerCase().split(/\s+/);
+            var matches = posts.filter(function(p) {
+                var content = ((p.body || '') + ' ' + (p.title || '')).toLowerCase();
+                return searchTerms.some(function(term) { return term.length >= 2 && content.indexOf(term) !== -1; });
+            });
+
+            if (matches.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:16px"><i class="fas fa-check-circle" style="color:#2ecc71;font-size:28px;display:block;margin-bottom:8px"></i><p style="color:#8080A0;font-size:13px">No community posts mention "' + escapeHtmlSafe(name) + '".</p></div>';
+                return;
+            }
+
+            container.innerHTML = '<p style="color:#E8A0B5;font-size:13px;font-weight:600;margin-bottom:12px">' + matches.length + ' post(s) mention "' + escapeHtmlSafe(name) + '"</p>' +
+                matches.slice(0, 10).map(function(p) {
+                    var highlighted = escapeHtmlSafe(p.body || '');
+                    searchTerms.forEach(function(term) {
+                        if (term.length >= 2) {
+                            var regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                            highlighted = highlighted.replace(regex, '<span style="background:rgba(231,76,60,0.2);color:#e74c3c;padding:1px 3px;border-radius:3px;font-weight:600">$1</span>');
+                        }
+                    });
+                    return '<div style="background:#1A1A2E;border-radius:10px;padding:14px;margin-bottom:8px">' +
+                        '<div style="font-size:12px;color:#666;margin-bottom:6px">' + getTimeAgoFromDate(p.created_at) + (p.city ? ' &bull; ' + escapeHtmlSafe(p.city) : '') + '</div>' +
+                        '<div style="font-size:13px;color:#ccc;line-height:1.5">' + highlighted + '</div>' +
+                    '</div>';
+                }).join('');
+        }).catch(function() {
+            container.innerHTML = '<p style="color:#e74c3c;font-size:13px">Failed to search community posts.</p>';
+        });
+    };
+
+    // ==================== TEA TALK (Community Posts) ====================
+    function hubFormatBody(text) {
+        if (!text) return '';
+        var escaped = escapeHtmlSafe(text);
+        escaped = escaped.replace(/\b([A-Z][a-z]+\s[A-Z]\.)/g, '<span style="color:#E8A0B5;font-weight:600">$1</span>');
+        return escaped;
+    }
+
+    function hubGetCategoryBadge(category) {
+        var map = {
+            experience: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">Experience</span>',
+            warning: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(231,76,60,0.15);color:#e74c3c">Warning</span>',
+            question: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(91,160,208,0.15);color:#5BA0D0">Question</span>',
+            positive: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Positive</span>',
+            general: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">General</span>',
+            referral: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Referral</span>'
+        };
+        return map[category] || '';
+    }
+
+    function hubGetAvatarColor(name) {
+        var colors = ['#6c7b95','#E8A0B5','#2ecc71','#9b59b6','#e085c2','#6ec2e2','#B48CD2','#1abc9c','#e74c3c','#3498db'];
+        var hash = 0;
+        for (var i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function hubRenderPost(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = hubGetAvatarColor(authorName);
+        var cityHtml = post.city ? ' <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtmlSafe(post.city) + '</span>' : '';
+        var badgeHtml = hubGetCategoryBadge(post.category);
+        var replyCount = post.reply_count || 0;
+        var likeCount = parseInt(post.like_count) || 0;
+        var userLiked = post.user_liked === true || post.user_liked === 't';
+        var heartIcon = userLiked ? 'fas fa-heart' : 'far fa-heart';
+        var heartStyle = userLiked ? 'color:#e74c3c' : 'color:#8080A0';
+        var canMod = canModifyPost(post);
+
+        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
+                '<div style="flex:1">' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + badgeHtml + '</div>' +
+                    '<div style="font-size:12px;color:#666;margin-top:2px">' + getTimeAgoFromDate(post.created_at) + cityHtml + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
+            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px" loading="lazy" onerror="this.style.display=\'none\'"></div>' : '') +
+            '<div style="display:flex;gap:16px;align-items:center">' +
+                '<button id="like-btn-' + post.id + '" onclick="toggleLike(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + heartStyle + '"><i class="' + heartIcon + '"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' replies</span>' +
+                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtmlSafe(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'community\')" style="margin-left:auto;background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i> Edit</button>' : '') +
+                (canMod ? '<button onclick="deletePost(' + post.id + ', \'community\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i> Delete</button>' : '') +
+            '</div>' +
+        '</div>';
+    }
+
+    function hubLoadCommunityPosts() {
+        var container = document.getElementById('hub-community-posts');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading discussions...</div>';
+        apiFetch('/posts?feed=community&limit=20').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-comments" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No discussions yet</p><small>Be the first to start a conversation!</small></div>';
+                return;
+            }
+            var html = '';
+            posts.forEach(function(post) { html += hubRenderPost(post); });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load discussions</div>';
+        });
+    }
+
+    window.hubSubmitCommunityPost = function() {
+        var body = document.getElementById('hub-community-body').value.trim();
+        var category = document.getElementById('hub-community-category').value;
+        var city = document.getElementById('hub-community-city') ? document.getElementById('hub-community-city').value.trim() : '';
+        if (!body) { showToast('Please write something before posting.', true); return; }
+        var btn = document.getElementById('hub-community-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        apiFetch('/posts', {
+            method: 'POST',
+            body: JSON.stringify({ title: body.substring(0, 80), body: body, category: category, city: city || null, feed: 'community' })
+        }).then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            if (data && data.error) { showToast(data.error, true); return; }
+            document.getElementById('hub-community-body').value = '';
+            if (document.getElementById('hub-community-city')) document.getElementById('hub-community-city').value = '';
+            if (document.getElementById('hub-community-category')) document.getElementById('hub-community-category').value = 'general';
+            showToast('Post shared!');
+            hubLoadCommunityPosts();
+        }).catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post';
+            showToast('Failed to submit post.', true);
+        });
+    };
+
+    // ==================== REFER A GOOD ONE ====================
+    var referralPhotoData = null;
+
+    window.handleReferralPhoto = function(input) {
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Photo must be under 5MB', true);
+                input.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                referralPhotoData = e.target.result;
+                var preview = document.getElementById('hub-referral-photo-preview');
+                var img = document.getElementById('hub-referral-photo-img');
+                if (img) img.src = referralPhotoData;
+                if (preview) preview.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.removeReferralPhoto = function() {
+        referralPhotoData = null;
+        var preview = document.getElementById('hub-referral-photo-preview');
+        var input = document.getElementById('hub-referral-photo');
+        if (preview) preview.style.display = 'none';
+        if (input) input.value = '';
+    };
+
+    function hubRenderReferral(post) {
+        var authorName = post.author_name || 'Anonymous';
+        var initial = authorName[0].toUpperCase();
+        var avatarColor = hubGetAvatarColor(authorName);
+        var personName = post.title || 'Unknown';
+        var replyCount = post.reply_count || 0;
+        var canMod = canModifyPost(post);
+
+        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
+            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
+                '<div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + '</div>' +
+                    '<div style="font-size:11px;color:#2ecc71"><i class="fas fa-star"></i> Recommender</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.15);border-radius:10px;padding:14px;margin-bottom:12px">' +
+                '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtmlSafe(personName) + '</div>' +
+                (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtmlSafe(post.city) + '</span>' : '') +
+            '</div>' +
+            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06)" alt="Referral photo"></div>' : '') +
+            '<div style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
+            '<div style="display:flex;gap:16px;align-items:center">' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-thumbs-up"></i> ' + (post.upvotes || 0) + ' vouches</span>' +
+                '<span style="font-size:12px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + ' comments</span>' +
+                (post.user_id ? '<button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="margin-left:auto;background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button>' : '') +
+                (canMod ? '<button onclick="editPost(' + post.id + ', \'' + escapeHtmlSafe(post.body || '').replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\', \'referral\')" style="background:none;border:none;color:#8080A0;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-pencil-alt"></i></button>' : '') +
+                (canMod ? '<button onclick="deletePost(' + post.id + ', \'referral\')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
+            '</div>' +
+        '</div>';
+    }
+
+    function hubLoadReferralPosts() {
+        var container = document.getElementById('hub-referral-posts');
+        if (!container) return;
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>';
+        apiFetch('/posts?feed=referral&limit=20').then(function(posts) {
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-heart" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No referrals yet</p><small>Be the first to recommend a good guy!</small></div>';
+                return;
+            }
+            var html = '';
+            posts.forEach(function(post) { html += hubRenderReferral(post); });
+            container.innerHTML = html;
+        }).catch(function() {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load referrals</div>';
+        });
+    }
+
+    window.hubSubmitReferral = function() {
+        var name = document.getElementById('hub-referral-name').value.trim();
+        var city = document.getElementById('hub-referral-city') ? document.getElementById('hub-referral-city').value.trim() : '';
+        var relation = document.getElementById('hub-referral-relation') ? document.getElementById('hub-referral-relation').value : '';
+        var body = document.getElementById('hub-referral-body').value.trim();
+        if (!name || !body) { showToast('Please fill in the name and your recommendation.', true); return; }
+        apiFetch('/posts', {
+            method: 'POST',
+            body: JSON.stringify({ title: name, body: body + (relation && relation !== 'How do you know him?' ? ' [' + relation + ']' : ''), category: 'referral', city: city || null, feed: 'referral', image_url: referralPhotoData || null })
+        }).then(function(data) {
+            if (data && data.error) { showToast(data.error, true); return; }
+            document.getElementById('hub-referral-name').value = '';
+            if (document.getElementById('hub-referral-city')) document.getElementById('hub-referral-city').value = '';
+            document.getElementById('hub-referral-body').value = '';
+            if (document.getElementById('hub-referral-relation')) document.getElementById('hub-referral-relation').selectedIndex = 0;
+            removeReferralPhoto();
+            showToast('Referral submitted!');
+            hubLoadReferralPosts();
+        }).catch(function() {
+            showToast('Failed to submit referral.', true);
+        });
+    };
+
+    window.hubContactPoster = function(posterId, posterName) {
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'hub-contact-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-envelope" style="color:#E8A0B5"></i> Ask About Him</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin-bottom:12px">Send a message to <strong style="color:#fff">' + escapeHtmlSafe(posterName) + '</strong> about their referral.</p>' +
+                '<div class="dc-form-group">' +
+                    '<textarea id="hub-contact-message" rows="4" placeholder="Hi! I saw your referral and would love to know more..." style="width:100%;padding:12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;resize:vertical;font-family:inherit"></textarea>' +
+                '</div>' +
+                '<button id="hub-contact-send-btn" class="dc-btn dc-btn-primary" onclick="hubSendContactMessage(' + posterId + ', \'' + escapeHtmlSafe(posterName).replace(/'/g, "\\'") + '\')"><i class="fas fa-paper-plane"></i> Send Message</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'hub-contact-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.hubSendContactMessage = function(posterId, posterName) {
+        var textarea = document.getElementById('hub-contact-message');
+        var content = textarea.value.trim();
+        if (!content) { showToast('Please type a message.', true); return; }
+
+        var btn = document.getElementById('hub-contact-send-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        apiFetch('/messages', {
+            method: 'POST',
+            body: JSON.stringify({ recipient_id: posterId, content: content })
+        }).then(function(data) {
+            if (data && (data.message || data.id)) {
+                showToast('Message sent to ' + posterName + '!');
+                var modal = document.getElementById('hub-contact-modal');
+                if (modal) modal.remove();
+            } else {
+                showToast((data && data.error) || 'Failed to send message', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+            }
+        }).catch(function() {
+            showToast('Failed to send message.', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        });
+    };
+
+    // ==================== POST EDIT / DELETE ====================
+    function reloadFeed(feed) {
+        if (feed === 'community') hubLoadCommunityPosts();
+        else if (feed === 'referral') hubLoadReferralPosts();
+    }
+
+    window.deletePost = function(postId, feed) {
+        if (!confirm('Are you sure you want to delete this post?')) return;
+        apiFetch('/posts/' + postId, { method: 'DELETE' }).then(function(data) {
+            if (data && data.message) {
+                showToast('Post deleted');
+                reloadFeed(feed);
+            } else {
+                showToast((data && data.error) || 'Failed to delete post', true);
+            }
+        }).catch(function() { showToast('Failed to delete post', true); });
+    };
+
+    window.editPost = function(postId, currentBody, feed) {
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'edit-post-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content">' +
+                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-pencil-alt" style="color:#E8A0B5"></i> Edit Post</h3>' +
+                '<textarea id="edit-post-body" rows="6" style="width:100%;padding:12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;resize:vertical;font-family:inherit">' + escapeHtmlSafe(currentBody) + '</textarea>' +
+                '<button id="edit-post-save-btn" class="dc-btn dc-btn-primary" style="margin-top:12px" onclick="saveEditPost(' + postId + ', \'' + feed + '\')"><i class="fas fa-check"></i> Save Changes</button>' +
+                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'edit-post-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    window.saveEditPost = function(postId, feed) {
+        var body = document.getElementById('edit-post-body').value.trim();
+        if (!body) { showToast('Post cannot be empty', true); return; }
+        var btn = document.getElementById('edit-post-save-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        apiFetch('/posts/' + postId, {
+            method: 'PUT',
+            body: JSON.stringify({ title: body.substring(0, 60), body: body })
+        }).then(function(data) {
+            if (data && data.message) {
+                showToast('Post updated');
+                var modal = document.getElementById('edit-post-modal');
+                if (modal) modal.remove();
+                reloadFeed(feed);
+            } else {
+                showToast((data && data.error) || 'Failed to update post', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+            }
+        }).catch(function() {
+            showToast('Failed to update post', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Save Changes';
+        });
+    };
+
+    // ==================== INVITE & EARN (Growth Referral) ====================
+    window.loadGrowReferral = function() {
+        apiFetch('/referral').then(function(data) {
+            if (!data) return;
+            renderGrowReferral(data);
+        }).catch(function(err) {
+            console.error('Error loading referral data:', err);
+        });
+    };
+
+    function renderGrowReferral(data) {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && data.shareUrl) urlEl.value = data.shareUrl;
+
+        var countEl = document.getElementById('grow-ref-count');
+        if (countEl) countEl.textContent = data.count || 0;
+
+        var count = data.referralCount || data.count || 0;
+        var progressBar = document.getElementById('grow-progress-bar');
+        var progressText = document.getElementById('grow-progress-text');
+        if (progressBar) progressBar.style.width = Math.min(100, (count / 5) * 100) + '%';
+        if (progressText) progressText.textContent = count + ' / 5';
+
+        var dots = document.querySelectorAll('.grow-dot');
+        dots.forEach(function(dot, i) {
+            dot.style.background = i < count ? '#E8A0B5' : '#333';
+        });
+
+        var rewardIcon = document.getElementById('grow-reward-icon');
+        var rewardSubtitle = document.getElementById('grow-reward-subtitle');
+        var claimBtn = document.getElementById('grow-claim-btn');
+        var claimedBanner = document.getElementById('grow-claimed-banner');
+        var claimedDetail = document.getElementById('grow-claimed-detail');
+
+        if (data.rewardClaimed) {
+            if (rewardIcon) { rewardIcon.className = 'fas fa-check-circle'; rewardIcon.style.color = '#2ecc71'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = 'You claimed your free month!';
+            if (claimBtn) claimBtn.style.display = 'none';
+            if (claimedBanner) {
+                claimedBanner.style.display = 'block';
+                if (data.rewardExpiresAt && claimedDetail) {
+                    var exp = new Date(data.rewardExpiresAt);
+                    var daysLeft = Math.max(0, Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24)));
+                    claimedDetail.textContent = daysLeft + ' days of SafeTea+ remaining';
+                }
+            }
+        } else if (data.rewardReady) {
+            if (rewardIcon) { rewardIcon.className = 'fas fa-gift'; rewardIcon.style.color = '#f27059'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = 'You did it! Claim your free month now.';
+            if (claimBtn) claimBtn.style.display = 'inline-block';
+            if (claimedBanner) claimedBanner.style.display = 'none';
+        } else {
+            var needed = 5 - count;
+            if (rewardIcon) { rewardIcon.className = 'fas fa-gift'; rewardIcon.style.color = '#E8A0B5'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = needed + ' more friend' + (needed !== 1 ? 's' : '') + ' needed to unlock';
+            if (claimBtn) claimBtn.style.display = 'none';
+            if (claimedBanner) claimedBanner.style.display = 'none';
+        }
+
+        var totalStat = document.getElementById('grow-total-stat');
+        var totalBrought = document.getElementById('grow-total-brought');
+        if (count > 0 && totalStat) {
+            totalStat.style.display = 'block';
+            if (totalBrought) totalBrought.innerHTML = '<i class="fas fa-users"></i> Total women you\'ve brought in: <strong>' + count + '</strong>';
+        }
+
+        var friendsList = document.getElementById('grow-friends-list');
+        if (data.referrals && data.referrals.length > 0 && friendsList) {
+            friendsList.innerHTML = data.referrals.map(function(r) {
+                var joinDate = new Date(r.created_at).toLocaleDateString();
+                var rInitial = (r.display_name || 'U').charAt(0).toUpperCase();
+                return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
+                    + '<div style="width:32px;height:32px;border-radius:50%;background:rgba(232,160,181,0.15);color:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">' + rInitial + '</div>'
+                    + '<div style="flex:1"><div style="font-size:13px;color:#fff">' + (r.display_name || 'Anonymous') + '</div>'
+                    + '<div style="font-size:11px;color:#8080A0">Joined ' + joinDate + '</div></div></div>';
+            }).join('');
+        } else if (friendsList) {
+            friendsList.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0;font-size:13px">No referrals yet. Share your link to get started!</div>';
+        }
+    }
+
+    window.claimGrowReward = function() {
+        var btn = document.getElementById('grow-claim-btn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Claiming...'; }
+        apiFetch('/referral', {
+            method: 'POST',
+            body: JSON.stringify({ action: 'claim' })
+        }).then(function(data) {
+            if (data && data.success) {
+                showToast('Reward claimed! Enjoy 1 month of free SafeTea+!');
+                loadGrowReferral();
+                apiFetch('/auth/me').then(function(d) {
+                    if (d && d.user) {
+                        localStorage.setItem(USER_KEY, JSON.stringify(d.user));
+                    }
+                }).catch(function() {});
+            } else {
+                showToast((data && data.error) || 'Could not claim reward', true);
+                if (btn) { btn.disabled = false; btn.textContent = 'Claim'; }
+            }
+        }).catch(function() {
+            showToast('Error claiming reward', true);
+            if (btn) { btn.disabled = false; btn.textContent = 'Claim'; }
+        });
+    };
+
+    window.copyReferralLink = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value && urlEl.value !== 'Loading...') {
+            navigator.clipboard.writeText(urlEl.value).then(function() {
+                showToast('Link copied!');
+            }).catch(function() {
+                urlEl.select();
+                document.execCommand('copy');
+                showToast('Link copied!');
+            });
+        }
+    };
+
+    window.shareReferralSMS = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value) {
+            var msg = 'Hey! Check out SafeTea \u2014 it helps women stay safe while dating. Join my community: ' + urlEl.value;
+            var isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMob) {
+                window.open('sms:?&body=' + encodeURIComponent(msg));
+            } else if (navigator.share) {
+                navigator.share({ title: 'SafeTea', text: msg, url: urlEl.value }).catch(function() {});
+            } else {
+                navigator.clipboard.writeText(msg).then(function() { showToast('Message copied! Paste in your messaging app.'); });
+            }
+        }
+    };
+
+    window.shareReferralNative = function() {
+        var urlEl = document.getElementById('grow-share-url');
+        if (urlEl && urlEl.value && navigator.share) {
+            navigator.share({
+                title: 'SafeTea - Date Smarter. Stay Safer.',
+                text: 'Join SafeTea \u2014 a private community where women protect each other in the dating world.',
+                url: urlEl.value
+            }).catch(function() {});
+        } else {
+            copyReferralLink();
+        }
+    };
+
     // ============ INIT ============
     loadProfile();
     loadVerificationStatus();

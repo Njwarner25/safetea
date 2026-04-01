@@ -98,7 +98,7 @@
         { "source": "/api/migrate-city-expansion", "destination": "/api/migrate-city-expansion" },
         { "source": "/api/seed-community", "destination": "/api/seed-community" },
         { "source": "/api/cron/unlock-cities", "destination": "/api/cron/unlock-cities" },
-        { "source": "/city/:slug", "destination": "/public/city.html" },
+        { "source": "/city/:slug", "destination": "/city.html" },
         { "source": "/api/cities", "destination": "/api/cities" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },

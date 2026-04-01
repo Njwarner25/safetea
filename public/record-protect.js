@@ -133,6 +133,10 @@
         var callerName = (fakeCallSettings && fakeCallSettings.callerName) || 'Mom';
         var voiceOption = (fakeCallSettings && fakeCallSettings.voiceOption) || 'mom';
         var delay = (fakeCallSettings && fakeCallSettings.defaultDelay) || 15;
+        var phoneOS = (fakeCallSettings && fakeCallSettings.phoneOS) || 'ios';
+
+        var iosSel = phoneOS === 'ios';
+        var andSel = phoneOS === 'android';
 
         // Show delay picker
         var picker = document.createElement('div');
@@ -147,13 +151,19 @@
                 '<input id="fc-picker-name" type="text" value="' + callerName + '" placeholder="e.g., Mom, Sarah" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box">' +
 
                 '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Voice</label>' +
-                '<select id="fc-picker-voice" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:16px;-webkit-appearance:auto">' +
+                '<select id="fc-picker-voice" style="width:100%;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:14px;font-family:\'Inter\',sans-serif;outline:none;margin-bottom:12px;-webkit-appearance:auto">' +
                     '<option value="mom"' + (voiceOption === 'mom' ? ' selected' : '') + '>Concerned Mom</option>' +
                     '<option value="bestfriend"' + (voiceOption === 'bestfriend' ? ' selected' : '') + '>Best Friend</option>' +
                     '<option value="sister"' + (voiceOption === 'sister' ? ' selected' : '') + '>Older Sister</option>' +
                     '<option value="dad"' + (voiceOption === 'dad' ? ' selected' : '') + '>Dad</option>' +
                     '<option value="roommate"' + (voiceOption === 'roommate' ? ' selected' : '') + '>Roommate</option>' +
                 '</select>' +
+
+                '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Phone style</label>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+                    '<button id="fc-os-ios" class="fc-os-btn" style="background:' + (iosSel ? '#22223A' : '#141428') + ';border:1px solid ' + (iosSel ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.06)') + ';color:#fff;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fab fa-apple" style="margin-right:6px"></i>iPhone</button>' +
+                    '<button id="fc-os-android" class="fc-os-btn" style="background:' + (andSel ? '#22223A' : '#141428') + ';border:1px solid ' + (andSel ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.06)') + ';color:#fff;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fab fa-android" style="margin-right:6px"></i>Android</button>' +
+                '</div>' +
 
                 '<label style="display:block;font-size:11px;font-weight:600;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Ring in...</label>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">' +
@@ -169,21 +179,38 @@
         document.getElementById('fc-cancel').onclick = function() { picker.remove(); };
         picker.addEventListener('click', function(e) { if (e.target === picker) picker.remove(); });
 
+        // OS style toggle
+        var selectedOS = phoneOS;
+        document.getElementById('fc-os-ios').onclick = function() {
+            selectedOS = 'ios';
+            this.style.borderColor = 'rgba(232,160,181,0.3)';
+            this.style.background = '#22223A';
+            document.getElementById('fc-os-android').style.borderColor = 'rgba(255,255,255,0.06)';
+            document.getElementById('fc-os-android').style.background = '#141428';
+        };
+        document.getElementById('fc-os-android').onclick = function() {
+            selectedOS = 'android';
+            this.style.borderColor = 'rgba(232,160,181,0.3)';
+            this.style.background = '#22223A';
+            document.getElementById('fc-os-ios').style.borderColor = 'rgba(255,255,255,0.06)';
+            document.getElementById('fc-os-ios').style.background = '#141428';
+        };
+
         picker.querySelectorAll('.fc-delay-btn').forEach(function(btn) {
             btn.onclick = function() {
                 var d = parseInt(btn.getAttribute('data-delay'), 10);
                 var name = document.getElementById('fc-picker-name').value || 'Mom';
                 var voice = document.getElementById('fc-picker-voice').value || 'mom';
                 localStorage.setItem('safetea_fakecall_settings', JSON.stringify({
-                    callerName: name, voiceOption: voice, defaultDelay: d
+                    callerName: name, voiceOption: voice, defaultDelay: d, phoneOS: selectedOS
                 }));
                 picker.remove();
-                startFakeCallCountdown(d, name, voice, user);
+                startFakeCallCountdown(d, name, voice, selectedOS, user);
             };
         });
     }
 
-    function startFakeCallCountdown(delaySec, callerName, voiceOption, user) {
+    function startFakeCallCountdown(delaySec, callerName, voiceOption, phoneOS, user) {
         if (typeof showToast === 'function') showToast('Fake call in ' + delaySec + ' seconds...');
 
         // Generate script and audio in background
@@ -191,23 +218,41 @@
             method: 'POST',
             headers: authHeaders(),
             body: JSON.stringify({ callerName: callerName, context: 'evening date' })
-        }).then(function(r) { return r.json(); }).catch(function() { return null; });
+        }).then(function(r) {
+            if (!r.ok) throw new Error('Script API returned ' + r.status);
+            return r.json();
+        }).catch(function(err) {
+            console.error('[FakeCall] Script generation failed:', err);
+            return null;
+        });
 
         var audioPromise = scriptPromise.then(function(scriptData) {
-            if (!scriptData || !scriptData.script) return null;
+            if (!scriptData || !scriptData.script) {
+                console.warn('[FakeCall] No script available — call will ring without voice');
+                return null;
+            }
             return fetch('/api/dates/fake-call-voice', {
                 method: 'POST',
                 headers: authHeaders(),
                 body: JSON.stringify({ script: scriptData.script, persona: voiceOption })
-            }).then(function(r) { return r.json(); }).catch(function() { return null; });
+            }).then(function(r) {
+                if (!r.ok) throw new Error('Voice API returned ' + r.status);
+                return r.json();
+            });
+        }).catch(function(err) {
+            console.error('[FakeCall] Voice synthesis failed:', err);
+            return null;
         });
 
         setTimeout(function() {
-            showFakeIncomingCall(callerName, audioPromise);
+            showFakeIncomingCall(callerName, audioPromise, phoneOS);
         }, delaySec * 1000);
     }
 
-    function showFakeIncomingCall(callerName, audioPromise) {
+    // ============ INCOMING CALL SCREEN (iOS / Android) ============
+    function showFakeIncomingCall(callerName, audioPromise, phoneOS) {
+        phoneOS = phoneOS || 'ios';
+
         // Vibrate pattern (repeating)
         var vibrateInterval = null;
         if (navigator.vibrate) {
@@ -217,14 +262,14 @@
             }, 3000);
         }
 
-        // Ringtone via Web Audio API (US phone ring: 440+480 Hz)
+        // Ringtone via Web Audio API
         var ringtone = null;
         try {
             var AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (AudioCtx) {
                 var actx = new AudioCtx();
                 var gainNode = actx.createGain();
-                gainNode.gain.value = 0.25;
+                gainNode.gain.value = 0.2;
                 gainNode.connect(actx.destination);
                 var ringActive = true;
 
@@ -239,12 +284,12 @@
                     var now = actx.currentTime;
                     o1.start(now);
                     o2.start(now);
-                    o1.stop(now + 1.5);
-                    o2.stop(now + 1.5);
+                    o1.stop(now + 2);
+                    o2.stop(now + 2);
                 }
 
                 playRingBurst();
-                var ringInterval = setInterval(playRingBurst, 3000);
+                var ringInterval = setInterval(playRingBurst, 4000);
 
                 ringtone = {
                     stop: function() {
@@ -264,28 +309,60 @@
 
         var overlay = document.createElement('div');
         overlay.id = 'fake-call-overlay';
-        overlay.style.cssText = 'position:fixed;inset:0;background:linear-gradient(180deg,#1a1a2e 0%,#0d0d1a 100%);z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px';
-
         var initial = callerName.charAt(0).toUpperCase();
-        overlay.innerHTML =
-            '<div style="text-align:center">' +
-                '<div style="width:80px;height:80px;background:linear-gradient(135deg,#E8A0B5,#D4768E);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:700;color:#fff;animation:fcRingPulse 1.5s ease-in-out infinite">' + initial + '</div>' +
-                '<p style="color:#fff;font-size:24px;font-weight:600;margin-bottom:4px">' + callerName + '</p>' +
-                '<p style="color:#8080A0;font-size:14px;margin-bottom:60px">Incoming Call...</p>' +
-            '</div>' +
-            '<div style="display:flex;gap:40px">' +
-                '<div style="text-align:center">' +
-                    '<button id="fc-decline" style="width:64px;height:64px;background:#e74c3c;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone-slash" style="font-size:22px;color:#fff;transform:rotate(135deg)"></i></button>' +
-                    '<p style="color:#8080A0;font-size:11px;margin-top:8px">Decline</p>' +
+
+        if (phoneOS === 'android') {
+            // ---- ANDROID STYLE ----
+            overlay.style.cssText = 'position:fixed;inset:0;background:#121212;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-family:"Google Sans","Roboto",sans-serif';
+            overlay.innerHTML =
+                '<div style="padding-top:env(safe-area-inset-top,44px)"></div>' +
+                // Caller info
+                '<div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:30px">' +
+                    '<div style="width:96px;height:96px;background:linear-gradient(135deg,#7BAAF7,#4285F4);border-radius:48px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:40px;font-weight:400;color:#fff;animation:fcRingPulse 2s ease-in-out infinite">' + initial + '</div>' +
+                    '<p style="color:#fff;font-size:26px;font-weight:500;margin:0 0 8px;letter-spacing:0">' + callerName + '</p>' +
+                    '<p style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:400;margin:0">Incoming call</p>' +
                 '</div>' +
-                '<div style="text-align:center">' +
-                    '<button id="fc-accept" style="width:64px;height:64px;background:#2ecc71;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone" style="font-size:22px;color:#fff"></i></button>' +
-                    '<p style="color:#8080A0;font-size:11px;margin-top:8px">Accept</p>' +
+                // Bottom buttons
+                '<div style="width:100%;padding:0 40px 50px;padding-bottom:max(50px,env(safe-area-inset-bottom,34px))">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;max-width:300px;margin:0 auto">' +
+                        '<div style="text-align:center">' +
+                            '<button id="fc-decline" style="width:64px;height:64px;background:rgba(234,67,53,0.15);border-radius:32px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone" style="font-size:24px;color:#EA4335;transform:rotate(135deg)"></i></button>' +
+                            '<p style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:8px;font-weight:400">Decline</p>' +
+                        '</div>' +
+                        '<div style="text-align:center">' +
+                            '<button id="fc-accept" style="width:64px;height:64px;background:rgba(52,168,83,0.15);border-radius:32px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone" style="font-size:24px;color:#34A853"></i></button>' +
+                            '<p style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:8px;font-weight:400">Answer</p>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        } else {
+            // ---- iOS STYLE ----
+            overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif';
+            overlay.innerHTML =
+                '<div style="padding-top:env(safe-area-inset-top,44px)"></div>' +
+                // Caller info
+                '<div style="text-align:center;flex:1;display:flex;flex-direction:column;justify-content:center;padding-bottom:40px">' +
+                    '<div style="width:110px;height:110px;background:linear-gradient(145deg,#A0A0B0,#6E6E80);border-radius:55px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:46px;font-weight:300;color:#fff;animation:fcRingPulse 2s ease-in-out infinite">' + initial + '</div>' +
+                    '<p style="color:#fff;font-size:30px;font-weight:300;margin:0 0 6px;letter-spacing:-0.5px">' + callerName + '</p>' +
+                    '<p style="color:rgba(255,255,255,0.55);font-size:15px;font-weight:400;margin:0">mobile</p>' +
                 '</div>' +
-            '</div>';
+                // Bottom buttons
+                '<div style="padding:0 0 50px;padding-bottom:max(50px,env(safe-area-inset-bottom,34px))">' +
+                    '<div style="display:flex;justify-content:center;gap:80px">' +
+                        '<div style="text-align:center">' +
+                            '<button id="fc-decline" style="width:70px;height:70px;background:#FF3B30;border-radius:35px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(255,59,48,0.4)"><i class="fas fa-phone" style="font-size:28px;color:#fff;transform:rotate(135deg)"></i></button>' +
+                            '<p style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px;font-weight:400">Decline</p>' +
+                        '</div>' +
+                        '<div style="text-align:center">' +
+                            '<button id="fc-accept" style="width:70px;height:70px;background:#34C759;border-radius:35px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(52,199,89,0.4)"><i class="fas fa-phone" style="font-size:28px;color:#fff"></i></button>' +
+                            '<p style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px;font-weight:400">Accept</p>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
 
         var ringStyle = document.createElement('style');
-        ringStyle.textContent = '@keyframes fcRingPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(232,160,181,0.4)}50%{transform:scale(1.05);box-shadow:0 0 0 20px rgba(232,160,181,0)}}';
+        ringStyle.textContent = '@keyframes fcRingPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(160,160,176,0.3)}50%{transform:scale(1.04);box-shadow:0 0 0 24px rgba(160,160,176,0)}}';
         overlay.appendChild(ringStyle);
 
         document.body.appendChild(overlay);
@@ -297,36 +374,94 @@
         document.getElementById('fc-accept').onclick = function() {
             stopRinging();
             overlay.remove();
-            showFakeActiveCall(callerName, audioPromise);
+            // iOS Safari requires audio.play() to be triggered from a user gesture.
+            // Pre-create and play a silent audio element NOW (inside the click handler)
+            // so the browser unlocks audio playback for this element.
+            var preloadedAudio = new Audio();
+            preloadedAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+            preloadedAudio.play().catch(function() {});
+            showFakeActiveCall(callerName, audioPromise, phoneOS, preloadedAudio);
         };
     }
 
-    function showFakeActiveCall(callerName, audioPromise) {
+    // ============ ACTIVE CALL SCREEN (iOS / Android) ============
+    function showFakeActiveCall(callerName, audioPromise, phoneOS, preloadedAudio) {
+        phoneOS = phoneOS || 'ios';
+
         var overlay = document.createElement('div');
         overlay.id = 'fake-active-call';
-        overlay.style.cssText = 'position:fixed;inset:0;background:#0d0d1a;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px';
 
-        var initial = callerName.charAt(0).toUpperCase();
-        overlay.innerHTML =
-            '<div style="text-align:center">' +
-                '<div style="width:60px;height:60px;background:linear-gradient(135deg,#E8A0B5,#D4768E);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px;font-weight:700;color:#fff">' + initial + '</div>' +
-                '<p style="color:#fff;font-size:20px;font-weight:600;margin-bottom:4px">' + callerName + '</p>' +
-                '<p id="fc-call-timer" style="color:#2ecc71;font-size:14px;margin-bottom:50px;font-variant-numeric:tabular-nums">00:00</p>' +
-            '</div>' +
-            '<div style="display:flex;gap:32px">' +
-                '<div style="text-align:center">' +
-                    '<button id="fc-mute-btn" style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-microphone-slash" style="font-size:18px;color:#8080A0;transition:color 0.2s"></i></button>' +
-                    '<p style="color:#8080A0;font-size:10px;margin-top:6px">Mute</p>' +
+        if (phoneOS === 'android') {
+            // ---- ANDROID ACTIVE CALL ----
+            overlay.style.cssText = 'position:fixed;inset:0;background:#121212;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-family:"Google Sans","Roboto",sans-serif';
+            overlay.innerHTML =
+                // Top: avatar + name + timer
+                '<div style="text-align:center;padding-top:max(70px,calc(env(safe-area-inset-top,44px) + 30px))">' +
+                    '<div style="width:72px;height:72px;background:linear-gradient(135deg,#7BAAF7,#4285F4);border-radius:36px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:30px;font-weight:400;color:#fff">' + callerName.charAt(0).toUpperCase() + '</div>' +
+                    '<p style="color:#fff;font-size:20px;font-weight:500;margin:0 0 4px">' + callerName + '</p>' +
+                    '<p id="fc-call-timer" style="color:rgba(255,255,255,0.6);font-size:14px;margin:0;font-variant-numeric:tabular-nums;font-weight:400">00:00</p>' +
                 '</div>' +
-                '<div style="text-align:center">' +
-                    '<button id="fc-end-call" style="width:52px;height:52px;background:#e74c3c;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone-slash" style="font-size:18px;color:#fff;transform:rotate(135deg)"></i></button>' +
-                    '<p style="color:#8080A0;font-size:10px;margin-top:6px">End</p>' +
+                // Middle: action buttons row
+                '<div style="display:flex;justify-content:center;gap:28px;padding:0 20px">' +
+                    '<div style="text-align:center">' +
+                        '<button id="fc-mute-btn" style="width:56px;height:56px;background:rgba(255,255,255,0.08);border-radius:28px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-microphone-slash" style="font-size:20px;color:#fff;transition:color 0.2s"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.6);font-size:10px;margin-top:6px;font-weight:400">Mute</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button style="width:56px;height:56px;background:rgba(255,255,255,0.08);border-radius:28px;border:none;display:flex;align-items:center;justify-content:center;cursor:default"><i class="fas fa-th" style="font-size:20px;color:#fff"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.6);font-size:10px;margin-top:6px;font-weight:400">Keypad</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button id="fc-speaker-btn" style="width:56px;height:56px;background:rgba(255,255,255,0.08);border-radius:28px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-volume-up" style="font-size:20px;color:#fff;transition:color 0.2s"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.6);font-size:10px;margin-top:6px;font-weight:400">Speaker</p>' +
+                    '</div>' +
                 '</div>' +
-                '<div style="text-align:center">' +
-                    '<button id="fc-speaker-btn" style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s"><i class="fas fa-volume-up" style="font-size:18px;color:#8080A0;transition:color 0.2s"></i></button>' +
-                    '<p style="color:#8080A0;font-size:10px;margin-top:6px">Speaker</p>' +
+                // Bottom: end call pill
+                '<div style="text-align:center;padding-bottom:max(50px,env(safe-area-inset-bottom,34px))">' +
+                    '<button id="fc-end-call" style="width:160px;height:56px;background:#EA4335;border-radius:28px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;gap:10px;box-shadow:0 2px 12px rgba(234,67,53,0.3)"><i class="fas fa-phone" style="font-size:22px;color:#fff;transform:rotate(135deg)"></i><span style="color:#fff;font-size:15px;font-weight:500">End call</span></button>' +
+                '</div>';
+        } else {
+            // ---- iOS ACTIVE CALL ----
+            overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:10001;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif';
+            overlay.innerHTML =
+                // Top: name + timer
+                '<div style="text-align:center;padding-top:max(70px,calc(env(safe-area-inset-top,44px) + 30px))">' +
+                    '<p style="color:#fff;font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-0.3px">' + callerName + '</p>' +
+                    '<p id="fc-call-timer" style="color:rgba(255,255,255,0.55);font-size:16px;margin:0;font-variant-numeric:tabular-nums;font-weight:400">00:00</p>' +
                 '</div>' +
-            '</div>';
+                // Middle: action buttons grid (3x2)
+                '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px 0;max-width:320px;width:100%;padding:0 20px">' +
+                    '<div style="text-align:center">' +
+                        '<button id="fc-mute-btn" style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 0.2s"><i class="fas fa-microphone-slash" style="font-size:22px;color:#fff;transition:color 0.2s"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:8px;font-weight:400">mute</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:default"><i class="fas fa-th" style="font-size:22px;color:#fff"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:8px;font-weight:400">keypad</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button id="fc-speaker-btn" style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:background 0.2s"><i class="fas fa-volume-up" style="font-size:22px;color:#fff;transition:color 0.2s"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:8px;font-weight:400">speaker</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.4;cursor:default"><i class="fas fa-plus" style="font-size:22px;color:#fff"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:8px;font-weight:400">add call</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.4;cursor:default"><i class="fas fa-video" style="font-size:22px;color:#fff"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:8px;font-weight:400">FaceTime</p>' +
+                    '</div>' +
+                    '<div style="text-align:center">' +
+                        '<button style="width:66px;height:66px;background:rgba(255,255,255,0.12);border-radius:33px;border:none;display:flex;align-items:center;justify-content:center;margin:0 auto;opacity:0.4;cursor:default"><i class="fas fa-user" style="font-size:22px;color:#fff"></i></button>' +
+                        '<p style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:8px;font-weight:400">contacts</p>' +
+                    '</div>' +
+                '</div>' +
+                // Bottom: end call
+                '<div style="text-align:center;padding-bottom:max(50px,env(safe-area-inset-bottom,34px))">' +
+                    '<button id="fc-end-call" style="width:70px;height:70px;background:#FF3B30;border-radius:35px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 20px rgba(255,59,48,0.4)"><i class="fas fa-phone" style="font-size:28px;color:#fff;transform:rotate(135deg)"></i></button>' +
+                    '<p style="color:rgba(255,255,255,0.55);font-size:12px;margin-top:10px;font-weight:400">End Call</p>' +
+                '</div>';
+        }
 
         document.body.appendChild(overlay);
 
@@ -338,36 +473,55 @@
             if (timerEl) timerEl.textContent = String(Math.floor(elapsed / 60)).padStart(2, '0') + ':' + String(elapsed % 60).padStart(2, '0');
         }, 1000);
 
-        // Play audio if available
+        // Play voice audio
         var audio = null;
         var isMuted = false;
+        var activeStyle = phoneOS === 'android' ? 'rgba(76,175,80,0.2)' : '#fff';
+        var activeColor = phoneOS === 'android' ? '#4CAF50' : '#000';
+        var inactiveStyle = phoneOS === 'android' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)';
+        var inactiveColor = '#fff';
+
         if (audioPromise) {
             audioPromise.then(function(voiceData) {
                 if (voiceData && voiceData.audio) {
-                    audio = new Audio('data:audio/mpeg;base64,' + voiceData.audio);
-                    audio.play().catch(function() {});
+                    // Reuse the preloaded audio element (already unlocked by user gesture on iOS)
+                    if (preloadedAudio) {
+                        audio = preloadedAudio;
+                        audio.src = 'data:audio/mpeg;base64,' + voiceData.audio;
+                    } else {
+                        audio = new Audio('data:audio/mpeg;base64,' + voiceData.audio);
+                    }
+                    audio.play().then(function() {
+                        console.log('[FakeCall] Voice audio playing');
+                    }).catch(function(err) {
+                        console.error('[FakeCall] Audio play failed:', err);
+                    });
                     audio.onended = function() {
                         clearInterval(timerInt);
                         overlay.remove();
                     };
+                } else {
+                    console.warn('[FakeCall] No voice audio available — showing silent call');
                 }
-            }).catch(function() {});
+            }).catch(function(err) {
+                console.error('[FakeCall] Audio promise rejected:', err);
+            });
         }
 
-        // Mute button — toggles audio mute
+        // Mute button
         document.getElementById('fc-mute-btn').onclick = function() {
             isMuted = !isMuted;
-            this.style.background = isMuted ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.1)';
-            this.querySelector('i').style.color = isMuted ? '#E8A0B5' : '#8080A0';
+            this.style.background = isMuted ? activeStyle : inactiveStyle;
+            this.querySelector('i').style.color = isMuted ? activeColor : inactiveColor;
             if (audio) audio.muted = isMuted;
         };
 
-        // Speaker button — visual toggle
+        // Speaker button
         var speakerOn = false;
         document.getElementById('fc-speaker-btn').onclick = function() {
             speakerOn = !speakerOn;
-            this.style.background = speakerOn ? 'rgba(232,160,181,0.3)' : 'rgba(255,255,255,0.1)';
-            this.querySelector('i').style.color = speakerOn ? '#E8A0B5' : '#8080A0';
+            this.style.background = speakerOn ? activeStyle : inactiveStyle;
+            this.querySelector('i').style.color = speakerOn ? activeColor : inactiveColor;
         };
 
         // End call button
@@ -801,7 +955,9 @@
         document.getElementById('fc-test-call').onclick = function() {
             var name = document.getElementById('fc-caller-name').value || 'Mom';
             backdrop.remove();
-            showFakeIncomingCall(name, Promise.resolve(null));
+            var testOS = 'ios';
+            try { var s = JSON.parse(localStorage.getItem('safetea_fakecall_settings')); if (s && s.phoneOS) testOS = s.phoneOS; } catch(e) {}
+            showFakeIncomingCall(name, Promise.resolve(null), testOS);
         };
     };
 

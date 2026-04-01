@@ -2494,72 +2494,57 @@
         var countEl = document.getElementById('grow-ref-count');
         if (countEl) countEl.textContent = data.count || 0;
 
-        // Promo banner
-        var promoBanner = document.getElementById('grow-promo-banner');
-        var countdown = document.getElementById('grow-promo-countdown');
-        if (data.promoActive === false && promoBanner) {
-            promoBanner.style.background = 'rgba(128,128,160,0.08)';
-            promoBanner.style.borderColor = 'rgba(128,128,160,0.15)';
-            if (countdown) countdown.textContent = 'Promo has ended';
-        } else if (countdown && data.promoEndDate) {
-            var end = new Date(data.promoEndDate);
-            var now = new Date();
-            var days = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
-            countdown.textContent = days + ' days remaining — ends ' + end.toLocaleDateString();
-        }
-
-        // Progress bar
-        var count = data.count || 0;
+        // Progress bar — single tier: 5 friends
+        var count = data.referralCount || data.count || 0;
         var progressBar = document.getElementById('grow-progress-bar');
         var progressText = document.getElementById('grow-progress-text');
-        if (progressBar) progressBar.style.width = Math.min(100, (count / 25) * 100) + '%';
-        if (progressText) progressText.textContent = count + ' / 25';
+        if (progressBar) progressBar.style.width = Math.min(100, (count / 5) * 100) + '%';
+        if (progressText) progressText.textContent = count + ' / 5';
 
-        // Tier statuses
-        var tiers = data.tiers || [
-            { threshold: 3, label: '30 days SafeTea+' },
-            { threshold: 10, label: '30 days SafeTea Pro' },
-            { threshold: 25, label: '90 days SafeTea Pro' }
-        ];
-        var claimedThresholds = {};
-        if (data.rewards) {
-            data.rewards.forEach(function(r) { claimedThresholds[r.threshold] = true; });
-        }
-        tiers.forEach(function(tier) {
-            var iconEl = document.getElementById('grow-tier-' + tier.threshold + '-icon');
-            var claimBtn = document.getElementById('grow-claim-' + tier.threshold);
-            var statusEl = document.getElementById('grow-status-' + tier.threshold);
-            if (claimedThresholds[tier.threshold]) {
-                if (iconEl) { iconEl.className = 'fas fa-check'; iconEl.style.color = '#2ecc71'; }
-                if (claimBtn) claimBtn.style.display = 'none';
-                if (statusEl) { statusEl.textContent = 'Claimed'; statusEl.style.color = '#2ecc71'; }
-            } else if (count >= tier.threshold && data.promoActive !== false) {
-                if (iconEl) { iconEl.className = 'fas fa-unlock'; iconEl.style.color = '#E8A0B5'; }
-                if (claimBtn) claimBtn.style.display = 'inline-block';
-                if (statusEl) statusEl.textContent = '';
-            } else {
-                if (iconEl) { iconEl.className = 'fas fa-lock'; iconEl.style.color = '#8080A0'; }
-                if (claimBtn) claimBtn.style.display = 'none';
-                var needed = tier.threshold - count;
-                if (statusEl) { statusEl.textContent = needed + ' more needed'; statusEl.style.color = '#8080A0'; }
-            }
+        // Progress dots
+        var dots = document.querySelectorAll('.grow-dot');
+        dots.forEach(function(dot, i) {
+            dot.style.background = i < count ? '#E8A0B5' : '#333';
         });
 
-        // Active rewards
-        var rewardsContainer = document.getElementById('grow-active-rewards');
-        var rewardsList = document.getElementById('grow-rewards-list');
-        if (data.activeRewards && data.activeRewards.length > 0 && rewardsContainer && rewardsList) {
-            rewardsContainer.style.display = 'block';
-            rewardsList.innerHTML = data.activeRewards.map(function(r) {
-                var exp = new Date(r.expires_at);
-                var daysLeft = Math.max(0, Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24)));
-                return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
-                    + '<i class="fas fa-crown" style="color:#2ecc71"></i>'
-                    + '<div style="flex:1"><div style="font-size:13px;color:#fff;font-weight:500">' + (r.label || r.tier) + '</div>'
-                    + '<div style="font-size:11px;color:#8080A0">' + daysLeft + ' days remaining</div></div></div>';
-            }).join('');
-        } else if (rewardsContainer) {
-            rewardsContainer.style.display = 'none';
+        // Reward status
+        var rewardIcon = document.getElementById('grow-reward-icon');
+        var rewardSubtitle = document.getElementById('grow-reward-subtitle');
+        var claimBtn = document.getElementById('grow-claim-btn');
+        var claimedBanner = document.getElementById('grow-claimed-banner');
+        var claimedDetail = document.getElementById('grow-claimed-detail');
+
+        if (data.rewardClaimed) {
+            if (rewardIcon) { rewardIcon.className = 'fas fa-check-circle'; rewardIcon.style.color = '#2ecc71'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = 'You claimed your free month!';
+            if (claimBtn) claimBtn.style.display = 'none';
+            if (claimedBanner) {
+                claimedBanner.style.display = 'block';
+                if (data.rewardExpiresAt && claimedDetail) {
+                    var exp = new Date(data.rewardExpiresAt);
+                    var daysLeft = Math.max(0, Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24)));
+                    claimedDetail.textContent = daysLeft + ' days of SafeTea+ remaining';
+                }
+            }
+        } else if (data.rewardReady) {
+            if (rewardIcon) { rewardIcon.className = 'fas fa-gift'; rewardIcon.style.color = '#f27059'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = 'You did it! Claim your free month now.';
+            if (claimBtn) claimBtn.style.display = 'inline-block';
+            if (claimedBanner) claimedBanner.style.display = 'none';
+        } else {
+            var needed = 5 - count;
+            if (rewardIcon) { rewardIcon.className = 'fas fa-gift'; rewardIcon.style.color = '#E8A0B5'; }
+            if (rewardSubtitle) rewardSubtitle.textContent = needed + ' more friend' + (needed !== 1 ? 's' : '') + ' needed to unlock';
+            if (claimBtn) claimBtn.style.display = 'none';
+            if (claimedBanner) claimedBanner.style.display = 'none';
+        }
+
+        // Total referrals stat
+        var totalStat = document.getElementById('grow-total-stat');
+        var totalBrought = document.getElementById('grow-total-brought');
+        if (count > 0 && totalStat) {
+            totalStat.style.display = 'block';
+            if (totalBrought) totalBrought.innerHTML = '<i class="fas fa-users"></i> Total women you\'ve brought in: <strong>' + count + '</strong>';
         }
 
         // Referrals list
@@ -2577,26 +2562,19 @@
             friendsList.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0;font-size:13px">No referrals yet. Share your link to get started!</div>';
         }
 
-        // Lifetime cap
-        var capEl = document.getElementById('grow-lifetime-cap');
-        if (capEl) {
-            var used = data.daysUsed || 0;
-            capEl.innerHTML = '<i class="fas fa-info-circle"></i> ' + used + ' / 180 free days used';
-        }
     }
 
-    window.claimGrowReward = function(threshold) {
-        var btn = document.getElementById('grow-claim-' + threshold);
+    window.claimGrowReward = function() {
+        var btn = document.getElementById('grow-claim-btn');
         if (btn) { btn.disabled = true; btn.textContent = 'Claiming...'; }
         apiFetch('/referral', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'claim', threshold: threshold })
+            body: JSON.stringify({ action: 'claim' })
         }).then(function(data) {
             if (data && data.success) {
-                showToast('Reward claimed! Enjoy your free premium time.');
+                showToast('Reward claimed! Enjoy 1 month of free SafeTea+!');
                 loadGrowReferral();
-                // Refresh user data to pick up tier upgrade
                 apiFetch('/auth/me').then(function(d) {
                     if (d && d.user) {
                         user = Object.assign(user, d.user);

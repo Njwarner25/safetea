@@ -7,14 +7,10 @@ function generateCode() {
   return 'ST-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
 }
 
-// Reward tier definitions (all map to 'plus' tier now)
+// Single reward: 5 verified friends → 1 month free SafeTea+ (one-time)
 const REWARD_TIERS = [
-  { threshold: 3,  tier: 'plus', days: 30, label: '30 days SafeTea+' },
-  { threshold: 10, tier: 'plus', days: 30, label: '30 days SafeTea+' },
-  { threshold: 25, tier: 'plus', days: 90, label: '90 days SafeTea+' },
+  { threshold: 5, tier: 'plus', days: 30, label: '1 month free SafeTea+' },
 ];
-
-const MAX_LIFETIME_DAYS = 180; // 6-month cap
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -60,31 +56,15 @@ module.exports = async function handler(req, res) {
         [user.id]
       );
 
-      // Total free days used
-      const totalDaysUsed = await getOne(
-        'SELECT COALESCE(SUM(days_granted), 0) as total FROM referral_rewards WHERE user_id = $1',
+      // Check if reward was already claimed (one-time only)
+      const rewardClaimed = await getOne(
+        "SELECT * FROM referral_rewards WHERE user_id = $1 AND reason = 'referral_5'",
         [user.id]
       );
 
-      // Check promo status
-      const promoConfig = await getOne(
-        "SELECT value FROM referral_config WHERE key = 'promo_end_date'"
-      );
-      const promoEndDate = promoConfig ? promoConfig.value : '2026-06-22T23:59:59Z';
-      const promoActive = new Date() < new Date(promoEndDate);
-
-      // Determine next reward
       const count = parseInt(referralCount.count);
-      let nextReward = null;
-      for (const tier of REWARD_TIERS) {
-        if (count < tier.threshold) {
-          nextReward = { ...tier, remaining: tier.threshold - count };
-          break;
-        }
-      }
-
-      // Determine unlocked rewards
-      const unlockedRewards = REWARD_TIERS.filter(t => count >= t.threshold);
+      const rewardReady = count >= 5 && !rewardClaimed;
+      const rewardAlreadyClaimed = !!rewardClaimed;
 
       return res.status(200).json({
         success: true,
@@ -93,12 +73,9 @@ module.exports = async function handler(req, res) {
         referralCount: count,
         referrals: referrals || [],
         activeRewards: activeRewards || [],
-        totalDaysUsed: parseInt(totalDaysUsed.total),
-        maxLifetimeDays: MAX_LIFETIME_DAYS,
-        promoActive,
-        promoEndDate,
-        nextReward,
-        unlockedRewards,
+        rewardReady,
+        rewardClaimed: rewardAlreadyClaimed,
+        rewardExpiresAt: rewardClaimed ? rewardClaimed.expires_at : null,
         rewardTiers: REWARD_TIERS,
       });
     } catch (err) {
@@ -114,9 +91,8 @@ module.exports = async function handler(req, res) {
       const { action } = body;
 
       if (action === 'claim') {
-        const { threshold } = body;
-        const tier = REWARD_TIERS.find(t => t.threshold === threshold);
-        if (!tier) return res.status(400).json({ error: 'Invalid reward tier' });
+        // One-time reward: 5 friends → 1 month free SafeTea+
+        const tier = REWARD_TIERS[0];
 
         // Verify user has enough referrals
         const referralCount = await getOne(
@@ -124,65 +100,46 @@ module.exports = async function handler(req, res) {
           [user.id]
         );
         if (parseInt(referralCount.count) < tier.threshold) {
-          return res.status(400).json({ error: 'Not enough referrals to claim this reward' });
+          return res.status(400).json({ error: 'You need 5 verified referrals to claim this reward' });
         }
 
-        // Check if already claimed this specific tier
+        // Check if already claimed (one-time only)
         const existing = await getOne(
-          "SELECT * FROM referral_rewards WHERE user_id = $1 AND reason = $2",
-          [user.id, `referral_${tier.threshold}`]
-        );
-        if (existing) {
-          return res.status(400).json({ error: 'Reward already claimed' });
-        }
-
-        // Check lifetime cap
-        const totalDaysUsed = await getOne(
-          'SELECT COALESCE(SUM(days_granted), 0) as total FROM referral_rewards WHERE user_id = $1',
+          "SELECT * FROM referral_rewards WHERE user_id = $1 AND reason = 'referral_5'",
           [user.id]
         );
-        if (parseInt(totalDaysUsed.total) + tier.days > MAX_LIFETIME_DAYS) {
-          return res.status(400).json({ error: 'Would exceed lifetime free day limit (180 days)' });
+        if (existing) {
+          return res.status(400).json({ error: 'Reward already claimed — this is a one-time offer' });
         }
 
-        // Check promo is active
-        const promoConfig = await getOne(
-          "SELECT value FROM referral_config WHERE key = 'promo_end_date'"
-        );
-        if (promoConfig && new Date() > new Date(promoConfig.value)) {
-          return res.status(400).json({ error: 'Referral promo has ended' });
-        }
-
-        // Grant the reward
+        // Grant 30 days free SafeTea+
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + tier.days);
+        expiresAt.setDate(expiresAt.getDate() + 30);
 
         await run(
           `INSERT INTO referral_rewards (user_id, tier, days_granted, reason, expires_at)
            VALUES ($1, $2, $3, $4, $5)`,
-          [user.id, 'plus', tier.days, `referral_${tier.threshold}`, expiresAt.toISOString()]
+          [user.id, 'plus', 30, 'referral_5', expiresAt.toISOString()]
         );
 
-        // Upgrade user subscription tier temporarily
-        const upgradeTier = 'plus';
+        // Upgrade user if currently free (if already paying, they keep paying — reward applies after)
         const currentTier = user.subscription_tier || 'free';
-        // Only upgrade if currently free
         if (currentTier === 'free') {
           await run(
             'UPDATE users SET subscription_tier = $1 WHERE id = $2',
-            [upgradeTier, user.id]
+            ['plus', user.id]
           );
         }
 
         return res.status(200).json({
           success: true,
           reward: {
-            tier: upgradeTier,
-            days: tier.days,
+            tier: 'plus',
+            days: 30,
             expiresAt: expiresAt.toISOString(),
-            label: tier.label,
+            label: '1 month free SafeTea+',
           },
-          message: `Congrats! You've unlocked ${tier.label}!`,
+          message: 'Congrats! You\'ve earned 1 month of free SafeTea+!',
         });
       }
 

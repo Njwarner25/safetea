@@ -2456,12 +2456,12 @@
                     <p style="font-size:14px;color:#8080A0;line-height:1.5;max-width:340px;margin:0 auto">Every invite makes someone's next date a little safer — and earns you free Premium.</p>
                 </div>
 
-                <!-- Promo banner -->
+                <!-- Referral reward banner -->
                 <div id="grow-promo-banner" style="background:linear-gradient(135deg,rgba(242,112,89,0.12),rgba(232,160,181,0.12));border:1px solid rgba(232,160,181,0.2);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-                    <i class="fas fa-fire" style="color:#f27059;font-size:18px"></i>
+                    <i class="fas fa-gift" style="color:#E8A0B5;font-size:18px"></i>
                     <div style="flex:1">
-                        <div style="font-size:14px;font-weight:600;color:#fff">Limited-Time: Double Rewards</div>
-                        <div id="grow-promo-countdown" style="font-size:12px;color:#8080A0">Promo ends June 22, 2026 — invite now before it's gone</div>
+                        <div style="font-size:14px;font-weight:600;color:#fff">Invite 5 Friends, Get 1 Month Free</div>
+                        <div style="font-size:12px;color:#8080A0">Share your link — when 5 friends verify, you earn free SafeTea+</div>
                     </div>
                 </div>
 
@@ -2491,65 +2491,48 @@
                     <div style="font-size:13px;color:#8080A0">friends joined through your link</div>
                 </div>
 
-                <!-- Progress tracker - 3 tiers -->
+                <!-- Reward progress — single tier: 5 friends = 1 month free -->
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:20px">
-                    <h3 style="font-size:15px;color:#fff;margin-bottom:16px"><i class="fas fa-trophy" style="color:#E8A0B5"></i> Reward Tiers</h3>
+                    <h3 style="font-size:15px;color:#fff;margin-bottom:16px"><i class="fas fa-trophy" style="color:#E8A0B5"></i> Your Reward</h3>
 
-                    <!-- Tier 1: 3 referrals -->
-                    <div id="grow-tier-3" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04)">
-                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(232,160,181,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <i id="grow-tier-3-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
+                    <!-- Reward status card -->
+                    <div id="grow-reward-card" style="display:flex;align-items:center;gap:14px;padding:16px;background:#141428;border-radius:10px;border:1px solid rgba(255,255,255,0.04);margin-bottom:16px">
+                        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(155,89,182,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i id="grow-reward-icon" class="fas fa-gift" style="color:#E8A0B5;font-size:20px"></i>
                         </div>
                         <div style="flex:1">
-                            <div style="font-size:14px;font-weight:600;color:#fff">3 Friends</div>
-                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea+</div>
+                            <div style="font-size:15px;font-weight:700;color:#fff">5 Friends = 1 Month Free</div>
+                            <div id="grow-reward-subtitle" style="font-size:12px;color:#8080A0;margin-top:2px">Get 5 friends to join and verify to earn 1 month of SafeTea+ free</div>
                         </div>
-                        <button id="grow-claim-3" onclick="claimGrowReward(3)" style="display:none;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
-                        <span id="grow-status-3" style="font-size:12px;font-weight:600;color:#8080A0"></span>
+                        <button id="grow-claim-btn" onclick="claimGrowReward()" style="display:none;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
                     </div>
 
-                    <!-- Tier 2: 10 referrals -->
-                    <div id="grow-tier-10" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.04)">
-                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <i id="grow-tier-10-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
-                        </div>
-                        <div style="flex:1">
-                            <div style="font-size:14px;font-weight:600;color:#fff">10 Friends</div>
-                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea Pro</div>
-                        </div>
-                        <button id="grow-claim-10" onclick="claimGrowReward(10)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
-                        <span id="grow-status-10" style="font-size:12px;font-weight:600;color:#8080A0"></span>
-                    </div>
-
-                    <!-- Tier 3: 25 referrals -->
-                    <div id="grow-tier-25" style="display:flex;align-items:center;gap:14px;padding:14px;background:#141428;border-radius:10px;border:1px solid rgba(255,255,255,0.04)">
-                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(155,89,182,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <i id="grow-tier-25-icon" class="fas fa-lock" style="color:#8080A0;font-size:16px"></i>
-                        </div>
-                        <div style="flex:1">
-                            <div style="font-size:14px;font-weight:600;color:#fff">25 Friends</div>
-                            <div style="font-size:12px;color:#8080A0">90 days free SafeTea Pro</div>
-                        </div>
-                        <button id="grow-claim-25" onclick="claimGrowReward(25)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
-                        <span id="grow-status-25" style="font-size:12px;font-weight:600;color:#8080A0"></span>
+                    <!-- Claimed banner -->
+                    <div id="grow-claimed-banner" style="display:none;padding:14px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:10px;text-align:center;margin-bottom:16px">
+                        <div style="font-size:14px;font-weight:600;color:#2ecc71"><i class="fas fa-check-circle"></i> Reward Claimed!</div>
+                        <div id="grow-claimed-detail" style="font-size:12px;color:#8080A0;margin-top:4px">SafeTea+ active</div>
                     </div>
 
                     <!-- Progress bar -->
-                    <div style="margin-top:16px">
+                    <div>
                         <div style="display:flex;justify-content:space-between;font-size:11px;color:#8080A0;margin-bottom:6px">
                             <span>Progress</span>
-                            <span id="grow-progress-text">0 / 25</span>
+                            <span id="grow-progress-text">0 / 5</span>
                         </div>
-                        <div style="height:6px;background:#141428;border-radius:3px;overflow:hidden">
-                            <div id="grow-progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#f27059,#E8A0B5);border-radius:3px;transition:width 0.5s ease"></div>
+                        <div style="height:8px;background:#141428;border-radius:4px;overflow:hidden">
+                            <div id="grow-progress-bar" style="height:100%;width:0%;background:linear-gradient(135deg,#f27059,#E8A0B5);border-radius:4px;transition:width 0.5s ease"></div>
+                        </div>
+                        <!-- 5 dots for each friend -->
+                        <div style="display:flex;justify-content:space-between;margin-top:8px;padding:0 2px">
+                            <div class="grow-dot" style="width:8px;height:8px;border-radius:50%;background:#333"></div>
+                            <div class="grow-dot" style="width:8px;height:8px;border-radius:50%;background:#333"></div>
+                            <div class="grow-dot" style="width:8px;height:8px;border-radius:50%;background:#333"></div>
+                            <div class="grow-dot" style="width:8px;height:8px;border-radius:50%;background:#333"></div>
+                            <div class="grow-dot" style="width:8px;height:8px;border-radius:50%;background:#333"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Active rewards -->
-                <div id="grow-active-rewards" style="display:none;background:#22223A;border:1px solid rgba(46,204,113,0.15);border-radius:14px;padding:20px;margin-bottom:20px">
-                    <h3 style="font-size:15px;color:#2ecc71;margin-bottom:12px"><i class="fas fa-check-circle"></i> Active Rewards</h3>
-                    <div id="grow-rewards-list"></div>
+                    <p style="text-align:center;font-size:11px;color:#8080A0;margin-top:14px">One-time reward. After 30 days, subscribe for $7.99/mo to keep access.</p>
                 </div>
 
                 <!-- Referrals list -->
@@ -2558,9 +2541,9 @@
                     <div id="grow-friends-list" style="color:#8080A0;font-size:13px">No referrals yet. Share your link to get started!</div>
                 </div>
 
-                <!-- Lifetime cap -->
-                <div style="text-align:center;margin-top:16px">
-                    <span id="grow-lifetime-cap" style="font-size:12px;color:#8080A0"><i class="fas fa-info-circle"></i> 0 / 180 free days used</span>
+                <!-- Total referrals stat -->
+                <div id="grow-total-stat" style="text-align:center;margin-top:16px;display:none">
+                    <span id="grow-total-brought" style="font-size:12px;color:#8080A0"><i class="fas fa-users"></i> Total women you've brought in: <strong>0</strong></span>
                 </div>
             </div>
 

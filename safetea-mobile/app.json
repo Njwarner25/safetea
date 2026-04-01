@@ -16,7 +16,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.getsafetea.mobile",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SafeTea uses your location to share your GPS coordinates with trusted contacts during an SOS alert.",
+        "NSMicrophoneUsageDescription": "SafeTea uses the microphone for audio features."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,7 +38,19 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-screen-capture"
+      "expo-screen-capture",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SafeTea uses your location to share your GPS coordinates with trusted contacts during an SOS alert."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "SafeTea uses the microphone for audio features."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

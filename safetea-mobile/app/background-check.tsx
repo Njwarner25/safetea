@@ -37,17 +37,18 @@ function getSectionStatus(section: any): { label: string; color: string } {
 export default function BackgroundCheckScreen() {
   const user = useAuthStore((s) => s.user);
 
-  if (user?.tier !== 'pro') {
+  // SafeTea+ tier gate (accepts 'plus' or legacy 'pro')
+  if (user?.tier !== 'plus' && user?.tier !== 'pro') {
     return (
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>Background Check is a Pro Feature</Text>
+          <Text style={styles.gateTitle}>Background Check is a SafeTea+ Feature</Text>
           <Text style={styles.gateDesc}>
-            Run comprehensive public records searches across criminal records, court filings, social media, and more. Upgrade to SafeTea Pro to unlock.
+            Run comprehensive public records searches across criminal records, court filings, social media, and more. Upgrade to SafeTea+ to unlock.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
-            <Text style={styles.upgradeBtnText}>Upgrade to Pro</Text>
+            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
           </Pressable>
         </View>
       </View>

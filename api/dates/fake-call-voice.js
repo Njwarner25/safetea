@@ -11,8 +11,8 @@ module.exports = async function handler(req, res) {
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  if (user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium') {
-    return res.status(403).json({ error: 'Voice synthesis requires SafeTea Pro' });
+  if (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium') {
+    return res.status(403).json({ error: 'Voice synthesis requires SafeTea+ ($7.99/mo)' });
   }
 
   const body = await parseBody(req);

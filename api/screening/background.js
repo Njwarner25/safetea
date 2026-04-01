@@ -67,9 +67,9 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Sign in to run background checks' });
 
-    // Plus or Pro tier required (admins bypass)
-    if (user.role !== 'admin' && (!user.subscription_tier || (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro'))) {
-      return res.status(403).json({ error: 'Background checks require a Plus or Pro subscription', upgrade: true });
+    // SafeTea+ required (admins bypass; accept 'plus', 'pro', 'premium' for backwards compat)
+    if (user.role !== 'admin' && (!user.subscription_tier || (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium'))) {
+      return res.status(403).json({ error: 'Background checks require SafeTea+ ($7.99/mo)', upgrade: true });
     }
 
     const body = await parseBody(req);

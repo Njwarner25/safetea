@@ -13,19 +13,19 @@ export default function NameWatchScreen() {
   const [nameInput, setNameInput] = useState('');
   const [initialsInput, setInitialsInput] = useState('');
 
-  // Pro tier gate
-  if (user?.tier !== 'pro') {
+  // SafeTea+ tier gate (accepts 'plus' or legacy 'pro')
+  if (user?.tier !== 'plus' && user?.tier !== 'pro') {
     return (
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>Name Watch is a Pro Feature</Text>
+          <Text style={styles.gateTitle}>Name Watch is a SafeTea+ Feature</Text>
           <Text style={styles.gateDesc}>
             Save names and initials of people you're dating or concerned about. Get alerted
             when they're posted about in your city's community.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
-            <Text style={styles.upgradeBtnText}>Upgrade to Pro</Text>
+            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
           </Pressable>
         </View>
       </View>

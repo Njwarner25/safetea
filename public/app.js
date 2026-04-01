@@ -935,10 +935,8 @@
         modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
 
         var isYearly = upgradeInterval === 'yearly';
-        var plusPrice = isYearly ? '$49.99' : '$5.99';
+        var plusPrice = isYearly ? '$66.99' : '$7.99';
         var plusPer = isYearly ? '/yr' : '/mo';
-        var proPrice = isYearly ? '$89.99' : '$9.99';
-        var proPer = isYearly ? '/yr' : '/mo';
         var saveBadge = isYearly ? ' <span style="color:#2ecc71;font-size:11px;font-weight:600">Save 30%</span>' : '';
 
         var html = '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 24px">';
@@ -956,11 +954,11 @@
         html += '<button onclick="upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly' + (isYearly ? '' : ' <span style="color:#2ecc71;font-size:10px">Save 30%</span>') + '</button>';
         html += '</div></div>';
 
-        // SafeTea+ card
-        var plusActive = currentTier === 'plus';
-        html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:12px">';
+        // SafeTea+ card (single paid tier)
+        var plusActive = currentTier === 'plus' || currentTier === 'pro' || currentTier === 'premium';
+        html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea+ <span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">POPULAR</span></h3></div>';
+        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea+ <span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">BEST VALUE</span></h3></div>';
         html += '<div style="color:#fff;font-size:22px;font-weight:800">' + plusPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + plusPer + '</span>' + saveBadge + '</div>';
         html += '</div>';
         html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
@@ -968,31 +966,14 @@
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SafeTea Reports & Sharing</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Name Watch Alerts</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SMS Notifications</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Photo Verification</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Safety Resource Hub</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Priority Support</div>';
         html += '</div>';
         if (plusActive) {
             html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(232,160,181,0.1);border-radius:8px;color:#E8A0B5;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
         } else {
             html += '<button onclick="startCheckout(\'plus\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to SafeTea+</button>';
-        }
-        html += '</div>';
-
-        // SafeTea Pro card
-        var proActive = currentTier === 'pro';
-        html += '<div style="background:#22223A;border:' + (proActive ? '2px solid #9b59b6' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea Pro <span style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">BEST VALUE</span></h3></div>';
-        html += '<div style="color:#fff;font-size:22px;font-weight:800">' + proPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + proPer + '</span>' + saveBadge + '</div>';
-        html += '</div>';
-        html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Everything in SafeTea+</div>';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Photo Verification</div>';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Safety Resource Hub</div>';
-        html += '<div><i class="fas fa-check" style="color:#9b59b6;width:16px;margin-right:6px"></i>Priority Support</div>';
-        html += '</div>';
-        if (proActive) {
-            html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(155,89,182,0.1);border-radius:8px;color:#9b59b6;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
-        } else {
-            html += '<button onclick="startCheckout(\'pro\')" style="width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Upgrade to SafeTea Pro</button>';
         }
         html += '</div>';
 

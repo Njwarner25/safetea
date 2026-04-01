@@ -10,9 +10,9 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Pro tier check
-    if (user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium') {
-      return res.status(403).json({ error: 'SOS feature requires SafeTea Pro' });
+    // Paid tier check (accept 'plus', 'pro', or 'premium' for backwards compat)
+    if (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium') {
+      return res.status(403).json({ error: 'SOS feature requires SafeTea+ ($7.99/mo)' });
     }
 
     const body = await parseBody(req);

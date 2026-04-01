@@ -6,7 +6,6 @@ import { api } from '../services/api';
 
 const STRIPE_PRICES = {
   plus: 'price_1TDXLUFaKA9n89CXkfEotpfL',
-  pro: 'price_1TDXN5FaKA9n89CXeDxnAJMh',
 };
 
 const PLANS = [
@@ -27,9 +26,9 @@ const PLANS = [
   {
     id: 'plus',
     name: 'SafeTea+',
-    price: '$5.99',
+    price: '$7.99',
     period: '/month',
-    description: 'Full access to protect yourself',
+    description: 'Full access & maximum protection',
     popular: true,
     features: [
       'Everything in Free',
@@ -37,19 +36,8 @@ const PLANS = [
       'Multi-city search',
       'Smart alerts & notifications (community)',
       'SafeWalk date sharing',
-      'AI Profile Screening (3/month)',
-    ],
-  },
-  {
-    id: 'pro',
-    name: 'SafeTea Pro',
-    price: '$9.99',
-    period: '/month',
-    description: 'Maximum protection, unlimited tools',
-    features: [
-      'Everything in SafeTea+',
       'Name Watch \u2014 get alerted when someone you know is posted about',
-      'Unlimited AI screening',
+      'Unlimited AI Profile Screening',
       'Background check credits (3/month)',
       'Safety map premium',
       'Scam database access',
@@ -150,7 +138,7 @@ export default function SubscriptionScreen() {
 
       <View style={styles.modCallout}>
         <Text style={styles.modCalloutText}>
-          💎 <Text style={styles.bold}>Volunteer moderators get all Pro features free.</Text>{' '}
+          💎 <Text style={styles.bold}>Volunteer moderators get all SafeTea+ features free.</Text>{' '}
           Our community mods are the backbone of SafeTea.
         </Text>
       </View>

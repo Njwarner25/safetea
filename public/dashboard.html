@@ -2021,9 +2021,9 @@
                 <div class="premium-gate-content">
                     <i class="fas fa-lock" style="font-size:48px;color:#E8A0B5;margin-bottom:16px"></i>
                     <h2>Unlock Inbox</h2>
-                    <p>Direct messaging is available on the Premium plan. Connect with referrers, ask questions, and build your network.</p>
-                    <div class="premium-gate-price">$5.99<span>/mo</span></div>
-                    <button class="btn-upgrade" onclick="showUpgradePrompt()"><i class="fas fa-crown"></i> Upgrade to Premium</button>
+                    <p>Direct messaging is available on the SafeTea+ plan. Connect with referrers, ask questions, and build your network.</p>
+                    <div class="premium-gate-price">$7.99<span>/mo</span></div>
+                    <button class="btn-upgrade" onclick="showUpgradePrompt()"><i class="fas fa-crown"></i> Upgrade to SafeTea+</button>
                 </div>
             </div>
             <!-- Inbox content (shown for premium users) -->
@@ -2117,7 +2117,7 @@
                         <div style="font-size:12px;color:#8080A0" id="home-timer-label">Since you checked in</div>
                     </div>
                     <button class="home-btn-safe" onclick="dateCheckIn()" style="width:100%;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px"><i class="fas fa-check-circle"></i> Check In — I'm Safe</button>
-                    <button onclick="triggerSOS()" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> SOS — I Need Help</button>
+                    <button onclick="showSOSActionSheet()" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:8px"><i class="fas fa-exclamation-triangle"></i> SOS — I Need Help</button>
                     <div style="display:flex;gap:8px">
                         <button onclick="viewSafeTeaReport()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-file-alt"></i> View Details</button>
                         <button onclick="shareDateLink()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-alt"></i> Share Live Link</button>
@@ -2166,12 +2166,12 @@
                         </div>
                     </a>
 
-                    <!-- Record & Protect -->
-                    <div id="rp-start-btn" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(231,76,60,0.12),rgba(192,57,43,0.06));border:1px solid rgba(231,76,60,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(231,76,60,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.2)'">
-                        <div style="min-width:44px;height:44px;background:linear-gradient(135deg,rgba(231,76,60,0.2),rgba(192,57,43,0.15));border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microphone" style="font-size:20px;color:#e74c3c"></i></div>
+                    <!-- Record & Protect (now accessed via floating SOS button) -->
+                    <div onclick="showSOSActionSheet()" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(231,76,60,0.12),rgba(192,57,43,0.06));border:1px solid rgba(231,76,60,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:inherit" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(231,76,60,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.2)'">
+                        <div style="min-width:44px;height:44px;background:linear-gradient(135deg,rgba(231,76,60,0.2),rgba(192,57,43,0.15));border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="font-size:20px;color:#e74c3c"></i></div>
                         <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Record & Protect <span style="font-size:10px;background:rgba(231,76,60,0.2);color:#e74c3c;padding:2px 6px;border-radius:4px;font-weight:500;margin-left:6px">PRO</span></h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Instantly record audio, capture GPS, and alert your trusted contacts in an emergency.</p>
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SOS — Record & Protect <span style="font-size:10px;background:rgba(232,160,181,0.2);color:#E8A0B5;padding:2px 6px;border-radius:4px;font-weight:500;margin-left:6px">SafeTea+</span></h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Fake Call, Record & Alert, or Call 911 — your complete emergency toolkit.</p>
                         </div>
                     </div>
                 </div>
@@ -2181,8 +2181,8 @@
                     <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
                         <div style="min-width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-gift" style="font-size:18px;color:#fff"></i></div>
                         <div style="flex:1">
-                            <h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:2px">Invite Friends, Get Premium Free</h4>
-                            <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.4">Share SafeTea and earn up to 90 days of free Pro access.</p>
+                            <h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:2px">Invite Friends, Get SafeTea+ Free</h4>
+                            <p style="color:rgba(255,255,255,0.8);font-size:12px;line-height:1.4">Share SafeTea and earn up to 90 days of free SafeTea+ access.</p>
                         </div>
                         <i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.5);font-size:16px"></i>
                     </div>
@@ -2448,7 +2448,7 @@
                 <div style="text-align:center;padding:20px 16px 24px">
                     <div style="width:64px;height:64px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-heart" style="font-size:28px;color:#fff"></i></div>
                     <h2 style="font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">Help Your Friends Date Safer</h2>
-                    <p style="font-size:14px;color:#8080A0;line-height:1.5;max-width:340px;margin:0 auto">Every invite makes someone's next date a little safer — and earns you free Premium.</p>
+                    <p style="font-size:14px;color:#8080A0;line-height:1.5;max-width:340px;margin:0 auto">Every invite makes someone's next date a little safer — and earns you free SafeTea+.</p>
                 </div>
 
                 <!-- Promo banner -->
@@ -2463,7 +2463,7 @@
                 <!-- Share code card -->
                 <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;margin-bottom:20px">
                     <h3 style="font-size:16px;color:#fff;margin-bottom:8px;display:flex;align-items:center;gap:10px"><i class="fas fa-paper-plane" style="color:#E8A0B5"></i> Send Your Invite</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Text your link to friends. When they sign up, you both win — they get safety tools, you get free Premium.</p>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Text your link to friends. When they sign up, you both win — they get safety tools, you get free SafeTea+.</p>
                     <div style="display:flex;gap:8px;margin-bottom:12px">
                         <input type="text" id="grow-share-url" readonly style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#E8A0B5;font-family:'Inter',sans-serif;font-size:13px;outline:none" value="Loading...">
                         <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-copy"></i> Copy</button>
@@ -2510,7 +2510,7 @@
                         </div>
                         <div style="flex:1">
                             <div style="font-size:14px;font-weight:600;color:#fff">10 Friends</div>
-                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea Pro</div>
+                            <div style="font-size:12px;color:#8080A0">30 days free SafeTea+</div>
                         </div>
                         <button id="grow-claim-10" onclick="claimGrowReward(10)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
                         <span id="grow-status-10" style="font-size:12px;font-weight:600;color:#8080A0"></span>
@@ -2523,7 +2523,7 @@
                         </div>
                         <div style="flex:1">
                             <div style="font-size:14px;font-weight:600;color:#fff">25 Friends</div>
-                            <div style="font-size:12px;color:#8080A0">90 days free SafeTea Pro</div>
+                            <div style="font-size:12px;color:#8080A0">90 days free SafeTea+</div>
                         </div>
                         <button id="grow-claim-25" onclick="claimGrowReward(25)" style="display:none;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Claim</button>
                         <span id="grow-status-25" style="font-size:12px;font-weight:600;color:#8080A0"></span>
@@ -2571,7 +2571,7 @@
                 <div class="profile-email" id="profile-email"></div>
                 <div class="profile-role" id="profile-role">member</div>
                 <div class="profile-tier" id="profile-tier" style="display:none">
-                    <span class="premium-badge"><i class="fas fa-crown"></i> Premium</span>
+                    <span class="premium-badge"><i class="fas fa-crown"></i> SafeTea+</span>
                 </div>
             </div>
 
@@ -2648,13 +2648,13 @@
                         <input type="radio" name="avatar-type" value="upload" onchange="onAvatarTypeChange(this.value)">
                         <div class="avatar-option-content">
                             <strong>Upload Avatar Photo</strong>
-                            <span class="premium-badge-inline"><i class="fas fa-crown"></i> $5.99</span>
+                            <span class="premium-badge-inline"><i class="fas fa-crown"></i> $7.99</span>
                         </div>
                     </label>
                     <div id="upload-avatar-input" class="avatar-sub-option" style="display:none">
                         <div id="upload-avatar-gate" style="display:none">
                             <div class="premium-mini-gate">
-                                <i class="fas fa-lock"></i> Upgrade to Premium to upload a photo
+                                <i class="fas fa-lock"></i> Upgrade to SafeTea+ to upload a photo
                                 <button class="btn-upgrade-sm" onclick="showUpgradePrompt()">Upgrade</button>
                             </div>
                         </div>
@@ -2738,6 +2738,16 @@
     <div class="toast" id="toast"></div>
 
     <button class="fab-invite" onclick="switchTab('hub');setTimeout(function(){switchHubTab('growreferral')},100)"><i class="fas fa-user-plus"></i> Invite Friends</button>
+
+    <!-- ====== FLOATING SOS BUTTON ====== -->
+    <div id="sos-floating-btn" onclick="showSOSActionSheet()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+        <span style="color:#fff;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;letter-spacing:0.5px">SOS</span>
+    </div>
+    <style>
+        @keyframes sosPulse { 0%,100%{box-shadow:0 4px 20px rgba(231,76,60,0.4)} 50%{box-shadow:0 4px 30px rgba(231,76,60,0.6)} }
+        #sos-floating-btn.sos-locked { background:linear-gradient(135deg,#555,#444);animation:none;box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+        #sos-floating-btn.sos-locked::after { content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;bottom:-2px;right:-2px;background:#22223A;color:#8080A0;font-size:9px;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;border:2px solid #1A1A2E; }
+    </style>
 
     <div class="mobile-tab-bar">
         <a data-tab="hub" class="active" onclick="switchTab('hub')"><i class="fas fa-shield-alt"></i><span>Home</span></a>

@@ -2,8 +2,8 @@ const { getMany, getOne, run } = require('../_utils/db');
 const { authenticate, cors } = require('../_utils/auth');
 const { generateSearchTerms, scanExistingPosts } = require('../_utils/namewatch');
 
-function isPro(user) {
-    return user && (user.role === 'admin' || user.role === 'moderator' || user.subscription_tier === 'plus' || user.subscription_tier === 'pro');
+function isPaidTier(user) {
+    return user && (user.role === 'admin' || user.role === 'moderator' || user.subscription_tier === 'plus' || user.subscription_tier === 'pro' || user.subscription_tier === 'premium');
 }
 
 module.exports = async function handler(req, res) {
@@ -15,11 +15,11 @@ module.exports = async function handler(req, res) {
 
     // Get full user with subscription_tier
     const fullUser = await getOne('SELECT id, role, city, subscription_tier FROM users WHERE id = $1', [user.id]);
-    if (!isPro(fullUser)) {
+    if (!isPaidTier(fullUser)) {
         return res.status(403).json({
-            error: 'Pro subscription required',
+            error: 'SafeTea+ subscription required',
             upgrade: true,
-            message: 'Name Watch requires SafeTea Pro ($9.99/mo).'
+            message: 'Name Watch requires SafeTea+ ($7.99/mo).'
         });
     }
 

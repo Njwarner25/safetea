@@ -10,12 +10,12 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Require premium tier
-    if (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro' && user.role !== 'admin' && user.role !== 'moderator') {
+    // Require SafeTea+ tier (accept 'plus', 'pro', 'premium' for backwards compat)
+    if (user.subscription_tier !== 'plus' && user.subscription_tier !== 'pro' && user.subscription_tier !== 'premium' && user.role !== 'admin' && user.role !== 'moderator') {
       return res.status(403).json({
-        error: 'Pro subscription required',
+        error: 'SafeTea+ subscription required',
         upgrade: true,
-        message: 'Name Watch requires SafeTea+. Upgrade to monitor names and get alerts.'
+        message: 'Name Watch requires SafeTea+ ($7.99/mo). Upgrade to monitor names and get alerts.'
       });
     }
 

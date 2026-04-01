@@ -45,11 +45,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const data = res.data as any;
         const token = data.token;
         api.setToken(token);
-        // Normalize legacy 'premium' tier to 'plus'
+        // Normalize legacy tier values: 'premium' -> 'plus', 'pro' -> 'plus'
         const user = data.user;
-        if (user && user.tier === 'premium') user.tier = 'plus';
+        if (user && (user.tier === 'premium' || user.tier === 'pro')) user.tier = 'plus';
         if (user && user.subscription_tier) {
-          user.tier = user.subscription_tier === 'premium' ? 'plus' : user.subscription_tier;
+          const st = user.subscription_tier;
+          user.tier = (st === 'premium' || st === 'pro') ? 'plus' : st;
         }
         set({
           user,

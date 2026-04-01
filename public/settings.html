@@ -744,9 +744,9 @@
       // Subscription info
       if (user.subscription_tier && user.subscription_tier !== 'free') {
         document.getElementById('subscription-section').style.display = 'block';
-        document.getElementById('sub-plan').textContent = 'SafeTea ' + (user.subscription_tier === 'plus' ? '+' : user.subscription_tier === 'pro' ? 'Pro' : user.subscription_tier);
+        document.getElementById('sub-plan').textContent = 'SafeTea+';
         document.getElementById('sub-details').textContent = user.subscription_status === 'active'
-          ? '$9.99/mo Â· Renews ' + (user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'monthly')
+          ? '$7.99/mo \u00b7 Renews ' + (user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'monthly')
           : 'Inactive';
         document.getElementById('sub-status').textContent = user.subscription_status === 'active' ? 'Active' : 'Inactive';
         if (user.subscription_status !== 'active') {

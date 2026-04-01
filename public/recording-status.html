@@ -3,56 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeTea — Recording</title>
+    <title>SafeTea — Live Tracking</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; }
         .container { max-width: 600px; margin: 0 auto; padding: 24px 20px; }
-        .header { text-align: center; margin-bottom: 32px; padding-top: 20px; }
+        .header { text-align: center; margin-bottom: 24px; padding-top: 16px; }
         .header i { font-size: 28px; color: #E8A0B5; }
         .header h1 { font-size: 20px; font-weight: 600; margin-top: 8px; }
-        .status-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
-        .status-active { background: rgba(231,76,60,0.15); color: #e74c3c; }
+        .status-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+        .status-active { background: rgba(231,76,60,0.15); color: #e74c3c; animation: badgePulse 2s infinite; }
         .status-stopped { background: rgba(46,204,113,0.15); color: #2ecc71; }
         .status-escalated { background: rgba(241,196,15,0.15); color: #f1c40f; }
-        .info-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        .info-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .info-row:last-child { border-bottom: none; }
         .info-icon { width: 32px; height: 32px; background: rgba(232,160,181,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .info-icon i { font-size: 14px; color: #E8A0B5; }
         .info-label { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 0.5px; }
         .info-value { font-size: 14px; color: #fff; margin-top: 2px; }
-        .outcry-card { background: rgba(232,160,181,0.06); border: 1px solid rgba(232,160,181,0.15); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .outcry-card h3 { color: #E8A0B5; font-size: 15px; margin-bottom: 10px; }
-        .outcry-card p { color: #C0C0D0; font-size: 13px; line-height: 1.7; }
-        .audio-section { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
-        .audio-section h3 { font-size: 15px; margin-bottom: 16px; color: #fff; }
-        .chunk-player { background: #141428; border-radius: 10px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .chunk-player span { font-size: 12px; color: #8080A0; }
+        #map-container { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; margin-bottom: 16px; height: 280px; }
+        .action-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+        .action-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-call { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; }
+        .btn-911 { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; }
+        .outcry-card { background: rgba(232,160,181,0.06); border: 1px solid rgba(232,160,181,0.15); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+        .outcry-card h3 { color: #E8A0B5; font-size: 14px; margin-bottom: 8px; }
+        .outcry-card p { color: #C0C0D0; font-size: 12px; line-height: 1.6; }
+        .audio-section { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .audio-section h3 { font-size: 15px; margin-bottom: 14px; color: #fff; }
+        .chunk-player { background: #141428; border-radius: 10px; padding: 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+        .chunk-player span { font-size: 11px; color: #8080A0; }
         audio { flex: 1; height: 32px; }
+        .download-btn { display: block; width: 100%; background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; text-align: center; margin-top: 12px; }
+        .safe-banner { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 16px; display: none; }
         .loading { text-align: center; padding: 60px 20px; }
         .loading i { font-size: 32px; color: #E8A0B5; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .error-msg { text-align: center; padding: 60px 20px; color: #8080A0; }
-        .download-btn { display: block; width: 100%; background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; text-align: center; margin-top: 16px; }
+        .last-updated { text-align: center; font-size: 11px; color: #555; margin-bottom: 16px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <i class="fas fa-shield-heart"></i>
-            <h1>SafeTea Recording</h1>
+            <h1>SafeTea Live Tracking</h1>
         </div>
 
         <div id="loading" class="loading">
             <i class="fas fa-spinner"></i>
-            <p style="margin-top:16px;color:#8080A0">Loading recording...</p>
+            <p style="margin-top:16px;color:#8080A0">Loading...</p>
         </div>
 
         <div id="content" style="display:none">
+            <!-- Safe banner (shown when resolved) -->
+            <div id="safe-banner" class="safe-banner">
+                <i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;margin-bottom:8px"></i>
+                <h3 style="color:#2ecc71;font-size:16px;margin-bottom:4px">User Is Safe</h3>
+                <p style="color:#8080A0;font-size:13px">Recording has been stopped and tracking is deactivated.</p>
+            </div>
+
             <div class="status-card">
                 <div id="status-badge" class="status-badge status-active">
                     <i class="fas fa-circle" style="font-size:8px"></i>
@@ -61,12 +77,24 @@
                 <div id="session-info"></div>
             </div>
 
-            <div class="outcry-card">
-                <h3><i class="fas fa-gavel"></i> What is an Outcry Witness?</h3>
-                <p>You may be what's legally known as an <strong>"outcry witness"</strong> — the first person a victim discloses abuse to. In many states, your testimony as an outcry witness carries special evidentiary weight in court. This recording may serve as critical evidence.</p>
-                <p style="margin-top:10px"><strong>What to do:</strong> Save this page. Try to contact them. If no response, call 911.</p>
+            <!-- Map -->
+            <div id="map-container"></div>
+            <div id="last-updated" class="last-updated"></div>
+
+            <!-- Quick actions -->
+            <div id="action-btns" class="action-btns">
+                <a id="btn-call-user" href="#" class="action-btn btn-call"><i class="fas fa-phone"></i> Call Them</a>
+                <a href="tel:911" class="action-btn btn-911"><i class="fas fa-exclamation-triangle"></i> Call 911</a>
             </div>
 
+            <!-- Outcry witness card -->
+            <div class="outcry-card">
+                <h3><i class="fas fa-gavel"></i> What is an Outcry Witness?</h3>
+                <p>You may be what's legally known as an <strong>"outcry witness"</strong> — the first person a victim discloses abuse to. In many states, your testimony carries special evidentiary weight in court. This recording may serve as critical evidence.</p>
+                <p style="margin-top:8px"><strong>What to do:</strong> Save this page. Try to contact them. If no response, call 911.</p>
+            </div>
+
+            <!-- Audio -->
             <div id="audio-section" class="audio-section">
                 <h3><i class="fas fa-headphones" style="color:#E8A0B5"></i> Audio Recording</h3>
                 <div id="chunks-container"></div>
@@ -82,15 +110,35 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
     (function() {
         var params = new URLSearchParams(window.location.search);
         var key = params.get('key');
+        var map = null;
+        var marker = null;
 
         if (!key) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'block';
             return;
+        }
+
+        function initMap(lat, lng) {
+            if (map) { map.remove(); }
+            map = L.map('map-container').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup('<b>Last known location</b>').openPopup();
+        }
+
+        function updateMap(lat, lng) {
+            if (!map) { initMap(lat, lng); return; }
+            var latlng = L.latLng(lat, lng);
+            marker.setLatLng(latlng);
+            map.panTo(latlng);
         }
 
         function loadSession() {
@@ -110,15 +158,18 @@
                     // Status badge
                     var badge = document.getElementById('status-badge');
                     var statusText = document.getElementById('status-text');
+                    var safeBanner = document.getElementById('safe-banner');
+
                     if (s.status === 'stopped') {
                         badge.className = 'status-badge status-stopped';
-                        statusText.textContent = 'Recording Ended';
+                        statusText.textContent = 'User Marked Safe — Recording Ended';
+                        safeBanner.style.display = 'block';
                     } else if (s.escalatedAt) {
                         badge.className = 'status-badge status-escalated';
                         statusText.textContent = 'Escalated — No Response';
                     } else {
                         badge.className = 'status-badge status-active';
-                        statusText.textContent = 'Recording Active';
+                        statusText.textContent = 'Recording Active — Live Tracking';
                     }
 
                     // Session info
@@ -126,18 +177,25 @@
                     infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-user"></i></div><div><div class="info-label">User</div><div class="info-value">' + escapeHtml(s.userName) + '</div></div></div>';
                     infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-clock"></i></div><div><div class="info-label">Started</div><div class="info-value">' + new Date(s.createdAt).toLocaleString() + '</div></div></div>';
                     if (s.latitude && s.longitude) {
-                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="info-label">GPS Location</div><div class="info-value"><a href="https://maps.google.com/?q=' + s.latitude + ',' + s.longitude + '" target="_blank" style="color:#E8A0B5;text-decoration:none">Open in Google Maps</a></div></div></div>';
+                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="info-label">GPS Location</div><div class="info-value"><a href="https://maps.google.com/?q=' + s.latitude + ',' + s.longitude + '" target="_blank" style="color:#E8A0B5;text-decoration:none">Open in Google Maps <i class="fas fa-external-link-alt" style="font-size:10px"></i></a></div></div></div>';
                     }
                     if (s.stoppedAt) {
-                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-stop-circle"></i></div><div><div class="info-label">Ended</div><div class="info-value">' + new Date(s.stoppedAt).toLocaleString() + '</div></div></div>';
+                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-check-circle"></i></div><div><div class="info-label">Marked Safe</div><div class="info-value">' + new Date(s.stoppedAt).toLocaleString() + '</div></div></div>';
                     }
                     document.getElementById('session-info').innerHTML = infoHtml;
+
+                    // Map
+                    if (s.latitude && s.longitude) {
+                        updateMap(parseFloat(s.latitude), parseFloat(s.longitude));
+                    }
+
+                    // Last updated
+                    document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
 
                     // Audio chunks
                     var chunksContainer = document.getElementById('chunks-container');
                     if (data.chunks && data.chunks.length > 0) {
                         var chunksHtml = '';
-                        var blobs = [];
                         data.chunks.forEach(function(chunk, i) {
                             var audioSrc = 'data:audio/webm;base64,' + chunk.audioData;
                             chunksHtml += '<div class="chunk-player">' +
@@ -148,7 +206,6 @@
                         });
                         chunksContainer.innerHTML = chunksHtml;
 
-                        // Download all button
                         var dlBtn = document.getElementById('download-all');
                         dlBtn.style.display = 'block';
                         dlBtn.onclick = function() {
@@ -169,12 +226,12 @@
                             });
                         };
                     } else {
-                        chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:20px">No audio chunks uploaded yet. Recording may still be in progress.</p>';
+                        chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio chunks yet. Recording may still be starting.</p>';
                     }
 
-                    // Auto-refresh if active
+                    // Auto-refresh if active (every 10 seconds)
                     if (s.status === 'active') {
-                        setTimeout(loadSession, 15000);
+                        setTimeout(loadSession, 10000);
                     }
                 })
                 .catch(function() {

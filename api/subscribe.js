@@ -52,16 +52,16 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'priceId is required' });
   }
 
-  // Validate price ID against known prices
+  // Validate price ID against known prices (all map to 'plus' tier)
   const validPrices = {
     // SafeTea+ Monthly
-    'price_1TDXLUFaKA9n89CXkfEotpfL': { tier: 'premium', plan: 'plus_monthly' },
+    'price_1TDXLUFaKA9n89CXkfEotpfL': { tier: 'plus', plan: 'plus_monthly' },
     // SafeTea+ Yearly
-    'price_1TEdLTFaKA9n89CX1xY0PG9H': { tier: 'premium', plan: 'plus_yearly' },
-    // SafeTea Pro Monthly
-    'price_1TDXN5FaKA9n89CXeDxnAJMh': { tier: 'premium', plan: 'pro_monthly' },
-    // SafeTea Pro Yearly
-    'price_1TEdJfFaKA9n89CXZebr3UxW': { tier: 'premium', plan: 'pro_yearly' },
+    'price_1TEdLTFaKA9n89CX1xY0PG9H': { tier: 'plus', plan: 'plus_yearly' },
+    // Legacy Pro Monthly (now maps to SafeTea+)
+    'price_1TDXN5FaKA9n89CXeDxnAJMh': { tier: 'plus', plan: 'plus_monthly' },
+    // Legacy Pro Yearly (now maps to SafeTea+)
+    'price_1TEdJfFaKA9n89CXZebr3UxW': { tier: 'plus', plan: 'plus_yearly' },
   };
 
   if (!validPrices[priceId]) {

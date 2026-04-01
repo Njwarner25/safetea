@@ -7,11 +7,11 @@ function generateCode() {
   return 'ST-' + crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
 }
 
-// Reward tier definitions
+// Reward tier definitions (all map to 'plus' tier now)
 const REWARD_TIERS = [
-  { threshold: 3,  tier: 'premium', days: 30, label: '30 days SafeTea+' },
-  { threshold: 10, tier: 'premium', days: 30, label: '30 days SafeTea Pro', pro: true },
-  { threshold: 25, tier: 'premium', days: 90, label: '90 days SafeTea Pro', pro: true },
+  { threshold: 3,  tier: 'plus', days: 30, label: '30 days SafeTea+' },
+  { threshold: 10, tier: 'plus', days: 30, label: '30 days SafeTea+' },
+  { threshold: 25, tier: 'plus', days: 90, label: '90 days SafeTea+' },
 ];
 
 const MAX_LIFETIME_DAYS = 180; // 6-month cap
@@ -160,15 +160,14 @@ module.exports = async function handler(req, res) {
         await run(
           `INSERT INTO referral_rewards (user_id, tier, days_granted, reason, expires_at)
            VALUES ($1, $2, $3, $4, $5)`,
-          [user.id, tier.pro ? 'pro' : 'premium', tier.days, `referral_${tier.threshold}`, expiresAt.toISOString()]
+          [user.id, 'plus', tier.days, `referral_${tier.threshold}`, expiresAt.toISOString()]
         );
 
         // Upgrade user subscription tier temporarily
-        const upgradeTier = tier.pro ? 'pro' : 'premium';
+        const upgradeTier = 'plus';
         const currentTier = user.subscription_tier || 'free';
-        // Only upgrade if it's actually an upgrade
-        const tierRank = { free: 0, premium: 1, pro: 2 };
-        if ((tierRank[upgradeTier] || 0) > (tierRank[currentTier] || 0)) {
+        // Only upgrade if currently free
+        if (currentTier === 'free') {
           await run(
             'UPDATE users SET subscription_tier = $1 WHERE id = $2',
             [upgradeTier, user.id]

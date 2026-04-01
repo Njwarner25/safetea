@@ -8,10 +8,10 @@ module.exports = async function handler(req, res) {
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  // Check tier — Name Watch requires plus or pro
+  // Check tier — Name Watch requires SafeTea+
   const tier = (user.subscription_tier || 'free').toLowerCase();
   if (tier === 'free') {
-    return res.status(403).json({ error: 'Name Watch requires SafeTea+ or Pro subscription' });
+    return res.status(403).json({ error: 'Name Watch requires SafeTea+ ($7.99/mo)' });
   }
 
   // ========== GET: Load watched names + matches ==========

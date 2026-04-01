@@ -57,7 +57,7 @@ module.exports = async function handler(req, res) {
     const totalCityVotes = await getOne('SELECT SUM(votes) as total FROM city_votes');
 
     const paidUsers = await getOne(
-      `SELECT COUNT(*) as count FROM users WHERE subscription_tier IN ('plus', 'pro')`
+      `SELECT COUNT(*) as count FROM users WHERE subscription_tier IN ('plus', 'pro', 'premium')`
     );
 
     let nameWatchUsers = { count: 0 };

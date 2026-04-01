@@ -62,7 +62,7 @@ export default function ModApplyScreen() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Perks</Text>
-        <Text style={styles.bulletItem}>  - All SafeTea Pro features unlocked for free</Text>
+        <Text style={styles.bulletItem}>  - All SafeTea+ features unlocked for free</Text>
         <Text style={styles.bulletItem}>  - Special moderator badge on your profile</Text>
         <Text style={styles.bulletItem}>  - Direct line to the SafeTea team</Text>
       </View>

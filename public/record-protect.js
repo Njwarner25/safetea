@@ -301,9 +301,18 @@
                     '</div>' +
                 '</div>' +
 
-                // Emergency Contacts link
-                '<div id="sos-contacts-link" style="text-align:center;margin-bottom:12px">' +
-                    '<a href="#" style="color:#E8A0B5;font-size:12px;text-decoration:none"><i class="fas fa-user-shield"></i> Manage Emergency Contacts</a>' +
+                // Trusted Contacts Card
+                '<div id="sos-contacts-card" style="background:#22223A;border:1px solid rgba(231,76,60,0.2);border-radius:14px;padding:14px 16px;margin-bottom:12px">' +
+                    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+                        '<div style="display:flex;align-items:center;gap:8px">' +
+                            '<i class="fas fa-user-shield" style="color:#e74c3c;font-size:14px"></i>' +
+                            '<span style="color:#fff;font-size:13px;font-weight:600">Trusted Contacts</span>' +
+                        '</div>' +
+                        '<button id="sos-manage-contacts-btn" style="background:rgba(232,160,181,0.12);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Manage</button>' +
+                    '</div>' +
+                    '<div id="sos-contacts-list" style="min-height:28px">' +
+                        '<p style="color:#555;font-size:12px;margin:0"><i class="fas fa-spinner fa-spin" style="margin-right:6px"></i>Loading...</p>' +
+                    '</div>' +
                 '</div>' +
 
                 // Cancel
@@ -320,7 +329,46 @@
         // Wire up handlers
         document.getElementById('sos-cancel').onclick = function() { backdrop.remove(); };
         backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
-        document.getElementById('sos-contacts-link').onclick = function(e) { e.preventDefault(); backdrop.remove(); window.showEmergencyContacts(); };
+        document.getElementById('sos-manage-contacts-btn').onclick = function() { backdrop.remove(); window.showEmergencyContacts(); };
+
+        // Load and display trusted contacts in the action sheet
+        (function loadContactsInSheet() {
+            var listEl = document.getElementById('sos-contacts-list');
+            if (!listEl) return;
+            fetch('/api/recording/contacts', { headers: authHeaders() })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.contacts || data.contacts.length === 0) {
+                    listEl.innerHTML =
+                        '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="document.getElementById(\'sos-action-sheet\').remove();window.showEmergencyContacts()">' +
+                            '<div style="width:32px;height:32px;background:rgba(231,76,60,0.08);border-radius:16px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-plus" style="font-size:12px;color:#e74c3c"></i></div>' +
+                            '<div>' +
+                                '<p style="color:#e74c3c;font-size:12px;font-weight:600;margin:0">No contacts set up</p>' +
+                                '<p style="color:#8080A0;font-size:11px;margin:0">Tap to add up to 2 emergency contacts</p>' +
+                            '</div>' +
+                        '</div>';
+                } else {
+                    var html = '';
+                    data.contacts.forEach(function(c) {
+                        html +=
+                            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (data.contacts.length > 1 ? '6px' : '0') + '">' +
+                                '<div style="width:32px;height:32px;background:rgba(46,204,113,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-check" style="font-size:12px;color:#2ecc71"></i></div>' +
+                                '<div>' +
+                                    '<p style="color:#fff;font-size:12px;font-weight:600;margin:0">' + c.contact_name + '</p>' +
+                                    '<p style="color:#8080A0;font-size:11px;margin:0">' + c.contact_phone + '</p>' +
+                                '</div>' +
+                            '</div>';
+                    });
+                    if (data.contacts.length < 2) {
+                        html += '<p style="color:#8080A0;font-size:10px;margin:4px 0 0;cursor:pointer" onclick="document.getElementById(\'sos-action-sheet\').remove();window.showEmergencyContacts()"><i class="fas fa-plus" style="margin-right:4px"></i>Add another contact</p>';
+                    }
+                    listEl.innerHTML = html;
+                }
+            })
+            .catch(function() {
+                listEl.innerHTML = '<p style="color:#555;font-size:12px;margin:0">Could not load contacts</p>';
+            });
+        })();
 
         if (paid) {
             document.getElementById('sos-opt-fakecall').onclick = function() { backdrop.remove(); triggerFakeCall(); };
@@ -900,7 +948,7 @@
                 '</div>' +
                 '<p style="color:#e74c3c;font-size:16px;font-weight:600;margin-bottom:6px">Recording Active</p>' +
                 '<p id="rp-timer" style="color:#8080A0;font-size:24px;font-weight:300;margin-bottom:6px;font-variant-numeric:tabular-nums">00:00</p>' +
-                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Uploading...</p>' +
+                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Waiting for first audio chunk...</p>' +
                 '<p id="rp-gps-status" style="color:#555;font-size:11px;margin-bottom:24px"></p>' +
                 '<div style="display:flex;gap:10px;justify-content:center">' +
                     '<button id="rp-stealth-btn" style="background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px 20px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-eye-slash"></i> Stealth</button>' +
@@ -1026,6 +1074,9 @@
             }
             state.sessionKey = data.sessionKey;
             state.contactsNotified = data.contactsNotified || 0;
+            state.contactsFound = data.contactsFound || 0;
+            state.twilioConfigured = data.twilioConfigured;
+            state.smsErrors = data.smsErrors;
         } catch (err) {
             if (typeof showToast === 'function') showToast('Network error starting recording. Please try again.');
             stream.getTracks().forEach(function(t) { t.stop(); });
@@ -1041,9 +1092,12 @@
 
         showStealthOverlay();
 
-        // Start MediaRecorder
+        // Start MediaRecorder — use low bitrate to keep chunks small (Vercel 4.5MB body limit)
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
-        state.mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+        var recorderOptions = { mimeType: mimeType };
+        // Try to set a low bitrate to keep base64 payload under 4MB
+        try { recorderOptions.audioBitsPerSecond = 32000; } catch (e) {}
+        state.mediaRecorder = new MediaRecorder(stream, recorderOptions);
 
         state.mediaRecorder.ondataavailable = function(e) {
             if (e.data && e.data.size > 0) {
@@ -1055,7 +1109,7 @@
             stream.getTracks().forEach(function(t) { t.stop(); });
         };
 
-        state.mediaRecorder.start(10000); // 10-second chunks
+        state.mediaRecorder.start(5000); // 5-second chunks (smaller = faster upload, stays under body limit)
 
         // Start GPS tracking
         if (navigator.geolocation) {
@@ -1087,7 +1141,17 @@
                 .then(function(data) {
                     if (data.success && !data.skipped) {
                         var statusEl = document.getElementById('rp-chunk-status');
-                        if (statusEl) statusEl.textContent = 'Update sent to contacts (' + (data.minutesActive || '?') + ' min)';
+                        if (statusEl) {
+                            if (data.contactsNotified > 0) {
+                                statusEl.textContent = 'Update sent to ' + data.contactsNotified + ' contact(s) (' + (data.minutesActive || '?') + ' min)';
+                            } else if (data.contactsFound === 0) {
+                                statusEl.textContent = 'No contacts saved — add emergency contacts';
+                            } else if (!data.twilioConfigured) {
+                                statusEl.textContent = 'SMS service not configured — contact support';
+                            } else {
+                                statusEl.textContent = 'Update failed to send (' + (data.minutesActive || '?') + ' min)';
+                            }
+                        }
                     }
                 })
                 .catch(function() {});
@@ -1097,17 +1161,39 @@
         if (state.contactsNotified > 0) {
             if (typeof showToast === 'function') showToast('Recording started. ' + state.contactsNotified + ' contact(s) notified.');
         } else {
-            if (typeof showToast === 'function') showToast('Recording started — but no contacts were notified. Add emergency contacts so someone knows.');
+            var reason = '';
+            if (state.contactsFound === 0) {
+                reason = 'No emergency contacts saved.';
+            } else if (!state.twilioConfigured) {
+                reason = 'SMS service not configured.';
+            } else if (state.smsErrors && state.smsErrors.length > 0) {
+                reason = 'SMS failed: ' + state.smsErrors[0];
+            }
+            if (typeof showToast === 'function') showToast('Recording started — but no contacts were notified. ' + reason);
             // Brief delay then show contacts manager
-            setTimeout(function() {
-                if (typeof window.showEmergencyContacts === 'function') window.showEmergencyContacts();
-            }, 2000);
+            if (state.contactsFound === 0) {
+                setTimeout(function() {
+                    if (typeof window.showEmergencyContacts === 'function') window.showEmergencyContacts();
+                }, 2000);
+            }
         }
     }
 
     // ============ UPLOAD CHUNK ============
     function uploadChunk(blob) {
         var chunkNum = state.chunkNumber++;
+        var statusEl = document.getElementById('rp-chunk-status');
+
+        // Check blob size — base64 adds ~33%, Vercel limit is 4.5MB
+        var estimatedBase64Size = blob.size * 1.37;
+        if (estimatedBase64Size > 4000000) {
+            console.warn('[Record] Chunk too large (' + Math.round(blob.size / 1024) + 'KB), skipping');
+            if (statusEl) statusEl.textContent = 'Chunk ' + (chunkNum + 1) + ' too large, skipped';
+            return;
+        }
+
+        if (statusEl) statusEl.textContent = 'Uploading chunk ' + (chunkNum + 1) + '...';
+
         var reader = new FileReader();
         reader.onloadend = function() {
             var base64 = reader.result.split(',')[1];
@@ -1115,34 +1201,51 @@
                 sessionKey: state.sessionKey,
                 chunkNumber: chunkNum,
                 audioData: base64,
-                durationMs: 10000,
+                durationMs: 5000,
                 latitude: state.lastLat,
                 longitude: state.lastLng
             });
 
+            // Use AbortController for 15-second timeout
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
+
             fetch('/api/recording/chunk', {
                 method: 'POST',
                 headers: authHeaders(),
-                body: payload
+                body: payload,
+                signal: controller.signal
             })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                clearTimeout(timeoutId);
+                return r.json();
+            })
             .then(function(data) {
-                var statusEl = document.getElementById('rp-chunk-status');
                 if (statusEl) {
                     statusEl.textContent = data.success
-                        ? 'Chunk ' + (chunkNum + 1) + ' uploaded securely'
-                        : 'Upload error — retrying...';
+                        ? 'Chunk ' + (chunkNum + 1) + ' saved'
+                        : 'Upload error: ' + (data.error || 'unknown');
                 }
             })
-            .catch(function() {
-                var statusEl = document.getElementById('rp-chunk-status');
-                if (statusEl) statusEl.textContent = 'Upload error — retrying...';
+            .catch(function(err) {
+                clearTimeout(timeoutId);
+                var msg = err.name === 'AbortError' ? 'Upload timed out' : 'Upload failed';
+                if (statusEl) statusEl.textContent = msg + ' — retrying chunk ' + (chunkNum + 1) + '...';
+                // Retry once after 3 seconds
                 setTimeout(function() {
+                    var ctrl2 = new AbortController();
+                    var tid2 = setTimeout(function() { ctrl2.abort(); }, 15000);
                     fetch('/api/recording/chunk', {
                         method: 'POST',
                         headers: authHeaders(),
-                        body: payload
-                    }).catch(function() {});
+                        body: payload,
+                        signal: ctrl2.signal
+                    })
+                    .then(function(r) { clearTimeout(tid2); return r.json(); })
+                    .then(function(data) {
+                        if (statusEl && data.success) statusEl.textContent = 'Chunk ' + (chunkNum + 1) + ' saved (retry)';
+                    })
+                    .catch(function() { clearTimeout(tid2); });
                 }, 3000);
             });
         };

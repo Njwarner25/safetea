@@ -49,6 +49,7 @@
         { "source": "/api/recording/sos-update", "destination": "/api/recording/sos-update" },
         { "source": "/api/recording/transcribe", "destination": "/api/recording/transcribe" },
         { "source": "/api/recording/contacts", "destination": "/api/recording/contacts" },
+        { "source": "/api/recording/debug-sms", "destination": "/api/recording/debug-sms" },
         { "source": "/api/migrate-recording", "destination": "/api/migrate-recording" },
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },

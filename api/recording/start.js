@@ -94,23 +94,18 @@ module.exports = async function handler(req, res) {
       const recordingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
 
       const message =
-        `🚨 SAFETEA EMERGENCY REPORT\n` +
-        `━━━━━━━━━━━━━━━━━\n\n` +
+        `SAFETEA EMERGENCY REPORT\n\n` +
         `A trusted contact may need your help and is unable to get to their phone.\n\n` +
-        `Review the information in this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n` +
-        `👤 WHO: ${displayName}\n` +
-        (gpsLink ? `📍 LOCATION: ${gpsLink}\n` : `📍 LOCATION: Unavailable\n`) +
-        `🎙️ AUDIO: Recording in progress\n` +
-        `📝 TRANSCRIPT: Processing...\n\n` +
-        `🔴 VIEW FULL REPORT:\n` +
+        `Review this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n` +
+        `WHO: ${displayName}\n` +
+        (gpsLink ? `LOCATION: ${gpsLink}\n` : `LOCATION: Unavailable\n`) +
+        `RECORDING: In progress\n\n` +
+        `VIEW FULL REPORT:\n` +
         `${recordingUrl}\n\n` +
-        `The report above contains live audio, transcript, and GPS location. It updates automatically.\n\n` +
-        `WHAT TO DO:\n` +
-        `1. Open the report link above\n` +
+        `1. Open the report link\n` +
         `2. Try to contact ${displayName}\n` +
-        `3. If no response, call 911 and share the location\n\n` +
-        `━━━━━━━━━━━━━━━━━\n` +
-        `Sent via SafeTea Record & Protect`;
+        `3. If no response, call 911\n\n` +
+        `- SafeTea Record & Protect`;
 
       for (const contact of contacts) {
         try {

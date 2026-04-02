@@ -99,23 +99,19 @@ module.exports = async function handler(req, res) {
     var recordingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
 
     var updateMsg =
-      '🚨 SAFETEA EMERGENCY UPDATE (' + minutesActive + ' min)\n' +
-      '━━━━━━━━━━━━━━━━━\n\n' +
+      'SAFETEA EMERGENCY UPDATE (' + minutesActive + ' min)\n\n' +
       'A trusted contact may need your help and is unable to get to their phone.\n\n' +
-      'Review the information in this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n' +
-      '👤 WHO: ' + displayName + '\n' +
-      (gpsLink ? '📍 LOCATION: ' + gpsLink + '\n' : '📍 LOCATION: Unavailable\n') +
-      '🎙️ AUDIO: ' + chunkCount + ' clip(s) recorded\n' +
-      (transcriptExcerpt ? '📝 TRANSCRIPT: "' + transcriptExcerpt + '"\n' : '📝 TRANSCRIPT: Processing...\n') +
-      '\n🔴 VIEW FULL REPORT:\n' +
+      'Review this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n' +
+      'WHO: ' + displayName + '\n' +
+      (gpsLink ? 'LOCATION: ' + gpsLink + '\n' : 'LOCATION: Unavailable\n') +
+      'AUDIO: ' + chunkCount + ' clip(s) recorded\n' +
+      (transcriptExcerpt ? 'TRANSCRIPT: "' + transcriptExcerpt + '"\n' : '') +
+      '\nVIEW FULL REPORT:\n' +
       recordingUrl + '\n\n' +
-      'The report above contains live audio, transcript, and GPS location. It updates automatically.\n\n' +
-      'WHAT TO DO:\n' +
-      '1. Open the report link above\n' +
+      '1. Open the report link\n' +
       '2. Try to contact ' + displayName + '\n' +
-      '3. If no response, call 911 and share the location\n\n' +
-      '━━━━━━━━━━━━━━━━━\n' +
-      'Sent via SafeTea Record & Protect';
+      '3. If no response, call 911\n\n' +
+      '- SafeTea Record & Protect';
 
     // SEND SMS IMMEDIATELY — don't let transcription block this
     var contactsNotified = 0;

@@ -57,19 +57,22 @@ module.exports = async function handler(req, res) {
     );
 
     // Send via Twilio if configured
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER) {
+    let fromPhone = process.env.TWILIO_PHONE_NUMBER || '';
+    if (fromPhone && !fromPhone.startsWith('+')) fromPhone = '+' + fromPhone;
+
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && fromPhone) {
       try {
         const twilio = require('twilio');
         const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-        await client.messages.create({
+        const msg = await client.messages.create({
           body: `Your SafeTea verification code is: ${code}. It expires in 10 minutes.`,
-          from: process.env.TWILIO_PHONE_NUMBER,
+          from: fromPhone,
           to: phone
         });
-        console.log(`OTP sent to ${phone} via Twilio`);
+        console.log(`OTP sent to ${phone} via Twilio, SID: ${msg.sid}, status: ${msg.status}`);
       } catch (err) {
-        console.error('Twilio send error:', err.message);
-        // Don't fail — fall through to dev mode logging
+        console.error('Twilio send error:', err.message, err.code, err.moreInfo);
+        return res.status(500).json({ error: 'Failed to send verification code. Please try again.' });
       }
     } else {
       console.log(`[DEV] OTP for ${phone}: ${code}`);

@@ -1125,38 +1125,55 @@
             );
         }
 
-        // Send updates to contacts every 1 minute (first update at 1 min, then repeating)
-        state.updateInterval = setInterval(function() {
-            if (state.recording && state.sessionKey) {
-                fetch('/api/recording/sos-update', {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({
-                        sessionKey: state.sessionKey,
-                        latitude: state.lastLat,
-                        longitude: state.lastLng
-                    })
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.success && !data.skipped) {
-                        var statusEl = document.getElementById('rp-chunk-status');
-                        if (statusEl) {
-                            if (data.contactsNotified > 0) {
-                                statusEl.textContent = 'Update sent to ' + data.contactsNotified + ' contact(s) (' + (data.minutesActive || '?') + ' min)';
-                            } else if (data.contactsFound === 0) {
-                                statusEl.textContent = 'No contacts saved — add emergency contacts';
-                            } else if (!data.twilioConfigured) {
-                                statusEl.textContent = 'SMS service not configured — contact support';
-                            } else {
-                                statusEl.textContent = 'Update failed to send (' + (data.minutesActive || '?') + ' min)';
-                            }
-                        }
+        // Send SMS updates to contacts every 1 minute — keeps sending until user stops
+        state.updateCount = 0;
+        function sendPeriodicUpdate() {
+            if (!state.recording || !state.sessionKey) return;
+            state.updateCount++;
+            var updateNum = state.updateCount;
+            console.log('[Record] Sending periodic update #' + updateNum);
+            var statusEl = document.getElementById('rp-chunk-status');
+            if (statusEl) statusEl.textContent = 'Sending update #' + updateNum + ' to contacts...';
+
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 20000);
+
+            fetch('/api/recording/sos-update', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    sessionKey: state.sessionKey,
+                    latitude: state.lastLat,
+                    longitude: state.lastLng
+                }),
+                signal: controller.signal
+            })
+            .then(function(r) { clearTimeout(timeoutId); return r.json(); })
+            .then(function(data) {
+                console.log('[Record] Update #' + updateNum + ' response:', JSON.stringify(data));
+                if (statusEl) {
+                    if (data.success && data.skipped) {
+                        statusEl.textContent = 'Update #' + updateNum + ' skipped (rate limit)';
+                    } else if (data.success && data.contactsNotified > 0) {
+                        statusEl.textContent = 'Update #' + updateNum + ' sent to ' + data.contactsNotified + ' contact(s)';
+                    } else if (data.contactsFound === 0) {
+                        statusEl.textContent = 'No emergency contacts saved';
+                    } else if (!data.twilioConfigured) {
+                        statusEl.textContent = 'SMS not configured — contact support';
+                    } else if (data.error) {
+                        statusEl.textContent = 'Update error: ' + data.error;
+                    } else {
+                        statusEl.textContent = 'Update #' + updateNum + ' — SMS delivery issue';
                     }
-                })
-                .catch(function() {});
-            }
-        }, 60000); // every 1 minute
+                }
+            })
+            .catch(function(err) {
+                clearTimeout(timeoutId);
+                console.error('[Record] Update #' + updateNum + ' failed:', err.message || err);
+                if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' failed — will retry next minute';
+            });
+        }
+        state.updateInterval = setInterval(sendPeriodicUpdate, 60000); // every 1 minute
 
         if (state.contactsNotified > 0) {
             if (typeof showToast === 'function') showToast('Recording started. ' + state.contactsNotified + ' contact(s) notified.');

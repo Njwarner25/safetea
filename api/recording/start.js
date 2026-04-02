@@ -29,8 +29,13 @@ module.exports = async function handler(req, res) {
       contacts_notified INTEGER DEFAULT 0,
       escalated_at TIMESTAMPTZ,
       stopped_at TIMESTAMPTZ,
+      last_update_sent_at TIMESTAMPTZ,
+      transcript TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`);
+    // Add columns that may be missing from older table versions
+    try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS last_update_sent_at TIMESTAMPTZ`); } catch(e) {}
+    try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS transcript TEXT`); } catch(e) {}
 
     await run(`CREATE TABLE IF NOT EXISTS recording_chunks (
       id SERIAL PRIMARY KEY,
@@ -77,8 +82,10 @@ module.exports = async function handler(req, res) {
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
     const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+    const twilioConfigured = !!(twilioSid && twilioAuth && twilioPhone);
+    let smsErrors = [];
 
-    if (twilioSid && twilioAuth && twilioPhone && contacts.length > 0) {
+    if (twilioConfigured && contacts.length > 0) {
       const twilio = require('twilio')(twilioSid, twilioAuth);
       const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
       const gpsLink = latitude && longitude
@@ -87,18 +94,21 @@ module.exports = async function handler(req, res) {
       const recordingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
 
       const message =
-        `🔴 RECORDING ACTIVATED — SafeTea\n` +
-        `━━━━━━━━━━━━━━━━━\n` +
-        `${displayName} activated Record & Protect.\n\n` +
-        `Audio is being recorded and uploaded in real-time.\n` +
-        (gpsLink ? `GPS Location: ${gpsLink}\n\n` : '\n') +
-        `📋 WHAT IS AN OUTCRY WITNESS?\n` +
-        `You may be what's legally known as an "outcry witness" — the first person a victim tells about an incident. In many states, your testimony as an outcry witness carries special evidentiary weight in court. This recording may serve as critical evidence.\n\n` +
-        `What to do:\n` +
-        `• Save this message\n` +
-        `• Try to contact them\n` +
-        `• If no response, call 911 with the GPS location above\n\n` +
-        `Listen to recording: ${recordingUrl}\n` +
+        `🚨 SAFETEA EMERGENCY REPORT\n` +
+        `━━━━━━━━━━━━━━━━━\n\n` +
+        `A trusted contact may need your help and is unable to get to their phone.\n\n` +
+        `Review the information in this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n` +
+        `👤 WHO: ${displayName}\n` +
+        (gpsLink ? `📍 LOCATION: ${gpsLink}\n` : `📍 LOCATION: Unavailable\n`) +
+        `🎙️ AUDIO: Recording in progress\n` +
+        `📝 TRANSCRIPT: Processing...\n\n` +
+        `🔴 VIEW FULL REPORT:\n` +
+        `${recordingUrl}\n\n` +
+        `The report above contains live audio, transcript, and GPS location. It updates automatically.\n\n` +
+        `WHAT TO DO:\n` +
+        `1. Open the report link above\n` +
+        `2. Try to contact ${displayName}\n` +
+        `3. If no response, call 911 and share the location\n\n` +
         `━━━━━━━━━━━━━━━━━\n` +
         `Sent via SafeTea Record & Protect`;
 
@@ -112,6 +122,7 @@ module.exports = async function handler(req, res) {
           contactsNotified++;
         } catch (smsErr) {
           console.error(`Recording SMS failed to ${contact.contact_phone}:`, smsErr.message);
+          smsErrors.push(smsErr.message);
         }
       }
 
@@ -127,6 +138,9 @@ module.exports = async function handler(req, res) {
       sessionKey,
       sessionId: session.id,
       contactsNotified,
+      contactsFound: contacts.length,
+      twilioConfigured,
+      smsErrors: smsErrors.length > 0 ? smsErrors : undefined,
     });
   } catch (err) {
     console.error('Recording start error:', err);

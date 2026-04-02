@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><title>SMS Debug</title>
+<style>body{background:#1a1a2e;color:#e0e0e0;font-family:monospace;padding:20px;max-width:600px;margin:0 auto}
+pre{background:#2a2a44;padding:15px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;font-size:13px}
+h2{color:#e74c3c}</style>
+</head><body>
+<h2>SMS Debug Check</h2>
+<p id="status">Running diagnostics...</p>
+<pre id="result">Loading...</pre>
+<script>
+var token = localStorage.getItem('safetea_token');
+if (!token) {
+  document.getElementById('status').textContent = 'Not logged in. Go to dashboard first, then come back here.';
+  document.getElementById('result').textContent = '';
+} else {
+  fetch('/api/recording/debug-sms', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('status').textContent = 'Results:';
+    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+  })
+  .catch(function(err) {
+    document.getElementById('status').textContent = 'Error:';
+    document.getElementById('result').textContent = err.message;
+  });
+}
+</script>
+</body></html>

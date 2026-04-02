@@ -3749,8 +3749,8 @@
     var cityImages = {
         'Chicago':     { image: '/images/cities/chicago.png',       emoji: '&#x1F3D9;', color: '#F0C4D4' },
         'New York':    { image: '/images/cities/newyork.png',      emoji: '&#x1F5FD;', color: '#D4E0F0' },
-        'Los Angeles': { image: '/images/cities/Los Angeles.jpg',   emoji: '&#x1F3AC;', color: '#F0D4C4' },
-        'Dallas':      { image: '/images/cities/dallas.jpg',       emoji: '&#x1F920;', color: '#D4F0E0' },
+        'Los Angeles': { image: '/images/cities/Los Angeles.jpg',   emoji: '&#x1F3AC;', color: '#F0D4C4', pos: 'center bottom' },
+        'Dallas':      { image: '/images/cities/dallas.jpg',       emoji: '&#x1F920;', color: '#D4F0E0', pos: 'center bottom' },
         'Miami':       { image: '/images/cities/miami.jpg',        emoji: '&#x1F334;', color: '#C4E8F0' },
         'Houston':     { image: '/images/cities/houston.jpg',      emoji: '&#x1F680;', color: '#E8D4F0' },
         'Atlanta':     { image: '/images/cities/atlanta.jpg',      emoji: '&#x1F3D7;', color: '#F0D4D4' },
@@ -3796,9 +3796,10 @@
             // Use custom image if available, emoji fallback
             var imgSection = '';
             if (meta.image) {
+                var objPos = meta.pos ? ';object-position:' + meta.pos : '';
                 imgSection = '<div class="city-card-img" style="background:' + meta.color + ';padding:0;overflow:hidden">' +
                     '<img src="' + meta.image + '" alt="' + escapeHtml(city.name) + '" ' +
-                    'style="width:100%;height:100%;object-fit:cover;display:block" ' +
+                    'style="width:100%;height:100%;object-fit:cover;display:block' + objPos + '" ' +
                     'onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=font-size:48px>' + meta.emoji + '</span>\'">' +
                 '</div>';
             } else {

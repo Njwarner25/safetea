@@ -27,27 +27,79 @@ module.exports = async function handler(req, res) {
         categoryFilter = ` AND p.category = $${params.length}`;
       }
       let userLikedSelect = 'false AS user_liked';
+      let userDislikedSelect = 'false AS user_disliked';
+      let userBumpedSelect = 'false AS user_bumped';
       if (userId) {
         params.push(userId);
-        userLikedSelect = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${params.length}) AS user_liked`;
+        const uidParam = params.length;
+        userLikedSelect = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${uidParam}) AS user_liked`;
+        userDislikedSelect = `EXISTS(SELECT 1 FROM post_dislikes pd2 WHERE pd2.post_id = p.id AND pd2.user_id = $${uidParam}) AS user_disliked`;
+        userBumpedSelect = `EXISTS(SELECT 1 FROM post_bumps pb2 WHERE pb2.post_id = p.id AND pb2.user_id = $${uidParam}) AS user_bumped`;
       }
 
-      const posts = await getMany(
-        `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
-                p.likes, p.feed, p.image_url, p.created_at,
-                u.display_name AS author_name,
-                u.custom_display_name AS author_custom_name,
-                u.avatar_color,
-                (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
-                (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
-                ${userLikedSelect}
-         FROM posts p
-         LEFT JOIN users u ON u.id = p.user_id
-         WHERE p.feed = $1${categoryFilter}
-         ORDER BY (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id) + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id) DESC, p.created_at DESC
-         LIMIT $2`,
-        params
-      );
+      let posts;
+      try {
+        posts = await getMany(
+          `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
+                  p.likes, p.feed, p.image_url, p.created_at, p.hidden,
+                  COALESCE(p.bump_count, 0) AS bump_count,
+                  COALESCE(p.dislike_count, 0) AS dislike_count,
+                  p.last_bumped_at,
+                  u.display_name AS author_name,
+                  u.custom_display_name AS author_custom_name,
+                  u.avatar_color,
+                  (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
+                  (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
+                  ${userLikedSelect},
+                  ${userDislikedSelect},
+                  ${userBumpedSelect}
+           FROM posts p
+           LEFT JOIN users u ON u.id = p.user_id
+           WHERE p.feed = $1${categoryFilter}
+           ORDER BY
+             COALESCE(p.bump_count, 0) * 2
+             + (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id)
+             + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id)
+             - COALESCE(p.dislike_count, 0) DESC,
+             COALESCE(p.last_bumped_at, p.created_at) DESC
+           LIMIT $2`,
+          params
+        );
+      } catch (queryErr) {
+        // Fallback: tables/columns may not exist yet (migration not run)
+        console.warn('[Posts] Full query failed, using fallback:', queryErr.message);
+        const fbParams = [feed, limit];
+        let fbCatFilter = '';
+        if (category) {
+          fbParams.push(category);
+          fbCatFilter = ` AND p.category = $${fbParams.length}`;
+        }
+        let fbUserLiked = 'false AS user_liked';
+        if (userId) {
+          fbParams.push(userId);
+          fbUserLiked = `EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${fbParams.length}) AS user_liked`;
+        }
+        posts = await getMany(
+          `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
+                  p.likes, p.feed, p.image_url, p.created_at, p.hidden,
+                  0 AS bump_count, 0 AS dislike_count,
+                  NULL AS last_bumped_at,
+                  u.display_name AS author_name,
+                  u.custom_display_name AS author_custom_name,
+                  u.avatar_color,
+                  (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
+                  (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
+                  ${fbUserLiked},
+                  false AS user_disliked,
+                  false AS user_bumped
+           FROM posts p
+           LEFT JOIN users u ON u.id = p.user_id
+           WHERE p.feed = $1${fbCatFilter}
+           ORDER BY p.created_at DESC
+           LIMIT $2`,
+          fbParams
+        );
+      }
 
       return res.status(200).json(posts);
     } catch (err) {
@@ -144,6 +196,8 @@ module.exports = async function handler(req, res) {
     try {
       await run('DELETE FROM replies WHERE post_id = $1', [id]);
       await run('DELETE FROM post_likes WHERE post_id = $1', [id]);
+      try { await run('DELETE FROM post_dislikes WHERE post_id = $1', [id]); } catch(e) { /* table may not exist */ }
+      try { await run('DELETE FROM post_bumps WHERE post_id = $1', [id]); } catch(e) { /* table may not exist */ }
       await run('DELETE FROM posts WHERE id = $1', [id]);
       return res.status(200).json({ message: 'Post deleted' });
     } catch (err) {

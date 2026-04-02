@@ -948,6 +948,7 @@
                 '</div>' +
                 '<p style="color:#e74c3c;font-size:16px;font-weight:600;margin-bottom:6px">Recording Active</p>' +
                 '<p id="rp-timer" style="color:#8080A0;font-size:24px;font-weight:300;margin-bottom:6px;font-variant-numeric:tabular-nums">00:00</p>' +
+                '<p id="rp-sms-status" style="color:#888;font-size:12px;margin-bottom:6px"></p>' +
                 '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Waiting for first audio chunk...</p>' +
                 '<p id="rp-gps-status" style="color:#555;font-size:11px;margin-bottom:24px"></p>' +
                 '<div style="display:flex;gap:10px;justify-content:center">' +
@@ -1072,6 +1073,7 @@
                 stream.getTracks().forEach(function(t) { t.stop(); });
                 return;
             }
+            console.log('[Record] Start response:', JSON.stringify(data));
             state.sessionKey = data.sessionKey;
             state.contactsNotified = data.contactsNotified || 0;
             state.contactsFound = data.contactsFound || 0;
@@ -1151,20 +1153,24 @@
             .then(function(r) { clearTimeout(timeoutId); return r.json(); })
             .then(function(data) {
                 console.log('[Record] Update #' + updateNum + ' response:', JSON.stringify(data));
-                if (statusEl) {
-                    if (data.success && data.skipped) {
-                        statusEl.textContent = 'Update #' + updateNum + ' skipped (rate limit)';
-                    } else if (data.success && data.contactsNotified > 0) {
-                        statusEl.textContent = 'Update #' + updateNum + ' sent to ' + data.contactsNotified + ' contact(s)';
-                    } else if (data.contactsFound === 0) {
-                        statusEl.textContent = 'No emergency contacts saved';
-                    } else if (!data.twilioConfigured) {
-                        statusEl.textContent = 'SMS not configured — contact support';
-                    } else if (data.error) {
-                        statusEl.textContent = 'Update error: ' + data.error;
-                    } else {
-                        statusEl.textContent = 'Update #' + updateNum + ' — SMS delivery issue';
-                    }
+                var smsEl = document.getElementById('rp-sms-status');
+                if (data.success && data.skipped) {
+                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' skipped (rate limit)';
+                } else if (data.success && data.contactsNotified > 0) {
+                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' sent';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#2ecc71">&#10003; Update #' + updateNum + ' sent to ' + data.contactsNotified + ' contact(s)</span>';
+                } else if (data.contactsFound === 0) {
+                    if (statusEl) statusEl.textContent = 'No emergency contacts saved';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; No emergency contacts saved</span>';
+                } else if (!data.twilioConfigured) {
+                    if (statusEl) statusEl.textContent = 'SMS not configured';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; SMS service not configured</span>';
+                } else if (data.error) {
+                    if (statusEl) statusEl.textContent = 'Update error: ' + data.error;
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#e74c3c">&#10007; ' + data.error + '</span>';
+                } else {
+                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' — 0 contacts notified';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; SMS not delivered (contacts: ' + (data.contactsFound || 0) + ')</span>';
                 }
             })
             .catch(function(err) {
@@ -1175,19 +1181,24 @@
         }
         state.updateInterval = setInterval(sendPeriodicUpdate, 60000); // every 1 minute
 
+        // Show persistent SMS status on overlay
+        var smsStatusEl = document.getElementById('rp-sms-status');
         if (state.contactsNotified > 0) {
+            if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#2ecc71">&#10003; Report sent to ' + state.contactsNotified + ' contact(s)</span>';
             if (typeof showToast === 'function') showToast('Recording started. ' + state.contactsNotified + ' contact(s) notified.');
         } else {
             var reason = '';
             if (state.contactsFound === 0) {
-                reason = 'No emergency contacts saved.';
+                reason = 'No emergency contacts saved';
             } else if (!state.twilioConfigured) {
-                reason = 'SMS service not configured.';
+                reason = 'SMS service not configured';
             } else if (state.smsErrors && state.smsErrors.length > 0) {
-                reason = 'SMS failed: ' + state.smsErrors[0];
+                reason = 'SMS error: ' + state.smsErrors[0];
+            } else {
+                reason = 'Unknown SMS issue (contacts: ' + state.contactsFound + ', twilio: ' + state.twilioConfigured + ')';
             }
-            if (typeof showToast === 'function') showToast('Recording started — but no contacts were notified. ' + reason);
-            // Brief delay then show contacts manager
+            if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#e67e22">&#9888; ' + reason + '</span>';
+            if (typeof showToast === 'function') showToast('Recording started — ' + reason);
             if (state.contactsFound === 0) {
                 setTimeout(function() {
                     if (typeof window.showEmergencyContacts === 'function') window.showEmergencyContacts();

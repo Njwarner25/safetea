@@ -3253,14 +3253,14 @@
             '</div>' +
             '<div style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:14px">' + hubFormatBody(post.body) + '</div>' +
             imageHtml +
-            '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
-                '<button onclick="roomReact(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + (likeActive ? 'color:#2ecc71' : 'color:#8080A0') + '"><i class="' + (likeActive ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="rl-' + post.id + '">' + likeCount + '</span></button>' +
-                '<button onclick="roomReact(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;' + (dislikeActive ? 'color:#e74c3c' : 'color:#8080A0') + '"><i class="' + (dislikeActive ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="rd-' + post.id + '">' + dislikeCount + '</span></button>' +
-                '<button onclick="roomShowReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#8080A0"><i class="fas fa-comment"></i> ' + replyCount + '</button>' +
-                '<button onclick="roomBumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#f39c12" title="Bump this post to the top"><i class="fas fa-arrow-up"></i>' + bumpLabel + '</button>' +
-                (!isAuthor ? '<button onclick="roomReportPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;color:#8080A0" title="Report"><i class="fas fa-flag"></i></button>' : '') +
-                (isRoomAdmin ? '<button onclick="roomPinPost(' + post.id + ')" style="margin-left:auto;background:none;border:none;color:#f1c40f;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-thumbtack"></i></button>' : '') +
-                (isAuthor || isRoomAdmin ? '<button onclick="roomDeletePost(' + post.id + ')" style="background:none;border:none;color:#e74c3c;font-size:12px;cursor:pointer;padding:4px 8px"><i class="fas fa-trash"></i></button>' : '') +
+            '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
+                '<button onclick="roomReact(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (likeActive ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (likeActive ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="rl-' + post.id + '">' + likeCount + '</span></button>' +
+                '<button onclick="roomReact(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (dislikeActive ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (dislikeActive ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="rd-' + post.id + '">' + dislikeCount + '</span></button>' +
+                '<button onclick="roomShowReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:#8080A0" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-comment"></i> ' + replyCount + '</button>' +
+                '<button onclick="roomBumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (bumpCount > 0 ? '#f39c12' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'" title="Bump this post to the top"><i class="fas fa-arrow-up"></i> <span id="rb-' + post.id + '">' + bumpCount + '</span></button>' +
+                '<div style="margin-left:auto;position:relative" id="room-menu-anchor-' + post.id + '">' +
+                    '<button onclick="showRoomPostMenu(' + post.id + ',' + isAuthor + ',' + isRoomAdmin + ')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
+                '</div>' +
             '</div>' +
             '<div id="rr-' + post.id + '" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px"></div>' +
         '</div>';
@@ -3286,22 +3286,97 @@
         });
     };
 
+    // Three-dot menu for room posts (matches community post menu style)
+    window.showRoomPostMenu = function(postId, isAuthor, isRoomAdmin) {
+        var existing = document.getElementById('room-post-menu-' + postId);
+        if (existing) { existing.remove(); return; }
+        document.querySelectorAll('[id^="room-post-menu-"]').forEach(function(m) { m.remove(); });
+
+        var menuHtml = '<div id="room-post-menu-' + postId + '" style="position:absolute;right:0;top:24px;background:#1a1a2e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;min-width:180px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden">';
+        if (!isAuthor) {
+            menuHtml += '<button onclick="roomReportPost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-flag" style="width:18px"></i> Report Post</button>';
+        }
+        if (isRoomAdmin) {
+            menuHtml += '<button onclick="roomPinPost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#f1c40f;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-thumbtack" style="width:18px"></i> Pin / Unpin</button>';
+        }
+        if (isAuthor || isRoomAdmin) {
+            menuHtml += '<button onclick="roomDeletePost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-trash" style="width:18px"></i> Delete Post</button>';
+        }
+        menuHtml += '</div>';
+
+        var wrapper = document.getElementById('room-menu-anchor-' + postId);
+        if (wrapper) {
+            wrapper.innerHTML = menuHtml;
+            setTimeout(function() {
+                document.addEventListener('click', function closeRoomMenu(e) {
+                    var menu = document.getElementById('room-post-menu-' + postId);
+                    if (menu && !menu.contains(e.target) && !wrapper.contains(e.target)) {
+                        menu.remove();
+                        document.removeEventListener('click', closeRoomMenu);
+                    }
+                });
+            }, 10);
+        }
+    };
+
+    // Styled report modal for room posts (matches community report modal)
     window.roomReportPost = function(postId) {
-        var reason = prompt('Why are you reporting this post?\n\nChoose: harassment, doxxing, spam, inappropriate, misinformation, threat, other');
-        if (!reason) return;
-        reason = reason.toLowerCase().trim();
-        var validReasons = ['harassment', 'doxxing', 'spam', 'inappropriate', 'misinformation', 'threat', 'other'];
-        if (!validReasons.includes(reason)) { showToast('Invalid reason. Use: ' + validReasons.join(', '), true); return; }
+        var modal = document.createElement('div');
+        modal.className = 'dc-share-modal';
+        modal.id = 'room-report-modal';
+        modal.innerHTML =
+            '<div class="dc-share-modal-content" style="max-width:420px">' +
+                '<h3 style="color:#fff;margin-bottom:4px"><i class="fas fa-flag" style="color:#e74c3c"></i> Report Post</h3>' +
+                '<p style="color:#8080A0;font-size:13px;margin-bottom:20px">Help keep the room safe. Select a reason below.</p>' +
+                '<div id="room-report-reasons" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">' +
+                    roomReportReasonOption('inappropriate', 'Inappropriate Content') +
+                    roomReportReasonOption('harassment', 'Harassment or Bullying') +
+                    roomReportReasonOption('spam', 'Spam') +
+                    roomReportReasonOption('doxxing', 'Doxxing / Sharing Private Info') +
+                    roomReportReasonOption('misinformation', 'False Information') +
+                    roomReportReasonOption('threat', 'Threats') +
+                    roomReportReasonOption('other', 'Other') +
+                '</div>' +
+                '<textarea id="room-report-details" rows="3" placeholder="Additional details (optional)..." style="width:100%;padding:12px;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:13px;resize:vertical;font-family:inherit;margin-bottom:16px"></textarea>' +
+                '<button id="room-report-submit-btn" style="width:100%;padding:14px;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit" onclick="submitRoomReport(' + postId + ')"><i class="fas fa-flag"></i> Submit Report</button>' +
+                '<button style="width:100%;margin-top:8px;padding:12px;background:rgba(255,255,255,0.06);color:#C8C8E0;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit" onclick="document.getElementById(\'room-report-modal\').remove()">Cancel</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
+
+    function roomReportReasonOption(value, label) {
+        return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#141428;border:1px solid rgba(255,255,255,0.06);border-radius:8px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor=\'rgba(232,160,181,0.3)\'" onmouseout="if(!this.querySelector(\'input\').checked)this.style.borderColor=\'rgba(255,255,255,0.06)\'">' +
+            '<input type="radio" name="room-report-reason" value="' + value + '" style="accent-color:#E8A0B5" onclick="this.closest(\'label\').style.borderColor=\'#E8A0B5\';document.querySelectorAll(\'#room-report-reasons label\').forEach(function(l){if(!l.querySelector(\'input\').checked)l.style.borderColor=\'rgba(255,255,255,0.06)\'})">' +
+            '<span style="color:#ccc;font-size:13px">' + label + '</span>' +
+        '</label>';
+    }
+
+    window.submitRoomReport = function(postId) {
+        var reason = document.querySelector('input[name="room-report-reason"]:checked');
+        if (!reason) { showToast('Please select a reason', true); return; }
+        var details = document.getElementById('room-report-details').value.trim();
+        var btn = document.getElementById('room-report-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
         apiFetch('/rooms/report', {
             method: 'POST',
-            body: JSON.stringify({ postId: postId, reason: reason })
+            body: JSON.stringify({ postId: postId, reason: reason.value, details: details || null })
         }).then(function(data) {
             if (data && data.success) {
-                showToast('Report submitted. Thank you.');
-            } else if (data && data.error) {
-                showToast(data.error, true);
+                showToast('Report submitted. Thank you for keeping the community safe.');
+                var modal = document.getElementById('room-report-modal');
+                if (modal) modal.remove();
+            } else {
+                showToast((data && data.error) || 'Failed to submit report', true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-flag"></i> Submit Report';
             }
+        }).catch(function() {
+            showToast('Failed to submit report', true);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-flag"></i> Submit Report';
         });
     };
 

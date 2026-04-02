@@ -12,15 +12,14 @@ module.exports = async function handler(req, res) {
   const postId = url.searchParams.get('postId');
   if (!postId) return res.status(400).json({ error: 'Post ID is required' });
 
-  // Verify the post exists and user is a room member
+  // Verify the post exists
   const post = await getOne('SELECT room_id FROM room_posts WHERE id = $1', [postId]);
   if (!post) return res.status(404).json({ error: 'Post not found' });
 
-  const membership = await getOne(
-    `SELECT * FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
-    [post.room_id, user.id]
-  );
-  if (!membership) return res.status(403).json({ error: 'You are not a member of this room' });
+  // Trust score gate
+  if ((user.trust_score || 0) < 70) {
+    return res.status(403).json({ error: 'trust_score_too_low', required: 70 });
+  }
 
   // GET — list replies
   if (req.method === 'GET') {
@@ -43,10 +42,6 @@ module.exports = async function handler(req, res) {
   // POST — create reply
   if (req.method === 'POST') {
     try {
-      if (membership.muted_until && new Date(membership.muted_until) > new Date()) {
-        return res.status(403).json({ error: 'You are muted in this room', mutedUntil: membership.muted_until });
-      }
-
       const body = await parseBody(req);
       if (!body.text?.trim()) return res.status(400).json({ error: 'Reply text is required' });
 
@@ -62,7 +57,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // DELETE — delete reply (author or room admin)
+  // DELETE — delete reply (author or SafeTea admin)
   if (req.method === 'DELETE') {
     try {
       const replyId = url.searchParams.get('replyId');
@@ -72,8 +67,8 @@ module.exports = async function handler(req, res) {
       if (!reply) return res.status(404).json({ error: 'Reply not found' });
 
       const isAuthor = reply.author_id === user.id;
-      const isRoomAdmin = membership.role === 'admin' || membership.role === 'co_admin';
-      if (!isAuthor && !isRoomAdmin) {
+      const isSafeTeaAdmin = user.role === 'admin' || user.role === 'moderator';
+      if (!isAuthor && !isSafeTeaAdmin) {
         return res.status(403).json({ error: 'Not authorized' });
       }
 

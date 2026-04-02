@@ -3234,7 +3234,7 @@
             : '';
         var u = getUser();
         var isAuthor = u && post.author_id === u.id;
-        var isRoomAdmin = currentRoomData && (currentRoomData.myRole === 'admin' || currentRoomData.myRole === 'co_admin');
+        var isSafeTeaAdmin = u && (u.role === 'admin' || u.role === 'moderator');
 
         var imageHtml = '';
         if (post.image_data) {
@@ -3259,7 +3259,7 @@
                 '<button onclick="roomShowReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:#8080A0" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-comment"></i> ' + replyCount + '</button>' +
                 '<button onclick="roomBumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (bumpCount > 0 ? '#f39c12' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'" title="Bump this post to the top"><i class="fas fa-arrow-up"></i> <span id="rb-' + post.id + '">' + bumpCount + '</span></button>' +
                 '<div style="margin-left:auto;position:relative" id="room-menu-anchor-' + post.id + '">' +
-                    '<button onclick="showRoomPostMenu(' + post.id + ',' + isAuthor + ',' + isRoomAdmin + ')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
+                    '<button onclick="showRoomPostMenu(' + post.id + ',' + isAuthor + ',' + isSafeTeaAdmin + ')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
                 '</div>' +
             '</div>' +
             '<div id="rr-' + post.id + '" style="display:none;margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px"></div>' +
@@ -3287,7 +3287,7 @@
     };
 
     // Three-dot menu for room posts (matches community post menu style)
-    window.showRoomPostMenu = function(postId, isAuthor, isRoomAdmin) {
+    window.showRoomPostMenu = function(postId, isAuthor, isAdmin) {
         var existing = document.getElementById('room-post-menu-' + postId);
         if (existing) { existing.remove(); return; }
         document.querySelectorAll('[id^="room-post-menu-"]').forEach(function(m) { m.remove(); });
@@ -3296,10 +3296,10 @@
         if (!isAuthor) {
             menuHtml += '<button onclick="roomReportPost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-flag" style="width:18px"></i> Report Post</button>';
         }
-        if (isRoomAdmin) {
+        if (isAdmin) {
             menuHtml += '<button onclick="roomPinPost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#f1c40f;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-thumbtack" style="width:18px"></i> Pin / Unpin</button>';
         }
-        if (isAuthor || isRoomAdmin) {
+        if (isAuthor || isAdmin) {
             menuHtml += '<button onclick="roomDeletePost(' + postId + ');document.getElementById(\'room-post-menu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-trash" style="width:18px"></i> Delete Post</button>';
         }
         menuHtml += '</div>';
@@ -3473,8 +3473,11 @@
                 if (preview) preview.style.display = 'none';
                 loadRoomFeed();
                 showToast('Posted!');
+            } else if (data && data.error === 'trust_score_too_low') {
+                showToast('Trust score too low (' + (data.trust_score || 0) + '/70). Complete verification to post.', true);
+                setTimeout(function() { window.location.href = '/verify.html'; }, 2000);
             } else if (data && data.error) {
-                showToast(data.error, true);
+                showToast(data.message || data.error, true);
             }
         }).catch(function() {
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post'; }

@@ -24,19 +24,20 @@ module.exports = async function handler(req, res) {
       const validTypes = ['tea_talk', 'good_guys'];
       const postType = validTypes.includes(type) ? type : 'tea_talk';
 
-      // Verify membership and not muted
-      const membership = await getOne(
-        `SELECT * FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
-        [roomId, user.id]
-      );
-      if (!membership) {
-        return res.status(403).json({ error: 'You are not a member of this room' });
-      }
-      if (membership.muted_until && new Date(membership.muted_until) > new Date()) {
+      // Trust score gate: require >= 70 to post in rooms
+      if ((user.trust_score || 0) < 70) {
         return res.status(403).json({
-          error: 'You are muted in this room',
-          mutedUntil: membership.muted_until
+          error: 'trust_score_too_low',
+          trust_score: user.trust_score || 0,
+          required: 70,
+          message: 'Complete verification steps to unlock room posting. Verify your identity and link social media accounts to get access.'
         });
+      }
+
+      // Verify room exists
+      const room = await getOne('SELECT id FROM sorority_rooms WHERE id = $1', [roomId]);
+      if (!room) {
+        return res.status(404).json({ error: 'Room not found' });
       }
 
       // Full name blocking
@@ -88,18 +89,13 @@ module.exports = async function handler(req, res) {
       if (!post) return res.status(404).json({ error: 'Post not found' });
 
       const isAuthor = post.author_id === user.id;
-      const membership = await getOne(
-        `SELECT role FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
-        [post.room_id, user.id]
-      );
-      const isRoomAdmin = membership && (membership.role === 'admin' || membership.role === 'co_admin');
       const isSafeTeaAdmin = user.role === 'admin' || user.role === 'moderator';
 
-      if (!isAuthor && !isRoomAdmin && !isSafeTeaAdmin) {
+      if (!isAuthor && !isSafeTeaAdmin) {
         return res.status(403).json({ error: 'Not authorized to delete this post' });
       }
 
-      if (isRoomAdmin && !isAuthor) {
+      if (isSafeTeaAdmin && !isAuthor) {
         await run('UPDATE room_posts SET deleted_by_admin = TRUE WHERE id = $1', [postId]);
       } else {
         await run('DELETE FROM room_posts WHERE id = $1', [postId]);

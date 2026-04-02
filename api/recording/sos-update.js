@@ -117,7 +117,8 @@ module.exports = async function handler(req, res) {
     var contactsNotified = 0;
     var twilioSid = process.env.TWILIO_ACCOUNT_SID;
     var twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-    var twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+    var twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
+    if (twilioPhone && !twilioPhone.startsWith('+')) twilioPhone = '+' + twilioPhone;
 
     if (twilioSid && twilioAuth && twilioPhone && contacts.length > 0) {
       var twilio = require('twilio')(twilioSid, twilioAuth);

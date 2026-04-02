@@ -81,7 +81,8 @@ module.exports = async function handler(req, res) {
 
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-    const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+    let twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
+    if (twilioPhone && !twilioPhone.startsWith('+')) twilioPhone = '+' + twilioPhone;
     const twilioConfigured = !!(twilioSid && twilioAuth && twilioPhone);
     let smsErrors = [];
 

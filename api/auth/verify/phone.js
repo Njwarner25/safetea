@@ -32,14 +32,48 @@ module.exports = async function handler(req, res) {
 
     const phone = normalizePhone(rawPhone.trim());
 
-    // Find valid, unused code for this phone
+    // Try Twilio Verify API first if configured
+    if (process.env.TWILIO_VERIFY_SERVICE_SID && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      try {
+        const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        const check = await twilio.verify.v2
+          .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+          .verificationChecks.create({ to: phone, code: code.trim() });
+
+        if (check.status !== 'approved') {
+          return res.status(401).json({ error: 'Invalid or expired verification code' });
+        }
+
+        // Code verified — update user
+        await run(
+          'UPDATE users SET phone_verified = true, phone = $1, updated_at = NOW() WHERE id = $2',
+          [phone, user.id]
+        );
+        const newScore = await recalculateTrustScore(user.id, 'phone_verified', 'phone');
+
+        return res.status(200).json({
+          success: true,
+          phone_verified: true,
+          trustScore: newScore,
+          message: 'Phone verified! +10 trust points earned.'
+        });
+      } catch (err) {
+        console.error('Twilio Verify check error:', err.message, err.code);
+        // If Verify fails (e.g. code expired), return the error
+        if (err.code === 20404) {
+          return res.status(401).json({ error: 'Verification code expired. Please request a new one.' });
+        }
+        return res.status(401).json({ error: 'Invalid or expired verification code' });
+      }
+    }
+
+    // Fallback: check against phone_verifications table
     const verification = await getOne(
       "SELECT * FROM phone_verifications WHERE phone = $1 AND code = $2 AND used = false AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1",
       [phone, code.trim()]
     );
 
     if (!verification) {
-      // Increment attempts for rate limiting
       const recent = await getOne(
         "SELECT id FROM phone_verifications WHERE phone = $1 AND used = false ORDER BY created_at DESC LIMIT 1",
         [phone]
@@ -50,22 +84,18 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid or expired verification code' });
     }
 
-    // Check max attempts
     if (verification.attempts >= 5) {
       await run("UPDATE phone_verifications SET used = true WHERE id = $1", [verification.id]);
       return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
     }
 
-    // Mark code as used
     await run("UPDATE phone_verifications SET used = true, verified_at = NOW() WHERE id = $1", [verification.id]);
 
-    // Set phone_verified = true and update phone number on user
     await run(
       'UPDATE users SET phone_verified = true, phone = $1, updated_at = NOW() WHERE id = $2',
       [phone, user.id]
     );
 
-    // Recalculate trust score
     const newScore = await recalculateTrustScore(user.id, 'phone_verified', 'phone');
 
     return res.status(200).json({

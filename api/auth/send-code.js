@@ -1,11 +1,5 @@
-const crypto = require('crypto');
 const { getOne, run } = require('../_utils/db');
 const { cors, parseBody } = require('../_utils/auth');
-
-// Generate a 6-digit OTP
-function generateOTP() {
-  return crypto.randomInt(100000, 999999).toString();
-}
 
 // Normalize phone number to E.164 format
 function normalizePhone(phone) {
@@ -32,46 +26,62 @@ module.exports = async function handler(req, res) {
     const phone = normalizePhone(rawPhone.trim());
 
     // Rate limit: max 5 codes per phone per hour
-    const recentAttempts = await getOne(
-      "SELECT COUNT(*) as count FROM phone_verifications WHERE phone = $1 AND created_at > NOW() - INTERVAL '1 hour'",
-      [phone]
-    );
+    try {
+      const recentAttempts = await getOne(
+        "SELECT COUNT(*) as count FROM phone_verifications WHERE phone = $1 AND created_at > NOW() - INTERVAL '1 hour'",
+        [phone]
+      );
+      if (recentAttempts && parseInt(recentAttempts.count) >= 5) {
+        return res.status(429).json({ error: 'Too many verification attempts. Please try again later.' });
+      }
+    } catch (e) { /* table may not exist yet */ }
 
-    if (recentAttempts && parseInt(recentAttempts.count) >= 5) {
-      return res.status(429).json({ error: 'Too many verification attempts. Please try again later.' });
+    // Use Twilio Verify API if TWILIO_VERIFY_SERVICE_SID is set (handles compliance automatically)
+    if (process.env.TWILIO_VERIFY_SERVICE_SID && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      try {
+        const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        const verification = await twilio.verify.v2
+          .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+          .verifications.create({ to: phone, channel: 'sms' });
+        console.log(`Twilio Verify sent to ${phone}, status: ${verification.status}`);
+
+        return res.status(200).json({
+          status: 200,
+          data: {
+            message: 'Verification code sent',
+            phone: phone,
+            method: 'twilio_verify'
+          }
+        });
+      } catch (err) {
+        console.error('Twilio Verify error:', err.message, err.code);
+        return res.status(500).json({ error: 'Failed to send verification code: ' + err.message });
+      }
     }
 
-    // Invalidate previous codes for this phone
-    await run(
-      "UPDATE phone_verifications SET used = true WHERE phone = $1 AND used = false",
-      [phone]
-    );
+    // Fallback: generate our own OTP and send via Twilio Messages API
+    const crypto = require('crypto');
+    const code = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
-
-    // Store the OTP
     await run(
       "INSERT INTO phone_verifications (phone, code, expires_at) VALUES ($1, $2, $3)",
       [phone, code, expiresAt]
     );
 
-    // Send via Twilio if configured
     let fromPhone = process.env.TWILIO_PHONE_NUMBER || '';
     if (fromPhone && !fromPhone.startsWith('+')) fromPhone = '+' + fromPhone;
 
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && fromPhone) {
       try {
-        const twilio = require('twilio');
-        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-        const msg = await client.messages.create({
+        const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        await twilio.messages.create({
           body: `Your SafeTea verification code is: ${code}. It expires in 10 minutes.`,
           from: fromPhone,
           to: phone
         });
-        console.log(`OTP sent to ${phone} via Twilio, SID: ${msg.sid}, status: ${msg.status}`);
       } catch (err) {
-        console.error('Twilio send error:', err.message, err.code, err.moreInfo);
+        console.error('Twilio SMS error:', err.message, err.code);
         return res.status(500).json({ error: 'Failed to send verification code. Please try again.' });
       }
     } else {
@@ -83,6 +93,7 @@ module.exports = async function handler(req, res) {
       data: {
         message: 'Verification code sent',
         phone: phone,
+        method: 'sms',
         ...(process.env.NODE_ENV !== 'production' && { dev_code: code })
       }
     });

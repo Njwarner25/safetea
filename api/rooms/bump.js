@@ -17,10 +17,15 @@ module.exports = async function handler(req, res) {
     const post = await getOne('SELECT * FROM room_posts WHERE id = $1', [postId]);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    // Trust score gate
+    // Trust score gate + membership
     if ((user.trust_score || 0) < 70) {
       return res.status(403).json({ error: 'trust_score_too_low', required: 70 });
     }
+    const membership = await getOne(
+      `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
+      [post.room_id, user.id]
+    );
+    if (!membership) return res.status(403).json({ error: 'You need an invite code to join this room.' });
 
     // Bump the post — increment count + update timestamp so it sorts higher
     await run(

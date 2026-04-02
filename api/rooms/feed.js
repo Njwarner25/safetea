@@ -18,14 +18,19 @@ module.exports = async function handler(req, res) {
 
     if (!roomId) return res.status(400).json({ error: 'Room ID is required' });
 
-    // Trust score gate: require >= 70 to view room feed
+    // Trust score gate
     if ((user.trust_score || 0) < 70) {
-      return res.status(403).json({
-        error: 'trust_score_too_low',
-        trust_score: user.trust_score || 0,
-        required: 70,
-        message: 'Complete verification steps to access rooms.'
-      });
+      return res.status(403).json({ error: 'trust_score_too_low', required: 70 });
+    }
+
+    // Verify membership (invite-only)
+    const membership = await getOne(
+      `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
+      [roomId, user.id]
+    );
+    const isAdmin = user.role === 'admin' || user.role === 'moderator';
+    if (!membership && !isAdmin) {
+      return res.status(403).json({ error: 'You need an invite code to join this room.' });
     }
 
     let typeFilter = '';

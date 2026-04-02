@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
       const validTypes = ['tea_talk', 'good_guys'];
       const postType = validTypes.includes(type) ? type : 'tea_talk';
 
-      // Trust score gate: require >= 70 to post in rooms
+      // Trust score gate: require >= 70
       if ((user.trust_score || 0) < 70) {
         return res.status(403).json({
           error: 'trust_score_too_low',
@@ -34,10 +34,13 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Verify room exists
-      const room = await getOne('SELECT id FROM sorority_rooms WHERE id = $1', [roomId]);
-      if (!room) {
-        return res.status(404).json({ error: 'Room not found' });
+      // Verify membership (rooms are invite-only)
+      const membership = await getOne(
+        `SELECT * FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
+        [roomId, user.id]
+      );
+      if (!membership) {
+        return res.status(403).json({ error: 'You need an invite code to join this room before posting.' });
       }
 
       // Full name blocking

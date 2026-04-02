@@ -50,31 +50,42 @@ module.exports = async function handler(req, res) {
 
     if (existing) {
       if (existing.status === 'approved') {
-        return res.status(409).json({ error: 'You are already a member of this room' });
+        return res.status(409).json({ error: 'You are already a member of this room', roomId: room.id, roomName: room.name });
       }
       if (existing.status === 'pending') {
-        return res.status(409).json({ error: 'You already have a pending request for this room' });
-      }
-      if (existing.status === 'denied' || existing.status === 'removed') {
-        // Allow re-request: update existing row back to pending
+        // Auto-approve since they have a valid invite code
         await getOne(
-          `UPDATE room_memberships SET status = 'pending', requested_at = NOW(), approved_at = NULL, approved_by = NULL
+          `UPDATE room_memberships SET status = 'approved', approved_at = NOW()
            WHERE id = $1 RETURNING *`,
           [existing.id]
         );
-        return res.status(200).json({ message: 'Join request submitted', roomName: room.name, status: 'pending' });
+        await getOne(`UPDATE sorority_rooms SET member_count = member_count + 1 WHERE id = $1 RETURNING id`, [room.id]);
+        return res.status(200).json({ message: 'Welcome to ' + room.name + '!', roomId: room.id, roomName: room.name, status: 'approved' });
+      }
+      if (existing.status === 'denied' || existing.status === 'removed') {
+        // Re-admit with valid invite code
+        await getOne(
+          `UPDATE room_memberships SET status = 'approved', requested_at = NOW(), approved_at = NOW()
+           WHERE id = $1 RETURNING *`,
+          [existing.id]
+        );
+        await getOne(`UPDATE sorority_rooms SET member_count = member_count + 1 WHERE id = $1 RETURNING id`, [room.id]);
+        return res.status(200).json({ message: 'Welcome back to ' + room.name + '!', roomId: room.id, roomName: room.name, status: 'approved' });
       }
     }
 
-    // Create pending membership
+    // Auto-approve — invite code grants immediate access
     await getOne(
-      `INSERT INTO room_memberships (room_id, user_id, role, status)
-       VALUES ($1, $2, 'member', 'pending')
+      `INSERT INTO room_memberships (room_id, user_id, role, status, approved_at)
+       VALUES ($1, $2, 'member', 'approved', NOW())
        RETURNING id`,
       [room.id, user.id]
     );
 
-    return res.status(200).json({ message: 'Join request submitted', roomName: room.name, status: 'pending' });
+    // Increment member count
+    await getOne(`UPDATE sorority_rooms SET member_count = member_count + 1 WHERE id = $1 RETURNING id`, [room.id]);
+
+    return res.status(200).json({ message: 'Welcome to ' + room.name + '!', roomId: room.id, roomName: room.name, status: 'approved' });
   } catch (err) {
     console.error('Room join error:', err);
     return res.status(500).json({ error: 'Internal server error' });

@@ -12,7 +12,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const q = (req.query.q || '').trim();
-    const filter = req.query.filter || 'all'; // all, banned, suspended, verified, unverified
+    const filter = req.query.filter || 'all'; // all, banned, suspended, verified, unverified, low-trust, high-trust
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = 20;
     const offset = (page - 1) * limit;
@@ -36,6 +36,10 @@ module.exports = async function handler(req, res) {
       where += ' AND is_verified = true';
     } else if (filter === 'unverified') {
       where += ' AND (is_verified IS NOT TRUE)';
+    } else if (filter === 'low-trust') {
+      where += ' AND trust_score <= 30';
+    } else if (filter === 'high-trust') {
+      where += ' AND trust_score >= 70';
     }
 
     const countResult = await getOne(
@@ -48,7 +52,8 @@ module.exports = async function handler(req, res) {
       `SELECT id, email, phone, display_name, custom_display_name, role, city,
               subscription_tier, is_verified, age_verified, identity_verified, gender_verified,
               banned, banned_at, ban_reason, ban_type, ban_until,
-              avatar_color, avatar_initial, created_at
+              avatar_color, avatar_initial, created_at,
+              trust_score, didit_verified, phone_verified
        FROM users ${where}
        ORDER BY created_at DESC
        LIMIT $${paramIdx + 1} OFFSET $${paramIdx + 2}`,

@@ -198,6 +198,26 @@ function sendWeeklyModReportEmail(to, reportText, weekLabel) {
   });
 }
 
+function sendVerificationRequestEmail(to, displayName, reason) {
+  return sendEmail({
+    to,
+    subject: 'Action Required: Verification Requested — SafeTea',
+    html: wrapHtml(`
+      <h2 style="color:#fff;font-size:20px;margin:0 0 16px;">Verification Requested</h2>
+      <p>Hey ${displayName || 'there'}, a SafeTea admin has requested that you complete additional verification on your account.</p>
+      <div style="background:#1A1A2E;border-radius:10px;padding:16px;margin:16px 0;border-left:3px solid #E8A0B5;">
+        <div style="color:#E8A0B5;font-size:13px;font-weight:600;margin-bottom:8px;">Reason</div>
+        <div style="color:#ccc;font-size:14px;line-height:1.5;">${(reason || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+      </div>
+      <p>Please complete the verification steps to maintain your access to SafeTea features.</p>
+      <div style="text-align:center;margin:24px 0;">
+        <a href="https://getsafetea.app/verify.html" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Complete Verification</a>
+      </div>
+      <p style="color:#8080A0;font-size:12px;">If you believe this was sent in error, contact support@getsafetea.app.</p>
+    `)
+  });
+}
+
 module.exports = {
   sendEmail,
   wrapHtml,
@@ -207,5 +227,6 @@ module.exports = {
   sendStrikeBanEmail,
   sendDateCheckInReminderEmail,
   sendCityUnlockEmail,
-  sendWeeklyModReportEmail
+  sendWeeklyModReportEmail,
+  sendVerificationRequestEmail
 };

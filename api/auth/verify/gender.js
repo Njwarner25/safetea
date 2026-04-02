@@ -1,5 +1,6 @@
 const { getOne, run } = require('../../_utils/db');
 const { authenticate, cors, parseBody } = require('../../_utils/auth');
+const { recalculateTrustScore } = require('../../_utils/trust-score');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -44,6 +45,11 @@ module.exports = async function handler(req, res) {
     if (updated.age_verified && updated.identity_verified && updated.gender_verified) {
       await run('UPDATE users SET is_verified = true, verified_at = NOW() WHERE id = $1', [user.id]);
     }
+
+    // Recalculate trust score after gender verification
+    recalculateTrustScore(user.id, 'gender_verified', 'verification').catch(function(e) {
+      console.error('[TrustScore] Recalc failed after gender verify:', e.message);
+    });
 
     return res.status(200).json({
       status: 'passed',

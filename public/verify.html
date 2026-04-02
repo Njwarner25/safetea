@@ -372,6 +372,15 @@
         <p>SafeTea requires verification to keep our community safe</p>
       </div>
 
+      <!-- Trust Score Display -->
+      <div id="trust-score-display" style="display:none;text-align:center;margin-bottom:24px;">
+        <div style="font-size:12px;color:#8080A0;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Trust Score</div>
+        <div id="trust-score-value" style="font-size:36px;font-weight:800;color:#E8A0B5;">0</div>
+        <div id="trust-score-bar" style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);margin-top:8px;overflow:hidden;">
+          <div id="trust-score-fill" style="height:100%;border-radius:3px;background:linear-gradient(135deg,#E8A0B5,#D4768E);width:0%;transition:width 0.6s ease;"></div>
+        </div>
+      </div>
+
       <!-- Progress Bar -->
       <div class="progress-bar">
         <div class="progress-step" id="prog-age">
@@ -380,11 +389,23 @@
         </div>
         <div class="progress-step" id="prog-identity">
           <div class="bar"></div>
-          <div class="label">Identity</div>
+          <div class="label">Selfie (+60)</div>
         </div>
         <div class="progress-step" id="prog-gender">
           <div class="bar"></div>
           <div class="label">Gender</div>
+        </div>
+        <div class="progress-step" id="prog-didit">
+          <div class="bar"></div>
+          <div class="label">ID (+30)</div>
+        </div>
+        <div class="progress-step" id="prog-phone">
+          <div class="bar"></div>
+          <div class="label">Phone (+10)</div>
+        </div>
+        <div class="progress-step" id="prog-social">
+          <div class="bar"></div>
+          <div class="label">Social (+20)</div>
         </div>
       </div>
 
@@ -467,12 +488,83 @@
         <button class="btn-primary" id="btn-gender" onclick="submitGender()" disabled>Continue</button>
       </div>
 
-      <!-- STEP 4: Complete -->
+      <!-- STEP 4: Document Verification (Didit) -->
+      <div class="step-panel" id="step-didit">
+        <h2>Document Verification</h2>
+        <p class="step-desc">Verify your government-issued ID for maximum trust. This earns you <strong style="color:#E8A0B5;">+30 trust points</strong> and helps keep the community safe.</p>
+        <div class="info-box">
+          <div class="icon">🪪</div>
+          <p>You'll be redirected to our secure verification partner to scan your ID. Your document data is never stored by SafeTea — only a verified/not-verified result is returned.</p>
+        </div>
+        <div style="background:rgba(241,196,15,0.08);border:1px solid rgba(241,196,15,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:12px;line-height:1.6;color:#ccc;">
+          <strong style="color:#f1c40f;">Illinois Residents — Biometric Information Notice:</strong> This verification process may involve the collection of biometric data (e.g., facial geometry from your ID photo). Under the Illinois Biometric Information Privacy Act (BIPA), you have the right to know how your biometric data is collected, used, and stored. Our verification partner processes this data solely to confirm your identity and does not retain biometric identifiers after verification is complete. By proceeding, you consent to the collection and use of biometric data for identity verification purposes. For questions, contact <a href="mailto:support@getsafetea.app" style="color:#E8A0B5;">support@getsafetea.app</a>.
+        </div>
+        <button class="btn-primary" id="btn-didit" onclick="startDiditVerification()">Verify My ID</button>
+        <div id="didit-waiting" style="display:none;">
+          <div class="waiting-state">
+            <div class="pulse-ring"></div>
+            <p>Setting up verification...</p>
+          </div>
+        </div>
+        <a class="skip-link" onclick="showStep('complete')">Skip for now</a>
+      </div>
+
+      <!-- STEP 5: Phone Verification -->
+      <div class="step-panel" id="step-phone">
+        <h2>Phone Verification</h2>
+        <p class="step-desc">Verify your phone number to earn <strong style="color:#E8A0B5;">+10 trust points</strong>.</p>
+        <div class="info-box">
+          <div class="icon">📱</div>
+          <p>We'll send a 6-digit code to your phone via SMS. Standard messaging rates may apply.</p>
+        </div>
+        <div id="phone-send-form">
+          <input type="tel" id="phone-input" placeholder="(555) 123-4567" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:16px;font-family:'Inter',sans-serif;margin-bottom:12px;outline:none" />
+          <button class="btn-primary" id="phone-send-btn" onclick="sendPhoneCode()" style="width:100%">Send Verification Code</button>
+        </div>
+        <div id="phone-verify-form" style="display:none">
+          <p style="color:#8080A0;font-size:13px;margin-bottom:12px">Enter the 6-digit code sent to <strong id="phone-sent-to" style="color:#E8A0B5"></strong></p>
+          <input type="text" id="phone-code-input" placeholder="000000" maxlength="6" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:24px;font-family:'Inter',sans-serif;margin-bottom:12px;outline:none;text-align:center;letter-spacing:8px" />
+          <button class="btn-primary" id="phone-verify-btn" onclick="verifyPhoneCode()" style="width:100%">Verify Code</button>
+          <p style="text-align:center;margin-top:10px"><a href="#" onclick="document.getElementById('phone-send-form').style.display='block';document.getElementById('phone-verify-form').style.display='none';return false" style="color:#8080A0;font-size:12px;text-decoration:none">Resend code / Change number</a></p>
+        </div>
+        <a class="skip-link" onclick="showStep('social')">Skip for now</a>
+      </div>
+
+      <!-- STEP 6: Social Media -->
+      <div class="step-panel" id="step-social">
+        <h2>Link Social Media</h2>
+        <p class="step-desc">Link up to 3 social accounts to earn <strong style="color:#E8A0B5;">+20 trust points each</strong>. Our AI verifies each account is real.</p>
+        <div id="social-connected-list" style="margin-bottom:16px"></div>
+        <div id="social-add-form">
+          <select id="social-platform" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none">
+            <option value="">Select platform...</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="twitter">X / Twitter</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="facebook">Facebook</option>
+            <option value="snapchat">Snapchat</option>
+          </select>
+          <input type="text" id="social-username" placeholder="@username" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none" />
+          <div style="display:flex;gap:10px;margin-bottom:10px">
+            <input type="number" id="social-age" placeholder="Account age (months)" min="0" style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none" />
+            <input type="number" id="social-followers" placeholder="Follower count" min="0" style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none" />
+          </div>
+          <button class="btn-primary" id="social-connect-btn" onclick="connectSocialAccount()" style="width:100%">Link Account</button>
+        </div>
+        <a class="skip-link" onclick="showStep('complete')">Continue to finish</a>
+      </div>
+
+      <!-- STEP 7: Complete -->
       <div class="step-panel" id="step-complete">
         <div class="complete-icon">✓</div>
         <div class="complete-text">
           <h2>You're Verified!</h2>
           <p>Your account is now fully verified. Welcome to SafeTea — your safety comes first.</p>
+          <div id="final-trust-score" style="margin:16px 0;padding:16px;background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.2);border-radius:10px;">
+            <div style="font-size:12px;color:#8080A0;margin-bottom:4px;">Your Trust Score</div>
+            <div id="final-score-value" style="font-size:32px;font-weight:800;color:#E8A0B5;">--</div>
+          </div>
           <button class="btn-primary" onclick="window.location.href='/dashboard.html'">Go to Dashboard</button>
         </div>
       </div>
@@ -483,7 +575,8 @@
   <script>
     const API_BASE = '/api';
     let selectedGender = null;
-    let currentStep = 'age'; // age, identity, gender, complete
+    let currentStep = 'age'; // age, identity, gender, didit, complete
+    let currentTrustScore = 0;
 
     // Get auth token
     function getToken() {
@@ -524,12 +617,17 @@
 
     // Update progress bar
     function updateProgress(step) {
-      const steps = ['age', 'identity', 'gender'];
+      const steps = ['age', 'identity', 'gender', 'didit', 'phone', 'social'];
       const idx = steps.indexOf(step);
 
       steps.forEach((s, i) => {
         const el = document.getElementById('prog-' + s);
-        el.classList.remove('completed', 'active');
+        if (!el) return;
+        // Don't remove 'completed' if the step was already server-confirmed completed
+        if (!el.dataset.serverCompleted) {
+          el.classList.remove('completed');
+        }
+        el.classList.remove('active');
         if (i < idx) el.classList.add('completed');
         else if (i === idx) el.classList.add('active');
       });
@@ -538,10 +636,23 @@
       if (step === 'complete') {
         steps.forEach(s => {
           const el = document.getElementById('prog-' + s);
+          if (!el) return;
           el.classList.remove('active');
           el.classList.add('completed');
         });
       }
+    }
+
+    function updateTrustScoreDisplay(score) {
+      currentTrustScore = score || 0;
+      document.getElementById('trust-score-display').style.display = 'block';
+      document.getElementById('trust-score-value').textContent = currentTrustScore;
+      document.getElementById('trust-score-fill').style.width = Math.min(100, currentTrustScore) + '%';
+      // Color based on score
+      const scoreEl = document.getElementById('trust-score-value');
+      if (currentTrustScore >= 70) scoreEl.style.color = '#2ecc71';
+      else if (currentTrustScore >= 40) scoreEl.style.color = '#f1c40f';
+      else scoreEl.style.color = '#e74c3c';
     }
 
     // Show a specific step
@@ -556,6 +667,11 @@
       document.getElementById('success-msg').style.display = 'none';
       // Load challenge when showing identity step
       if (step === 'identity') loadIdentityChallenge();
+      // Show final trust score on complete step
+      if (step === 'complete') {
+        var finalEl = document.getElementById('final-score-value');
+        if (finalEl) finalEl.textContent = currentTrustScore || '--';
+      }
     }
 
     // ---- STEP 1: Age ----
@@ -777,12 +893,174 @@
           localStorage.setItem('safetea_user', JSON.stringify(user));
         }
 
-        showSuccess('Profile complete!');
-        setTimeout(() => showStep('complete'), 500);
+        showSuccess('Gender verification complete!');
+        setTimeout(() => showStep('didit'), 500);
       } catch (err) {
         showError(err.message);
       } finally {
         setLoading('btn-gender', false);
+      }
+    }
+
+    // ---- STEP 4: Didit Document Verification ----
+    async function startDiditVerification() {
+      document.getElementById('btn-didit').style.display = 'none';
+      document.getElementById('didit-waiting').style.display = 'block';
+
+      try {
+        const res = await fetch(API_BASE + '/auth/verify/start-didit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          }
+        });
+        const data = await res.json();
+        document.getElementById('didit-waiting').style.display = 'none';
+
+        if (!res.ok) throw new Error(data.error || 'Failed to start verification');
+
+        if (data.verification_url) {
+          // Store that we're in Didit flow so we can check on return
+          localStorage.setItem('safetea_didit_pending', 'true');
+          window.location.href = data.verification_url;
+        } else {
+          throw new Error('No verification URL returned');
+        }
+      } catch (err) {
+        document.getElementById('didit-waiting').style.display = 'none';
+        document.getElementById('btn-didit').style.display = 'block';
+        showError(err.message);
+      }
+    }
+
+    // ---- PHONE VERIFICATION ----
+    var phoneNumber = '';
+
+    async function sendPhoneCode() {
+      var phone = document.getElementById('phone-input').value.trim();
+      if (!phone) { showError('Please enter your phone number'); return; }
+
+      var btn = document.getElementById('phone-send-btn');
+      btn.disabled = true; btn.textContent = 'Sending...';
+
+      try {
+        var res = await fetch(API_BASE + '/auth/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ phone: phone })
+        });
+        var data = await res.json();
+        btn.disabled = false; btn.textContent = 'Send Verification Code';
+
+        if (!res.ok) { showError(data.error || 'Failed to send code'); return; }
+
+        phoneNumber = data.data ? data.data.phone : phone;
+        document.getElementById('phone-sent-to').textContent = phoneNumber;
+        document.getElementById('phone-send-form').style.display = 'none';
+        document.getElementById('phone-verify-form').style.display = 'block';
+        showSuccess('Code sent! Check your messages.');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Send Verification Code';
+        showError('Network error. Please try again.');
+      }
+    }
+
+    async function verifyPhoneCode() {
+      var code = document.getElementById('phone-code-input').value.trim();
+      if (!code || code.length !== 6) { showError('Please enter the 6-digit code'); return; }
+
+      var btn = document.getElementById('phone-verify-btn');
+      btn.disabled = true; btn.textContent = 'Verifying...';
+
+      try {
+        var res = await fetch(API_BASE + '/auth/verify/phone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({ phone: phoneNumber, code: code })
+        });
+        var data = await res.json();
+
+        btn.disabled = false; btn.textContent = 'Verify Code';
+
+        if (!res.ok) { showError(data.error || 'Invalid code'); return; }
+
+        document.getElementById('prog-phone').classList.add('completed');
+        if (data.trustScore !== undefined) updateTrustScoreDisplay(data.trustScore);
+        showSuccess('Phone verified! +10 trust points earned.');
+        setTimeout(function() { showStep('social'); }, 1000);
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Verify Code';
+        showError('Network error. Please try again.');
+      }
+    }
+
+    // ---- SOCIAL MEDIA ----
+    async function loadConnectedAccounts() {
+      var list = document.getElementById('social-connected-list');
+      try {
+        var res = await fetch(API_BASE + '/auth/connect-social', {
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        // connect-social is POST only, we'll just show what we have locally
+      } catch (e) {}
+      // We'll populate from the connect responses
+    }
+
+    async function connectSocialAccount() {
+      var platform = document.getElementById('social-platform').value;
+      var username = document.getElementById('social-username').value.trim();
+      var age = document.getElementById('social-age').value;
+      var followers = document.getElementById('social-followers').value;
+
+      if (!platform) { showError('Please select a platform'); return; }
+      if (!username) { showError('Please enter your username'); return; }
+
+      var btn = document.getElementById('social-connect-btn');
+      btn.disabled = true; btn.textContent = 'Verifying account...';
+
+      try {
+        var res = await fetch(API_BASE + '/auth/connect-social', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+          body: JSON.stringify({
+            platform: platform,
+            platform_username: username,
+            account_age_months: age ? parseInt(age) : null,
+            follower_count: followers ? parseInt(followers) : null
+          })
+        });
+        var data = await res.json();
+        btn.disabled = false; btn.textContent = 'Link Account';
+
+        if (!res.ok) { showError(data.error || 'Failed to link account'); return; }
+
+        // Show result
+        var list = document.getElementById('social-connected-list');
+        var statusColor = data.verified ? '#2ecc71' : '#f1c40f';
+        var statusText = data.verified ? 'Verified (+20 pts)' : 'Under review';
+        list.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;margin-bottom:8px">' +
+          '<div><strong style="color:#fff;font-size:14px">' + platform.charAt(0).toUpperCase() + platform.slice(1) + '</strong> <span style="color:#8080A0;font-size:12px">@' + username + '</span></div>' +
+          '<span style="color:' + statusColor + ';font-size:12px;font-weight:600">' + statusText + '</span></div>';
+
+        // Update trust score display
+        if (data.trustScore !== undefined) updateTrustScoreDisplay(data.trustScore);
+
+        // Clear form
+        document.getElementById('social-platform').value = '';
+        document.getElementById('social-username').value = '';
+        document.getElementById('social-age').value = '';
+        document.getElementById('social-followers').value = '';
+
+        if (data.verified) {
+          document.getElementById('prog-social').classList.add('completed');
+          showSuccess(platform.charAt(0).toUpperCase() + platform.slice(1) + ' linked! +20 trust points.');
+        } else {
+          showSuccess(platform.charAt(0).toUpperCase() + platform.slice(1) + ' linked but flagged for review. No points yet.');
+        }
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Link Account';
+        showError('Network error. Please try again.');
       }
     }
 
@@ -793,6 +1071,11 @@
         window.location.href = '/login.html';
         return;
       }
+
+      // Check if returning from Didit verification
+      const urlParams = new URLSearchParams(window.location.search);
+      const diditReturn = urlParams.get('didit') === 'complete';
+      const wasDiditPending = localStorage.getItem('safetea_didit_pending');
 
       // Check if returning from identity verification
       const wasVerifying = localStorage.getItem('safetea_verifying');
@@ -814,16 +1097,56 @@
 
         const data = await res.json();
 
-        // If fully verified, go to dashboard
-        if (data.verified) {
-          window.location.href = '/dashboard.html';
+        // Update trust score display
+        if (typeof data.trustScore !== 'undefined') {
+          updateTrustScoreDisplay(data.trustScore);
+        }
+
+        // Mark completed steps in progress bar
+        if (data.steps.age && data.steps.age.completed) document.getElementById('prog-age').classList.add('completed');
+        if (data.steps.identity && data.steps.identity.completed) document.getElementById('prog-identity').classList.add('completed');
+        if (data.steps.gender && data.steps.gender.completed) document.getElementById('prog-gender').classList.add('completed');
+        if (data.steps.didit && data.steps.didit.completed) document.getElementById('prog-didit').classList.add('completed');
+        if (data.steps.phone && data.steps.phone.completed) document.getElementById('prog-phone').classList.add('completed');
+        if (data.steps.social && data.steps.social.completed) document.getElementById('prog-social').classList.add('completed');
+
+        // Pre-populate connected social accounts list
+        if (data.socialAccounts && data.socialAccounts.length > 0) {
+          var list = document.getElementById('social-connected-list');
+          list.innerHTML = '';
+          data.socialAccounts.forEach(function(acct) {
+            var statusColor = acct.verified ? '#2ecc71' : (acct.flagged ? '#e74c3c' : '#f1c40f');
+            var statusText = acct.verified ? 'Verified (+20 pts)' : (acct.flagged ? 'Flagged' : 'Under review');
+            list.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;margin-bottom:8px">' +
+              '<div><strong style="color:#fff;font-size:14px">' + acct.platform.charAt(0).toUpperCase() + acct.platform.slice(1) + '</strong> <span style="color:#8080A0;font-size:12px">@' + acct.platform_username + '</span></div>' +
+              '<span style="color:' + statusColor + ';font-size:12px;font-weight:600">' + statusText + '</span></div>';
+          });
+          // Hide add form if already at max 3
+          if (data.socialAccounts.length >= 3) {
+            document.getElementById('social-add-form').style.display = 'none';
+          }
+        }
+
+        // If returning from Didit
+        if (diditReturn || wasDiditPending) {
+          localStorage.removeItem('safetea_didit_pending');
+          if (data.diditVerified) {
+            showSuccess('Document verification complete! +30 trust points earned.');
+            setTimeout(() => showStep('phone'), 1000);
+          } else {
+            // Didit may still be processing — show message
+            showStep('didit');
+            showSuccess('Verification submitted! It may take a moment to process. You can continue to the dashboard.');
+          }
+          // Clean URL
+          window.history.replaceState({}, '', '/verify.html');
           return;
         }
 
         // Legacy: clean up old verifying flag
         if (wasVerifying) localStorage.removeItem('safetea_verifying');
 
-        // Show the next required step
+        // Show the next incomplete step
         if (data.nextStep) {
           showStep(data.nextStep);
         } else if (!data.steps.age.completed) {
@@ -832,6 +1155,13 @@
           showStep('identity');
         } else if (!data.steps.gender.completed) {
           showStep('gender');
+        } else if (!data.steps.didit.completed) {
+          showStep('didit');
+        } else if (!data.steps.phone.completed) {
+          showStep('phone');
+        } else if (data.steps.social && data.steps.social.count < 3) {
+          // Show social if fewer than 3 verified accounts
+          showStep('social');
         } else {
           showStep('complete');
         }

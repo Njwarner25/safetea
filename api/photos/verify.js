@@ -346,7 +346,7 @@ module.exports = async function handler(req, res) {
   var usage;
   try {
     usage = await getOne(
-      'SELECT check_count FROM photo_verification_usage WHERE user_id = $1 AND check_month = $2',
+      'SELECT check_count, extra_checks FROM photo_verification_usage WHERE user_id = $1 AND check_month = $2',
       [user.id, currentMonth]
     );
   } catch (e) {
@@ -355,11 +355,19 @@ module.exports = async function handler(req, res) {
   }
 
   var currentCount = usage ? parseInt(usage.check_count, 10) : 0;
-  if (user.role !== 'admin' && currentCount >= MONTHLY_LIMIT) {
+  var extraChecks = usage ? parseInt(usage.extra_checks || 0, 10) : 0;
+  var totalLimit = MONTHLY_LIMIT + extraChecks;
+
+  if (user.role !== 'admin' && currentCount >= totalLimit) {
     return res.status(429).json({
-      error: 'You\'ve used all ' + MONTHLY_LIMIT + ' Photo Verification checks this month. Checks reset next month.',
+      error: 'monthly_limit_reached',
       checksUsed: currentCount,
-      checksLimit: MONTHLY_LIMIT
+      checksLimit: totalLimit,
+      extraChecksAvailable: 0,
+      canPurchaseMore: true,
+      pricePerCheck: '$0.99',
+      purchaseUrl: '/api/photos/purchase-check',
+      message: 'You\'ve used all your Photo Verification checks this month. Get more for $0.99 each.'
     });
   }
 
@@ -445,8 +453,8 @@ module.exports = async function handler(req, res) {
       layers: results.layers,
       recommendations: results.recommendations,
       checksUsed: currentCount + 1,
-      checksRemaining: Math.max(0, MONTHLY_LIMIT - currentCount - 1),
-      checksLimit: MONTHLY_LIMIT,
+      checksRemaining: Math.max(0, totalLimit - currentCount - 1),
+      checksLimit: totalLimit,
       photosDeletedAt: new Date().toISOString()
     });
   } catch (err) {

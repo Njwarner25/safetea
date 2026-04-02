@@ -12,6 +12,15 @@ module.exports = async function handler(req, res) {
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
+  // Trust score gate: require score >= 70 to post in city chat
+  if ((user.trust_score || 0) < 70) {
+    return res.status(403).json({
+      error: 'trust_score_too_low',
+      required: 70,
+      message: 'Complete verification steps to unlock city chat. Verify your identity and link social media accounts to get access.'
+    });
+  }
+
   const body = await parseBody(req);
   const { title, body: postBody, category, city } = body;
 

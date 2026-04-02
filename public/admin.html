@@ -172,9 +172,17 @@
         .city-card-stat span { color: #E8A0B5; font-weight: 600; }
         .city-card-actions { margin-top: 14px; display: flex; gap: 8px; }
 
+        /* Mobile hamburger */
+        .mobile-nav-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 200; width: 40px; height: 40px; background: #22223A; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #E8A0B5; font-size: 18px; cursor: pointer; align-items: center; justify-content: center; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+        .sidebar-overlay.open { display: block; }
+
         @media (max-width: 768px) {
-            .sidebar { display: none; }
+            .sidebar { display: none; position: fixed; z-index: 150; }
+            .sidebar.open { display: block; }
+            .mobile-nav-toggle { display: flex; }
             .main { margin-left: 0; }
+            .topbar { padding-left: 60px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .mod-toolbar { flex-direction: column; align-items: stretch; }
             .form-row { grid-template-columns: 1fr; }
@@ -182,8 +190,12 @@
     </style>
 </head>
 <body>
+    <!-- Mobile hamburger button -->
+    <button class="mobile-nav-toggle" id="mobile-nav-toggle" onclick="toggleMobileSidebar()"><i class="fas fa-bars"></i></button>
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="admin-sidebar">
         <div class="sidebar-logo">
             <img src="/logo.png" alt="SafeTea">
             <span>safetea</span>
@@ -231,6 +243,15 @@
                         <div><span style="font-size:12px;color:#8080A0">New Today</span><div style="font-size:22px;font-weight:700;color:#E8A0B5" id="stat-new-today">&mdash;</div></div>
                         <div><span style="font-size:12px;color:#8080A0">This Week</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-week">&mdash;</div></div>
                         <div><span style="font-size:12px;color:#8080A0">This Month</span><div style="font-size:22px;font-weight:700;color:#fff" id="stat-new-month">&mdash;</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-shield-alt"></i> Trust Score Distribution</h3>
+                    <div id="trust-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+                        <div><span style="font-size:12px;color:#8080A0">Avg Score</span><div style="font-size:22px;font-weight:700;color:#E8A0B5" id="stat-trust-avg">&mdash;</div></div>
+                        <div><span style="font-size:12px;color:#e74c3c">Low (≤30)</span><div style="font-size:22px;font-weight:700;color:#e74c3c" id="stat-trust-low">&mdash;</div></div>
+                        <div><span style="font-size:12px;color:#f1c40f">Medium</span><div style="font-size:22px;font-weight:700;color:#f1c40f" id="stat-trust-med">&mdash;</div></div>
+                        <div><span style="font-size:12px;color:#2ecc71">High (≥70)</span><div style="font-size:22px;font-weight:700;color:#2ecc71" id="stat-trust-high">&mdash;</div></div>
                     </div>
                 </div>
             </div>
@@ -289,6 +310,8 @@
                             <option value="suspended">Suspended</option>
                             <option value="verified">Verified</option>
                             <option value="unverified">Unverified</option>
+                            <option value="low-trust">Low Trust (≤30)</option>
+                            <option value="high-trust">High Trust (≥70)</option>
                         </select>
                         <button class="btn btn-primary" onclick="loadUsers()"><i class="fas fa-search"></i> Search</button>
                     </div>
@@ -490,6 +513,19 @@
                 .catch(() => { window.location.href = '/'; });
         }
 
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            var sidebar = document.getElementById('admin-sidebar');
+            var overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+            }
+        }
+
         // Sidebar navigation
         document.querySelectorAll('.sidebar-nav a[data-section]').forEach(link => {
             link.addEventListener('click', () => {
@@ -499,6 +535,11 @@
                 document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
                 document.getElementById('section-' + section).classList.add('active');
                 document.getElementById('page-title').textContent = link.textContent.trim();
+                // Close mobile sidebar
+                var sidebar = document.getElementById('admin-sidebar');
+                var overlay = document.getElementById('sidebar-overlay');
+                if (sidebar) sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('open');
 
                 if (section === 'overview') loadOverview();
                 if (section === 'moderation') loadModerationPosts();
@@ -570,6 +611,13 @@
                 document.getElementById('stat-new-today').textContent = data.growth.newToday;
                 document.getElementById('stat-new-week').textContent = data.growth.newThisWeek;
                 document.getElementById('stat-new-month').textContent = data.growth.newThisMonth;
+                // Trust score distribution
+                if (data.trustScore) {
+                    document.getElementById('stat-trust-avg').textContent = data.trustScore.avg || 0;
+                    document.getElementById('stat-trust-low').textContent = data.trustScore.low || 0;
+                    document.getElementById('stat-trust-med').textContent = data.trustScore.medium || 0;
+                    document.getElementById('stat-trust-high').textContent = data.trustScore.high || 0;
+                }
             } catch (err) {
                 console.error('Failed to load overview:', err);
             }
@@ -874,6 +922,10 @@
                         : '<span style="font-size:10px;color:#8080A0">FREE</span>';
                     var verifiedBadge = u.is_verified ? '<span style="color:#2ecc71;font-size:11px" title="Verified"><i class="fas fa-check-circle"></i></span>' : '<span style="color:#8080A0;font-size:11px" title="Unverified"><i class="fas fa-times-circle"></i></span>';
 
+                    var ts = u.trust_score || 0;
+                    var trustColor = ts >= 70 ? 'rgba(46,204,113,0.15);color:#2ecc71' : ts >= 40 ? 'rgba(241,196,15,0.15);color:#f1c40f' : 'rgba(231,76,60,0.15);color:#e74c3c';
+                    var trustBadge = '<span style="background:' + trustColor + ';font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px" title="Trust Score: ' + ts + '"><i class="fas fa-shield-alt"></i> ' + ts + '</span>';
+
                     var statusBadge = '';
                     var actionBtns = '';
                     if (u.banned && u.ban_type === 'permanent') {
@@ -892,7 +944,9 @@
                         statusBadge = '<span style="color:#2ecc71;font-size:11px"><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> Active</span>';
                         actionBtns = '<button class="btn btn-sm btn-ghost" onclick="warnUser(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')" style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
                             '<button class="btn btn-sm btn-danger" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'permanent\')"><i class="fas fa-ban"></i> Ban</button>' +
-                            '<button class="btn btn-sm btn-ghost" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'temporary\')"><i class="fas fa-pause-circle"></i> Suspend</button>';
+                            '<button class="btn btn-sm btn-ghost" onclick="openBanModal(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\', \'temporary\')"><i class="fas fa-pause-circle"></i> Suspend</button>' +
+                            (ts <= 30 ? '<button class="btn btn-sm btn-primary" onclick="requestVerify(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-shield-alt"></i> Request Verify</button>' : '') +
+                            '<button class="btn btn-sm btn-ghost" onclick="viewTrustEvents(' + u.id + ', \'' + escapeHtml(name).replace(/'/g, "\\'") + '\')"><i class="fas fa-history"></i> Trust Log</button>';
                     }
 
                     var roleBadge = u.role === 'admin' ? '<span class="mod-list-role admin">admin</span>' : u.role === 'moderator' ? '<span class="mod-list-role" style="background:rgba(52,152,219,0.15);color:#3498db">mod</span>' : '';
@@ -910,7 +964,7 @@
                             '<div class="mod-list-avatar" style="background:' + color + '">' + escapeHtml(initial) + '</div>' +
                             '<div>' +
                                 '<div class="mod-list-name">' + escapeHtml(name) + ' ' + verifiedBadge + ' ' + roleBadge + '</div>' +
-                                '<div class="mod-list-detail">' + escapeHtml(u.email || '') + (u.city ? ' &middot; ' + escapeHtml(u.city) : '') + ' &middot; ' + tierBadge + ' &middot; ID: ' + u.id + '</div>' +
+                                '<div class="mod-list-detail">' + escapeHtml(u.email || '') + (u.city ? ' &middot; ' + escapeHtml(u.city) : '') + ' &middot; ' + tierBadge + ' &middot; ' + trustBadge + ' &middot; ID: ' + u.id + '</div>' +
                             '</div>' +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
@@ -1175,6 +1229,69 @@
                 loadUsers();
             } catch (err) {
                 showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== REQUEST VERIFY =====
+        async function requestVerify(userId, name) {
+            var reason = prompt('Why does "' + name + '" need to re-verify? (min 5 characters):');
+            if (!reason || reason.length < 5) {
+                if (reason !== null) showToast('Reason must be at least 5 characters', true);
+                return;
+            }
+            try {
+                var res = await fetch(API_BASE + '/admin/request-verify', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ user_id: userId, reason: reason })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Verification request sent to ' + name);
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== TRUST EVENT LOG =====
+        async function viewTrustEvents(userId, name) {
+            try {
+                var res = await fetch(API_BASE + '/admin/trust-events?user_id=' + userId, {
+                    headers: authHeaders()
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                var events = data.events || [];
+                var html = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">' +
+                    '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto">' +
+                    '<h3 style="color:#fff;margin-bottom:20px"><i class="fas fa-history" style="color:#E8A0B5"></i> Trust Events — ' + escapeHtml(name) + '</h3>';
+
+                if (events.length === 0) {
+                    html += '<p style="color:#8080A0;text-align:center;padding:20px">No trust events recorded yet.</p>';
+                } else {
+                    html += '<div style="display:flex;flex-direction:column;gap:8px">';
+                    events.forEach(function(e) {
+                        var deltaColor = e.delta > 0 ? '#2ecc71' : e.delta < 0 ? '#e74c3c' : '#8080A0';
+                        var deltaText = e.delta > 0 ? '+' + e.delta : e.delta === 0 ? '0' : String(e.delta);
+                        html += '<div style="background:#141428;border-radius:8px;padding:12px;font-size:13px">' +
+                            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+                                '<span style="color:#fff;font-weight:600">' + escapeHtml(e.event_type) + '</span>' +
+                                '<span style="color:' + deltaColor + ';font-weight:700">' + deltaText + ' (' + e.score_before + ' → ' + e.score_after + ')</span>' +
+                            '</div>' +
+                            '<div style="color:#8080A0;font-size:12px">' + escapeHtml(e.reason || '') + '</div>' +
+                            '<div style="color:#555;font-size:11px;margin-top:4px">' + new Date(e.created_at).toLocaleString() + ' &middot; ' + escapeHtml(e.triggered_by || 'system') + '</div>' +
+                        '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '<button class="btn btn-ghost" style="margin-top:16px;width:100%" onclick="this.closest(\'div[style*=fixed]\').remove()">Close</button>' +
+                    '</div></div>';
+
+                document.body.insertAdjacentHTML('beforeend', html);
+            } catch (err) {
+                showToast('Failed to load trust events: ' + err.message, true);
             }
         }
 

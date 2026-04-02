@@ -15,8 +15,7 @@
         watchId: null,
         lastLat: null,
         lastLng: null,
-        escalationTimer: null,
-        escalationTimer2: null,
+        updateInterval: null,
         overlay: null,
         stealthMode: false
     };
@@ -1026,6 +1025,7 @@
                 return;
             }
             state.sessionKey = data.sessionKey;
+            state.contactsNotified = data.contactsNotified || 0;
         } catch (err) {
             if (typeof showToast === 'function') showToast('Network error starting recording. Please try again.');
             stream.getTracks().forEach(function(t) { t.stop(); });
@@ -1071,32 +1071,38 @@
             );
         }
 
-        // Escalation timer — 15 minutes (first), 30 minutes (second)
-        state.escalationTimer = setTimeout(function() {
+        // Send updates to contacts every 1 minute (first update at 1 min, then repeating)
+        state.updateInterval = setInterval(function() {
             if (state.recording && state.sessionKey) {
-                fetch('/api/recording/escalate', {
+                fetch('/api/recording/sos-update', {
                     method: 'POST',
                     headers: authHeaders(),
-                    body: JSON.stringify({ sessionKey: state.sessionKey, level: 1 })
-                }).catch(function() {});
-                var statusEl = document.getElementById('rp-chunk-status');
-                if (statusEl) statusEl.textContent = 'Escalation alert sent to contacts (15 min)';
+                    body: JSON.stringify({
+                        sessionKey: state.sessionKey,
+                        latitude: state.lastLat,
+                        longitude: state.lastLng
+                    })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success && !data.skipped) {
+                        var statusEl = document.getElementById('rp-chunk-status');
+                        if (statusEl) statusEl.textContent = 'Update sent to contacts (' + (data.minutesActive || '?') + ' min)';
+                    }
+                })
+                .catch(function() {});
             }
-        }, 900000); // 15 minutes
+        }, 60000); // every 1 minute
 
-        state.escalationTimer2 = setTimeout(function() {
-            if (state.recording && state.sessionKey) {
-                fetch('/api/recording/escalate', {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ sessionKey: state.sessionKey, level: 2 })
-                }).catch(function() {});
-                var statusEl = document.getElementById('rp-chunk-status');
-                if (statusEl) statusEl.textContent = 'Second escalation sent (30 min)';
-            }
-        }, 1800000); // 30 minutes
-
-        if (typeof showToast === 'function') showToast('Recording started. Your contacts have been notified.');
+        if (state.contactsNotified > 0) {
+            if (typeof showToast === 'function') showToast('Recording started. ' + state.contactsNotified + ' contact(s) notified.');
+        } else {
+            if (typeof showToast === 'function') showToast('Recording started — but no contacts were notified. Add emergency contacts so someone knows.');
+            // Brief delay then show contacts manager
+            setTimeout(function() {
+                if (typeof window.showEmergencyContacts === 'function') window.showEmergencyContacts();
+            }, 2000);
+        }
     }
 
     // ============ UPLOAD CHUNK ============
@@ -1157,8 +1163,7 @@
             state.watchId = null;
         }
 
-        if (state.escalationTimer) { clearTimeout(state.escalationTimer); state.escalationTimer = null; }
-        if (state.escalationTimer2) { clearTimeout(state.escalationTimer2); state.escalationTimer2 = null; }
+        if (state.updateInterval) { clearInterval(state.updateInterval); state.updateInterval = null; }
 
         if (state.sessionKey) {
             fetch('/api/recording/resolve', {

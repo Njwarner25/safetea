@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
 
@@ -54,9 +55,23 @@ module.exports = async function handler(req, res) {
       );
 
       let contactsNotified = 0;
+      let recordingSessionKey = null;
 
-      // If alert_contacts, send SMS to trusted contacts
+      // If alert_contacts, auto-start recording + send SMS to trusted contacts
       if (type === 'alert_contacts') {
+        // Auto-start a recording session linked to this SOS
+        try {
+          recordingSessionKey = crypto.randomBytes(24).toString('hex');
+          await run(
+            `INSERT INTO recording_sessions (session_key, user_id, latitude, longitude, sos_event_id)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [recordingSessionKey, user.id, latitude || null, longitude || null, sosEvent.id]
+          );
+        } catch (recErr) {
+          console.error('[SOS] Failed to auto-start recording:', recErr.message);
+          recordingSessionKey = null;
+        }
+
         const contacts = await getMany(
           `SELECT * FROM date_trusted_contacts WHERE checkout_id = $1`,
           [activeCheckout.id]
@@ -73,6 +88,9 @@ module.exports = async function handler(req, res) {
             ? `https://maps.google.com/?q=${latitude},${longitude}`
             : null;
           const trackingUrl = `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`;
+          const recordingUrl = recordingSessionKey
+            ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
+            : null;
 
           const message =
             `🚨 SOS ALERT — SafeTea\n` +
@@ -82,8 +100,15 @@ module.exports = async function handler(req, res) {
             `Venue: ${activeCheckout.venue_name}\n` +
             (activeCheckout.venue_address ? `Address: ${activeCheckout.venue_address}\n` : '') +
             (gpsLink ? `\nGPS Location: ${gpsLink}\n` : '') +
+            (recordingUrl ? `\n🔴 LIVE RECORDING: ${recordingUrl}\n` : '') +
+            (recordingUrl ? `Audio is being recorded and uploaded in real-time.\n` : '') +
+            `\n📋 OUTCRY WITNESS NOTICE\n` +
+            `You may be an "outcry witness" — the first person told about an incident. Your testimony may carry special legal weight. This recording may serve as evidence.\n\n` +
+            `What to do:\n` +
+            `• Try to contact them immediately\n` +
+            `• If no response, call 911 with the GPS location above\n` +
+            `• Save this message\n` +
             `\nLive tracking: ${trackingUrl}\n` +
-            `\nPlease check on them immediately.\n` +
             `━━━━━━━━━━━━━━━━━\n` +
             `Sent via SafeTea SOS`;
 
@@ -109,6 +134,7 @@ module.exports = async function handler(req, res) {
         contactsNotified,
         checkoutId: activeCheckout.id,
         shareCode: activeCheckout.share_code,
+        recordingSessionKey: recordingSessionKey || null,
       });
     } catch (err) {
       console.error('SOS error:', err);

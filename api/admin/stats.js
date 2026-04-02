@@ -65,6 +65,21 @@ module.exports = async function handler(req, res) {
       nameWatchUsers = await getOne('SELECT COUNT(DISTINCT user_id) as count FROM watched_names');
     } catch (e) {}
 
+    // Trust score distribution
+    let trustDistribution = { low: 0, medium: 0, high: 0, avg: 0 };
+    try {
+      const lowTrust = await getOne('SELECT COUNT(*) as count FROM users WHERE trust_score <= 30 AND banned IS NOT TRUE');
+      const medTrust = await getOne('SELECT COUNT(*) as count FROM users WHERE trust_score > 30 AND trust_score < 70 AND banned IS NOT TRUE');
+      const highTrust = await getOne('SELECT COUNT(*) as count FROM users WHERE trust_score >= 70 AND banned IS NOT TRUE');
+      const avgTrust = await getOne('SELECT ROUND(AVG(trust_score)) as avg FROM users WHERE banned IS NOT TRUE');
+      trustDistribution = {
+        low: parseInt(lowTrust.count) || 0,
+        medium: parseInt(medTrust.count) || 0,
+        high: parseInt(highTrust.count) || 0,
+        avg: parseInt(avgTrust.avg) || 0
+      };
+    } catch (e) {}
+
     return res.json({
       overview: {
         totalUsers: parseInt(totalUsers.count) || 0,
@@ -84,7 +99,8 @@ module.exports = async function handler(req, res) {
       breakdown: {
         byTier: tierBreakdown,
         byCity: usersByCity
-      }
+      },
+      trustScore: trustDistribution
     });
   } catch (err) {
     console.error('Admin stats error:', err);

@@ -256,10 +256,36 @@
                     updateVerifyStep('age', data.steps.age);
                     updateVerifyStep('identity', data.steps.identity);
                     updateVerifyStep('gender', data.steps.gender);
+                    updateVerifyStep('didit', data.steps.didit);
+                    updateVerifyStep('phone', data.steps.phone);
+                }
+
+                // Social media status
+                var socialStatus = document.getElementById('verify-social-status');
+                var socialStep = document.getElementById('verify-step-social');
+                var socialIcon = socialStep ? socialStep.querySelector('.verify-icon') : null;
+                if (socialStatus) {
+                    // We don't have social count from status endpoint, show generic
+                    socialStatus.textContent = 'Link accounts on verify page';
+                    socialStatus.style.color = '#8080A0';
+                }
+
+                // Trust score display
+                var trustEl = document.getElementById('dash-trust-score');
+                var trustVal = document.getElementById('dash-trust-value');
+                var trustBar = document.getElementById('dash-trust-bar');
+                if (trustEl && typeof data.trustScore !== 'undefined') {
+                    trustEl.style.display = 'block';
+                    var score = data.trustScore || 0;
+                    if (trustVal) {
+                        trustVal.textContent = score;
+                        trustVal.style.color = score >= 70 ? '#2ecc71' : score >= 40 ? '#f1c40f' : '#e74c3c';
+                    }
+                    if (trustBar) trustBar.style.width = Math.min(100, score) + '%';
                 }
 
                 var banner = document.getElementById('verification-banner');
-                if (banner && data.verified) {
+                if (banner && data.verified && data.diditVerified) {
                     banner.style.display = 'block';
                     banner.style.background = 'rgba(46,204,113,0.15)';
                     banner.style.color = '#2ecc71';
@@ -276,6 +302,9 @@
                 setVerifyStatus('age', 'Unable to check');
                 setVerifyStatus('identity', 'Unable to check');
                 setVerifyStatus('gender', 'Unable to check');
+                setVerifyStatus('didit', 'Unable to check');
+                setVerifyStatus('phone', 'Unable to check');
+                setVerifyStatus('social', 'Unable to check');
             });
     }
 

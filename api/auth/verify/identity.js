@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../../_utils/auth');
 const { run, getOne } = require('../../_utils/db');
+const { recalculateTrustScore } = require('../../_utils/trust-score');
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
@@ -167,6 +168,11 @@ RESPOND WITH JSON ONLY:
       if (fullyVerified) {
         await run('UPDATE users SET is_verified = true, verified_at = NOW() WHERE id = $1', [user.id]);
       }
+
+      // Recalculate trust score after identity verification
+      recalculateTrustScore(user.id, 'identity_verified', 'verification').catch(function(e) {
+        console.error('[TrustScore] Recalc failed after identity verify:', e.message);
+      });
 
       return res.status(200).json({
         verified: true,

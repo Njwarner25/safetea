@@ -2436,17 +2436,6 @@
                     </div>
                 </div>
 
-                <!-- ====== RED FLAG SCANNER BANNER ====== -->
-                <a href="/redflag" style="display:block;text-decoration:none;color:inherit;margin-bottom:20px;background:linear-gradient(135deg,rgba(231,76,60,0.06),rgba(232,160,181,0.06));border:2px solid rgba(231,76,60,0.2);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='rgba(231,76,60,0.4)';this.style.boxShadow='0 8px 24px rgba(231,76,60,0.12)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.2)';this.style.boxShadow='none'">
-                    <div style="display:flex;align-items:center;gap:16px">
-                        <div style="min-width:52px;height:52px;background:linear-gradient(135deg,rgba(231,76,60,0.15),rgba(232,160,181,0.1));border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-camera" style="font-size:22px;color:#e74c3c"></i></div>
-                        <div style="flex:1">
-                            <h4 style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px">Red Flag Scanner <i class="fas fa-arrow-right" style="font-size:12px;margin-left:6px;color:#E8A0B5"></i></h4>
-                            <p style="color:#8080A0;font-size:13px;line-height:1.5;margin:0">Screenshot a conversation and our AI scans for manipulation, gaslighting, and red flags.</p>
-                        </div>
-                    </div>
-                </a>
-
                 <!-- ====== COMMUNITY (Tea Talk + Good Guys + Sorority Rooms) ====== -->
                 <div style="margin-bottom:20px">
                     <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-users" style="color:#9b59b6;font-size:13px"></i> Community</h3>
@@ -3157,8 +3146,25 @@
 
             <!-- Identity Verification Section -->
             <div class="profile-form" id="verification-card" style="margin-bottom:24px">
-                <h3><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> Identity Verification</h3>
-                <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Complete all 3 steps to earn your verified badge and unlock full community access.</p>
+                <h3><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> Trust Score & Verification</h3>
+                <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Complete verification steps to build your trust score and unlock city chat (70+ required).</p>
+
+                <!-- Trust Score Bar -->
+                <div id="dash-trust-score" style="display:none;margin-bottom:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                        <span style="color:#8080A0;font-size:12px;font-weight:600">TRUST SCORE</span>
+                        <span id="dash-trust-value" style="font-size:18px;font-weight:700;color:#E8A0B5">0</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.06);border-radius:6px;height:8px;overflow:hidden">
+                        <div id="dash-trust-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#e74c3c,#f39c12,#2ecc71);width:0%;transition:width 0.6s ease"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-top:4px">
+                        <span style="color:#555;font-size:10px">0</span>
+                        <span style="color:#555;font-size:10px">70 = City Chat</span>
+                        <span style="color:#555;font-size:10px">100</span>
+                    </div>
+                </div>
+
                 <div id="verification-steps">
                     <div class="verify-step" id="verify-step-age">
                         <div class="verify-icon pending"><i class="fas fa-birthday-cake"></i></div>
@@ -3170,7 +3176,7 @@
                     <div class="verify-step" id="verify-step-identity">
                         <div class="verify-icon pending"><i class="fas fa-id-card"></i></div>
                         <div class="verify-info">
-                            <div class="verify-label">Identity Verification</div>
+                            <div class="verify-label">Selfie + Liveness <span style="color:#E8A0B5;font-size:11px;font-weight:600">+60 pts</span></div>
                             <div class="verify-status" id="verify-identity-status">Checking...</div>
                         </div>
                         <button class="btn-verify-action" id="btn-verify-identity" style="display:none" onclick="startIdentityVerification()">Verify Now</button>
@@ -3182,7 +3188,31 @@
                             <div class="verify-status" id="verify-gender-status">Checking...</div>
                         </div>
                     </div>
+                    <div class="verify-step" id="verify-step-didit">
+                        <div class="verify-icon pending"><i class="fas fa-passport"></i></div>
+                        <div class="verify-info">
+                            <div class="verify-label">Document ID <span style="color:#E8A0B5;font-size:11px;font-weight:600">+30 pts</span></div>
+                            <div class="verify-status" id="verify-didit-status">Checking...</div>
+                        </div>
+                    </div>
+                    <div class="verify-step" id="verify-step-phone">
+                        <div class="verify-icon pending"><i class="fas fa-mobile-alt"></i></div>
+                        <div class="verify-info">
+                            <div class="verify-label">Phone Verified <span style="color:#E8A0B5;font-size:11px;font-weight:600">+10 pts</span></div>
+                            <div class="verify-status" id="verify-phone-status">Checking...</div>
+                        </div>
+                    </div>
+                    <div class="verify-step" id="verify-step-social">
+                        <div class="verify-icon pending"><i class="fas fa-share-alt"></i></div>
+                        <div class="verify-info">
+                            <div class="verify-label">Social Media <span style="color:#E8A0B5;font-size:11px;font-weight:600">+20 pts each</span></div>
+                            <div class="verify-status" id="verify-social-status">Checking...</div>
+                        </div>
+                    </div>
                 </div>
+
+                <a href="/verify" style="display:block;margin-top:16px;padding:14px;border-radius:10px;text-align:center;font-size:14px;font-weight:600;background:linear-gradient(135deg,rgba(232,160,181,0.15),rgba(232,160,181,0.05));border:1px solid rgba(232,160,181,0.25);color:#E8A0B5;text-decoration:none;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(232,160,181,0.5)'" onmouseout="this.style.borderColor='rgba(232,160,181,0.25)'"><i class="fas fa-arrow-right"></i> Complete Verification Steps</a>
+
                 <div id="verification-banner" style="display:none;margin-top:16px;padding:14px;border-radius:10px;text-align:center;font-size:14px;font-weight:600"></div>
             </div>
 

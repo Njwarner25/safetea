@@ -32,10 +32,25 @@ module.exports = async function handler(req, res) {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
-                const plan = session.metadata.plan;
-                const userId = session.metadata.user_id;
+                const plan = session.metadata && session.metadata.plan;
+                const userId = session.metadata && session.metadata.user_id;
+                const purchaseType = session.metadata && session.metadata.type;
                 const subscriptionId = session.subscription;
                 const customerId = session.customer;
+
+                // Handle photo check extra purchase
+                if (purchaseType === 'photo_check_extra' && userId) {
+                    const currentMonth = new Date().toISOString().slice(0, 7);
+                    await run(
+                        `INSERT INTO photo_verification_usage (user_id, check_month, check_count, extra_checks, last_check_at)
+                         VALUES ($1, $2, 0, 1, NOW())
+                         ON CONFLICT (user_id, check_month)
+                         DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + 1`,
+                        [parseInt(userId), currentMonth]
+                    );
+                    console.log('User ' + userId + ' purchased extra photo check');
+                    break;
+                }
 
                 if (userId && plan) {
                     await run(

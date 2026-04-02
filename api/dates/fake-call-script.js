@@ -1,5 +1,10 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 
+const SERVER_FALLBACK_SCRIPTS = [
+  "Hey, I really need you to come home right now. Something came up and I can't explain over the phone. It's not an emergency but I really need your help. Can you leave in the next few minutes? I'll explain everything when you get here.",
+  "Hi, sorry to bother you but I just got locked out and I really need you to come let me in. I've been waiting outside for a while and my phone is almost dead. Can you head this way as soon as you can? Thank you so much."
+];
+
 module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -24,7 +29,9 @@ module.exports = async function handler(req, res) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'AI service not configured' });
+    // No API key — return fallback instead of 500
+    const fallback = SERVER_FALLBACK_SCRIPTS[Math.floor(Math.random() * SERVER_FALLBACK_SCRIPTS.length)];
+    return res.status(200).json({ success: true, script: fallback, fallback: true });
   }
 
   try {
@@ -50,6 +57,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ success: true, script });
   } catch (err) {
     console.error('Script generation error:', err);
-    return res.status(500).json({ error: 'Failed to generate script', details: err.message });
+    // Return fallback instead of 500
+    const fallback = SERVER_FALLBACK_SCRIPTS[Math.floor(Math.random() * SERVER_FALLBACK_SCRIPTS.length)];
+    return res.status(200).json({ success: true, script: fallback, fallback: true });
   }
 };

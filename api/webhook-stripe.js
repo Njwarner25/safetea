@@ -50,6 +50,21 @@ module.exports = async function handler(req, res) {
         const session = event.data.object;
         const userId = session.metadata && (session.metadata.user_id || session.metadata.safetea_user_id);
         const plan = session.metadata && session.metadata.plan;
+        const purchaseType = session.metadata && session.metadata.type;
+
+        // Handle photo check extra purchase
+        if (purchaseType === 'photo_check_extra' && userId) {
+          const currentMonth = new Date().toISOString().slice(0, 7);
+          await run(
+            `INSERT INTO photo_verification_usage (user_id, check_month, check_count, extra_checks, last_check_at)
+             VALUES ($1, $2, 0, 1, NOW())
+             ON CONFLICT (user_id, check_month)
+             DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + 1`,
+            [userId, currentMonth]
+          );
+          console.log(`User ${userId} purchased extra photo check for ${currentMonth}`);
+          break;
+        }
 
         if (userId) {
           // Determine tier from plan

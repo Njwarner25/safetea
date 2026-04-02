@@ -139,6 +139,7 @@
         { "source": "/api/migrate-photo-verify", "destination": "/api/migrate-photo-verify" },
         { "source": "/api/migrate-apple-iap", "destination": "/api/migrate-apple-iap" },
         { "source": "/api/migrate-post-interactions", "destination": "/api/migrate-post-interactions" },
+        { "source": "/api/cleanup-storage", "destination": "/api/cleanup-storage" },
         { "source": "/api/cron/fetch-crime-alerts", "destination": "/api/cron/fetch-crime-alerts" },
         { "source": "/api/cron/cleanup-photos", "destination": "/api/cron/cleanup-photos" },
         { "source": "/api/cron/ai-moderate", "destination": "/api/cron/ai-moderate" },

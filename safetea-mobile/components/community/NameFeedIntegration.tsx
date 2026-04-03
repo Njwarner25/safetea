@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
+import PlusBadge from '../PlusBadge';
 import { api } from '../../services/api';
 import type {
   CommunityMention,
@@ -202,7 +203,10 @@ function MentionCard({ post }: { post: CommunityMention }) {
             <Text style={styles.avatarText}>{post.authorInitial}</Text>
           </View>
           <View>
-            <Text style={styles.authorName}>{post.authorName}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.authorName}>{post.authorName}</Text>
+              <PlusBadge tier={(post as any).authorTier} />
+            </View>
             <Text style={styles.authorMeta}>
               {post.createdAt}
               {post.neighborhood ? ` \u00B7 ${post.neighborhood}` : ''}

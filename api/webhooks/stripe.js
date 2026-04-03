@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 const plan = session.metadata && session.metadata.plan;
-                const userId = session.metadata && session.metadata.user_id;
+                const userId = session.metadata && (session.metadata.user_id || session.metadata.safetea_user_id);
                 const purchaseType = session.metadata && session.metadata.type;
                 const subscriptionId = session.subscription;
                 const customerId = session.customer;
@@ -41,21 +41,24 @@ module.exports = async function handler(req, res) {
                 // Handle photo check extra purchase
                 if (purchaseType === 'photo_check_extra' && userId) {
                     const currentMonth = new Date().toISOString().slice(0, 7);
+                    const checksToAdd = parseInt(session.metadata.checks || '1', 10);
                     await run(
                         `INSERT INTO photo_verification_usage (user_id, check_month, check_count, extra_checks, last_check_at)
-                         VALUES ($1, $2, 0, 1, NOW())
+                         VALUES ($1, $2, 0, $3, NOW())
                          ON CONFLICT (user_id, check_month)
-                         DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + 1`,
-                        [parseInt(userId), currentMonth]
+                         DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + $3`,
+                        [parseInt(userId), currentMonth, checksToAdd]
                     );
-                    console.log('User ' + userId + ' purchased extra photo check');
+                    console.log('User ' + userId + ' purchased ' + checksToAdd + ' extra photo check(s) (' + (session.metadata.package || 'single') + ')');
                     break;
                 }
 
                 if (userId && plan) {
+                    // Normalize plan to tier: 'plus_monthly'/'plus_yearly' -> 'plus'
+                    const tier = plan.startsWith('plus') ? 'plus' : plan;
                     await run(
                         'UPDATE users SET subscription_tier = $1, stripe_subscription_id = $2, stripe_customer_id = $3 WHERE id = $4',
-                        [plan, subscriptionId, customerId, parseInt(userId)]
+                        [tier, subscriptionId, customerId, parseInt(userId)]
                     );
                 }
                 break;

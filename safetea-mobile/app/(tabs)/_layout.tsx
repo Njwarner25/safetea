@@ -1,31 +1,9 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
-import { useEffect, useState } from 'react';
+import { Image } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { useNameWatchStore } from '../../store/nameWatchStore';
-import { useAuthStore } from '../../store/authStore';
-import { getCityByNumericId } from '../../constants/cities';
-import { api } from '../../services/api';
 
 export default function TabLayout() {
-  const unreadCount = useNameWatchStore((s) => s.getUnreadCount());
-  const user = useAuthStore((s) => s.user);
-  const [crimeCount, setCrimeCount] = useState(0);
-
-  useEffect(() => {
-    if (!user?.cityId) return;
-    const city = getCityByNumericId(user.cityId);
-    if (!city?.lat || !city?.lon) return;
-    api.getAreaAlerts(city.lat, city.lon, 2, 30).then((res) => {
-      if (!res.error) {
-        const alerts = Array.isArray(res.data) ? res.data : (res.data as any)?.alerts || [];
-        setCrimeCount(alerts.length);
-      }
-    }).catch(() => {});
-  }, [user?.cityId]);
-
-  const badgeCount = unreadCount + crimeCount;
-
   return (
     <Tabs
       screenOptions={{
@@ -33,7 +11,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
           backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          borderTopColor: 'rgba(255,255,255,0.06)',
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
@@ -48,44 +26,50 @@ export default function TabLayout() {
         },
         headerTintColor: Colors.textPrimary,
         headerTitleStyle: { fontWeight: '700' },
+        headerRight: () => (
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: 32, height: 32, marginRight: 16 }}
+            resizeMode="contain"
+          />
+        ),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Feed',
-          headerTitle: 'SafeTea',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🍵</Text>,
+          title: 'Community',
+          headerTitle: 'SafeTea Community',
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="comments" size={size || 22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🔍</Text>,
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="search" size={size || 22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="create"
         options={{
           title: 'Post',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>✏️</Text>,
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="plus-circle" size={size || 22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Alerts',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>🔔</Text>,
-          tabBarBadge: badgeCount > 0 ? badgeCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: Colors.pink, fontSize: 10 },
+          title: 'Tools',
+          headerTitle: 'SafeTea Tools',
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="toolbox" size={size || 22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 22, color }}>👤</Text>,
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="user" size={size || 22} color={color} solid />,
         }}
       />
     </Tabs>

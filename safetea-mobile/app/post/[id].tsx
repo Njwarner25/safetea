@@ -5,6 +5,7 @@ import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors'
 import { usePostStore, PostCategory } from '../../store/postStore';
 import { getAvatarById } from '../../constants/avatars';
 import ReportModal from '../../components/ReportModal';
+import PlusBadge from '../../components/PlusBadge';
 
 const categoryColors: Record<PostCategory, string> = {
   warning: Colors.warning,
@@ -38,7 +39,10 @@ export default function PostDetailScreen() {
             <Text style={styles.avatarEmoji}>{avatar?.emoji || '👤'}</Text>
           </View>
           <View style={styles.headerMeta}>
-            <Text style={styles.pseudonym}>{post.authorPseudonym}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.pseudonym}>{post.authorPseudonym}</Text>
+              <PlusBadge tier={post.authorTier} />
+            </View>
             <Text style={styles.timestamp}>{new Date(post.createdAt).toLocaleDateString()}</Text>
           </View>
           <View style={[styles.categoryBadge, { backgroundColor: categoryColors[post.category] + '20' }]}>

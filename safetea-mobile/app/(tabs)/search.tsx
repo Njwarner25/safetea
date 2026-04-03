@@ -15,9 +15,6 @@ type ToolItem = {
 const TOOLS: ToolItem[] = [
   { icon: 'shield-alt', title: 'Background Check', desc: 'Search public records (FCRA compliant)', tier: 'PLUS' },
   { icon: 'map-marker-alt', title: 'Sex Offender Registry', desc: 'Check registered offenders in your area', tier: 'FREE' },
-  { icon: 'eye', title: 'Name Watch', desc: 'Get alerts when someone you know is posted about', tier: 'PLUS', route: '/name-watch' },
-  { icon: 'brain', title: 'AI Profile Screening', desc: 'Scan dating profiles for red flags', tier: 'PLUS', route: '/screening' },
-  { icon: 'walking', title: 'SafeWalk', desc: 'Share your date with trusted contacts', tier: 'FREE', route: '/safewalk' },
   { icon: 'map-marked-alt', title: 'Safety Map', desc: 'Crowd-sourced venue safety ratings', tier: 'FREE', route: '/safety-map' },
   { icon: 'database', title: 'Scam Database', desc: 'Search known dating scam patterns', tier: 'FREE', route: '/scam-database' },
 ];

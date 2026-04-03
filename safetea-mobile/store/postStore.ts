@@ -9,6 +9,7 @@ export interface Post {
   authorId: string;
   authorPseudonym: string;
   authorAvatarId: string;
+  authorTier?: 'free' | 'plus' | 'pro';
   cityId: string;
   category: PostCategory;
   title: string;

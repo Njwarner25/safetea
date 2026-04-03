@@ -2180,6 +2180,9 @@
 
     // ==================== WATERMARK UTILITY ====================
     function addWatermark(dataUrl, callback) {
+        var u = getUser();
+        var userId = u ? u.id : '';
+        var text = userId ? 'SafeTea #' + userId : 'SafeTea';
         var img = new Image();
         img.onload = function() {
             var canvas = document.createElement('canvas');
@@ -2189,7 +2192,6 @@
             ctx.drawImage(img, 0, 0);
 
             // Watermark text
-            var text = 'SafeTea';
             var fontSize = Math.max(16, Math.round(img.width * 0.04));
             ctx.font = '700 ' + fontSize + 'px Inter, sans-serif';
             ctx.textAlign = 'right';

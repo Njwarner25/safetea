@@ -81,9 +81,9 @@ module.exports = async function handler(req, res) {
 async function checkNameWatchMatches(postId, postBody, postCity) {
   try {
     const watchedNames = await getMany(
-      `SELECT wn.id, wn.name, wn.user_id, u.email, u.display_name, u.city
+      `SELECT wn.id, wn.display_name AS name, wn.user_id, u.email, u.display_name, u.city
        FROM watched_names wn
-       JOIN users u ON u.id = wn.user_id
+       JOIN users u ON u.id::text = wn.user_id::text
        WHERE u.subscription_tier != 'free'`
     );
 
@@ -93,7 +93,7 @@ async function checkNameWatchMatches(postId, postBody, postCity) {
     let matchCount = 0;
 
     for (const wn of watchedNames) {
-      const nameLower = wn.name.toLowerCase();
+      const nameLower = (wn.name || '').toLowerCase();
       const nameParts = nameLower.split(/\s+/);
 
       const fullMatch = bodyLower.includes(nameLower);

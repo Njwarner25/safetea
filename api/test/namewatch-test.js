@@ -10,10 +10,10 @@ module.exports = async function handler(req, res) {
     // Find user who watches "Bradd Pitt"
     step = 'find_watcher';
     var watcher = await db.getOne(
-      `SELECT wn.id AS wn_id, wn.name, wn.user_id, u.email, u.display_name, u.city
+      `SELECT wn.id AS wn_id, wn.display_name AS name, wn.user_id, u.email, u.display_name, u.city
        FROM watched_names wn
-       JOIN users u ON u.id = wn.user_id
-       WHERE LOWER(wn.name) LIKE '%bradd%' OR LOWER(wn.name) LIKE '%pitt%'
+       JOIN users u ON u.id::text = wn.user_id::text
+       WHERE LOWER(wn.display_name) LIKE '%bradd%' OR LOWER(wn.display_name) LIKE '%pitt%'
        LIMIT 1`
     );
 
@@ -36,9 +36,9 @@ module.exports = async function handler(req, res) {
     // Run name watch matching
     step = 'fetch_watched';
     var watchedNames = await db.getMany(
-      `SELECT wn.id, wn.name, wn.user_id, u.email, u.display_name, u.city
+      `SELECT wn.id, wn.display_name AS name, wn.user_id, wn.search_terms, u.email, u.display_name AS user_display_name, u.city
        FROM watched_names wn
-       JOIN users u ON u.id = wn.user_id
+       JOIN users u ON u.id::text = wn.user_id::text
        WHERE u.subscription_tier != 'free'`
     );
 
@@ -48,13 +48,15 @@ module.exports = async function handler(req, res) {
 
     for (var i = 0; i < watchedNames.length; i++) {
       var wn = watchedNames[i];
-      var nameLower = wn.name.toLowerCase();
+      var nameLower = (wn.name || '').toLowerCase();
       var nameParts = nameLower.split(/\s+/);
 
       var fullMatch = bodyLower.includes(nameLower);
       var partMatch = nameParts.some(function(p) { return p.length >= 2 && bodyLower.includes(p); });
+      var initials = nameParts.map(function(p) { return p[0]; }).join('').toLowerCase();
+      var initialMatch = initials.length >= 2 && bodyLower.includes(initials);
 
-      if (fullMatch || partMatch) {
+      if (fullMatch || partMatch || initialMatch) {
         step = 'insert_match_' + i;
         try {
           await db.run(
@@ -66,10 +68,9 @@ module.exports = async function handler(req, res) {
           continue;
         }
 
-        matches.push({ name: wn.name, userId: wn.user_id, type: fullMatch ? 'full' : 'part' });
+        matches.push({ name: wn.name, userId: wn.user_id, type: fullMatch ? 'full' : partMatch ? 'part' : 'initials' });
 
         // Send inbox alert
-        step = 'inbox_' + i;
         var alertMsg = 'Name Watch Alert: "' + wn.name + '" was mentioned in a new post in ' + city + '. Check your Alerts tab.';
         try {
           await db.run(
@@ -79,11 +80,10 @@ module.exports = async function handler(req, res) {
         } catch (e) {}
 
         // Send email
-        step = 'email_' + i;
         if (wn.email) {
           try {
             var emailSvc = require('../../services/email');
-            await emailSvc.sendNameWatchMatchEmail(wn.email, wn.display_name, wn.name, postBody.substring(0, 150), city);
+            await emailSvc.sendNameWatchMatchEmail(wn.email, wn.user_display_name, wn.name, postBody.substring(0, 150), city);
           } catch (e) {}
         }
       }

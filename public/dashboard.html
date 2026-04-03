@@ -4385,28 +4385,45 @@
         if (counter) { counter.textContent = '0 / 2,000'; counter.style.color = '#8080A0'; }
     }
 
+    // Resize image to fit within maxW/maxH and compress as JPEG
+    function resizeImage(dataUrl, maxW, quality, callback) {
+        var img = new Image();
+        img.onload = function() {
+            var w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+    }
+
     // Photo upload handling
     function handlePostPhoto(input) {
         if (input.files && input.files[0]) {
             var file = input.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Photo must be under 5MB');
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Photo must be under 10MB');
                 return;
             }
             communityState.postPhotoFile = file;
             var reader = new FileReader();
             reader.onload = function(e) {
-                if (typeof addWatermark === 'function') {
-                    addWatermark(e.target.result, function(watermarked) {
-                        communityState.postPhotoDataUrl = watermarked;
-                        document.getElementById('post-photo-preview-img').src = watermarked;
+                // Resize to max 1200px wide, JPEG 0.75 quality (~200-400KB)
+                resizeImage(e.target.result, 1200, 0.75, function(resized) {
+                    if (typeof addWatermark === 'function') {
+                        addWatermark(resized, function(watermarked) {
+                            communityState.postPhotoDataUrl = watermarked;
+                            document.getElementById('post-photo-preview-img').src = watermarked;
+                            document.getElementById('post-photo-preview').style.display = 'inline-block';
+                        });
+                    } else {
+                        communityState.postPhotoDataUrl = resized;
+                        document.getElementById('post-photo-preview-img').src = resized;
                         document.getElementById('post-photo-preview').style.display = 'inline-block';
-                    });
-                } else {
-                    communityState.postPhotoDataUrl = e.target.result;
-                    document.getElementById('post-photo-preview-img').src = e.target.result;
-                    document.getElementById('post-photo-preview').style.display = 'inline-block';
-                }
+                    }
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -4451,11 +4468,12 @@
 
     function submitCommunityPost() {
         var content = document.getElementById('community-post-text').value.trim();
-        if (!content) return;
+        if (!content) { showToast('Write something before posting'); return; }
         var category = document.getElementById('community-post-cat').value;
         var token = localStorage.getItem('safetea_token');
         var city = communityState.selectedCity;
-        if (!token || !city) return;
+        if (!token) { showToast('Please log in to post'); return; }
+        if (!city) { showToast('Select a city first'); return; }
         var btn = document.querySelector('.post-modal-submit');
         btn.textContent = 'Posting...';
         btn.disabled = true;
@@ -4472,7 +4490,10 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify(postData)
         })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (r.status === 413) throw new Error('Photo is too large. Try a smaller image.');
+            return r.json();
+        })
         .then(function(data) {
             btn.textContent = 'Post';
             btn.disabled = false;

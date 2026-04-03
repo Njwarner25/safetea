@@ -74,18 +74,61 @@ function sendWelcomeEmail(to, displayName) {
     html: wrapHtml(`
       <h2 style="color:#fff;font-size:20px;margin:0 0 16px;">Welcome to SafeTea, ${displayName || 'there'}!</h2>
       <p>You've joined a private, women-first community where you can share, verify, and protect each other in the dating world.</p>
-      <p><strong style="color:#E8A0B5;">Here's what you can do:</strong></p>
+
+      <div style="background:rgba(232,160,181,0.08);border:1px solid rgba(232,160,181,0.15);border-radius:12px;padding:20px;margin:20px 0;">
+        <h3 style="color:#E8A0B5;font-size:16px;margin:0 0 16px;">How SafeTea Keeps You Safe</h3>
+        <table cellpadding="0" cellspacing="0" style="width:100%;border:0;">
+          <tr>
+            <td style="padding:0 12px 14px 0;vertical-align:top;width:30px;">
+              <div style="width:30px;height:30px;background:rgba(232,160,181,0.15);border-radius:8px;text-align:center;line-height:30px;color:#E8A0B5;font-weight:700;font-size:13px;">1</div>
+            </td>
+            <td style="padding:0 0 14px 0;vertical-align:top;">
+              <strong style="color:#fff;font-size:14px;">Check Out Before Your Date</strong>
+              <p style="color:#8080A0;font-size:13px;margin:4px 0 0;line-height:1.4;">Enter who, where, and when. Add trusted contacts who get an SMS.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 12px 14px 0;vertical-align:top;width:30px;">
+              <div style="width:30px;height:30px;background:rgba(91,160,208,0.12);border-radius:8px;text-align:center;line-height:30px;color:#5BA0D0;font-weight:700;font-size:13px;">2</div>
+            </td>
+            <td style="padding:0 0 14px 0;vertical-align:top;">
+              <strong style="color:#fff;font-size:14px;">Trusted Contacts Get an SMS</strong>
+              <p style="color:#8080A0;font-size:13px;margin:4px 0 0;line-height:1.4;">They receive date info and a live tracking link — no app needed.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 12px 14px 0;vertical-align:top;width:30px;">
+              <div style="width:30px;height:30px;background:rgba(180,140,210,0.12);border-radius:8px;text-align:center;line-height:30px;color:#B48CD2;font-weight:700;font-size:13px;">3</div>
+            </td>
+            <td style="padding:0 0 14px 0;vertical-align:top;">
+              <strong style="color:#fff;font-size:14px;">Live Tracking Page</strong>
+              <p style="color:#8080A0;font-size:13px;margin:4px 0 0;line-height:1.4;">Contacts can check your status — whether you're on the date and if overdue.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 12px 0 0;vertical-align:top;width:30px;">
+              <div style="width:30px;height:30px;background:rgba(76,175,80,0.12);border-radius:8px;text-align:center;line-height:30px;color:#4CAF50;font-weight:700;font-size:13px;">4</div>
+            </td>
+            <td style="padding:0;vertical-align:top;">
+              <strong style="color:#fff;font-size:14px;">Check In When Safe</strong>
+              <p style="color:#8080A0;font-size:13px;margin:4px 0 0;line-height:1.4;">Tap "Check In" and all your contacts get a confirmation text.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <p><strong style="color:#E8A0B5;">Your SafeTea Tools:</strong></p>
       <ul style="padding-left:20px;margin:12px 0;">
-        <li>Share and read dating experiences in your city's community feed</li>
-        <li>Use <strong>Name Watch</strong> to monitor names and get alerts</li>
-        <li>Run <strong>Red Flag Scans</strong> on conversations</li>
-        <li>Access the <strong>Safety Resource Hub</strong> for trusted safety resources</li>
-        <li>Use <strong>Date Check-In</strong> to share your location with trusted contacts</li>
+        <li><strong>Date Check-In</strong> — Share your location with trusted contacts</li>
+        <li><strong>Photo Verification</strong> — AI-powered catfish detection</li>
+        <li><strong>Red Flag Scanner</strong> — Analyze conversations for red flags</li>
+        <li><strong>SOS Record & Protect</strong> — Emergency recording and alerts</li>
+        <li><strong>Name Watch</strong> — Monitor names and get alerts when mentioned</li>
       </ul>
       <div style="text-align:center;margin:24px 0;">
-        <a href="https://getsafetea.app/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Open SafeTea</a>
+        <a href="https://getsafetea.app/dashboard" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Open SafeTea</a>
       </div>
-      <p style="color:#8080A0;font-size:13px;">Stay safe out there. We've got your back. 💕</p>
+      <p style="color:#8080A0;font-size:13px;">Stay safe out there. We've got your back.</p>
     `)
   });
 }

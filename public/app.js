@@ -3754,7 +3754,7 @@
                 loadRoomFeed();
                 showToast('Posted!');
             } else if (data && data.error === 'trust_score_too_low') {
-                showToast('Trust score too low (' + (data.trust_score || 0) + '/70). Complete verification to post.', true);
+                showToast('Trust score too low (' + (data.trust_score || 0) + '/80). Complete verification to post.', true);
                 setTimeout(function() { window.location.href = '/verify.html'; }, 2000);
             } else if (data && data.error) {
                 showToast(data.message || data.error, true);

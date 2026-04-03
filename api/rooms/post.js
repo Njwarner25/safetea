@@ -24,12 +24,12 @@ module.exports = async function handler(req, res) {
       const validTypes = ['tea_talk', 'good_guys'];
       const postType = validTypes.includes(type) ? type : 'tea_talk';
 
-      // Trust score gate: require >= 70
-      if ((user.trust_score || 0) < 70) {
+      // Trust score gate: require >= 80
+      if ((user.trust_score || 0) < 80) {
         return res.status(403).json({
           error: 'trust_score_too_low',
           trust_score: user.trust_score || 0,
-          required: 70,
+          required: 80,
           message: 'Complete verification steps to unlock room posting. Verify your identity and link social media accounts to get access.'
         });
       }

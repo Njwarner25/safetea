@@ -19,8 +19,8 @@ module.exports = async function handler(req, res) {
     if (!roomId) return res.status(400).json({ error: 'Room ID is required' });
 
     // Trust score gate
-    if ((user.trust_score || 0) < 70) {
-      return res.status(403).json({ error: 'trust_score_too_low', required: 70 });
+    if ((user.trust_score || 0) < 80) {
+      return res.status(403).json({ error: 'trust_score_too_low', required: 80 });
     }
 
     // Verify membership (invite-only)

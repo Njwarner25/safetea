@@ -15,7 +15,7 @@ const { getOne, getMany, run } = require('./db');
  *   Gender reports >= 3           -15
  *   Banned                        score = 0
  *
- * City chat requires score >= 70
+ * City chat requires score >= 80
  * Admin re-verification triggered at score <= 30
  */
 

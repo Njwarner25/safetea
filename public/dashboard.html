@@ -2114,18 +2114,6 @@
                 </div>
             </div>
 
-            <!-- Did You Know Card -->
-            <div id="did-you-know-card" style="margin:0 16px 16px;background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border:1px solid #FFE082;border-radius:14px;padding:18px 20px;position:relative;overflow:hidden">
-                <div style="display:flex;align-items:flex-start;gap:12px">
-                    <div style="min-width:36px;height:36px;background:rgba(255,193,7,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">&#128161;</div>
-                    <div style="flex:1">
-                        <div style="font-size:11px;font-weight:700;color:#F57F17;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Did You Know?</div>
-                        <div id="dyk-fact" style="font-size:14px;color:#5D4037;line-height:1.6;font-weight:500"></div>
-                        <div id="dyk-source" style="font-size:11px;color:#8D6E63;margin-top:6px"></div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Posts Feed -->
             <div id="community-feed">
                 <div class="loading" style="text-align:center;padding:40px;color:#999;">
@@ -2472,27 +2460,9 @@
                     </div>
                 </div>
 
-                <!-- ====== COMMUNITY (Tea Talk + Good Guys + Sorority Rooms) ====== -->
+                <!-- ====== COMMUNITY (Sorority Rooms) ====== -->
                 <div style="margin-bottom:20px">
                     <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-users" style="color:#9b59b6;font-size:13px"></i> Community</h3>
-
-                    <div onclick="switchTab('community');setTimeout(function(){filterCommunity('tea-talk')},100)" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.1),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.2)'">
-                        <div style="min-width:44px;height:44px;background:rgba(232,160,181,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-comments" style="font-size:20px;color:#E8A0B5"></i></div>
-                        <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Tea Talk</h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Share experiences, warn others, and discuss dating in your city.</p>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
-                    </div>
-
-                    <div onclick="switchTab('community');setTimeout(function(){filterCommunity('good-guys')},100)" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(76,175,80,0.08),rgba(76,175,80,0.02));border:1px solid rgba(76,175,80,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(76,175,80,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(76,175,80,0.15)'">
-                        <div style="min-width:44px;height:44px;background:rgba(76,175,80,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-heart" style="font-size:20px;color:#4CAF50"></i></div>
-                        <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Good Guys</h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Recommend guys who treated you right. Help others find the good ones.</p>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
-                    </div>
 
                     <div onclick="switchHubTab('sororityrooms')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(155,89,182,0.1),rgba(155,89,182,0.04));border:1px solid rgba(155,89,182,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(155,89,182,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(155,89,182,0.2)'">
                         <div style="min-width:44px;height:44px;background:rgba(155,89,182,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="font-size:20px;color:#9b59b6"></i></div>

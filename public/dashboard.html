@@ -4294,9 +4294,17 @@
             communityState.postPhotoFile = file;
             var reader = new FileReader();
             reader.onload = function(e) {
-                communityState.postPhotoDataUrl = e.target.result;
-                document.getElementById('post-photo-preview-img').src = e.target.result;
-                document.getElementById('post-photo-preview').style.display = 'inline-block';
+                if (typeof addWatermark === 'function') {
+                    addWatermark(e.target.result, function(watermarked) {
+                        communityState.postPhotoDataUrl = watermarked;
+                        document.getElementById('post-photo-preview-img').src = watermarked;
+                        document.getElementById('post-photo-preview').style.display = 'inline-block';
+                    });
+                } else {
+                    communityState.postPhotoDataUrl = e.target.result;
+                    document.getElementById('post-photo-preview-img').src = e.target.result;
+                    document.getElementById('post-photo-preview').style.display = 'inline-block';
+                }
             };
             reader.readAsDataURL(file);
         }

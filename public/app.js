@@ -2174,6 +2174,54 @@
     }
     window.getPlusBadgeHtml = getPlusBadgeHtml;
 
+    // ==================== WATERMARK UTILITY ====================
+    function addWatermark(dataUrl, callback) {
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            // Watermark text
+            var text = 'SafeTea';
+            var fontSize = Math.max(16, Math.round(img.width * 0.04));
+            ctx.font = '700 ' + fontSize + 'px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+
+            // Measure text for background pill
+            var metrics = ctx.measureText(text);
+            var textW = metrics.width;
+            var pillH = fontSize + 12;
+            var pillW = textW + 24;
+            var pillX = img.width - 16 - pillW;
+            var pillY = img.height - 16 - pillH;
+
+            // Semi-transparent dark pill background
+            ctx.fillStyle = 'rgba(26, 26, 46, 0.65)';
+            ctx.beginPath();
+            var r = pillH / 2;
+            ctx.moveTo(pillX + r, pillY);
+            ctx.lineTo(pillX + pillW - r, pillY);
+            ctx.arc(pillX + pillW - r, pillY + r, r, -Math.PI / 2, Math.PI / 2);
+            ctx.lineTo(pillX + r, pillY + pillH);
+            ctx.arc(pillX + r, pillY + r, r, Math.PI / 2, -Math.PI / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // White text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText(text, img.width - 28, img.height - 22);
+
+            callback(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        img.onerror = function() { callback(dataUrl); };
+        img.src = dataUrl;
+    }
+    window.addWatermark = addWatermark;
+
     function canModifyPost(post) {
         var u = getUser();
         return u && (String(post.user_id) === String(u.id) || u.role === 'admin' || u.role === 'moderator');
@@ -2677,11 +2725,13 @@
             }
             var reader = new FileReader();
             reader.onload = function(e) {
-                referralPhotoData = e.target.result;
-                var preview = document.getElementById('hub-referral-photo-preview');
-                var img = document.getElementById('hub-referral-photo-img');
-                if (img) img.src = referralPhotoData;
-                if (preview) preview.style.display = 'inline-block';
+                addWatermark(e.target.result, function(watermarked) {
+                    referralPhotoData = watermarked;
+                    var preview = document.getElementById('hub-referral-photo-preview');
+                    var img = document.getElementById('hub-referral-photo-img');
+                    if (img) img.src = watermarked;
+                    if (preview) preview.style.display = 'inline-block';
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -3248,10 +3298,12 @@
         if (file.size > 5 * 1024 * 1024) { showToast('Photo must be under 5MB', true); return; }
         var reader = new FileReader();
         reader.onload = function(e) {
-            rvPostPhotoData = e.target.result;
-            var preview = document.getElementById('rv-post-photo-preview');
-            var img = document.getElementById('rv-post-photo-img');
-            if (preview && img) { img.src = e.target.result; preview.style.display = 'inline-block'; }
+            addWatermark(e.target.result, function(watermarked) {
+                rvPostPhotoData = watermarked;
+                var preview = document.getElementById('rv-post-photo-preview');
+                var img = document.getElementById('rv-post-photo-img');
+                if (preview && img) { img.src = watermarked; preview.style.display = 'inline-block'; }
+            });
         };
         reader.readAsDataURL(file);
         input.value = '';

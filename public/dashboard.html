@@ -4020,7 +4020,7 @@
             '<div class="community-post-header">' +
                 '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
                 '<div class="community-post-meta">' +
-                    '<span class="community-post-author">' + escapeHtml(authorName) + trendingBadge + '</span>' +
+                    '<span class="community-post-author">' + escapeHtml(authorName) + (typeof getPlusBadgeHtml === 'function' ? getPlusBadgeHtml(post.author_tier) : '') + trendingBadge + '</span>' +
                     '<div class="community-post-time">' + timeAgo + cityTag + neighborhood + '</div>' +
                 '</div>' +
                 '<div style="position:relative" id="cmenu-anchor-' + post.id + '">' +
@@ -4034,6 +4034,10 @@
                 '<button id="cdislike-btn-' + post.id + '" class="community-post-action" onclick="communityVote(' + post.id + ',\'dislike\')" style="color:' + (userDisliked ? '#E8A0B5' : '') + '"><i class="' + (userDisliked ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="cdislike-count-' + post.id + '">' + dislikeCount + '</span></button>' +
                 '<button class="community-post-action" onclick="communityToggleReplies(' + post.id + ')"><i class="far fa-comment"></i> <span id="creply-count-' + post.id + '">' + replyCount + '</span></button>' +
                 '<button id="cbump-btn-' + post.id + '" class="community-post-action" onclick="communityBump(' + post.id + ')" style="color:' + (userBumped ? '#E8A0B5' : '') + '"><i class="fas fa-arrow-up"></i> <span id="cbump-count-' + post.id + '">' + bumpCount + '</span></button>' +
+                '<span style="margin-left:auto;display:flex;align-items:center;gap:2px">' +
+                    (isOwner ? '<button class="community-post-action" onclick="communityDeletePost(' + post.id + ')" title="Delete post" style="color:#8080A0" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#8080A0\'"><i class="fas fa-trash-alt"></i></button>' : '') +
+                    '<button class="community-post-action" onclick="communityReportPost(' + post.id + ')" title="Report post" style="color:#8080A0" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#8080A0\'"><i class="fas fa-flag"></i></button>' +
+                '</span>' +
             '</div>' +
             '<div id="creplies-' + post.id + '" style="display:none;padding:12px 0 0;border-top:1px solid rgba(0,0,0,0.06);margin-top:12px"></div>' +
         '</div>';

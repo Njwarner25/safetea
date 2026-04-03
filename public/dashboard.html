@@ -296,18 +296,18 @@
         .community-cat-tab.inactive:hover { background: #e5e5e5; }
         .community-cat-tab.active-good { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         /* Post Cards */
-        .community-post { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .community-post { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; }
         .community-post-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
         .community-post-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; color: #fff; flex-shrink: 0; }
-        .community-post-meta { flex: 1; }
+        .community-post-meta { flex: 1; min-width: 0; }
         .community-post-author { font-weight: 700; font-size: 16px; color: #222; display: block; }
         .community-post-time { font-size: 13px; color: #999; margin-top: 2px; }
         .community-post-more { background: none; border: none; color: #bbb; font-size: 18px; cursor: pointer; padding: 4px 8px; letter-spacing: 2px; }
         .community-post-more:hover { color: #888; }
-        .community-post-body { font-size: 15px; line-height: 1.65; color: #333; margin-bottom: 16px; }
+        .community-post-body { font-size: 15px; line-height: 1.65; color: #333; margin-bottom: 16px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; }
         .community-post-body strong { font-weight: 700; }
         .community-post-image { width: 100%; border-radius: 12px; margin-bottom: 16px; max-height: 300px; object-fit: cover; }
-        .community-post-actions { display: flex; gap: 24px; align-items: center; }
+        .community-post-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
         .community-post-action { display: flex; align-items: center; gap: 6px; color: #999; font-size: 14px; cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
         .community-post-action:hover { color: #E8A0B5; }
         .community-post-action .liked { color: #e74c3c; }
@@ -1531,6 +1531,18 @@
             color: var(--st-primary) !important;
         }
 
+        /* Did You Know card — darker text in light mode */
+        [data-theme="light"] #home-dyk-fact {
+            color: #3a2a3d !important;
+        }
+        [data-theme="light"] #home-dyk-source {
+            color: #6b5570 !important;
+        }
+        [data-theme="light"] #home-dyk-card {
+            background: linear-gradient(135deg, rgba(232,160,181,0.12), rgba(155,89,182,0.08)) !important;
+            border-color: rgba(217,106,138,0.25) !important;
+        }
+
         /* How SafeTea keeps you safe — light card */
         [data-theme="light"] .home-info-card {
             background: var(--st-surface-soft) !important;
@@ -2092,12 +2104,6 @@
                 <input type="text" id="community-search-input" placeholder="Search names or posts in your city..." style="width:100%;padding:12px 14px 12px 40px;background:#fff;border:1px solid #f3c7d7;border-radius:12px;font-size:14px;font-family:'Inter',sans-serif;color:#1f1720;outline:none" onfocus="this.style.borderColor='#d96a8a'" onblur="this.style.borderColor='#f3c7d7'">
             </div>
 
-            <!-- Category Tabs: Tea Talk + Good Guys -->
-            <div class="community-category-tabs">
-                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')">&#9749; Tea Talk</button>
-                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')">&#10004; Good Guys</button>
-            </div>
-
             <!-- Quick Actions Row -->
             <div class="community-quick-actions" style="display:flex;gap:8px;padding:0 16px;margin-bottom:16px;flex-wrap:wrap">
                 <button onclick="switchTab('hub');setTimeout(function(){switchHubTab('search')},100)" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-search" style="color:#d96a8a;font-size:12px"></i> Search Name</button>
@@ -2129,13 +2135,6 @@
             <button class="community-quickpost-btn" onclick="communityState.selectedCity ? openPostModal() : openCityPicker()"><i class="fas fa-paper-plane"></i> Post</button>
         </div>
 
-        <!-- Bottom Category Tabs (fixed) -->
-        <div id="community-bottom-tabs" style="display:none;position:fixed;bottom:120px;left:0;right:0;z-index:49;padding:8px 16px;max-width:720px;margin:0 auto;">
-            <div style="display:flex;gap:8px;">
-                <button class="community-cat-tab active-tea" data-cat="tea-talk" onclick="filterCommunity('tea-talk')" style="font-size:13px;padding:8px 16px;">&#9749; Tea Talk</button>
-                <button class="community-cat-tab inactive" data-cat="good-guys" onclick="filterCommunity('good-guys')" style="font-size:13px;padding:8px 16px;">&#10004; Good Guys</button>
-            </div>
-        </div>
     </div>
 
     <!-- City Picker Full Screen -->

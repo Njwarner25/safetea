@@ -3096,30 +3096,43 @@
     var DID_YOU_KNOW_FACTS = [
         { fact: '1 in 3 women worldwide have experienced physical or sexual violence.', source: 'World Health Organization' },
         { fact: '57% of women who have been murdered were killed by a current or former intimate partner.', source: 'CDC' },
-        { fact: 'Only 12% of sexual assaults are reported to police.', source: 'RAINN' },
-        { fact: 'On average, it takes a victim 7 attempts to leave an abusive relationship before they leave for good.', source: 'National Domestic Violence Hotline' },
+        { fact: 'Women are 5 times more likely than men to experience intimate partner violence.', source: 'Bureau of Justice Statistics' },
+        { fact: 'On average, more than 3 women are murdered by their husbands or boyfriends every day in the U.S.', source: 'Bureau of Justice Statistics' },
         { fact: '1 in 4 women will experience domestic violence in their lifetime.', source: 'NCADV' },
         { fact: 'Nearly half of all women in the US have experienced some form of sexual violence.', source: 'CDC NISVS' },
-        { fact: 'Online dating fraud costs Americans over $300 million per year.', source: 'FTC' },
-        { fact: 'Over 50% of online dating profiles contain at least one lie.', source: 'Journal of Communication' },
-        { fact: '10% of sex offenders use dating apps to find victims.', source: 'Journal of Sexual Aggression' },
+        { fact: 'Intimate partner violence accounts for 15% of all violent crime in the U.S.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Women experience 2 million injuries from intimate partner violence each year in the U.S.', source: 'CDC' },
+        { fact: 'Only 12% of sexual assaults are reported to police.', source: 'RAINN' },
+        { fact: 'On average, it takes a victim 7 attempts to leave an abusive relationship before they leave for good.', source: 'National Domestic Violence Hotline' },
+        { fact: 'Every 68 seconds, an American is sexually assaulted.', source: 'RAINN' },
+        { fact: 'Women ages 18-24 are most commonly abused by an intimate partner.', source: 'Bureau of Justice Statistics' },
+        { fact: '72% of all murder-suicides involve an intimate partner; 94% of the victims are women.', source: 'Violence Policy Center' },
+        { fact: 'Stalking affects 1 in 6 women at some point in their lives — compared to 1 in 19 men.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Nearly 3 out of 4 stalking victims know their stalker in some capacity.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Women are 70% more likely to experience violence on a first date than men.', source: 'Journal of Interpersonal Violence' },
+        { fact: '43% of dating college women reported experiencing violent and abusive dating behaviors.', source: 'Liz Claiborne Inc. Study' },
+        { fact: 'Domestic violence is the leading cause of injury to women between the ages of 15 and 44.', source: 'U.S. Surgeon General' },
+        { fact: '10 million people are physically abused by an intimate partner every year in the U.S.', source: 'NCADV' },
+        { fact: 'Women who are abused are 8 times more likely to be killed if there is a firearm in the home.', source: 'American Journal of Public Health' },
+        { fact: 'Over 20,000 calls are placed to domestic violence hotlines daily in the U.S.', source: 'NNEDV' },
+        { fact: '1 in 7 women has been stalked by an intimate partner to the point of feeling very fearful.', source: 'CDC NISVS' },
+        { fact: '38 million U.S. women have experienced intimate partner physical violence in their lifetime.', source: 'CDC NISVS' },
+        { fact: 'Homicide is the 5th leading cause of death for women ages 20-44 in the U.S.', source: 'CDC WISQARS' },
+        { fact: 'Digital abuse is the most common form of dating abuse among young people.', source: 'Love Is Respect' },
         { fact: 'Having a safety plan can reduce risk of injury by 60%.', source: 'Journal of Interpersonal Violence' },
         { fact: 'Sharing date details with a friend before meeting someone new is the #1 safety tip from law enforcement.', source: 'National Crime Prevention Council' },
-        { fact: 'Stalking affects 1 in 6 women at some point in their lives.', source: 'Bureau of Justice Statistics' },
-        { fact: 'Nearly 3 out of 4 stalking victims know their stalker in some capacity.', source: 'Bureau of Justice Statistics' },
-        { fact: 'Romance scams were the costliest type of consumer fraud in 2023.', source: 'FTC Consumer Sentinel' },
-        { fact: '43% of dating college women reported experiencing violent and abusive dating behaviors.', source: 'Liz Claiborne Inc. Study' },
-        { fact: 'Digital abuse is the most common form of dating abuse among young people.', source: 'Love Is Respect' },
-        { fact: 'Women ages 18-24 are most commonly abused by an intimate partner.', source: 'Bureau of Justice Statistics' },
-        { fact: 'Trusting your instincts is one of the most effective personal safety strategies, according to security experts.', source: 'The Gift of Fear, Gavin de Becker' }
+        { fact: 'Abusers who strangle their partners are 10 times more likely to eventually kill them.', source: 'Journal of Emergency Medicine' },
+        { fact: 'Women experience about 4.8 million intimate partner-related physical assaults per year.', source: 'CDC' },
+        { fact: '1 in 5 women has been the victim of attempted or completed rape in her lifetime.', source: 'CDC NISVS' }
     ];
 
     function initDidYouKnow() {
         var factEl = document.getElementById('dyk-fact');
         var sourceEl = document.getElementById('dyk-source');
         if (!factEl || !sourceEl) return;
-        var idx = Math.floor(Math.random() * DID_YOU_KNOW_FACTS.length);
-        var item = DID_YOU_KNOW_FACTS[idx];
+        // Use date-based index so each day shows a different fact
+        var dayIndex = Math.floor(Date.now() / 86400000) % DID_YOU_KNOW_FACTS.length;
+        var item = DID_YOU_KNOW_FACTS[dayIndex];
         factEl.textContent = item.fact;
         sourceEl.textContent = 'Source: ' + item.source;
     }

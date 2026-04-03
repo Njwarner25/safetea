@@ -2191,35 +2191,29 @@
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
 
-            // Watermark text
-            var fontSize = Math.max(16, Math.round(img.width * 0.04));
+            // Transparent repeating diagonal watermark across entire image
+            var fontSize = Math.max(18, Math.round(img.width * 0.045));
             ctx.font = '700 ' + fontSize + 'px Inter, sans-serif';
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'bottom';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
 
-            // Measure text for background pill
-            var metrics = ctx.measureText(text);
-            var textW = metrics.width;
-            var pillH = fontSize + 12;
-            var pillW = textW + 24;
-            var pillX = img.width - 16 - pillW;
-            var pillY = img.height - 16 - pillH;
+            // Rotate -30 degrees and tile across entire canvas
+            ctx.save();
+            ctx.translate(img.width / 2, img.height / 2);
+            ctx.rotate(-30 * Math.PI / 180);
 
-            // Semi-transparent dark pill background
-            ctx.fillStyle = 'rgba(26, 26, 46, 0.65)';
-            ctx.beginPath();
-            var r = pillH / 2;
-            ctx.moveTo(pillX + r, pillY);
-            ctx.lineTo(pillX + pillW - r, pillY);
-            ctx.arc(pillX + pillW - r, pillY + r, r, -Math.PI / 2, Math.PI / 2);
-            ctx.lineTo(pillX + r, pillY + pillH);
-            ctx.arc(pillX + r, pillY + r, r, Math.PI / 2, -Math.PI / 2);
-            ctx.closePath();
-            ctx.fill();
+            var textW = ctx.measureText(text).width;
+            var spacingX = textW + 80;
+            var spacingY = fontSize * 3.5;
+            var diag = Math.sqrt(img.width * img.width + img.height * img.height);
 
-            // White text
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillText(text, img.width - 28, img.height - 22);
+            for (var y = -diag; y < diag; y += spacingY) {
+                for (var x = -diag; x < diag; x += spacingX) {
+                    ctx.fillText(text, x, y);
+                }
+            }
+            ctx.restore();
 
             callback(canvas.toDataURL('image/jpeg', 0.92));
         };

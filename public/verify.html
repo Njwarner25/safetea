@@ -6,6 +6,7 @@
   <title>Verify Your Identity - SafeTea</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -537,19 +538,40 @@
         <p class="step-desc">Link up to 3 social accounts to earn <strong style="color:#E8A0B5;">+20 trust points each</strong>. Our AI verifies each account is real.</p>
         <div id="social-connected-list" style="margin-bottom:16px"></div>
         <div id="social-add-form">
-          <select id="social-platform" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box">
-            <option value="">Select platform...</option>
-            <option value="instagram">Instagram</option>
-            <option value="tiktok">TikTok</option>
-            <option value="twitter">X / Twitter</option>
-            <option value="linkedin">LinkedIn</option>
-            <option value="facebook">Facebook</option>
-            <option value="snapchat">Snapchat</option>
-          </select>
-          <input type="text" id="social-username" placeholder="@username" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
-          <input type="number" id="social-age" placeholder="Account age (months)" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
-          <input type="number" id="social-followers" placeholder="Follower count" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
-          <button class="btn-primary" id="social-connect-btn" onclick="connectSocialAccount()" style="width:100%">Link Account</button>
+          <input type="hidden" id="social-platform" value="" />
+          <div id="social-platform-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+            <div class="social-pick" data-platform="instagram" onclick="selectPlatform('instagram')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-instagram" style="font-size:28px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">Instagram</span>
+            </div>
+            <div class="social-pick" data-platform="tiktok" onclick="selectPlatform('tiktok')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-tiktok" style="font-size:28px;color:#fff"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">TikTok</span>
+            </div>
+            <div class="social-pick" data-platform="twitter" onclick="selectPlatform('twitter')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-x-twitter" style="font-size:28px;color:#fff"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">X / Twitter</span>
+            </div>
+            <div class="social-pick" data-platform="linkedin" onclick="selectPlatform('linkedin')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-linkedin" style="font-size:28px;color:#0A66C2"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">LinkedIn</span>
+            </div>
+            <div class="social-pick" data-platform="facebook" onclick="selectPlatform('facebook')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-facebook" style="font-size:28px;color:#1877F2"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">Facebook</span>
+            </div>
+            <div class="social-pick" data-platform="snapchat" onclick="selectPlatform('snapchat')" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .2s">
+              <i class="fa-brands fa-snapchat" style="font-size:28px;color:#FFFC00"></i>
+              <span style="font-size:11px;color:#ccc;font-weight:500">Snapchat</span>
+            </div>
+          </div>
+          <div id="social-fields" style="display:none">
+            <div id="social-selected-label" style="text-align:center;margin-bottom:10px;font-size:13px;color:#E8A0B5;font-weight:600"></div>
+            <input type="text" id="social-username" placeholder="@username" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
+            <input type="number" id="social-age" placeholder="Account age (months)" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
+            <input type="number" id="social-followers" placeholder="Follower count" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
+            <button class="btn-primary" id="social-connect-btn" onclick="connectSocialAccount()" style="width:100%">Link Account</button>
+          </div>
         </div>
         <a class="skip-link" onclick="showStep('complete')">Continue to finish</a>
       </div>
@@ -995,15 +1017,42 @@
     }
 
     // ---- SOCIAL MEDIA ----
-    async function loadConnectedAccounts() {
-      var list = document.getElementById('social-connected-list');
-      try {
-        var res = await fetch(API_BASE + '/auth/connect-social', {
-          headers: { 'Authorization': 'Bearer ' + getToken() }
-        });
-        // connect-social is POST only, we'll just show what we have locally
-      } catch (e) {}
-      // We'll populate from the connect responses
+    var PLATFORM_META = {
+      instagram: { icon: 'fa-brands fa-instagram', color: '#E1306C', label: 'Instagram' },
+      tiktok:    { icon: 'fa-brands fa-tiktok',    color: '#fff',    label: 'TikTok' },
+      twitter:   { icon: 'fa-brands fa-x-twitter', color: '#fff',    label: 'X / Twitter' },
+      linkedin:  { icon: 'fa-brands fa-linkedin',  color: '#0A66C2', label: 'LinkedIn' },
+      facebook:  { icon: 'fa-brands fa-facebook',  color: '#1877F2', label: 'Facebook' },
+      snapchat:  { icon: 'fa-brands fa-snapchat',  color: '#FFFC00', label: 'Snapchat' }
+    };
+
+    function selectPlatform(platform) {
+      document.getElementById('social-platform').value = platform;
+      // Highlight selected card
+      document.querySelectorAll('.social-pick').forEach(function(el) {
+        if (el.dataset.platform === platform) {
+          el.style.borderColor = '#E8A0B5';
+          el.style.background = 'rgba(232,160,181,0.1)';
+        } else {
+          el.style.borderColor = 'rgba(255,255,255,0.08)';
+          el.style.background = 'rgba(255,255,255,0.03)';
+        }
+      });
+      // Show input fields
+      var meta = PLATFORM_META[platform];
+      document.getElementById('social-selected-label').innerHTML = '<i class="' + meta.icon + '" style="margin-right:6px"></i> Linking ' + meta.label;
+      document.getElementById('social-fields').style.display = 'block';
+      document.getElementById('social-username').focus();
+    }
+
+    function renderConnectedAccount(platform, username, verified, flagged) {
+      var meta = PLATFORM_META[platform] || { icon: 'fa-solid fa-link', color: '#8080A0', label: platform };
+      var statusColor = verified ? '#2ecc71' : (flagged ? '#e74c3c' : '#f1c40f');
+      var statusText = verified ? 'Verified (+20 pts)' : (flagged ? 'Flagged' : 'Under review');
+      return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;margin-bottom:8px">' +
+        '<div style="display:flex;align-items:center;gap:10px"><i class="' + meta.icon + '" style="font-size:22px;color:' + meta.color + ';width:28px;text-align:center"></i>' +
+        '<div><strong style="color:#fff;font-size:14px">' + meta.label + '</strong><br><span style="color:#8080A0;font-size:12px">@' + username + '</span></div></div>' +
+        '<span style="color:' + statusColor + ';font-size:12px;font-weight:600">' + statusText + '</span></div>';
     }
 
     async function connectSocialAccount() {
@@ -1034,28 +1083,40 @@
 
         if (!res.ok) { showError(data.error || 'Failed to link account'); return; }
 
-        // Show result
+        // Show result with icon
         var list = document.getElementById('social-connected-list');
-        var statusColor = data.verified ? '#2ecc71' : '#f1c40f';
-        var statusText = data.verified ? 'Verified (+20 pts)' : 'Under review';
-        list.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;margin-bottom:8px">' +
-          '<div><strong style="color:#fff;font-size:14px">' + platform.charAt(0).toUpperCase() + platform.slice(1) + '</strong> <span style="color:#8080A0;font-size:12px">@' + username + '</span></div>' +
-          '<span style="color:' + statusColor + ';font-size:12px;font-weight:600">' + statusText + '</span></div>';
+        list.innerHTML += renderConnectedAccount(platform, username, data.verified, data.flagged);
+
+        // Grey out the selected platform card
+        var card = document.querySelector('.social-pick[data-platform="' + platform + '"]');
+        if (card) {
+          card.style.opacity = '0.35';
+          card.style.pointerEvents = 'none';
+          card.style.borderColor = 'rgba(255,255,255,0.05)';
+          card.style.background = 'rgba(255,255,255,0.02)';
+        }
 
         // Update trust score display
         if (data.trustScore !== undefined) updateTrustScoreDisplay(data.trustScore);
 
-        // Clear form
+        // Reset form
         document.getElementById('social-platform').value = '';
         document.getElementById('social-username').value = '';
         document.getElementById('social-age').value = '';
         document.getElementById('social-followers').value = '';
+        document.getElementById('social-fields').style.display = 'none';
+        document.querySelectorAll('.social-pick').forEach(function(el) {
+          if (el.style.pointerEvents !== 'none') {
+            el.style.borderColor = 'rgba(255,255,255,0.08)';
+            el.style.background = 'rgba(255,255,255,0.03)';
+          }
+        });
 
         if (data.verified) {
           document.getElementById('prog-social').classList.add('completed');
-          showSuccess(platform.charAt(0).toUpperCase() + platform.slice(1) + ' linked! +20 trust points.');
+          showSuccess(PLATFORM_META[platform].label + ' linked! +20 trust points.');
         } else {
-          showSuccess(platform.charAt(0).toUpperCase() + platform.slice(1) + ' linked but flagged for review. No points yet.');
+          showSuccess(PLATFORM_META[platform].label + ' linked but flagged for review. No points yet.');
         }
       } catch (err) {
         btn.disabled = false; btn.textContent = 'Link Account';
@@ -1110,16 +1171,20 @@
         if (data.steps.phone && data.steps.phone.completed) document.getElementById('prog-phone').classList.add('completed');
         if (data.steps.social && data.steps.social.completed) document.getElementById('prog-social').classList.add('completed');
 
-        // Pre-populate connected social accounts list
+        // Pre-populate connected social accounts list with icons
         if (data.socialAccounts && data.socialAccounts.length > 0) {
           var list = document.getElementById('social-connected-list');
           list.innerHTML = '';
           data.socialAccounts.forEach(function(acct) {
-            var statusColor = acct.verified ? '#2ecc71' : (acct.flagged ? '#e74c3c' : '#f1c40f');
-            var statusText = acct.verified ? 'Verified (+20 pts)' : (acct.flagged ? 'Flagged' : 'Under review');
-            list.innerHTML += '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;margin-bottom:8px">' +
-              '<div><strong style="color:#fff;font-size:14px">' + acct.platform.charAt(0).toUpperCase() + acct.platform.slice(1) + '</strong> <span style="color:#8080A0;font-size:12px">@' + acct.platform_username + '</span></div>' +
-              '<span style="color:' + statusColor + ';font-size:12px;font-weight:600">' + statusText + '</span></div>';
+            list.innerHTML += renderConnectedAccount(acct.platform, acct.platform_username, acct.verified, acct.flagged);
+            // Grey out already-connected platform card
+            var card = document.querySelector('.social-pick[data-platform="' + acct.platform + '"]');
+            if (card) {
+              card.style.opacity = '0.35';
+              card.style.pointerEvents = 'none';
+              card.style.borderColor = 'rgba(255,255,255,0.05)';
+              card.style.background = 'rgba(255,255,255,0.02)';
+            }
           });
           // Hide add form if already at max 3
           if (data.socialAccounts.length >= 3) {

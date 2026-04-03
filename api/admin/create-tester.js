@@ -30,6 +30,8 @@ module.exports = async function handler(req, res) {
   const password = body.password || '';
   const displayName = body.display_name || 'Tester';
   const city = body.city || null;
+  const tier = (body.tier || 'plus').toLowerCase();
+  const role = tier === 'free' ? 'user' : 'admin';
 
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password are required' });
@@ -42,21 +44,21 @@ module.exports = async function handler(req, res) {
     // Check if already exists
     const existing = await getOne('SELECT id, email FROM users WHERE email = $1', [email]);
     if (existing) {
-      // Upgrade existing user to full access
+      // Update existing user
       await run(
         `UPDATE users SET
-          role = 'admin',
-          subscription_tier = 'plus',
+          role = $2,
+          subscription_tier = $3,
           identity_verified = true,
           age_verified = true,
           gender_verified = true,
           is_verified = true,
           phone_verified = true,
           didit_verified = true,
-          trust_score = 100,
+          trust_score = $4,
           trust_score_updated_at = NOW()
         WHERE id = $1`,
-        [existing.id]
+        [existing.id, role, tier, tier === 'free' ? 0 : 100]
       );
       const user = await getOne(
         'SELECT id, email, display_name, role, subscription_tier, trust_score, city FROM users WHERE id = $1',
@@ -76,8 +78,8 @@ module.exports = async function handler(req, res) {
       `INSERT INTO users (email, password_hash, display_name, city, role, subscription_tier,
         identity_verified, age_verified, gender_verified, is_verified, phone_verified,
         didit_verified, trust_score, trust_score_updated_at)
-       VALUES ($1, $2, $3, $4, 'admin', 'plus', true, true, true, true, true, true, 100, NOW())`,
-      [email, passwordHash, displayName, city]
+       VALUES ($1, $2, $3, $4, $5, $6, true, true, true, true, true, true, $7, NOW())`,
+      [email, passwordHash, displayName, city, role, tier, tier === 'free' ? 0 : 100]
     );
 
     const user = await getOne(

@@ -3403,53 +3403,38 @@
         document.getElementById('sos-floating-btn').style.display = 'none';
     }
 
-    // SOS: hold 1s = activate, hold 5s = dismiss
+    // SOS: tap = activate, hold 3s = dismiss (ring countdown)
     (function() {
         var btn = document.getElementById('sos-floating-btn');
         var ring = document.getElementById('sos-ring');
         var ringProgress = document.getElementById('sos-ring-progress');
-        var holdTimer = null;
         var dismissTimer = null;
         var animFrame = null;
         var holdStart = 0;
-        var fired = false;
-        var ACTIVATE_MS = 1000;
-        var DISMISS_MS = 5000;
-        var CIRCUMFERENCE = 182; // 2 * PI * 29
+        var dismissed = false;
+        var DISMISS_MS = 3000;
+        var CIRCUMFERENCE = 182;
 
         function startHold(e) {
             e.preventDefault();
-            fired = false;
+            dismissed = false;
             holdStart = Date.now();
             btn.classList.add('sos-holding');
+            ring.style.display = 'block';
+            ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
+            animateRing();
 
-            // At 1s: activate SOS
-            holdTimer = setTimeout(function() {
-                fired = true;
-                btn.classList.remove('sos-holding');
-                if (navigator.vibrate) navigator.vibrate(50);
-                showSOSActionSheet();
-                // Show ring — keep holding to dismiss
-                ring.style.display = 'block';
-                ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
-                animateRing();
-            }, ACTIVATE_MS);
-
-            // At 5s: dismiss
             dismissTimer = setTimeout(function() {
+                dismissed = true;
                 cleanup();
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 hideSOSButton();
-                // Close action sheet if open
-                var sheet = document.getElementById('sos-action-sheet');
-                if (sheet) sheet.remove();
             }, DISMISS_MS);
         }
 
         function animateRing() {
-            var elapsed = Date.now() - holdStart - ACTIVATE_MS;
-            var remaining = DISMISS_MS - ACTIVATE_MS;
-            var progress = Math.min(elapsed / remaining, 1);
+            var elapsed = Date.now() - holdStart;
+            var progress = Math.min(elapsed / DISMISS_MS, 1);
             ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
             if (progress < 1) {
                 animFrame = requestAnimationFrame(animateRing);
@@ -3458,7 +3443,6 @@
 
         function cleanup() {
             btn.classList.remove('sos-holding');
-            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
             if (dismissTimer) { clearTimeout(dismissTimer); dismissTimer = null; }
             if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
             ring.style.display = 'none';
@@ -3467,19 +3451,18 @@
 
         function endHold(e) {
             e.preventDefault();
-            var elapsed = Date.now() - holdStart;
+            if (dismissed) return;
             cleanup();
-            if (!fired && elapsed < ACTIVATE_MS) {
-                if (typeof showToast === 'function') showToast('Hold 1s to activate SOS');
-            }
+            // It was a tap (released before 3s) — open SOS action sheet
+            showSOSActionSheet();
         }
 
         btn.addEventListener('mousedown', startHold);
         btn.addEventListener('touchstart', startHold, { passive: false });
         btn.addEventListener('mouseup', endHold);
-        btn.addEventListener('mouseleave', function() { cleanup(); });
+        btn.addEventListener('mouseleave', function() { if (!dismissed) cleanup(); });
         btn.addEventListener('touchend', endHold);
-        btn.addEventListener('touchcancel', function() { cleanup(); });
+        btn.addEventListener('touchcancel', function() { if (!dismissed) cleanup(); });
     })();
     </script>
 

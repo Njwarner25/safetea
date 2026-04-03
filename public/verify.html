@@ -57,6 +57,7 @@
     .progress-step {
       flex: 1;
       text-align: center;
+      cursor: pointer;
     }
     .progress-step .bar {
       height: 4px;
@@ -383,27 +384,27 @@
 
       <!-- Progress Bar -->
       <div class="progress-bar">
-        <div class="progress-step" id="prog-age">
+        <div class="progress-step" id="prog-age" onclick="showStep('age')">
           <div class="bar"></div>
           <div class="label">Age</div>
         </div>
-        <div class="progress-step" id="prog-identity">
+        <div class="progress-step" id="prog-identity" onclick="showStep('identity')">
           <div class="bar"></div>
           <div class="label">Selfie (+60)</div>
         </div>
-        <div class="progress-step" id="prog-gender">
+        <div class="progress-step" id="prog-gender" onclick="showStep('gender')">
           <div class="bar"></div>
           <div class="label">Gender</div>
         </div>
-        <div class="progress-step" id="prog-didit">
+        <div class="progress-step" id="prog-didit" onclick="showStep('didit')">
           <div class="bar"></div>
           <div class="label">ID (+30)</div>
         </div>
-        <div class="progress-step" id="prog-phone">
+        <div class="progress-step" id="prog-phone" onclick="showStep('phone')">
           <div class="bar"></div>
           <div class="label">Phone (+10)</div>
         </div>
-        <div class="progress-step" id="prog-social">
+        <div class="progress-step" id="prog-social" onclick="showStep('social')">
           <div class="bar"></div>
           <div class="label">Social (+20)</div>
         </div>
@@ -536,7 +537,7 @@
         <p class="step-desc">Link up to 3 social accounts to earn <strong style="color:#E8A0B5;">+20 trust points each</strong>. Our AI verifies each account is real.</p>
         <div id="social-connected-list" style="margin-bottom:16px"></div>
         <div id="social-add-form">
-          <select id="social-platform" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none">
+          <select id="social-platform" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box">
             <option value="">Select platform...</option>
             <option value="instagram">Instagram</option>
             <option value="tiktok">TikTok</option>
@@ -545,11 +546,9 @@
             <option value="facebook">Facebook</option>
             <option value="snapchat">Snapchat</option>
           </select>
-          <input type="text" id="social-username" placeholder="@username" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none" />
-          <div style="display:flex;gap:10px;margin-bottom:10px">
-            <input type="number" id="social-age" placeholder="Account age (months)" min="0" style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none" />
-            <input type="number" id="social-followers" placeholder="Follower count" min="0" style="flex:1;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none" />
-          </div>
+          <input type="text" id="social-username" placeholder="@username" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
+          <input type="number" id="social-age" placeholder="Account age (months)" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
+          <input type="number" id="social-followers" placeholder="Follower count" min="0" style="width:100%;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#fff;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px;outline:none;box-sizing:border-box" />
           <button class="btn-primary" id="social-connect-btn" onclick="connectSocialAccount()" style="width:100%">Link Account</button>
         </div>
         <a class="skip-link" onclick="showStep('complete')">Continue to finish</a>
@@ -1072,8 +1071,9 @@
         return;
       }
 
-      // Check if returning from Didit verification
+      // Check URL parameters
       const urlParams = new URLSearchParams(window.location.search);
+      const requestedStep = urlParams.get('step'); // from dashboard click
       const diditReturn = urlParams.get('didit') === 'complete';
       const wasDiditPending = localStorage.getItem('safetea_didit_pending');
 
@@ -1145,6 +1145,13 @@
 
         // Legacy: clean up old verifying flag
         if (wasVerifying) localStorage.removeItem('safetea_verifying');
+
+        // If a specific step was requested via URL param (e.g. from dashboard click), go there
+        if (requestedStep && ['age', 'identity', 'gender', 'didit', 'phone', 'social', 'complete'].indexOf(requestedStep) !== -1) {
+          showStep(requestedStep);
+          window.history.replaceState({}, '', '/verify.html');
+          return;
+        }
 
         // Show the next incomplete step
         if (data.nextStep) {

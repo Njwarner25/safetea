@@ -217,6 +217,10 @@
         if (inboxGate) inboxGate.style.display = isPaid ? 'none' : 'block';
         if (inboxContent) inboxContent.style.display = isPaid ? 'block' : 'none';
 
+        // Home upgrade card — show only for free users
+        var upgradeCard = document.getElementById('home-upgrade-card');
+        if (upgradeCard) upgradeCard.style.display = isPaid ? 'none' : 'block';
+
         // User avatar in nav
         var navAvatar = document.querySelector('.user-avatar');
         if (navAvatar) {

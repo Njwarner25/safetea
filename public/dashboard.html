@@ -2378,6 +2378,66 @@
             <!-- HUB: OVERVIEW (Home — clean stacked layout) -->
             <div id="hub-overview" class="hub-sub active">
 
+                <!-- ====== UPGRADE TO SAFETEA PLUS (hidden for plus users) ====== -->
+                <div id="home-upgrade-card" style="display:none;background:linear-gradient(135deg,#1A1A2E 0%,#22223A 100%);border:1.5px solid rgba(232,160,181,0.25);border-radius:18px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden">
+                    <!-- Decorative accent -->
+                    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(232,160,181,0.12),transparent 70%);border-radius:50%"></div>
+                    <div style="position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(155,89,182,0.1),transparent 70%);border-radius:50%"></div>
+
+                    <!-- Badge -->
+                    <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#f27059,#E8A0B5);padding:5px 14px;border-radius:20px;margin-bottom:16px">
+                        <i class="fas fa-shield-heart" style="color:#fff;font-size:12px"></i>
+                        <span style="color:#fff;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase">SafeTea+</span>
+                    </div>
+
+                    <h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:8px;line-height:1.3">Upgrade to SafeTea+</h3>
+                    <p style="color:#B0B0C8;font-size:14px;line-height:1.6;margin-bottom:20px">SafeTea is the all-in-one safety companion for people who date. Get full access to every tool designed to keep you safe before, during, and after every date.</p>
+
+                    <!-- Feature list -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px">
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-calendar-check" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Date Check-In</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-camera" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Photo Verification</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-flag" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Red Flag Scanner</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-exclamation-triangle" style="color:#e74c3c;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">SOS Record & Protect</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-eye" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Name Watch</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-search" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Safety Search</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(232,160,181,0.06);border-radius:10px;padding:10px 12px">
+                            <i class="fas fa-envelope" style="color:#E8A0B5;font-size:14px;min-width:18px;text-align:center"></i>
+                            <span style="color:#D0D0E0;font-size:12px;font-weight:500">Private Inbox</span>
+                        </div>
+                    </div>
+
+                    <!-- Price + CTA -->
+                    <div style="text-align:center">
+                        <div style="margin-bottom:14px">
+                            <span style="color:#E8A0B5;font-size:28px;font-weight:800">$7.99</span>
+                            <span style="color:#8080A0;font-size:14px">/month</span>
+                        </div>
+                        <button onclick="showUpgradePrompt()" style="width:100%;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;border:none;padding:16px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:0.3px;box-shadow:0 4px 20px rgba(232,160,181,0.3);transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 20px rgba(232,160,181,0.3)'">
+                            <i class="fas fa-shield-heart"></i> Upgrade to SafeTea+
+                        </button>
+                        <p style="color:#8080A0;font-size:11px;margin-top:10px">Annual plan available — save 30%</p>
+                    </div>
+                </div>
+
                 <!-- ====== ACTIVE DATE CARD (shown when checked out) ====== -->
                 <div id="home-active-date" class="home-card" style="display:none;background:linear-gradient(135deg,rgba(232,160,181,0.08),rgba(180,140,210,0.06));border:1px solid rgba(232,160,181,0.2);border-radius:16px;padding:20px;margin-bottom:20px">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -2397,31 +2457,6 @@
                     <div style="display:flex;gap:8px">
                         <button onclick="viewSafeTeaReport()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-file-alt"></i> View Details</button>
                         <button onclick="shareDateLink()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-alt"></i> Share Live Link</button>
-                    </div>
-                </div>
-
-                <!-- ====== SAFETY TOOLS (stacked cards) ====== -->
-                <div style="margin-bottom:20px">
-                    <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-shield-alt" style="color:#E8A0B5;font-size:13px"></i> Safety Tools</h3>
-                    <p style="color:#8080A0;font-size:13px;margin-top:-8px;margin-bottom:14px">Private tools to help you stay safe and informed.</p>
-
-                    <!-- Safety Search -->
-                    <div onclick="switchHubTab('search')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(91,160,208,0.08),rgba(91,160,208,0.02));border:1px solid rgba(91,160,208,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(91,160,208,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(91,160,208,0.15)'">
-                        <div style="min-width:44px;height:44px;background:rgba(91,160,208,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-search" style="font-size:20px;color:#5BA0D0"></i></div>
-                        <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Safety Search</h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Run background checks with social media, mugshots, and data broker exposure.</p>
-                        </div>
-                    </div>
-
-                    <!-- Quick link to SafeTea Tools tab -->
-                    <div onclick="switchTab('alerts')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.06),rgba(155,89,182,0.04));border:1px solid rgba(232,160,181,0.15);border-radius:14px;padding:16px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
-                        <div style="min-width:44px;height:44px;background:rgba(232,160,181,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-toolbox" style="font-size:20px;color:#E8A0B5"></i></div>
-                        <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">All SafeTea Tools</h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Date Check-In, Photo Verification, Red Flag Scanner, SOS, Name Watch</p>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#8080A0"></i>
                     </div>
                 </div>
 

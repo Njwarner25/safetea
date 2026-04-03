@@ -242,6 +242,85 @@
         return t === 'plus' || t === 'pro' || t === 'premium' || user.role === 'admin' || user.role === 'moderator';
     }
 
+    // ============ SHARE API ============
+    function composeShareText(displayName, gpsLink, trackingUrl) {
+        return 'SAFETEA EMERGENCY REPORT\n\n' +
+            (displayName || 'A SafeTea user') + ' may need immediate help and activated SafeTea\'s emergency system.\n\n' +
+            'LIVE TRACKING (auto-updates every 10s):\n' + (trackingUrl || '') + '\n\n' +
+            (gpsLink ? 'CURRENT LOCATION:\n' + gpsLink + '\n\n' : '') +
+            'WHAT\'S HAPPENING:\n' +
+            '- Audio is being recorded and uploaded in real-time\n' +
+            '- GPS location is tracking continuously\n\n' +
+            'OUTCRY WITNESS NOTICE:\n' +
+            'You may be the first person told about this situation. Your testimony may carry special legal weight. This recording may serve as evidence.\n\n' +
+            'WHAT TO DO:\n' +
+            '1. Open the live tracking link above\n' +
+            '2. Try to contact ' + (displayName || 'them') + ' directly\n' +
+            '3. If no response, call 911 with the GPS location\n' +
+            '4. Save this message\n\n' +
+            'Sent via SafeTea Record & Protect';
+    }
+
+    function shareEmergencyReport(displayName, gpsLink, trackingUrl) {
+        var text = composeShareText(displayName, gpsLink, trackingUrl);
+        if (navigator.share) {
+            navigator.share({
+                title: 'SafeTea Emergency Report',
+                text: text
+            }).catch(function(err) {
+                if (err.name !== 'AbortError') {
+                    console.warn('[Share] Share cancelled or failed:', err);
+                    showDesktopShareFallback(text, displayName, gpsLink, trackingUrl);
+                }
+            });
+        } else {
+            showDesktopShareFallback(text, displayName, gpsLink, trackingUrl);
+        }
+    }
+
+    function showDesktopShareFallback(text, displayName, gpsLink, trackingUrl) {
+        var existing = document.getElementById('share-fallback-modal');
+        if (existing) existing.remove();
+
+        var encoded = encodeURIComponent(text);
+        var smsBody = encodeURIComponent('SafeTea Emergency: ' + (displayName || 'Someone') + ' may need help. Live tracking: ' + (trackingUrl || ''));
+        var emailSubject = encodeURIComponent('EMERGENCY: ' + (displayName || 'A SafeTea user') + ' may need your help');
+
+        var backdrop = document.createElement('div');
+        backdrop.id = 'share-fallback-modal';
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10002;display:flex;align-items:center;justify-content:center;padding:20px';
+        backdrop.innerHTML =
+            '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;max-width:400px;width:100%">' +
+                '<h3 style="color:#fff;font-size:16px;margin-bottom:4px;text-align:center"><i class="fas fa-share-alt" style="color:#E8A0B5"></i> Share Emergency Report</h3>' +
+                '<p style="color:#8080A0;font-size:12px;text-align:center;margin-bottom:16px">Send this to your trusted contacts</p>' +
+                '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">' +
+                    '<button id="share-copy" style="width:100%;background:#22223A;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif;text-align:left"><i class="fas fa-copy" style="color:#E8A0B5;margin-right:8px;width:16px"></i>Copy to Clipboard</button>' +
+                    '<a href="sms:?body=' + smsBody + '" style="display:block;width:100%;background:#22223A;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px;border-radius:10px;font-size:13px;text-decoration:none;box-sizing:border-box"><i class="fas fa-sms" style="color:#2ecc71;margin-right:8px;width:16px"></i>Send via SMS</a>' +
+                    '<a href="https://wa.me/?text=' + encoded + '" target="_blank" style="display:block;width:100%;background:#22223A;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px;border-radius:10px;font-size:13px;text-decoration:none;box-sizing:border-box"><i class="fab fa-whatsapp" style="color:#25D366;margin-right:8px;width:16px"></i>Send via WhatsApp</a>' +
+                    '<a href="mailto:?subject=' + emailSubject + '&body=' + encoded + '" style="display:block;width:100%;background:#22223A;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px;border-radius:10px;font-size:13px;text-decoration:none;box-sizing:border-box"><i class="fas fa-envelope" style="color:#E8A0B5;margin-right:8px;width:16px"></i>Send via Email</a>' +
+                '</div>' +
+                '<button id="share-fallback-close" style="width:100%;background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:10px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif">Close</button>' +
+            '</div>';
+        document.body.appendChild(backdrop);
+
+        document.getElementById('share-copy').onclick = function() {
+            navigator.clipboard.writeText(text).then(function() {
+                if (typeof showToast === 'function') showToast('Emergency report copied to clipboard');
+            }).catch(function() {
+                // Fallback: select from textarea
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                if (typeof showToast === 'function') showToast('Copied to clipboard');
+            });
+        };
+        document.getElementById('share-fallback-close').onclick = function() { backdrop.remove(); };
+        backdrop.addEventListener('click', function(e) { if (e.target === backdrop) backdrop.remove(); });
+    }
+
     // ============ SOS ACTION SHEET ============
     window.showSOSActionSheet = function() {
         var user = getUser();
@@ -350,11 +429,14 @@
                 } else {
                     var html = '';
                     data.contacts.forEach(function(c) {
+                        var emailIcon = c.contact_email
+                            ? '<span style="color:#2ecc71;font-size:9px;margin-left:6px" title="Email set"><i class="fas fa-envelope"></i></span>'
+                            : '<span style="color:#e67e22;font-size:9px;margin-left:6px" title="No email"><i class="fas fa-exclamation-circle"></i></span>';
                         html +=
                             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (data.contacts.length > 1 ? '6px' : '0') + '">' +
                                 '<div style="width:32px;height:32px;background:rgba(46,204,113,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user-check" style="font-size:12px;color:#2ecc71"></i></div>' +
                                 '<div>' +
-                                    '<p style="color:#fff;font-size:12px;font-weight:600;margin:0">' + c.contact_name + '</p>' +
+                                    '<p style="color:#fff;font-size:12px;font-weight:600;margin:0">' + c.contact_name + emailIcon + '</p>' +
                                     '<p style="color:#8080A0;font-size:11px;margin:0">' + c.contact_phone + '</p>' +
                                 '</div>' +
                             '</div>';
@@ -951,7 +1033,8 @@
                 '<p id="rp-sms-status" style="color:#888;font-size:12px;margin-bottom:6px"></p>' +
                 '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Waiting for first audio chunk...</p>' +
                 '<p id="rp-gps-status" style="color:#555;font-size:11px;margin-bottom:24px"></p>' +
-                '<div style="display:flex;gap:10px;justify-content:center">' +
+                '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+                    '<button id="rp-reshare-btn" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:12px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-share-alt"></i> Re-share</button>' +
                     '<button id="rp-stealth-btn" style="background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px 20px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-eye-slash"></i> Stealth</button>' +
                     '<button id="rp-stop-btn" style="background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-check-circle"></i> I\'m Safe — Stop</button>' +
                 '</div>' +
@@ -968,6 +1051,17 @@
         document.getElementById('rp-stop-btn').onclick = stopRecording;
         document.getElementById('rp-stealth-btn').onclick = function() {
             toggleStealthMode();
+        };
+        document.getElementById('rp-reshare-btn').onclick = function() {
+            if (state.shareData) {
+                shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
+            } else if (state.sessionKey) {
+                var user = getUser();
+                var name = user ? (user.custom_display_name || user.display_name || 'A SafeTea user') : 'A SafeTea user';
+                var gps = state.lastLat && state.lastLng ? 'https://maps.google.com/?q=' + state.lastLat + ',' + state.lastLng : null;
+                var tracking = 'https://www.getsafetea.app/recording-status?key=' + state.sessionKey;
+                shareEmergencyReport(name, gps, tracking);
+            }
         };
 
         // In stealth mode: tap anywhere on the black screen to briefly reveal controls
@@ -1076,9 +1170,11 @@
             console.log('[Record] Start response:', JSON.stringify(data));
             state.sessionKey = data.sessionKey;
             state.contactsNotified = data.contactsNotified || 0;
+            state.emailsSent = data.emailsSent || 0;
             state.contactsFound = data.contactsFound || 0;
             state.twilioConfigured = data.twilioConfigured;
             state.smsErrors = data.smsErrors;
+            state.shareData = data.shareData || null;
         } catch (err) {
             if (typeof showToast === 'function') showToast('Network error starting recording. Please try again.');
             stream.getTracks().forEach(function(t) { t.stop(); });
@@ -1093,6 +1189,11 @@
         if (sosBtn) sosBtn.style.display = 'none';
 
         showStealthOverlay();
+
+        // Open share sheet immediately so user can forward emergency info while they still can
+        if (state.shareData) {
+            shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
+        }
 
         // Start MediaRecorder — use low bitrate to keep chunks small (Vercel 4.5MB body limit)
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
@@ -1127,15 +1228,16 @@
             );
         }
 
-        // Send SMS updates to contacts every 1 minute — keeps sending until user stops
+        // Send updates at 1 min and 3 min only (contacts have live tracking page after that)
         state.updateCount = 0;
-        function sendPeriodicUpdate() {
+        function sendPeriodicUpdate(updateLabel) {
             if (!state.recording || !state.sessionKey) return;
             state.updateCount++;
             var updateNum = state.updateCount;
-            console.log('[Record] Sending periodic update #' + updateNum);
+            var label = updateLabel || ('Update #' + updateNum);
+            console.log('[Record] Sending ' + label);
             var statusEl = document.getElementById('rp-chunk-status');
-            if (statusEl) statusEl.textContent = 'Sending update #' + updateNum + ' to contacts...';
+            if (statusEl) statusEl.textContent = 'Sending ' + label + ' to contacts...';
 
             var controller = new AbortController();
             var timeoutId = setTimeout(function() { controller.abort(); }, 20000);
@@ -1152,40 +1254,46 @@
             })
             .then(function(r) { clearTimeout(timeoutId); return r.json(); })
             .then(function(data) {
-                console.log('[Record] Update #' + updateNum + ' response:', JSON.stringify(data));
+                console.log('[Record] ' + label + ' response:', JSON.stringify(data));
                 var smsEl = document.getElementById('rp-sms-status');
+                var notified = (data.contactsNotified || 0) + (data.emailsSent || 0);
                 if (data.success && data.skipped) {
-                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' skipped (rate limit)';
-                } else if (data.success && data.contactsNotified > 0) {
-                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' sent';
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#2ecc71">&#10003; Update #' + updateNum + ' sent to ' + data.contactsNotified + ' contact(s)</span>';
+                    if (statusEl) statusEl.textContent = label + ' skipped (already sent)';
+                } else if (data.success && notified > 0) {
+                    if (statusEl) statusEl.textContent = label + ' sent';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#2ecc71">&#10003; ' + label + ' sent to ' + notified + ' contact(s)</span>';
                 } else if (data.contactsFound === 0) {
                     if (statusEl) statusEl.textContent = 'No emergency contacts saved';
                     if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; No emergency contacts saved</span>';
-                } else if (!data.twilioConfigured) {
-                    if (statusEl) statusEl.textContent = 'SMS not configured';
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; SMS service not configured</span>';
                 } else if (data.error) {
-                    if (statusEl) statusEl.textContent = 'Update error: ' + data.error;
+                    if (statusEl) statusEl.textContent = label + ' error: ' + data.error;
                     if (smsEl) smsEl.innerHTML = '<span style="color:#e74c3c">&#10007; ' + data.error + '</span>';
                 } else {
-                    if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' — 0 contacts notified';
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; SMS not delivered (contacts: ' + (data.contactsFound || 0) + ')</span>';
+                    if (statusEl) statusEl.textContent = label + ' — delivery pending';
+                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; Contacts notified via live tracking page</span>';
                 }
             })
             .catch(function(err) {
                 clearTimeout(timeoutId);
-                console.error('[Record] Update #' + updateNum + ' failed:', err.message || err);
-                if (statusEl) statusEl.textContent = 'Update #' + updateNum + ' failed — will retry next minute';
+                console.error('[Record] ' + label + ' failed:', err.message || err);
+                if (statusEl) statusEl.textContent = label + ' failed';
             });
         }
-        state.updateInterval = setInterval(sendPeriodicUpdate, 60000); // every 1 minute
+        // 1-minute update
+        state.updateTimeout1 = setTimeout(function() {
+            sendPeriodicUpdate('1-min alert');
+        }, 60000);
+        // 3-minute update
+        state.updateTimeout2 = setTimeout(function() {
+            sendPeriodicUpdate('3-min alert');
+        }, 180000);
 
-        // Show persistent SMS status on overlay
+        // Show persistent status on overlay
         var smsStatusEl = document.getElementById('rp-sms-status');
-        if (state.contactsNotified > 0) {
-            if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#2ecc71">&#10003; Report sent to ' + state.contactsNotified + ' contact(s)</span>';
-            if (typeof showToast === 'function') showToast('Recording started. ' + state.contactsNotified + ' contact(s) notified.');
+        var totalNotified = (state.contactsNotified || 0) + (state.emailsSent || 0);
+        if (totalNotified > 0) {
+            if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#2ecc71">&#10003; ' + totalNotified + ' contact(s) notified (SMS + email)</span>';
+            if (typeof showToast === 'function') showToast('Recording started. ' + totalNotified + ' contact(s) notified. Updates at 1 & 3 min.');
         } else {
             var reason = '';
             if (state.contactsFound === 0) {
@@ -1195,7 +1303,7 @@
             } else if (state.smsErrors && state.smsErrors.length > 0) {
                 reason = 'SMS error: ' + state.smsErrors[0];
             } else {
-                reason = 'Unknown SMS issue (contacts: ' + state.contactsFound + ', twilio: ' + state.twilioConfigured + ')';
+                reason = 'Contacts notified via share — updates at 1 & 3 min';
             }
             if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#e67e22">&#9888; ' + reason + '</span>';
             if (typeof showToast === 'function') showToast('Recording started — ' + reason);
@@ -1294,8 +1402,11 @@
             state.watchId = null;
         }
 
+        if (state.updateTimeout1) { clearTimeout(state.updateTimeout1); state.updateTimeout1 = null; }
+        if (state.updateTimeout2) { clearTimeout(state.updateTimeout2); state.updateTimeout2 = null; }
         if (state.updateInterval) { clearInterval(state.updateInterval); state.updateInterval = null; }
 
+        var savedShareData = state.shareData;
         if (state.sessionKey) {
             fetch('/api/recording/resolve', {
                 method: 'POST',
@@ -1308,6 +1419,15 @@
                     var msg = 'Recording saved. ' + (data.totalChunks || 0) + ' chunk(s) stored securely.';
                     if (data.contactsNotified > 0) msg += ' ' + data.contactsNotified + ' contact(s) notified you are safe.';
                     if (typeof showToast === 'function') showToast(msg);
+
+                    // Offer to share "I'm safe" message
+                    if (savedShareData && navigator.share) {
+                        var safeName = savedShareData.displayName || 'A SafeTea user';
+                        navigator.share({
+                            title: 'SafeTea — All Clear',
+                            text: safeName + ' has marked themselves safe on SafeTea. Live tracking deactivated. No further action needed.'
+                        }).catch(function() {});
+                    }
                 }
             })
             .catch(function() {
@@ -1317,6 +1437,7 @@
 
         state.sessionKey = null;
         state.chunkNumber = 0;
+        state.shareData = null;
 
         // Restore SOS floating button
         var sosBtn = document.getElementById('sos-floating-btn');
@@ -1416,7 +1537,7 @@
         backdrop.innerHTML =
             '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto">' +
                 '<h3 style="color:#fff;font-size:17px;margin-bottom:4px"><i class="fas fa-user-shield" style="color:#e74c3c"></i> Emergency Contacts</h3>' +
-                '<p style="color:#8080A0;font-size:12px;margin-bottom:20px">Up to 2 contacts who get notified during Record & Alert</p>' +
+                '<p style="color:#8080A0;font-size:12px;margin-bottom:20px">Up to 2 contacts who get a text + email during Record & Alert</p>' +
 
                 '<div id="ec-list" style="margin-bottom:16px">' +
                     '<p style="color:#555;font-size:12px;text-align:center">Loading...</p>' +
@@ -1425,7 +1546,9 @@
                 '<div id="ec-add-form" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:16px">' +
                     '<p style="color:#C0C0D0;font-size:13px;font-weight:600;margin-bottom:10px"><i class="fas fa-plus-circle" style="color:#E8A0B5"></i> Add Contact</p>' +
                     '<input id="ec-name" type="text" placeholder="Name (e.g. Mom, Sarah)" maxlength="100" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:8px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
-                    '<input id="ec-phone" type="tel" placeholder="Phone number" maxlength="20" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
+                    '<input id="ec-phone" type="tel" placeholder="Phone number" maxlength="20" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:8px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
+                    '<input id="ec-email" type="email" placeholder="Email (for emergency reports)" maxlength="150" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
+                    '<p style="color:#555;font-size:11px;margin:0 0 10px;line-height:1.4">Phone gets a short text alert. Email gets the full emergency report with GPS, audio transcript, and live tracking link.</p>' +
                     '<button id="ec-add-btn" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Add Contact</button>' +
                 '</div>' +
 
@@ -1443,6 +1566,7 @@
         document.getElementById('ec-add-btn').onclick = function() {
             var name = document.getElementById('ec-name').value.trim();
             var phone = document.getElementById('ec-phone').value.trim();
+            var email = document.getElementById('ec-email') ? document.getElementById('ec-email').value.trim() : '';
             if (!name || !phone) {
                 if (typeof showToast === 'function') showToast('Please enter both name and phone number');
                 return;
@@ -1453,7 +1577,7 @@
             fetch('/api/recording/contacts', {
                 method: 'POST',
                 headers: authHeaders(),
-                body: JSON.stringify({ contactName: name, contactPhone: phone })
+                body: JSON.stringify({ contactName: name, contactPhone: phone, contactEmail: email || undefined })
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -1462,6 +1586,7 @@
                 if (data.success) {
                     document.getElementById('ec-name').value = '';
                     document.getElementById('ec-phone').value = '';
+                    if (document.getElementById('ec-email')) document.getElementById('ec-email').value = '';
                     loadEmergencyContacts();
                     if (typeof showToast === 'function') showToast('Contact added');
                 } else {
@@ -1494,15 +1619,19 @@
             }
             var html = '';
             data.contacts.forEach(function(c) {
+                var emailLine = c.contact_email
+                    ? '<p style="color:#8080A0;font-size:11px;margin:0"><i class="fas fa-envelope" style="font-size:9px;margin-right:4px"></i>' + c.contact_email + ' <span onclick="editContactEmail(' + c.id + ',\'' + (c.contact_email || '').replace(/'/g, "\\'") + '\')" style="color:#E8A0B5;cursor:pointer;font-size:10px"><i class="fas fa-pen" style="font-size:8px"></i> edit</span></p>'
+                    : '<p style="color:#e67e22;font-size:10px;margin:0;cursor:pointer" onclick="editContactEmail(' + c.id + ',\'\')"><i class="fas fa-exclamation-circle" style="font-size:9px;margin-right:4px"></i>Add email to get full report <i class="fas fa-plus" style="font-size:8px;margin-left:4px"></i></p>';
                 html += '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">' +
-                    '<div style="display:flex;align-items:center;gap:10px">' +
-                        '<div style="width:36px;height:36px;background:rgba(231,76,60,0.12);border-radius:18px;display:flex;align-items:center;justify-content:center"><i class="fas fa-user" style="font-size:14px;color:#e74c3c"></i></div>' +
-                        '<div>' +
+                    '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">' +
+                        '<div style="width:36px;height:36px;background:rgba(231,76,60,0.12);border-radius:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-user" style="font-size:14px;color:#e74c3c"></i></div>' +
+                        '<div style="min-width:0">' +
                             '<p style="color:#fff;font-size:13px;font-weight:600;margin:0">' + c.contact_name + '</p>' +
                             '<p style="color:#8080A0;font-size:11px;margin:0">' + c.contact_phone + '</p>' +
+                            emailLine +
                         '</div>' +
                     '</div>' +
-                    '<button onclick="removeEmergencyContact(' + c.id + ')" style="background:rgba(231,76,60,0.1);border:none;width:30px;height:30px;border-radius:15px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="fas fa-trash-alt" style="font-size:12px;color:#e74c3c"></i></button>' +
+                    '<button onclick="removeEmergencyContact(' + c.id + ')" style="background:rgba(231,76,60,0.1);border:none;width:30px;height:30px;border-radius:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-trash-alt" style="font-size:12px;color:#e74c3c"></i></button>' +
                 '</div>';
             });
             list.innerHTML = html;
@@ -1514,6 +1643,33 @@
             list.innerHTML = '<p style="color:#e74c3c;font-size:12px;text-align:center">Failed to load contacts</p>';
         });
     }
+
+    window.editContactEmail = function(contactId, currentEmail) {
+        var newEmail = prompt('Enter email address for emergency reports:', currentEmail || '');
+        if (newEmail === null) return; // cancelled
+        newEmail = newEmail.trim();
+        if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            if (typeof showToast === 'function') showToast('Please enter a valid email address');
+            return;
+        }
+        fetch('/api/recording/contacts', {
+            method: 'PATCH',
+            headers: authHeaders(),
+            body: JSON.stringify({ contactId: contactId, contactEmail: newEmail || null })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                loadEmergencyContacts();
+                if (typeof showToast === 'function') showToast(newEmail ? 'Email updated' : 'Email removed');
+            } else {
+                if (typeof showToast === 'function') showToast(data.error || 'Failed to update email');
+            }
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast('Network error');
+        });
+    };
 
     window.removeEmergencyContact = function(contactId) {
         if (!confirm('Remove this emergency contact?')) return;

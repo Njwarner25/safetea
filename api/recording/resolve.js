@@ -1,6 +1,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
 const { transcribeAudio } = require('./transcribe');
+const { sendSafeConfirmationEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -33,12 +34,13 @@ module.exports = async function handler(req, res) {
       [sessionKey]
     );
 
-    // Send "I'm Safe" SMS (recording_contacts first, then date_trusted_contacts fallback)
+    // Send "I'm Safe" short SMS + email (recording_contacts first, then date_trusted_contacts fallback)
     let contactsNotified = 0;
+    let emailsSent = 0;
     let contacts = [];
     try {
       contacts = await getMany(
-        'SELECT contact_name, contact_phone FROM recording_contacts WHERE user_id = $1',
+        'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]
       );
     } catch (e) { /* table may not exist yet */ }
@@ -56,31 +58,42 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-    const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+    let twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
+    if (twilioPhone && !twilioPhone.startsWith('+')) twilioPhone = '+' + twilioPhone;
 
-    if (twilioSid && twilioAuth && twilioPhone && contacts.length > 0) {
-      const twilio = require('twilio')(twilioSid, twilioAuth);
-      const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
+    if (contacts.length > 0) {
+      const shortSms = `${displayName} has marked themselves safe on SafeTea. No further action needed.`;
 
-      const message =
-        `✅ Update — SafeTea\n` +
-        `━━━━━━━━━━━━━━━━━\n` +
-        `${displayName} has stopped recording and marked themselves as safe.\n\n` +
-        `Live tracking deactivated.\n` +
-        `━━━━━━━━━━━━━━━━━`;
+      // Short SMS via Twilio
+      if (twilioSid && twilioAuth && twilioPhone) {
+        const twilio = require('twilio')(twilioSid, twilioAuth);
+        for (const contact of contacts) {
+          try {
+            await twilio.messages.create({
+              body: shortSms,
+              from: twilioPhone,
+              to: contact.contact_phone,
+            });
+            contactsNotified++;
+          } catch (smsErr) {
+            console.error(`Safe SMS failed to ${contact.contact_phone}:`, smsErr.message);
+          }
+        }
+      }
 
+      // Safe confirmation email via SendGrid
       for (const contact of contacts) {
-        try {
-          await twilio.messages.create({
-            body: message,
-            from: twilioPhone,
-            to: contact.contact_phone,
-          });
-          contactsNotified++;
-        } catch (smsErr) {
-          console.error(`Safe SMS failed to ${contact.contact_phone}:`, smsErr.message);
+        const email = contact.contact_email || contact.email;
+        if (email) {
+          try {
+            await sendSafeConfirmationEmail(email, displayName);
+            emailsSent++;
+          } catch (emailErr) {
+            console.error(`Safe email failed to ${email}:`, emailErr.message);
+          }
         }
       }
     }

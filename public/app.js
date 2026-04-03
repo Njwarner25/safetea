@@ -1086,6 +1086,16 @@
             .then(function(data) {
                 if (data.success) {
                     if (typeof showToast === 'function') showToast('SOS sent! ' + (data.contactsNotified || 0) + ' contact(s) notified.');
+                    // Open share sheet with emergency info
+                    if (data.shareData && navigator.share) {
+                        var sd = data.shareData;
+                        var text = 'SAFETEA SOS ALERT\n\n' +
+                            (sd.displayName || 'A SafeTea user') + ' triggered an emergency SOS.\n\n' +
+                            (sd.gpsLink ? 'GPS: ' + sd.gpsLink + '\n' : '') +
+                            'LIVE TRACKING: ' + sd.trackingUrl + '\n\n' +
+                            'What to do:\n1. Open the tracking link\n2. Try to contact them\n3. If no response, call 911\n\nSent via SafeTea';
+                        navigator.share({ title: 'SafeTea SOS Alert', text: text }).catch(function() {});
+                    }
                 } else {
                     if (typeof showToast === 'function') showToast(data.error || 'SOS failed. Please try again.');
                 }
@@ -2222,6 +2232,103 @@
     }
     window.addWatermark = addWatermark;
 
+    // ==================== STEGANOGRAPHIC WATERMARK ====================
+    // Embeds viewer's user ID into image pixels using block-based luminance modulation.
+    // 40-bit payload: 8-bit magic header (10101010) + 32-bit user ID.
+    // Each 32x32 block shifts green channel +3 (bit=1) or -3 (bit=0).
+    // Payload tiles across all blocks for redundancy; decoder uses majority voting.
+
+    var STEGO_BLOCK = 32;
+    var STEGO_MAGIC = 0xAA; // 10101010
+
+    function stegoEmbed(dataUrl, userId, callback) {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            var w = img.width, h = img.height;
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var imageData = ctx.getImageData(0, 0, w, h);
+            var px = imageData.data;
+
+            // Build 40-bit payload: 8 magic + 32 userId
+            var uid = (userId >>> 0) & 0xFFFFFFFF;
+            var bits = [];
+            var i;
+            for (i = 7; i >= 0; i--) bits.push((STEGO_MAGIC >> i) & 1);
+            for (i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
+
+            var blocksX = Math.floor(w / STEGO_BLOCK);
+            var blocksY = Math.floor(h / STEGO_BLOCK);
+            var totalBlocks = blocksX * blocksY;
+            if (totalBlocks === 0) { callback(dataUrl); return; }
+
+            for (var b = 0; b < totalBlocks; b++) {
+                var bit = bits[b % bits.length];
+                var bx = (b % blocksX) * STEGO_BLOCK;
+                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
+                var delta = bit ? 3 : -3;
+                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
+                        var idx = (py * w + px2) * 4;
+                        var g = px[idx + 1] + delta;
+                        px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+                    }
+                }
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+            callback(canvas.toDataURL('image/jpeg', 0.95));
+        };
+        img.onerror = function() { callback(dataUrl); };
+        img.src = dataUrl;
+    }
+    window.stegoEmbed = stegoEmbed;
+
+    // IntersectionObserver: lazy-process photo post canvases when they enter viewport
+    function initStegoObserver() {
+        if (!window.IntersectionObserver) return;
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (!entry.isIntersecting) return;
+                var el = entry.target;
+                if (el.dataset.stegoProcessed) return;
+                el.dataset.stegoProcessed = '1';
+                observer.unobserve(el);
+
+                var src = el.dataset.stegoSrc;
+                if (!src) return;
+                var u = getUser();
+                var uid = u ? parseInt(u.id) || 0 : 0;
+
+                stegoEmbed(src, uid, function(encoded) {
+                    var imgEl = new Image();
+                    imgEl.onload = function() {
+                        var canvas = el;
+                        canvas.width = imgEl.width;
+                        canvas.height = imgEl.height;
+                        var ctx = canvas.getContext('2d');
+                        ctx.drawImage(imgEl, 0, 0);
+                        canvas.style.opacity = '1';
+                    };
+                    imgEl.src = encoded;
+                });
+            });
+        }, { rootMargin: '200px' });
+        window._stegoObserver = observer;
+    }
+    initStegoObserver();
+
+    // Observe new stego canvases after feed renders
+    function observeStegoCanvases(container) {
+        if (!window._stegoObserver) return;
+        var canvases = (container || document).querySelectorAll('canvas[data-stego-src]:not([data-stego-processed])');
+        canvases.forEach(function(c) { window._stegoObserver.observe(c); });
+    }
+    window.observeStegoCanvases = observeStegoCanvases;
+
     function canModifyPost(post) {
         var u = getUser();
         return u && (String(post.user_id) === String(u.id) || u.role === 'admin' || u.role === 'moderator');
@@ -2622,7 +2729,7 @@
                 '</div>' +
             '</div>' +
             '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
-            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px" loading="lazy" onerror="this.style.display=\'none\'"></div>' : '') +
+            (post.image_url ? '<div style="margin-bottom:12px;position:relative"><canvas data-stego-src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>' : '') +
             // Action bar
             '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
                 '<button id="like-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userLiked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
@@ -2654,6 +2761,7 @@
             var html = '';
             posts.forEach(function(post) { html += hubRenderPost(post); });
             container.innerHTML = html;
+            observeStegoCanvases(container);
         }).catch(function() {
             container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load discussions</div>';
         });
@@ -2771,7 +2879,7 @@
                 '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtmlSafe(personName) + '</div>' +
                 (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtmlSafe(post.city) + '</span>' : '') +
             '</div>' +
-            (post.image_url ? '<div style="margin-bottom:12px"><img src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06)" alt="Referral photo"></div>' : '') +
+            (post.image_url ? '<div style="margin-bottom:12px;position:relative"><canvas data-stego-src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>' : '') +
             '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
             // Ask About Him button
             (post.user_id ? '<div style="margin-bottom:12px"><button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button></div>' : '') +
@@ -2806,6 +2914,7 @@
             var html = '';
             posts.forEach(function(post) { html += hubRenderReferral(post); });
             container.innerHTML = html;
+            observeStegoCanvases(container);
         }).catch(function() {
             container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load referrals</div>';
         });
@@ -3090,6 +3199,7 @@
 
     // ==================== DID YOU KNOW ====================
     var DID_YOU_KNOW_FACTS = [
+        // Violence & safety stats
         { fact: '1 in 3 women worldwide have experienced physical or sexual violence.', source: 'World Health Organization' },
         { fact: '57% of women who have been murdered were killed by a current or former intimate partner.', source: 'CDC' },
         { fact: 'Women are 5 times more likely than men to experience intimate partner violence.', source: 'Bureau of Justice Statistics' },
@@ -3119,13 +3229,38 @@
         { fact: 'Sharing date details with a friend before meeting someone new is the #1 safety tip from law enforcement.', source: 'National Crime Prevention Council' },
         { fact: 'Abusers who strangle their partners are 10 times more likely to eventually kill them.', source: 'Journal of Emergency Medicine' },
         { fact: 'Women experience about 4.8 million intimate partner-related physical assaults per year.', source: 'CDC' },
-        { fact: '1 in 5 women has been the victim of attempted or completed rape in her lifetime.', source: 'CDC NISVS' }
+        { fact: '1 in 5 women has been the victim of attempted or completed rape in her lifetime.', source: 'CDC NISVS' },
+        // Dating safety tips
+        { fact: 'Always meet a first date in a public place — never at your home or theirs.', source: 'National Sexual Violence Resource Center' },
+        { fact: 'Trust your gut: women who acted on early warning signs were 3x less likely to be victimized.', source: 'The Gift of Fear, Gavin de Becker' },
+        { fact: 'Love bombing — excessive flattery and attention early on — is the #1 predictor of future emotional abuse.', source: 'Journal of Personality and Social Psychology' },
+        { fact: '53% of online daters admit to lying on their profile. Reverse-image search photos before meeting.', source: 'Pew Research Center' },
+        { fact: 'Sharing your live location with a trusted friend during dates can be a lifesaver — literally.', source: 'National Crime Prevention Council' },
+        { fact: 'If someone pressures you to move off a dating app to text immediately, it can be a red flag for controlling behavior.', source: 'Love Is Respect' },
+        { fact: 'Coercive control — isolation, monitoring, and manipulation — is now a criminal offense in many states.', source: 'National Network to End Domestic Violence' },
+        { fact: '85% of domestic violence victims return to their abuser at least once. Support, don\'t judge.', source: 'National Domestic Violence Hotline' },
+        { fact: 'Financial abuse occurs in 99% of domestic violence cases — it\'s the #1 reason victims stay.', source: 'National Network to End Domestic Violence' },
+        { fact: 'A person who disrespects your boundaries on small things will likely disrespect them on big things too.', source: 'Love Is Respect' },
+        // Technology & digital safety
+        { fact: 'Nearly 1 in 4 young adults has had a partner check their phone without permission.', source: 'Pew Research Center' },
+        { fact: 'Stalkerware — hidden tracking apps — is installed on an estimated 1 million phones in the U.S. each year.', source: 'Coalition Against Stalkerware' },
+        { fact: 'Disable location metadata on your photos before sharing them with someone you don\'t fully trust.', source: 'Electronic Frontier Foundation' },
+        { fact: '70% of catfishing victims report emotional or financial harm. Always verify who you\'re talking to.', source: 'FBI Internet Crime Report' },
+        { fact: 'Image-based abuse ("revenge porn") is a crime in 48 states and the District of Columbia.', source: 'Cyber Civil Rights Initiative' },
+        { fact: 'Sextortion scams increased 300% from 2021 to 2023. Never share intimate images with someone you haven\'t met.', source: 'FBI IC3 Report' },
+        // Empowerment & resources
+        { fact: 'The National Domestic Violence Hotline is available 24/7: call 1-800-799-7233 or text START to 88788.', source: 'NDVH' },
+        { fact: 'Safety planning is the single most effective tool for reducing harm. SafeTea\'s Date Check-In is your digital safety plan.', source: 'SafeTea' },
+        { fact: 'You are never responsible for someone else\'s abusive behavior — no matter what they tell you.', source: 'National Domestic Violence Hotline' },
+        { fact: 'Communities that talk openly about dating violence see 40% higher reporting rates and faster interventions.', source: 'Journal of Community Psychology' },
+        { fact: 'Background checks can reveal undisclosed criminal history — 1 in 8 online daters has a prior record.', source: 'Journal of Forensic Sciences' },
+        { fact: 'Women who use safety apps report feeling 60% more confident going on dates.', source: 'Dating Safety Alliance Survey' }
     ];
 
     function initDidYouKnow() {
-        // Use date-based index so each day shows a different fact
-        var dayIndex = Math.floor(Date.now() / 86400000) % DID_YOU_KNOW_FACTS.length;
-        var item = DID_YOU_KNOW_FACTS[dayIndex];
+        // Rotate every 6 hours (21600000 ms)
+        var sixHourIndex = Math.floor(Date.now() / 21600000) % DID_YOU_KNOW_FACTS.length;
+        var item = DID_YOU_KNOW_FACTS[sixHourIndex];
 
         // Community tab version
         var factEl = document.getElementById('dyk-fact');
@@ -3304,6 +3439,7 @@
             var html = '';
             data.posts.forEach(function(post) { html += roomRenderPost(post); });
             container.innerHTML = html;
+            observeStegoCanvases(container);
         }).catch(function() {
             container.innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">Failed to load feed.</p>';
         });
@@ -3356,7 +3492,7 @@
 
         var imageHtml = '';
         if (post.image_data) {
-            imageHtml = '<div style="margin-bottom:14px"><img src="' + post.image_data + '" style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid rgba(255,255,255,0.06)"></div>';
+            imageHtml = '<div style="margin-bottom:14px;position:relative"><canvas data-stego-src="' + post.image_data + '" style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
         }
 
         var bumpLabel = bumpCount > 0 ? ' ' + bumpCount : '';

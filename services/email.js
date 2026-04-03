@@ -261,6 +261,105 @@ function sendVerificationRequestEmail(to, displayName, reason) {
   });
 }
 
+function sendEmergencyReportEmail(to, { displayName, gpsLink, trackingUrl, minutesActive, transcript, chunkCount }) {
+  var locationHtml = gpsLink
+    ? '<a href="' + gpsLink + '" style="color:#fff;text-decoration:underline;font-weight:600">' + gpsLink + '</a>'
+    : '<span style="color:#e67e22">Location unavailable</span>';
+
+  var transcriptHtml = '';
+  if (transcript && transcript !== '(No speech detected)') {
+    var escaped = transcript.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    transcriptHtml =
+      '<div style="background:#1A1A2E;border-radius:10px;padding:16px;margin:16px 0;border-left:3px solid #E8A0B5;">' +
+        '<div style="color:#E8A0B5;font-size:12px;font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Audio Transcript</div>' +
+        '<div style="color:#ccc;font-size:14px;line-height:1.6;font-style:italic">"' + escaped + '"</div>' +
+      '</div>';
+  }
+
+  return sendEmail({
+    to,
+    subject: 'EMERGENCY: ' + (displayName || 'A SafeTea user') + ' may need your help',
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#1A1A2E;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:0;">
+    <div style="background:linear-gradient(135deg,#e74c3c,#c0392b);padding:28px 24px;text-align:center;">
+      <p style="color:#fff;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">SAFETEA EMERGENCY REPORT</p>
+      <p style="color:rgba(255,255,255,0.9);font-size:22px;font-weight:700;margin:0;">${displayName || 'A SafeTea user'} may need your help</p>
+      ${minutesActive ? '<p style="color:rgba(255,255,255,0.7);font-size:13px;margin:8px 0 0;">Recording active for ' + minutesActive + ' minute(s)</p>' : ''}
+    </div>
+    <div style="padding:28px 24px;">
+      <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <p style="color:#e74c3c;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Current Location</p>
+        <p style="color:#F0D0C0;font-size:15px;margin:0;">${locationHtml}</p>
+      </div>
+
+      <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <p style="color:#E8A0B5;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Audio Recording</p>
+        <p style="color:#F0D0C0;font-size:14px;margin:0;line-height:1.6;">
+          ${chunkCount ? chunkCount + ' audio clip(s) recorded and uploading in real-time' : 'Audio is being recorded and uploaded in real-time'}<br>
+          GPS location is tracking continuously
+        </p>
+      </div>
+
+      ${transcriptHtml}
+
+      <div style="text-align:center;margin:24px 0;">
+        <a href="${trackingUrl}" style="display:inline-block;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;padding:16px 40px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;">Open Live Tracking</a>
+        <p style="color:#8080A0;font-size:11px;margin-top:8px;">Auto-updates every 10 seconds</p>
+      </div>
+
+      <div style="background:rgba(241,196,15,0.08);border:1px solid rgba(241,196,15,0.2);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <p style="color:#f1c40f;font-size:13px;font-weight:700;margin:0 0 8px;">OUTCRY WITNESS NOTICE</p>
+        <p style="color:#F0D0C0;font-size:13px;line-height:1.6;margin:0;">You may be the first person told about this situation. Your testimony may carry special legal weight. This recording may serve as evidence.</p>
+      </div>
+
+      <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;">
+        <p style="color:#fff;font-size:14px;font-weight:700;margin:0 0 12px;">What To Do</p>
+        <ol style="color:#F0D0C0;font-size:14px;line-height:1.8;margin:0;padding-left:20px;">
+          <li>Open the live tracking link above</li>
+          <li>Try to contact ${displayName || 'them'} directly</li>
+          <li>If no response, <strong style="color:#e74c3c;">call 911</strong> with the GPS location</li>
+          <li>Save this email as evidence</li>
+        </ol>
+      </div>
+    </div>
+    <div style="text-align:center;padding:16px 24px 32px;color:#666;font-size:12px;">
+      <p style="margin:0;">Sent via SafeTea Record &amp; Protect</p>
+    </div>
+  </div>
+</body>
+</html>`,
+    text: 'SAFETEA EMERGENCY REPORT\n\n' +
+      (displayName || 'A SafeTea user') + ' may need your help.\n\n' +
+      'LOCATION: ' + (gpsLink || 'Unavailable') + '\n' +
+      'AUDIO: Recording in progress' + (chunkCount ? ' (' + chunkCount + ' clips)' : '') + '\n' +
+      (transcript ? 'TRANSCRIPT: "' + transcript + '"\n' : '') +
+      'LIVE TRACKING: ' + trackingUrl + '\n\n' +
+      'WHAT TO DO:\n1. Open the live tracking link\n2. Try to contact ' + (displayName || 'them') + '\n3. If no response, call 911\n4. Save this email\n\n' +
+      'Sent via SafeTea Record & Protect'
+  });
+}
+
+function sendSafeConfirmationEmail(to, displayName) {
+  return sendEmail({
+    to,
+    subject: (displayName || 'A SafeTea user') + ' is safe — SafeTea',
+    html: wrapHtml(`
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:56px;height:56px;background:rgba(46,204,113,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <span style="font-size:28px;color:#2ecc71;">&#10003;</span>
+        </div>
+        <h2 style="color:#2ecc71;font-size:20px;margin:0 0 8px;">All Clear</h2>
+      </div>
+      <p><strong style="color:#fff;">${displayName || 'A SafeTea user'}</strong> has stopped recording and marked themselves as safe.</p>
+      <p>Live tracking has been deactivated. No further action is needed.</p>
+      <p style="color:#8080A0;font-size:13px;margin-top:20px;">Thank you for being a trusted contact. Your willingness to help matters.</p>
+    `)
+  });
+}
+
 module.exports = {
   sendEmail,
   wrapHtml,
@@ -271,5 +370,7 @@ module.exports = {
   sendDateCheckInReminderEmail,
   sendCityUnlockEmail,
   sendWeeklyModReportEmail,
-  sendVerificationRequestEmail
+  sendVerificationRequestEmail,
+  sendEmergencyReportEmail,
+  sendSafeConfirmationEmail
 };

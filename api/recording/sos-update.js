@@ -1,5 +1,6 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
+const { sendEmergencyReportEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -30,12 +31,19 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Active recording not found' });
     }
 
-    // Check rate limit — don't send more often than every 50 seconds
+    // Only send at 1-minute and 3-minute marks (contacts have live tracking page after that)
+    var minutesActive = Math.round((Date.now() - new Date(session.created_at).getTime()) / 60000);
+    var updatesSent = 0;
     if (session.last_update_sent_at) {
+      // Count how many updates have been sent by checking the timestamp pattern
       var secondsSinceLast = (Date.now() - new Date(session.last_update_sent_at).getTime()) / 1000;
       if (secondsSinceLast < 50) {
         return res.status(200).json({ success: true, skipped: true, reason: 'Too soon since last update' });
       }
+    }
+    // After 4 minutes, stop sending updates — contacts have the live tracking page
+    if (minutesActive > 4) {
+      return res.status(200).json({ success: true, skipped: true, reason: 'Auto-updates complete (contacts have live tracking)' });
     }
 
     // Update location
@@ -50,7 +58,7 @@ module.exports = async function handler(req, res) {
     var contacts = [];
     try {
       contacts = await getMany(
-        'SELECT contact_name, contact_phone FROM recording_contacts WHERE user_id = $1',
+        'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]
       );
     } catch (e) {}
@@ -90,48 +98,60 @@ module.exports = async function handler(req, res) {
       chunkCount = parseInt(cc.total) || 0;
     } catch (e) {}
 
-    // Calculate duration
-    var minutesActive = Math.round((Date.now() - new Date(session.created_at).getTime()) / 60000);
+    // Build update data
     var displayName = session.custom_display_name || session.display_name || 'A SafeTea user';
     var gpsLink = latitude && longitude
       ? 'https://maps.google.com/?q=' + latitude + ',' + longitude
       : (session.latitude && session.longitude ? 'https://maps.google.com/?q=' + session.latitude + ',' + session.longitude : null);
-    var recordingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
+    var trackingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
 
-    var updateMsg =
-      'SAFETEA EMERGENCY UPDATE (' + minutesActive + ' min)\n\n' +
-      'A trusted contact may need your help and is unable to get to their phone.\n\n' +
-      'Review this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n' +
-      'WHO: ' + displayName + '\n' +
-      (gpsLink ? 'LOCATION: ' + gpsLink + '\n' : 'LOCATION: Unavailable\n') +
-      'AUDIO: ' + chunkCount + ' clip(s) recorded\n' +
-      (transcriptExcerpt ? 'TRANSCRIPT: "' + transcriptExcerpt + '"\n' : '') +
-      '\nVIEW FULL REPORT:\n' +
-      recordingUrl + '\n\n' +
-      '1. Open the report link\n' +
-      '2. Try to contact ' + displayName + '\n' +
-      '3. If no response, call 911\n\n' +
-      '- SafeTea Record & Protect';
+    // Short SMS ping via Twilio + full email via SendGrid
+    var shortSms = minutesActive <= 1
+      ? "You're a trusted contact for " + displayName + " on SafeTea. They may need your help \u2014 check your email immediately."
+      : "URGENT: " + displayName + "'s SafeTea recording has been active for " + minutesActive + " minutes. Check your email for updated location and audio.";
 
-    // SEND SMS IMMEDIATELY — don't let transcription block this
     var contactsNotified = 0;
+    var emailsSent = 0;
     var twilioSid = process.env.TWILIO_ACCOUNT_SID;
     var twilioAuth = process.env.TWILIO_AUTH_TOKEN;
     var twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
     if (twilioPhone && !twilioPhone.startsWith('+')) twilioPhone = '+' + twilioPhone;
 
-    if (twilioSid && twilioAuth && twilioPhone && contacts.length > 0) {
-      var twilio = require('twilio')(twilioSid, twilioAuth);
-      for (var i = 0; i < contacts.length; i++) {
-        try {
-          await twilio.messages.create({
-            body: updateMsg,
-            from: twilioPhone,
-            to: contacts[i].contact_phone,
-          });
-          contactsNotified++;
-        } catch (smsErr) {
-          console.error('Recording update SMS failed to ' + contacts[i].contact_phone + ':', smsErr.message);
+    if (contacts.length > 0) {
+      // Short SMS
+      if (twilioSid && twilioAuth && twilioPhone) {
+        var twilio = require('twilio')(twilioSid, twilioAuth);
+        for (var i = 0; i < contacts.length; i++) {
+          try {
+            await twilio.messages.create({
+              body: shortSms,
+              from: twilioPhone,
+              to: contacts[i].contact_phone,
+            });
+            contactsNotified++;
+          } catch (smsErr) {
+            console.error('Recording update SMS failed to ' + contacts[i].contact_phone + ':', smsErr.message);
+          }
+        }
+      }
+
+      // Full emergency email with updated GPS + transcript
+      for (var j = 0; j < contacts.length; j++) {
+        var contactEmail = contacts[j].contact_email || contacts[j].email;
+        if (contactEmail) {
+          try {
+            await sendEmergencyReportEmail(contactEmail, {
+              displayName: displayName,
+              gpsLink: gpsLink,
+              trackingUrl: trackingUrl,
+              minutesActive: minutesActive,
+              transcript: transcriptExcerpt || null,
+              chunkCount: chunkCount
+            });
+            emailsSent++;
+          } catch (emailErr) {
+            console.error('Emergency email failed to ' + contactEmail + ':', emailErr.message);
+          }
         }
       }
     }
@@ -198,6 +218,7 @@ module.exports = async function handler(req, res) {
       success: true,
       minutesActive: minutesActive,
       contactsNotified: contactsNotified,
+      emailsSent: emailsSent,
       contactsFound: contacts.length,
       twilioConfigured: !!(twilioSid && twilioAuth && twilioPhone),
     });

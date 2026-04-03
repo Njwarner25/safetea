@@ -1,6 +1,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
 const crypto = require('crypto');
+const { sendEmergencyReportEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -56,12 +57,13 @@ module.exports = async function handler(req, res) {
       [sessionKey, user.id, latitude || null, longitude || null]
     );
 
-    // Send SMS to trusted contacts (recording_contacts first, then date_trusted_contacts fallback)
+    // Get trusted contacts (recording_contacts first, then date_trusted_contacts fallback)
     let contactsNotified = 0;
+    let emailsSent = 0;
     let contacts = [];
     try {
       contacts = await getMany(
-        'SELECT contact_name, contact_phone FROM recording_contacts WHERE user_id = $1',
+        'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]
       );
     } catch (e) { /* table may not exist yet */ }
@@ -79,6 +81,12 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
+    const gpsLink = latitude && longitude
+      ? `https://maps.google.com/?q=${latitude},${longitude}`
+      : null;
+    const trackingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
+
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
     let twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
@@ -86,46 +94,51 @@ module.exports = async function handler(req, res) {
     const twilioConfigured = !!(twilioSid && twilioAuth && twilioPhone);
     let smsErrors = [];
 
-    if (twilioConfigured && contacts.length > 0) {
-      const twilio = require('twilio')(twilioSid, twilioAuth);
-      const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
-      const gpsLink = latitude && longitude
-        ? `https://maps.google.com/?q=${latitude},${longitude}`
-        : null;
-      const recordingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
+    if (contacts.length > 0) {
+      // Short SMS ping via Twilio
+      const shortSms = `You're a trusted contact for ${displayName} on SafeTea. They may need your help — check your email immediately.`;
 
-      const message =
-        `SAFETEA EMERGENCY REPORT\n\n` +
-        `A trusted contact may need your help and is unable to get to their phone.\n\n` +
-        `Review this report and decide if this is an emergency. If so, call 911 with the information provided.\n\n` +
-        `WHO: ${displayName}\n` +
-        (gpsLink ? `LOCATION: ${gpsLink}\n` : `LOCATION: Unavailable\n`) +
-        `RECORDING: In progress\n\n` +
-        `VIEW FULL REPORT:\n` +
-        `${recordingUrl}\n\n` +
-        `1. Open the report link\n` +
-        `2. Try to contact ${displayName}\n` +
-        `3. If no response, call 911\n\n` +
-        `- SafeTea Record & Protect`;
+      if (twilioConfigured) {
+        const twilio = require('twilio')(twilioSid, twilioAuth);
+        for (const contact of contacts) {
+          try {
+            await twilio.messages.create({
+              body: shortSms,
+              from: twilioPhone,
+              to: contact.contact_phone,
+            });
+            contactsNotified++;
+          } catch (smsErr) {
+            console.error(`Recording SMS failed to ${contact.contact_phone}:`, smsErr.message);
+            smsErrors.push(smsErr.message);
+          }
+        }
+      }
 
+      // Full emergency email via SendGrid to contacts with email
       for (const contact of contacts) {
-        try {
-          await twilio.messages.create({
-            body: message,
-            from: twilioPhone,
-            to: contact.contact_phone,
-          });
-          contactsNotified++;
-        } catch (smsErr) {
-          console.error(`Recording SMS failed to ${contact.contact_phone}:`, smsErr.message);
-          smsErrors.push(smsErr.message);
+        const email = contact.contact_email || contact.email;
+        if (email) {
+          try {
+            await sendEmergencyReportEmail(email, {
+              displayName,
+              gpsLink,
+              trackingUrl,
+              minutesActive: 0,
+              transcript: null,
+              chunkCount: 0
+            });
+            emailsSent++;
+          } catch (emailErr) {
+            console.error(`Emergency email failed to ${email}:`, emailErr.message);
+          }
         }
       }
 
       // Update contacts notified count
       await run(
         `UPDATE recording_sessions SET contacts_notified = $1 WHERE session_key = $2`,
-        [contactsNotified, sessionKey]
+        [contactsNotified + emailsSent, sessionKey]
       );
     }
 
@@ -134,9 +147,15 @@ module.exports = async function handler(req, res) {
       sessionKey,
       sessionId: session.id,
       contactsNotified,
+      emailsSent,
       contactsFound: contacts.length,
       twilioConfigured,
       smsErrors: smsErrors.length > 0 ? smsErrors : undefined,
+      shareData: {
+        displayName,
+        gpsLink,
+        trackingUrl
+      }
     });
   } catch (err) {
     console.error('Recording start error:', err);

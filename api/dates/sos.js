@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { run, getOne, getMany } = require('../_utils/db');
+const { sendEmergencyReportEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -77,51 +78,57 @@ module.exports = async function handler(req, res) {
           [activeCheckout.id]
         );
 
+        const displayName = user.custom_display_name || user.display_name || 'A SafeTea user';
+        const gpsLink = latitude && longitude
+          ? `https://maps.google.com/?q=${latitude},${longitude}`
+          : null;
+        const trackingUrl = recordingSessionKey
+          ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
+          : `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`;
+
         const twilioSid = process.env.TWILIO_ACCOUNT_SID;
         const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
-        const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+        let twilioPhone = process.env.TWILIO_PHONE_NUMBER || '';
+        if (twilioPhone && !twilioPhone.startsWith('+')) twilioPhone = '+' + twilioPhone;
+        let emailsSent = 0;
 
-        if (twilioSid && twilioAuth && twilioPhone && contacts.length > 0) {
-          const twilio = require('twilio')(twilioSid, twilioAuth);
+        if (contacts.length > 0) {
+          const shortSms = `You're a trusted contact for ${displayName} on SafeTea. They may need your help — check your email immediately.`;
 
-          const gpsLink = latitude && longitude
-            ? `https://maps.google.com/?q=${latitude},${longitude}`
-            : null;
-          const trackingUrl = `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`;
-          const recordingUrl = recordingSessionKey
-            ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
-            : null;
+          // Short SMS via Twilio
+          if (twilioSid && twilioAuth && twilioPhone) {
+            const twilio = require('twilio')(twilioSid, twilioAuth);
+            for (const contact of contacts) {
+              try {
+                await twilio.messages.create({
+                  body: shortSms,
+                  from: twilioPhone,
+                  to: contact.contact_phone,
+                });
+                contactsNotified++;
+              } catch (smsErr) {
+                console.error(`SOS SMS failed to ${contact.contact_phone}:`, smsErr.message);
+              }
+            }
+          }
 
-          const message =
-            `🚨 SOS ALERT — SafeTea\n` +
-            `━━━━━━━━━━━━━━━━━\n` +
-            `${user.display_name || 'A SafeTea user'} triggered an emergency SOS alert.\n\n` +
-            `Date with: ${activeCheckout.date_name}\n` +
-            `Venue: ${activeCheckout.venue_name}\n` +
-            (activeCheckout.venue_address ? `Address: ${activeCheckout.venue_address}\n` : '') +
-            (gpsLink ? `\nGPS Location: ${gpsLink}\n` : '') +
-            (recordingUrl ? `\n🔴 LIVE RECORDING: ${recordingUrl}\n` : '') +
-            (recordingUrl ? `Audio is being recorded and uploaded in real-time.\n` : '') +
-            `\n📋 OUTCRY WITNESS NOTICE\n` +
-            `You may be an "outcry witness" — the first person told about an incident. Your testimony may carry special legal weight. This recording may serve as evidence.\n\n` +
-            `What to do:\n` +
-            `• Try to contact them immediately\n` +
-            `• If no response, call 911 with the GPS location above\n` +
-            `• Save this message\n` +
-            `\nLive tracking: ${trackingUrl}\n` +
-            `━━━━━━━━━━━━━━━━━\n` +
-            `Sent via SafeTea SOS`;
-
+          // Full emergency email via SendGrid
           for (const contact of contacts) {
-            try {
-              await twilio.messages.create({
-                body: message,
-                from: twilioPhone,
-                to: contact.contact_phone,
-              });
-              contactsNotified++;
-            } catch (smsErr) {
-              console.error(`SOS SMS failed to ${contact.contact_phone}:`, smsErr.message);
+            const email = contact.contact_email || contact.email;
+            if (email) {
+              try {
+                await sendEmergencyReportEmail(email, {
+                  displayName,
+                  gpsLink,
+                  trackingUrl,
+                  minutesActive: 0,
+                  transcript: null,
+                  chunkCount: 0
+                });
+                emailsSent++;
+              } catch (emailErr) {
+                console.error(`SOS email failed to ${email}:`, emailErr.message);
+              }
             }
           }
         }
@@ -135,6 +142,13 @@ module.exports = async function handler(req, res) {
         checkoutId: activeCheckout.id,
         shareCode: activeCheckout.share_code,
         recordingSessionKey: recordingSessionKey || null,
+        shareData: {
+          displayName: user.custom_display_name || user.display_name || 'A SafeTea user',
+          gpsLink: latitude && longitude ? `https://maps.google.com/?q=${latitude},${longitude}` : null,
+          trackingUrl: recordingSessionKey
+            ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
+            : `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`
+        },
       });
     } catch (err) {
       console.error('SOS error:', err);

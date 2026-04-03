@@ -31,6 +31,11 @@ module.exports = async function handler(req, res) {
       )
     `);
 
+    // Add extra_checks column if missing
+    try {
+      await run('ALTER TABLE photo_verification_usage ADD COLUMN IF NOT EXISTS extra_checks INTEGER DEFAULT 0');
+    } catch (e) {}
+
     return res.status(200).json({ success: true, message: 'Photo verification tables created' });
   } catch (err) {
     console.error('Photo verify migration error:', err);

@@ -1,6 +1,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { checkForFullNames } = require('../_utils/check-fullname');
+const { enforceCityChatAccess } = require('../_utils/gender-gate');
 const { sendNameWatchMatchEmail } = require('../../services/email');
 const { sendPushNotification } = require('../../services/push');
 
@@ -20,6 +21,9 @@ module.exports = async function handler(req, res) {
       message: 'Complete verification steps to unlock city chat. Verify your identity and link social media accounts to get access.'
     });
   }
+
+  // Gender gate: city chat is a women-only space
+  if (await enforceCityChatAccess(user, res)) return;
 
   const body = await parseBody(req);
   const { title, body: postBody, category, city } = body;

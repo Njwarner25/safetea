@@ -1,5 +1,6 @@
 const { authenticate, cors } = require('../_utils/auth');
 const { getMany } = require('../_utils/db');
+const { enforceCityChatAccess } = require('../_utils/gender-gate');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -8,6 +9,9 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Gender gate: city chat is a women-only space
+  if (await enforceCityChatAccess(user, res)) return;
 
   const city = req.query.city || null;
   const category = req.query.category || null;

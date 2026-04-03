@@ -365,9 +365,12 @@ module.exports = async function handler(req, res) {
       checksLimit: totalLimit,
       extraChecksAvailable: 0,
       canPurchaseMore: true,
-      pricePerCheck: '$0.99',
       purchaseUrl: '/api/photos/purchase-check',
-      message: 'You\'ve used all your Photo Verification checks this month. Get more for $0.99 each.'
+      packages: [
+        { type: 'single', price: '$0.99', checks: 1, label: '1 Extra Photo Check — $0.99' },
+        { type: '10pack', price: '$7.99', checks: 10, label: '10 Photo Checks — $7.99 (save ~$2)' },
+      ],
+      message: 'You\'ve used all your Photo Verification checks this month. Get more starting at $0.99 each, or save with a 10-pack for $7.99.'
     });
   }
 
@@ -453,12 +456,4 @@ module.exports = async function handler(req, res) {
       layers: results.layers,
       recommendations: results.recommendations,
       checksUsed: currentCount + 1,
-      checksRemaining: Math.max(0, totalLimit - currentCount - 1),
-      checksLimit: totalLimit,
-      photosDeletedAt: new Date().toISOString()
-    });
-  } catch (err) {
-    console.error('Photo verification error:', err);
-    return res.status(500).json({ error: 'Verification failed', details: err.message });
-  }
-};
+      checksRemaining: Math.max(0, tot

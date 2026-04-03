@@ -2168,6 +2168,11 @@
         });
     }
 
+    function getPlusBadgeHtml(tier) {
+        if (!tier || tier === 'free') return '';
+        return ' <span style="display:inline-block;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;vertical-align:middle;letter-spacing:0.5px;text-transform:uppercase">PLUS</span>';
+    }
+
     function canModifyPost(post) {
         var u = getUser();
         return u && (String(post.user_id) === String(u.id) || u.role === 'admin' || u.role === 'moderator');
@@ -2563,7 +2568,7 @@
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div style="flex:1">' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + badgeHtml + trendingBadge + '</div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getPlusBadgeHtml(post.author_tier) + ' ' + badgeHtml + trendingBadge + '</div>' +
                     '<div style="font-size:12px;color:#666;margin-top:2px">' + getTimeAgoFromDate(post.created_at) + cityHtml + '</div>' +
                 '</div>' +
             '</div>' +
@@ -2703,7 +2708,7 @@
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div>' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + '</div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getPlusBadgeHtml(post.author_tier) + '</div>' +
                     '<div style="font-size:11px;color:#2ecc71"><i class="fas fa-star"></i> Recommender</div>' +
                 '</div>' +
             '</div>' +
@@ -3024,6 +3029,38 @@
         }
     };
 
+    // ==================== DID YOU KNOW ====================
+    var DID_YOU_KNOW_FACTS = [
+        { fact: '1 in 3 women worldwide have experienced physical or sexual violence.', source: 'World Health Organization' },
+        { fact: '57% of women who have been murdered were killed by a current or former intimate partner.', source: 'CDC' },
+        { fact: 'Only 12% of sexual assaults are reported to police.', source: 'RAINN' },
+        { fact: 'On average, it takes a victim 7 attempts to leave an abusive relationship before they leave for good.', source: 'National Domestic Violence Hotline' },
+        { fact: '1 in 4 women will experience domestic violence in their lifetime.', source: 'NCADV' },
+        { fact: 'Nearly half of all women in the US have experienced some form of sexual violence.', source: 'CDC NISVS' },
+        { fact: 'Online dating fraud costs Americans over $300 million per year.', source: 'FTC' },
+        { fact: 'Over 50% of online dating profiles contain at least one lie.', source: 'Journal of Communication' },
+        { fact: '10% of sex offenders use dating apps to find victims.', source: 'Journal of Sexual Aggression' },
+        { fact: 'Having a safety plan can reduce risk of injury by 60%.', source: 'Journal of Interpersonal Violence' },
+        { fact: 'Sharing date details with a friend before meeting someone new is the #1 safety tip from law enforcement.', source: 'National Crime Prevention Council' },
+        { fact: 'Stalking affects 1 in 6 women at some point in their lives.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Nearly 3 out of 4 stalking victims know their stalker in some capacity.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Romance scams were the costliest type of consumer fraud in 2023.', source: 'FTC Consumer Sentinel' },
+        { fact: '43% of dating college women reported experiencing violent and abusive dating behaviors.', source: 'Liz Claiborne Inc. Study' },
+        { fact: 'Digital abuse is the most common form of dating abuse among young people.', source: 'Love Is Respect' },
+        { fact: 'Women ages 18-24 are most commonly abused by an intimate partner.', source: 'Bureau of Justice Statistics' },
+        { fact: 'Trusting your instincts is one of the most effective personal safety strategies, according to security experts.', source: 'The Gift of Fear, Gavin de Becker' }
+    ];
+
+    function initDidYouKnow() {
+        var factEl = document.getElementById('dyk-fact');
+        var sourceEl = document.getElementById('dyk-source');
+        if (!factEl || !sourceEl) return;
+        var idx = Math.floor(Math.random() * DID_YOU_KNOW_FACTS.length);
+        var item = DID_YOU_KNOW_FACTS[idx];
+        factEl.textContent = item.fact;
+        sourceEl.textContent = 'Source: ' + item.source;
+    }
+
     // ============ INIT ============
     loadProfile();
     loadVerificationStatus();
@@ -3031,6 +3068,7 @@
     initAlertsTab();
     updateInboxBadge();
     loadSubscriptionStatus();
+    initDidYouKnow();
     if (typeof initRecordProtect === 'function') initRecordProtect();
 
     // Handle Stripe checkout success redirect

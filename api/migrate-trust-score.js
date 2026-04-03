@@ -39,6 +39,11 @@ module.exports = async function handler(req, res) {
       results.push('Added profile_complete column');
     } catch (e) { results.push('profile_complete: ' + e.message); }
 
+    try {
+      await run(`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender_under_review BOOLEAN DEFAULT false`);
+      results.push('Added gender_under_review column');
+    } catch (e) { results.push('gender_under_review: ' + e.message); }
+
     // Create trust_events audit log table
     await run(`CREATE TABLE IF NOT EXISTS trust_events (
       id SERIAL PRIMARY KEY,

@@ -55,14 +55,15 @@ module.exports = async function handler(req, res) {
         // Handle photo check extra purchase
         if (purchaseType === 'photo_check_extra' && userId) {
           const currentMonth = new Date().toISOString().slice(0, 7);
+          const checksToAdd = parseInt(session.metadata.checks || '1', 10);
           await run(
             `INSERT INTO photo_verification_usage (user_id, check_month, check_count, extra_checks, last_check_at)
-             VALUES ($1, $2, 0, 1, NOW())
+             VALUES ($1, $2, 0, $3, NOW())
              ON CONFLICT (user_id, check_month)
-             DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + 1`,
-            [userId, currentMonth]
+             DO UPDATE SET extra_checks = COALESCE(photo_verification_usage.extra_checks, 0) + $3`,
+            [userId, currentMonth, checksToAdd]
           );
-          console.log(`User ${userId} purchased extra photo check for ${currentMonth}`);
+          console.log(`User ${userId} purchased ${checksToAdd} extra photo check(s) (${session.metadata.package || 'single'}) for ${currentMonth}`);
           break;
         }
 

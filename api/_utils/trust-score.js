@@ -84,7 +84,13 @@ async function recalculateTrustScore(userId, eventType, triggeredBy, adminId) {
   if (user.flagged) score -= 10;
 
   // Gender reports >= 3
-  if ((user.gender_report_count || 0) >= 3) score -= 15;
+  if ((user.gender_report_count || 0) >= 3) {
+    score -= 15;
+    // Revoke city chat access pending admin review
+    try {
+      await run('UPDATE users SET gender_under_review = true WHERE id = $1', [userId]);
+    } catch (e) { /* column may not exist yet */ }
+  }
 
   // Clamp to 0-100
   score = Math.max(0, Math.min(100, score));

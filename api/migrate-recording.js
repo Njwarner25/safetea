@@ -30,8 +30,20 @@ module.exports = async function handler(req, res) {
 
     await run(`CREATE INDEX IF NOT EXISTS idx_chunks_session ON recording_chunks(session_key, chunk_number)`);
 
-    // Add transcript column
+    // Add missing columns
     try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS transcript TEXT`); } catch(e) {}
+    try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS last_update_sent_at TIMESTAMPTZ`); } catch(e) {}
+    try { await run(`ALTER TABLE recording_sessions ADD COLUMN IF NOT EXISTS sos_event_id INTEGER`); } catch(e) {}
+
+    // Ensure recording_contacts table
+    await run(`CREATE TABLE IF NOT EXISTS recording_contacts (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      contact_name VARCHAR(100) NOT NULL,
+      contact_phone VARCHAR(30) NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, contact_phone)
+    )`);
 
     return res.status(200).json({ success: true, message: 'Recording tables created' });
   } catch (err) {

@@ -3127,14 +3127,21 @@
     ];
 
     function initDidYouKnow() {
-        var factEl = document.getElementById('dyk-fact');
-        var sourceEl = document.getElementById('dyk-source');
-        if (!factEl || !sourceEl) return;
         // Use date-based index so each day shows a different fact
         var dayIndex = Math.floor(Date.now() / 86400000) % DID_YOU_KNOW_FACTS.length;
         var item = DID_YOU_KNOW_FACTS[dayIndex];
-        factEl.textContent = item.fact;
-        sourceEl.textContent = 'Source: ' + item.source;
+
+        // Community tab version
+        var factEl = document.getElementById('dyk-fact');
+        var sourceEl = document.getElementById('dyk-source');
+        if (factEl) factEl.textContent = item.fact;
+        if (sourceEl) sourceEl.textContent = 'Source: ' + item.source;
+
+        // Home page version
+        var homeFact = document.getElementById('home-dyk-fact');
+        var homeSource = document.getElementById('home-dyk-source');
+        if (homeFact) homeFact.textContent = item.fact;
+        if (homeSource) homeSource.textContent = 'Source: ' + item.source;
     }
 
     // ============ INIT ============

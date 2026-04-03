@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   if (await enforceCityChatAccess(user, res)) return;
 
   const body = await parseBody(req);
-  const { title, body: postBody, category, city } = body;
+  const { title, body: postBody, category, city, image } = body;
 
   if (!postBody || postBody.trim().length < 3) {
     return res.status(400).json({ error: 'Post body is required (min 3 characters)' });
@@ -57,11 +57,12 @@ module.exports = async function handler(req, res) {
 
   try {
     const postTitle = title || postBody.substring(0, 80);
+    const imageUrl = image || null;
     const result = await getOne(
-      `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
-       VALUES ($1, $2, $3, $4, $5, 'community', NOW())
+      `INSERT INTO posts (user_id, title, body, category, city, feed, image_url, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'community', $6, NOW())
        RETURNING id`,
-      [user.id, postTitle, postBody.trim(), category || 'general', city || user.city || null]
+      [user.id, postTitle, postBody.trim(), category || 'general', city || user.city || null, imageUrl]
     );
 
     // Check Name Watch matches (non-blocking)

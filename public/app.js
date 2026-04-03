@@ -2170,7 +2170,7 @@
 
     function canModifyPost(post) {
         var u = getUser();
-        return u && (post.user_id === u.id || u.role === 'admin' || u.role === 'moderator');
+        return u && (String(post.user_id) === String(u.id) || u.role === 'admin' || u.role === 'moderator');
     }
 
     // ==================== VOTE SYSTEM (LIKE / DISLIKE) ====================
@@ -2461,7 +2461,6 @@
         if (sub === 'namewatch' && typeof initNameWatch === 'function') initNameWatch();
         if (sub === 'datecheck' && typeof initDateCheck === 'function') initDateCheck();
         if (sub === 'search') { if (typeof initSearchTabs === 'function') initSearchTabs(); initAreaAlerts(); }
-        if (sub === 'teatalk') hubLoadCommunityPosts();
         if (sub === 'referral') hubLoadReferralPosts();
         if (sub === 'growreferral') loadGrowReferral();
         if (sub === 'sororityrooms') initSororityRooms();

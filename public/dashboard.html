@@ -1267,18 +1267,6 @@
             color: var(--st-text) !important;
         }
 
-        /* ===== Tea Talk sub (inside hub) — light mode ===== */
-        [data-theme="light"] #hub-teatalk h2,
-        [data-theme="light"] #hub-teatalk h3[style*="color:#fff"] {
-            color: var(--st-text) !important;
-        }
-        [data-theme="light"] #hub-teatalk p[style*="color:#8080A0"] {
-            color: var(--st-text-soft) !important;
-        }
-        [data-theme="light"] #hub-teatalk div[style*="background:#22223A"] {
-            background: var(--st-surface) !important;
-            border: 1px solid var(--st-border) !important;
-        }
 
         /* ===== Date Check section — light mode inline overrides ===== */
         [data-theme="light"] #hub-datecheck h2,
@@ -2355,7 +2343,6 @@
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-camera"></i> Photo Verification</button>
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-shield-alt"></i> Safety Resources</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
-                <button class="hub-tab" data-hubsub="teatalk" onclick="switchHubTab('teatalk')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-comments"></i> Tea Talk</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-heart"></i> Good Guys</button>
             </div>
 
@@ -2440,7 +2427,7 @@
                 <div style="margin-bottom:20px">
                     <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-users" style="color:#9b59b6;font-size:13px"></i> Community</h3>
 
-                    <div onclick="switchHubTab('teatalk')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.1),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.2)'">
+                    <div onclick="switchTab('community');setTimeout(function(){filterCommunity('tea-talk')},100)" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.1),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.2)'">
                         <div style="min-width:44px;height:44px;background:rgba(232,160,181,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-comments" style="font-size:20px;color:#E8A0B5"></i></div>
                         <div style="flex:1">
                             <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Tea Talk</h4>
@@ -2449,7 +2436,7 @@
                         <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </div>
 
-                    <div onclick="switchHubTab('referral')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(76,175,80,0.08),rgba(76,175,80,0.02));border:1px solid rgba(76,175,80,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(76,175,80,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(76,175,80,0.15)'">
+                    <div onclick="switchTab('community');setTimeout(function(){filterCommunity('good-guys')},100)" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(76,175,80,0.08),rgba(76,175,80,0.02));border:1px solid rgba(76,175,80,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(76,175,80,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(76,175,80,0.15)'">
                         <div style="min-width:44px;height:44px;background:rgba(76,175,80,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-heart" style="font-size:20px;color:#4CAF50"></i></div>
                         <div style="flex:1">
                             <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Good Guys</h4>
@@ -2870,34 +2857,6 @@
                 </div>
             </div>
 
-            <!-- HUB: TEA TALK (Community Feed) -->
-            <div id="hub-teatalk" class="hub-sub" style="display:none">
-                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
-                <div style="margin-bottom:20px">
-                    <h2 style="color:#fff;font-size:20px;display:flex;align-items:center;gap:10px"><i class="fas fa-comments" style="color:#E8A0B5"></i> Tea Talk</h2>
-                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Share experiences, warn others, and hype good guys. Your community, your voice.</p>
-                </div>
-                <!-- Compose Box -->
-                <div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:20px">
-                    <textarea id="hub-community-body" rows="3" placeholder="What's the tea? Share a warning, shout out a good guy, or start a discussion..." style="width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;color:#fff;font-size:14px;resize:vertical;font-family:'Inter',sans-serif;outline:none" onfocus="this.style.borderColor='#E8A0B5'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-                        <select id="hub-community-category" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#ccc;font-size:13px;font-family:'Inter',sans-serif;outline:none">
-                            <option value="tea-talk">Tea Talk</option>
-                            <option value="good-guys">Good Guys</option>
-                            <option value="warning">Warning</option>
-                            <option value="advice">Advice</option>
-                            <option value="general">General</option>
-                        </select>
-                        <input type="text" id="hub-community-city" placeholder="City (optional)" style="flex:1;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 12px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;outline:none" onfocus="this.style.borderColor='#E8A0B5'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
-                        <button id="hub-community-submit" onclick="hubSubmitCommunityPost()" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap"><i class="fas fa-paper-plane"></i> Post</button>
-                    </div>
-                </div>
-                <!-- Posts Container -->
-                <div id="hub-community-posts">
-                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-comments" style="font-size:32px;display:block;margin-bottom:12px"></i><p>Loading discussions...</p></div>
-                </div>
-            </div>
-
             <!-- HUB: GOOD GUYS (Referral Feed) -->
             <div id="hub-referral" class="hub-sub" style="display:none">
                 <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
@@ -3166,43 +3125,43 @@
                 </div>
 
                 <div id="verification-steps">
-                    <div class="verify-step" id="verify-step-age">
+                    <div class="verify-step" id="verify-step-age" onclick="window.location.href='/verify.html?step=age'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-birthday-cake"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Age Verification</div>
                             <div class="verify-status" id="verify-age-status">Checking...</div>
                         </div>
                     </div>
-                    <div class="verify-step" id="verify-step-identity">
+                    <div class="verify-step" id="verify-step-identity" onclick="window.location.href='/verify.html?step=identity'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-id-card"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Selfie + Liveness <span style="color:#E8A0B5;font-size:11px;font-weight:600">+60 pts</span></div>
                             <div class="verify-status" id="verify-identity-status">Checking...</div>
                         </div>
-                        <button class="btn-verify-action" id="btn-verify-identity" style="display:none" onclick="startIdentityVerification()">Verify Now</button>
+                        <button class="btn-verify-action" id="btn-verify-identity" style="display:none" onclick="event.stopPropagation();startIdentityVerification()">Verify Now</button>
                     </div>
-                    <div class="verify-step" id="verify-step-gender">
+                    <div class="verify-step" id="verify-step-gender" onclick="window.location.href='/verify.html?step=gender'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-venus"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Gender Verification</div>
                             <div class="verify-status" id="verify-gender-status">Checking...</div>
                         </div>
                     </div>
-                    <div class="verify-step" id="verify-step-didit">
+                    <div class="verify-step" id="verify-step-didit" onclick="window.location.href='/verify.html?step=didit'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-passport"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Document ID <span style="color:#E8A0B5;font-size:11px;font-weight:600">+30 pts</span></div>
                             <div class="verify-status" id="verify-didit-status">Checking...</div>
                         </div>
                     </div>
-                    <div class="verify-step" id="verify-step-phone">
+                    <div class="verify-step" id="verify-step-phone" onclick="window.location.href='/verify.html?step=phone'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-mobile-alt"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Phone Verified <span style="color:#E8A0B5;font-size:11px;font-weight:600">+10 pts</span></div>
                             <div class="verify-status" id="verify-phone-status">Checking...</div>
                         </div>
                     </div>
-                    <div class="verify-step" id="verify-step-social">
+                    <div class="verify-step" id="verify-step-social" onclick="window.location.href='/verify.html?step=social'" style="cursor:pointer">
                         <div class="verify-icon pending"><i class="fas fa-share-alt"></i></div>
                         <div class="verify-info">
                             <div class="verify-label">Social Media <span style="color:#E8A0B5;font-size:11px;font-weight:600">+20 pts each</span></div>
@@ -4053,7 +4012,7 @@
         // Check if current user owns this post
         var currentUser = null;
         try { currentUser = JSON.parse(localStorage.getItem('safetea_user')); } catch(e) {}
-        var isOwner = currentUser && post.user_id === currentUser.id;
+        var isOwner = currentUser && String(post.user_id) === String(currentUser.id);
 
         return '<div id="cpost-' + post.id + '" class="community-post"' + (deprioritized ? ' style="opacity:0.5"' : '') + '>' +
             '<div class="community-post-header">' +
@@ -4206,11 +4165,11 @@
         if (existing) { existing.remove(); return; }
         document.querySelectorAll('[id^="cmenu-"]').forEach(function(m) { m.remove(); });
 
-        var html = '<div id="cmenu-' + postId + '" style="position:absolute;right:0;top:24px;background:#fff;border:1px solid #eee;border-radius:10px;min-width:160px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden">';
+        var html = '<div id="cmenu-' + postId + '" style="position:absolute;right:0;top:24px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;min-width:160px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden">';
         if (isOwner) {
-            html += '<button onclick="communityDeletePost(' + postId + ');document.getElementById(\'cmenu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer"><i class="fas fa-trash" style="width:18px"></i> Delete Post</button>';
+            html += '<button onclick="communityDeletePost(' + postId + ');document.getElementById(\'cmenu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-trash" style="width:18px"></i> Delete Post</button>';
         } else {
-            html += '<button onclick="communityReportPost(' + postId + ');document.getElementById(\'cmenu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer"><i class="fas fa-flag" style="width:18px"></i> Report Post</button>';
+            html += '<button onclick="communityReportPost(' + postId + ');document.getElementById(\'cmenu-' + postId + '\').remove()" style="display:block;width:100%;text-align:left;padding:12px 16px;background:none;border:none;color:#e74c3c;font-size:13px;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-flag" style="width:18px"></i> Report Post</button>';
         }
         html += '</div>';
         var wrapper = document.getElementById('cmenu-anchor-' + postId);

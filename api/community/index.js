@@ -49,13 +49,14 @@ module.exports = async function handler(req, res) {
     try {
       posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
-                p.feed, p.created_at, p.hidden,
+                p.feed, p.image_url, p.created_at, p.hidden,
                 COALESCE(p.bump_count, 0) AS bump_count,
                 COALESCE(p.dislike_count, 0) AS dislike_count,
                 p.last_bumped_at,
                 u.display_name AS author_name,
                 u.custom_display_name AS author_custom_name,
                 u.avatar_color, u.avatar_initial,
+                COALESCE(u.subscription_tier, 'free') AS author_tier,
                 (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
                 (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
                 ${userLikedSelect},
@@ -85,11 +86,12 @@ module.exports = async function handler(req, res) {
       fbIdx++; fbParams.push(user.id);
       posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
-                p.feed, p.created_at, p.hidden,
+                p.feed, p.image_url, p.created_at, p.hidden,
                 0 AS bump_count, 0 AS dislike_count, NULL AS last_bumped_at,
                 u.display_name AS author_name,
                 u.custom_display_name AS author_custom_name,
                 u.avatar_color, u.avatar_initial,
+                COALESCE(u.subscription_tier, 'free') AS author_tier,
                 (SELECT COUNT(*) FROM replies r WHERE r.post_id = p.id) AS reply_count,
                 (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
                 EXISTS(SELECT 1 FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $${fbIdx}) AS user_liked,

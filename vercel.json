@@ -72,6 +72,7 @@
         { "source": "/api/auth/reset-password", "destination": "/api/auth/reset-password" },
         { "source": "/api/auth/change-password", "destination": "/api/auth/change-password" },
         { "source": "/api/auth/send-code", "destination": "/api/auth/send-code" },
+        { "source": "/api/auth/debug-verify", "destination": "/api/auth/debug-verify" },
         { "source": "/api/auth/verify-code", "destination": "/api/auth/verify-code" },
         { "source": "/api/auth/firebase-verify", "destination": "/api/auth/firebase-verify" },
         { "source": "/api/auth/connect-social", "destination": "/api/auth/connect-social" },

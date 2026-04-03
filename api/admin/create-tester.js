@@ -45,20 +45,21 @@ module.exports = async function handler(req, res) {
     const existing = await getOne('SELECT id, email FROM users WHERE email = $1', [email]);
     if (existing) {
       // Update existing user
+      var isFree = tier === 'free';
       await run(
         `UPDATE users SET
           role = $2,
           subscription_tier = $3,
-          identity_verified = true,
-          age_verified = true,
-          gender_verified = true,
-          is_verified = true,
-          phone_verified = true,
-          didit_verified = true,
+          identity_verified = $5,
+          age_verified = $5,
+          gender_verified = $5,
+          is_verified = $5,
+          phone_verified = $5,
+          didit_verified = $5,
           trust_score = $4,
           trust_score_updated_at = NOW()
         WHERE id = $1`,
-        [existing.id, role, tier, tier === 'free' ? 0 : 100]
+        [existing.id, role, tier, isFree ? 0 : 100, !isFree]
       );
       const user = await getOne(
         'SELECT id, email, display_name, role, subscription_tier, trust_score, city FROM users WHERE id = $1',
@@ -74,12 +75,13 @@ module.exports = async function handler(req, res) {
 
     // Create new user
     const passwordHash = await bcrypt.hash(password, 10);
+    var isFreeNew = tier === 'free';
     await run(
       `INSERT INTO users (email, password_hash, display_name, city, role, subscription_tier,
         identity_verified, age_verified, gender_verified, is_verified, phone_verified,
         didit_verified, trust_score, trust_score_updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, true, true, true, true, true, true, $7, NOW())`,
-      [email, passwordHash, displayName, city, role, tier, tier === 'free' ? 0 : 100]
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $7, $7, $7, $7, $8, NOW())`,
+      [email, passwordHash, displayName, city, role, tier, !isFreeNew, isFreeNew ? 0 : 100]
     );
 
     const user = await getOne(

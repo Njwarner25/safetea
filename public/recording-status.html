@@ -140,11 +140,33 @@
         var key = params.get('key');
         var map = null;
         var marker = null;
+        var audioLoaded = false;
+        var loadedChunkCount = 0;
+        var blobUrls = [];
+        var isPlaying = false;
+        var currentChunkIdx = 0;
+        var currentAudio = null;
 
         if (!key) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('error').style.display = 'block';
             return;
+        }
+
+        // Detect WebM support
+        var canPlayWebm = false;
+        try {
+            var testAudio = document.createElement('audio');
+            canPlayWebm = !!(testAudio.canPlayType && (testAudio.canPlayType('audio/webm;codecs=opus') || testAudio.canPlayType('audio/webm')));
+        } catch(e) {}
+
+        function base64ToBlob(base64, mimeType) {
+            var byteChars = atob(base64);
+            var byteArray = new Uint8Array(byteChars.length);
+            for (var j = 0; j < byteChars.length; j++) {
+                byteArray[j] = byteChars.charCodeAt(j);
+            }
+            return new Blob([byteArray], { type: mimeType || 'audio/webm;codecs=opus' });
         }
 
         function initMap(lat, lng) {
@@ -164,6 +186,203 @@
             map.panTo(latlng);
         }
 
+        function updateStatus(s) {
+            var badge = document.getElementById('status-badge');
+            var statusText = document.getElementById('status-text');
+            var safeBanner = document.getElementById('safe-banner');
+
+            if (s.status === 'stopped') {
+                badge.className = 'status-badge status-stopped';
+                statusText.textContent = 'User Marked Safe — Recording Ended';
+                safeBanner.style.display = 'block';
+            } else if (s.escalatedAt) {
+                badge.className = 'status-badge status-escalated';
+                statusText.textContent = 'Escalated — No Response';
+            } else {
+                badge.className = 'status-badge status-active';
+                statusText.textContent = 'Recording Active — Live Tracking';
+            }
+
+            var infoHtml = '';
+            infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-user"></i></div><div><div class="info-label">User</div><div class="info-value">' + escapeHtml(s.userName) + '</div></div></div>';
+            infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-clock"></i></div><div><div class="info-label">Started</div><div class="info-value">' + new Date(s.createdAt).toLocaleString() + '</div></div></div>';
+            if (s.latitude && s.longitude) {
+                infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="info-label">GPS Location</div><div class="info-value"><a href="https://maps.google.com/?q=' + s.latitude + ',' + s.longitude + '" target="_blank" style="color:#E8A0B5;text-decoration:none">Open in Google Maps <i class="fas fa-external-link-alt" style="font-size:10px"></i></a></div></div></div>';
+            }
+            if (s.stoppedAt) {
+                infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-check-circle"></i></div><div><div class="info-label">Marked Safe</div><div class="info-value">' + new Date(s.stoppedAt).toLocaleString() + '</div></div></div>';
+            }
+            document.getElementById('session-info').innerHTML = infoHtml;
+
+            if (s.latitude && s.longitude) {
+                updateMap(parseFloat(s.latitude), parseFloat(s.longitude));
+            }
+
+            document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+        }
+
+        function updateTranscript(s, chunks) {
+            var transcriptSection = document.getElementById('transcript-section');
+            var transcriptContent = document.getElementById('transcript-content');
+            var transcribeBtn = document.getElementById('transcribe-btn');
+            transcriptSection.style.display = 'block';
+
+            if (s.transcript) {
+                transcriptContent.textContent = s.transcript;
+                transcribeBtn.style.display = 'none';
+            } else if (chunks && chunks.length > 0) {
+                transcriptContent.innerHTML = '<span style="color:#8080A0">Transcript not yet generated.</span>';
+                transcribeBtn.style.display = 'block';
+                transcribeBtn.onclick = function() {
+                    transcribeBtn.disabled = true;
+                    transcribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transcribing audio...';
+                    fetch('/api/recording/transcribe?key=' + encodeURIComponent(key))
+                        .then(function(r) { return r.json(); })
+                        .then(function(tData) {
+                            if (tData.transcript) {
+                                transcriptContent.textContent = tData.transcript;
+                                transcribeBtn.style.display = 'none';
+                            } else {
+                                transcriptContent.textContent = '(No speech detected in recording)';
+                                transcribeBtn.style.display = 'none';
+                            }
+                        })
+                        .catch(function() {
+                            transcribeBtn.disabled = false;
+                            transcribeBtn.innerHTML = '<i class="fas fa-language"></i> Generate Transcript';
+                            transcriptContent.innerHTML = '<span style="color:#e74c3c">Transcription failed. Try again.</span>';
+                        });
+                };
+            } else {
+                transcriptSection.style.display = 'none';
+            }
+        }
+
+        function buildAudioPlayers(chunks) {
+            var chunksContainer = document.getElementById('chunks-container');
+
+            if (!chunks || chunks.length === 0) {
+                chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio chunks yet. Recording may still be starting.</p>';
+                return;
+            }
+
+            // Safari/iOS warning
+            if (!canPlayWebm) {
+                chunksContainer.innerHTML =
+                    '<div style="background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.2);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
+                        '<p style="color:#f1c40f;font-weight:600;font-size:13px;margin:0 0 6px">Your browser does not support WebM audio</p>' +
+                        '<p style="color:#8080A0;font-size:12px;margin:0">Use Chrome or Firefox to play audio, or tap Download below to save the files.</p>' +
+                    '</div>';
+            } else {
+                chunksContainer.innerHTML = '';
+            }
+
+            // Clean up old blob URLs
+            for (var b = 0; b < blobUrls.length; b++) {
+                try { URL.revokeObjectURL(blobUrls[b]); } catch(e) {}
+            }
+            blobUrls = [];
+
+            // Create blob URLs for each chunk (more reliable than data URIs)
+            var chunkBlobUrls = [];
+            for (var c = 0; c < chunks.length; c++) {
+                var blob = base64ToBlob(chunks[c].audioData);
+                var blobUrl = URL.createObjectURL(blob);
+                chunkBlobUrls.push(blobUrl);
+                blobUrls.push(blobUrl);
+            }
+
+            // Combined sequential player
+            var combinedPlayer = document.getElementById('combined-player');
+            combinedPlayer.style.display = 'block';
+            var playAllBtn = document.getElementById('play-all-btn');
+            var playerLabel = document.getElementById('player-label');
+            var playerProgress = document.getElementById('player-progress');
+            var playerTimer = document.getElementById('player-timer');
+            var playerBar = document.getElementById('player-bar');
+
+            playerProgress.textContent = '0 / ' + chunks.length + ' chunks';
+
+            function playChunk(idx) {
+                if (idx >= chunkBlobUrls.length) {
+                    isPlaying = false;
+                    playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                    playerLabel.textContent = 'Recording Complete';
+                    playerBar.style.width = '100%';
+                    return;
+                }
+                currentChunkIdx = idx;
+                playerProgress.textContent = (idx + 1) + ' / ' + chunkBlobUrls.length + ' chunks';
+                playerBar.style.width = ((idx / chunkBlobUrls.length) * 100) + '%';
+
+                currentAudio = new Audio(chunkBlobUrls[idx]);
+                currentAudio.onerror = function() {
+                    console.error('Audio chunk ' + idx + ' failed to decode');
+                    playerLabel.textContent = 'Chunk ' + (idx + 1) + ' failed — skipping...';
+                    setTimeout(function() { playChunk(idx + 1); }, 500);
+                };
+                currentAudio.play().catch(function(err) {
+                    console.error('Audio play failed:', err);
+                    playerLabel.textContent = 'Playback error — trying next chunk...';
+                    setTimeout(function() { playChunk(idx + 1); }, 500);
+                });
+                currentAudio.ontimeupdate = function() {
+                    var m = Math.floor(currentAudio.currentTime / 60);
+                    var sec = Math.floor(currentAudio.currentTime % 60);
+                    playerTimer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+                };
+                currentAudio.onended = function() {
+                    playChunk(idx + 1);
+                };
+            }
+
+            playAllBtn.onclick = function() {
+                if (!canPlayWebm) { alert('Your browser does not support WebM audio. Please use Chrome or Firefox, or download the files.'); return; }
+                if (isPlaying) {
+                    isPlaying = false;
+                    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                    playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                    playerLabel.textContent = 'Play Full Recording';
+                } else {
+                    isPlaying = true;
+                    playAllBtn.innerHTML = '<i class="fas fa-pause" style="color:#fff;font-size:14px"></i>';
+                    playerLabel.textContent = 'Playing...';
+                    playChunk(0);
+                }
+            };
+
+            // Individual chunk players using blob URLs
+            if (canPlayWebm) {
+                var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Individual Chunks (' + chunks.length + '):</div>';
+                for (var i = 0; i < chunks.length; i++) {
+                    chunksHtml += '<div class="chunk-player">' +
+                        '<span>#' + (i + 1) + '</span>' +
+                        '<audio controls preload="none" src="' + chunkBlobUrls[i] + '"></audio>' +
+                        '<span>' + new Date(chunks[i].createdAt).toLocaleTimeString() + '</span>' +
+                    '</div>';
+                }
+                chunksContainer.innerHTML += chunksHtml;
+            }
+
+            // Download button — always works regardless of browser
+            var dlBtn = document.getElementById('download-all');
+            dlBtn.style.display = 'block';
+            dlBtn.onclick = function() {
+                for (var d = 0; d < chunks.length; d++) {
+                    var dlBlob = base64ToBlob(chunks[d].audioData);
+                    var dlUrl = URL.createObjectURL(dlBlob);
+                    var a = document.createElement('a');
+                    a.href = dlUrl;
+                    a.download = 'safetea-recording-chunk-' + (d + 1) + '.webm';
+                    a.click();
+                    URL.revokeObjectURL(dlUrl);
+                }
+            };
+
+            loadedChunkCount = chunks.length;
+            audioLoaded = true;
+        }
+
         function loadSession() {
             fetch('/api/recording/session?key=' + encodeURIComponent(key))
                 .then(function(r) { return r.json(); })
@@ -178,167 +397,15 @@
                     document.getElementById('content').style.display = 'block';
                     var s = data.session;
 
-                    // Status badge
-                    var badge = document.getElementById('status-badge');
-                    var statusText = document.getElementById('status-text');
-                    var safeBanner = document.getElementById('safe-banner');
+                    // Always update status, map, timestamp
+                    updateStatus(s);
 
-                    if (s.status === 'stopped') {
-                        badge.className = 'status-badge status-stopped';
-                        statusText.textContent = 'User Marked Safe — Recording Ended';
-                        safeBanner.style.display = 'block';
-                    } else if (s.escalatedAt) {
-                        badge.className = 'status-badge status-escalated';
-                        statusText.textContent = 'Escalated — No Response';
-                    } else {
-                        badge.className = 'status-badge status-active';
-                        statusText.textContent = 'Recording Active — Live Tracking';
-                    }
+                    // Always update transcript
+                    updateTranscript(s, data.chunks);
 
-                    // Session info
-                    var infoHtml = '';
-                    infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-user"></i></div><div><div class="info-label">User</div><div class="info-value">' + escapeHtml(s.userName) + '</div></div></div>';
-                    infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-clock"></i></div><div><div class="info-label">Started</div><div class="info-value">' + new Date(s.createdAt).toLocaleString() + '</div></div></div>';
-                    if (s.latitude && s.longitude) {
-                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-map-marker-alt"></i></div><div><div class="info-label">GPS Location</div><div class="info-value"><a href="https://maps.google.com/?q=' + s.latitude + ',' + s.longitude + '" target="_blank" style="color:#E8A0B5;text-decoration:none">Open in Google Maps <i class="fas fa-external-link-alt" style="font-size:10px"></i></a></div></div></div>';
-                    }
-                    if (s.stoppedAt) {
-                        infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-check-circle"></i></div><div><div class="info-label">Marked Safe</div><div class="info-value">' + new Date(s.stoppedAt).toLocaleString() + '</div></div></div>';
-                    }
-                    document.getElementById('session-info').innerHTML = infoHtml;
-
-                    // Map
-                    if (s.latitude && s.longitude) {
-                        updateMap(parseFloat(s.latitude), parseFloat(s.longitude));
-                    }
-
-                    // Last updated
-                    document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
-
-                    // Transcript
-                    var transcriptSection = document.getElementById('transcript-section');
-                    var transcriptContent = document.getElementById('transcript-content');
-                    var transcribeBtn = document.getElementById('transcribe-btn');
-                    transcriptSection.style.display = 'block';
-
-                    if (s.transcript) {
-                        transcriptContent.textContent = s.transcript;
-                        transcribeBtn.style.display = 'none';
-                    } else if (data.chunks && data.chunks.length > 0) {
-                        transcriptContent.innerHTML = '<span style="color:#8080A0">Transcript not yet generated.</span>';
-                        transcribeBtn.style.display = 'block';
-                        transcribeBtn.onclick = function() {
-                            transcribeBtn.disabled = true;
-                            transcribeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transcribing audio...';
-                            fetch('/api/recording/transcribe?key=' + encodeURIComponent(key))
-                                .then(function(r) { return r.json(); })
-                                .then(function(tData) {
-                                    if (tData.transcript) {
-                                        transcriptContent.textContent = tData.transcript;
-                                        transcribeBtn.style.display = 'none';
-                                    } else {
-                                        transcriptContent.textContent = '(No speech detected in recording)';
-                                        transcribeBtn.style.display = 'none';
-                                    }
-                                })
-                                .catch(function() {
-                                    transcribeBtn.disabled = false;
-                                    transcribeBtn.innerHTML = '<i class="fas fa-language"></i> Generate Transcript';
-                                    transcriptContent.innerHTML = '<span style="color:#e74c3c">Transcription failed. Try again.</span>';
-                                });
-                        };
-                    } else {
-                        transcriptSection.style.display = 'none';
-                    }
-
-                    // Audio chunks
-                    var chunksContainer = document.getElementById('chunks-container');
-                    if (data.chunks && data.chunks.length > 0) {
-                        // Combined sequential player
-                        var combinedPlayer = document.getElementById('combined-player');
-                        combinedPlayer.style.display = 'block';
-                        var playAllBtn = document.getElementById('play-all-btn');
-                        var playerLabel = document.getElementById('player-label');
-                        var playerProgress = document.getElementById('player-progress');
-                        var playerTimer = document.getElementById('player-timer');
-                        var playerBar = document.getElementById('player-bar');
-                        var isPlaying = false;
-                        var currentChunkIdx = 0;
-                        var currentAudio = null;
-
-                        playerProgress.textContent = '0 / ' + data.chunks.length + ' chunks';
-
-                        function playChunk(idx) {
-                            if (idx >= data.chunks.length) {
-                                isPlaying = false;
-                                playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
-                                playerLabel.textContent = 'Recording Complete';
-                                playerBar.style.width = '100%';
-                                return;
-                            }
-                            currentChunkIdx = idx;
-                            playerProgress.textContent = (idx + 1) + ' / ' + data.chunks.length + ' chunks';
-                            playerBar.style.width = ((idx / data.chunks.length) * 100) + '%';
-
-                            currentAudio = new Audio('data:audio/webm;base64,' + data.chunks[idx].audioData);
-                            currentAudio.play().catch(function() {});
-                            currentAudio.ontimeupdate = function() {
-                                var m = Math.floor(currentAudio.currentTime / 60);
-                                var sec = Math.floor(currentAudio.currentTime % 60);
-                                playerTimer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-                            };
-                            currentAudio.onended = function() {
-                                playChunk(idx + 1);
-                            };
-                        }
-
-                        playAllBtn.onclick = function() {
-                            if (isPlaying) {
-                                isPlaying = false;
-                                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-                                playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
-                                playerLabel.textContent = 'Play Full Recording';
-                            } else {
-                                isPlaying = true;
-                                playAllBtn.innerHTML = '<i class="fas fa-pause" style="color:#fff;font-size:14px"></i>';
-                                playerLabel.textContent = 'Playing...';
-                                playChunk(0);
-                            }
-                        };
-
-                        // Individual chunk players
-                        var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Individual Chunks:</div>';
-                        data.chunks.forEach(function(chunk, i) {
-                            var audioSrc = 'data:audio/webm;base64,' + chunk.audioData;
-                            chunksHtml += '<div class="chunk-player">' +
-                                '<span>#' + (i + 1) + '</span>' +
-                                '<audio controls preload="none" src="' + audioSrc + '"></audio>' +
-                                '<span>' + new Date(chunk.createdAt).toLocaleTimeString() + '</span>' +
-                            '</div>';
-                        });
-                        chunksContainer.innerHTML = chunksHtml;
-
-                        var dlBtn = document.getElementById('download-all');
-                        dlBtn.style.display = 'block';
-                        dlBtn.onclick = function() {
-                            data.chunks.forEach(function(chunk, i) {
-                                var byteChars = atob(chunk.audioData);
-                                var byteNumbers = new Array(byteChars.length);
-                                for (var j = 0; j < byteChars.length; j++) {
-                                    byteNumbers[j] = byteChars.charCodeAt(j);
-                                }
-                                var byteArray = new Uint8Array(byteNumbers);
-                                var blob = new Blob([byteArray], { type: 'audio/webm' });
-                                var url = URL.createObjectURL(blob);
-                                var a = document.createElement('a');
-                                a.href = url;
-                                a.download = 'safetea-recording-chunk-' + (i + 1) + '.webm';
-                                a.click();
-                                URL.revokeObjectURL(url);
-                            });
-                        };
-                    } else {
-                        chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio chunks yet. Recording may still be starting.</p>';
+                    // Only rebuild audio players if new chunks arrived or first load
+                    if (!audioLoaded || (data.chunks && data.chunks.length > loadedChunkCount)) {
+                        buildAudioPlayers(data.chunks);
                     }
 
                     // Auto-refresh if active (every 10 seconds)

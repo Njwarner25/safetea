@@ -3293,6 +3293,40 @@
                 </div>
             </div>
 
+            <!-- SOS Button Toggle -->
+            <div class="profile-form" style="margin-top:24px">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <i class="fas fa-exclamation-triangle" style="color:#e74c3c;font-size:16px"></i>
+                        <div>
+                            <div style="color:#fff;font-size:14px;font-weight:600">SOS Floating Button</div>
+                            <div style="color:#8080A0;font-size:12px;margin-top:2px">Show the SOS button on all screens</div>
+                        </div>
+                    </div>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+                        <input type="checkbox" id="sos-toggle" onchange="toggleSOSButton(this.checked)" style="opacity:0;width:0;height:0">
+                        <span id="sos-toggle-track" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#333;border-radius:12px;transition:background 0.2s"></span>
+                        <span id="sos-toggle-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.2s"></span>
+                    </label>
+                </div>
+            </div>
+            <script>
+            (function(){
+                var tog = document.getElementById('sos-toggle');
+                var track = document.getElementById('sos-toggle-track');
+                var thumb = document.getElementById('sos-toggle-thumb');
+                var isHidden = localStorage.getItem('safetea_sos_hidden') === '1';
+                tog.checked = !isHidden;
+                if (!isHidden) { track.style.background='#e74c3c'; thumb.style.transform='translateX(20px)'; }
+            })();
+            function toggleSOSButton(on) {
+                var track = document.getElementById('sos-toggle-track');
+                var thumb = document.getElementById('sos-toggle-thumb');
+                if (on) { showSOSButton(); track.style.background='#e74c3c'; thumb.style.transform='translateX(20px)'; }
+                else { hideSOSButton(); track.style.background='#333'; thumb.style.transform='translateX(0)'; }
+            }
+            </script>
+
             <!-- Trust Signal -->
             <div style="margin-top:20px;padding:14px 18px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:12px;display:flex;align-items:center;gap:12px">
                 <i class="fas fa-shield-alt" style="color:#2ecc71;font-size:18px;flex-shrink:0"></i>
@@ -3332,6 +3366,9 @@
     <!-- ====== FLOATING SOS BUTTON ====== -->
     <div id="sos-floating-btn" style="position:fixed;bottom:90px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
         <span style="color:#fff;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;letter-spacing:0.5px">SOS</span>
+        <div id="sos-hide-btn" onclick="event.stopPropagation();hideSOSButton()" style="position:absolute;top:-4px;left:-4px;width:20px;height:20px;background:#22223A;border:2px solid #1A1A2E;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99">
+            <i class="fas fa-times" style="color:#8080A0;font-size:8px"></i>
+        </div>
     </div>
     <style>
         @keyframes sosPulse { 0%,100%{box-shadow:0 4px 20px rgba(231,76,60,0.4)} 50%{box-shadow:0 4px 30px rgba(231,76,60,0.6)} }
@@ -3340,6 +3377,20 @@
         #sos-floating-btn.sos-holding { transform:scale(0.92)!important;box-shadow:0 2px 10px rgba(231,76,60,0.6),0 0 20px rgba(231,76,60,0.3)!important; }
     </style>
     <script>
+    // SOS hide/show
+    function hideSOSButton() {
+        document.getElementById('sos-floating-btn').style.display = 'none';
+        localStorage.setItem('safetea_sos_hidden', '1');
+        if (typeof showToast === 'function') showToast('SOS button hidden. Re-enable in Profile settings.');
+    }
+    function showSOSButton() {
+        document.getElementById('sos-floating-btn').style.display = 'flex';
+        localStorage.removeItem('safetea_sos_hidden');
+    }
+    if (localStorage.getItem('safetea_sos_hidden') === '1') {
+        document.getElementById('sos-floating-btn').style.display = 'none';
+    }
+
     // SOS press-and-hold (1 second)
     (function() {
         var btn = document.getElementById('sos-floating-btn');

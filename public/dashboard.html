@@ -3364,22 +3364,34 @@
     <div class="toast" id="toast"></div>
 
     <!-- ====== FLOATING SOS BUTTON ====== -->
-    <div id="sos-floating-btn" style="position:fixed;bottom:90px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+    <div id="sos-floating-btn" style="position:fixed;bottom:90px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
         <span style="color:#fff;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;letter-spacing:0.5px">SOS</span>
-        <div id="sos-hide-btn" onclick="event.stopPropagation();hideSOSButton()" style="position:absolute;top:-6px;left:-6px;width:24px;height:24px;background:#1A1A2E;border:2px solid #8080A0;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:100">
-            <i class="fas fa-times" style="color:#fff;font-size:10px"></i>
-        </div>
+        <!-- Countdown ring for dismiss (hidden by default) -->
+        <svg id="sos-ring" style="position:absolute;top:-4px;left:-4px;width:64px;height:64px;transform:rotate(-90deg);pointer-events:none;display:none">
+            <circle cx="32" cy="32" r="29" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+            <circle id="sos-ring-progress" cx="32" cy="32" r="29" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="182" stroke-dashoffset="182" stroke-linecap="round"/>
+        </svg>
     </div>
     <style>
         @keyframes sosPulse { 0%,100%{box-shadow:0 4px 20px rgba(231,76,60,0.4)} 50%{box-shadow:0 4px 30px rgba(231,76,60,0.6)} }
         #sos-floating-btn.sos-locked { background:linear-gradient(135deg,#555,#444);animation:none;box-shadow:0 4px 12px rgba(0,0,0,0.3); }
         #sos-floating-btn.sos-locked::after { content:'\f023';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;bottom:-2px;right:-2px;background:#22223A;color:#8080A0;font-size:9px;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;border:2px solid #1A1A2E; }
         #sos-floating-btn.sos-holding { transform:scale(0.92)!important;box-shadow:0 2px 10px rgba(231,76,60,0.6),0 0 20px rgba(231,76,60,0.3)!important; }
+        #sos-floating-btn.sos-dismissing { animation:none!important; }
     </style>
     <script>
     // SOS hide/show
     function hideSOSButton() {
-        document.getElementById('sos-floating-btn').style.display = 'none';
+        var btn = document.getElementById('sos-floating-btn');
+        btn.style.transition = 'all 0.3s ease';
+        btn.style.opacity = '0';
+        btn.style.transform = 'scale(0.3)';
+        setTimeout(function() {
+            btn.style.display = 'none';
+            btn.style.opacity = '';
+            btn.style.transform = '';
+            btn.style.transition = '';
+        }, 300);
         localStorage.setItem('safetea_sos_hidden', '1');
         if (typeof showToast === 'function') showToast('SOS button hidden. Re-enable in Profile settings.');
     }
@@ -3391,39 +3403,83 @@
         document.getElementById('sos-floating-btn').style.display = 'none';
     }
 
-    // SOS press-and-hold (1 second)
+    // SOS: hold 1s = activate, hold 5s = dismiss
     (function() {
         var btn = document.getElementById('sos-floating-btn');
+        var ring = document.getElementById('sos-ring');
+        var ringProgress = document.getElementById('sos-ring-progress');
         var holdTimer = null;
+        var dismissTimer = null;
+        var animFrame = null;
+        var holdStart = 0;
         var fired = false;
+        var ACTIVATE_MS = 1000;
+        var DISMISS_MS = 5000;
+        var CIRCUMFERENCE = 182; // 2 * PI * 29
 
         function startHold(e) {
             e.preventDefault();
             fired = false;
+            holdStart = Date.now();
             btn.classList.add('sos-holding');
+
+            // At 1s: activate SOS
             holdTimer = setTimeout(function() {
                 fired = true;
                 btn.classList.remove('sos-holding');
                 if (navigator.vibrate) navigator.vibrate(50);
                 showSOSActionSheet();
-            }, 1000);
+                // Show ring — keep holding to dismiss
+                ring.style.display = 'block';
+                ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
+                animateRing();
+            }, ACTIVATE_MS);
+
+            // At 5s: dismiss
+            dismissTimer = setTimeout(function() {
+                cleanup();
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                hideSOSButton();
+                // Close action sheet if open
+                var sheet = document.getElementById('sos-action-sheet');
+                if (sheet) sheet.remove();
+            }, DISMISS_MS);
+        }
+
+        function animateRing() {
+            var elapsed = Date.now() - holdStart - ACTIVATE_MS;
+            var remaining = DISMISS_MS - ACTIVATE_MS;
+            var progress = Math.min(elapsed / remaining, 1);
+            ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+            if (progress < 1) {
+                animFrame = requestAnimationFrame(animateRing);
+            }
+        }
+
+        function cleanup() {
+            btn.classList.remove('sos-holding');
+            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+            if (dismissTimer) { clearTimeout(dismissTimer); dismissTimer = null; }
+            if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+            ring.style.display = 'none';
+            ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
         }
 
         function endHold(e) {
             e.preventDefault();
-            btn.classList.remove('sos-holding');
-            if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-            if (!fired && typeof showToast === 'function') {
-                showToast('Hold SOS for 1 second to activate');
+            var elapsed = Date.now() - holdStart;
+            cleanup();
+            if (!fired && elapsed < ACTIVATE_MS) {
+                if (typeof showToast === 'function') showToast('Hold 1s to activate SOS');
             }
         }
 
         btn.addEventListener('mousedown', startHold);
         btn.addEventListener('touchstart', startHold, { passive: false });
         btn.addEventListener('mouseup', endHold);
-        btn.addEventListener('mouseleave', function() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; btn.classList.remove('sos-holding'); } });
+        btn.addEventListener('mouseleave', function() { cleanup(); });
         btn.addEventListener('touchend', endHold);
-        btn.addEventListener('touchcancel', function() { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; btn.classList.remove('sos-holding'); } });
+        btn.addEventListener('touchcancel', function() { cleanup(); });
     })();
     </script>
 

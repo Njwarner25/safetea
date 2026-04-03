@@ -126,7 +126,7 @@ async function checkNameWatchMatches(postId, postBody, postCity) {
 
         if (wn.email) {
           const snippet = postBody.length > 150 ? postBody.substring(0, 150) + '...' : postBody;
-          sendNameWatchMatchEmail(wn.email, wn.display_name, wn.name, snippet, postCity || wn.city).catch(function(err) {
+          sendNameWatchMatchEmail(wn.email, wn.display_name, wn.name, snippet, postCity || wn.city, postId).catch(function(err) {
             console.error('[NameWatch] Email failed for', wn.email, err.message);
           });
         }

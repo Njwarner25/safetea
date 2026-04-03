@@ -133,7 +133,10 @@ function sendWelcomeEmail(to, displayName) {
   });
 }
 
-function sendNameWatchMatchEmail(to, displayName, watchedName, postSnippet, city) {
+function sendNameWatchMatchEmail(to, displayName, watchedName, postSnippet, city, postId) {
+  var postUrl = postId
+    ? 'https://getsafetea.app/dashboard.html?tab=hub&post=' + postId
+    : 'https://getsafetea.app/dashboard.html?tab=hub&sub=namewatch';
   return sendEmail({
     to,
     subject: `🔔 Name Watch Alert: "${watchedName}" was mentioned`,
@@ -145,7 +148,7 @@ function sendNameWatchMatchEmail(to, displayName, watchedName, postSnippet, city
         <div style="color:#ccc;font-size:14px;line-height:1.5;">${postSnippet || 'A new post mentions this name.'}</div>
       </div>
       <div style="text-align:center;margin:24px 0;">
-        <a href="https://getsafetea.app/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">View Post</a>
+        <a href="${postUrl}" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">View Post</a>
       </div>
       <p style="color:#8080A0;font-size:12px;">You're receiving this because you have "${watchedName}" on your Name Watch list.</p>
     `)

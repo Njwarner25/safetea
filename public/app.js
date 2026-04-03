@@ -1649,16 +1649,18 @@
                 } else {
                     msgs.forEach(function(m) {
                         if (isSystemThread) {
-                            html += '<div class="msg-bubble received" style="background:rgba(232,160,181,0.08);border-left:3px solid #E8A0B5">';
+                            html += '<div class="msg-bubble received" style="background:rgba(232,160,181,0.08);border-left:3px solid #E8A0B5;position:relative">';
                             html += escapeHtmlSafe(m.content);
-                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
-                            html += '</div>';
+                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at);
+                            html += ' <span class="msg-delete-btn" onclick="event.stopPropagation();deleteMessage(' + m.id + ')" title="Delete" style="cursor:pointer;opacity:0.4;margin-left:6px;font-size:11px">&times;</span>';
+                            html += '</div></div>';
                         } else {
                             var isSent = m.sender_id === myId;
-                            html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">';
+                            html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '" style="position:relative">';
                             html += escapeHtmlSafe(m.content);
-                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at) + '</div>';
-                            html += '</div>';
+                            html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at);
+                            html += ' <span class="msg-delete-btn" onclick="event.stopPropagation();deleteMessage(' + m.id + ')" title="Delete" style="cursor:pointer;opacity:0.4;margin-left:6px;font-size:11px">&times;</span>';
+                            html += '</div></div>';
                         }
                     });
                 }
@@ -1724,6 +1726,27 @@
         .catch(function() {
             input.disabled = false;
             if (typeof showToast === 'function') showToast('Network error — try again');
+        });
+    };
+
+    // Delete a message
+    window.deleteMessage = function(msgId) {
+        if (!confirm('Delete this message?')) return;
+        fetch('/api/messages?id=' + msgId, {
+            method: 'DELETE',
+            headers: authHeaders()
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (currentThreadUserId) openConversation(currentThreadUserId);
+                loadConversations();
+            } else {
+                if (typeof showToast === 'function') showToast(data.error || 'Failed to delete');
+            }
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast('Network error');
         });
     };
 

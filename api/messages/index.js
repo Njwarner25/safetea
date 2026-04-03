@@ -49,6 +49,23 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // ========== DELETE: Delete a message ==========
+  if (req.method === 'DELETE') {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const msgId = url.searchParams.get('id');
+    if (!msgId) return res.status(400).json({ error: 'Message ID required' });
+
+    try {
+      await run(
+        'DELETE FROM messages WHERE id = $1 AND (sender_id = $2 OR recipient_id = $2)',
+        [msgId, user.id]
+      );
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to delete message', details: err.message });
+    }
+  }
+
   // ========== POST: Send a message ==========
   if (req.method === 'POST') {
     const body = req.body || {};

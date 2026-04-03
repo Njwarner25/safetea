@@ -147,13 +147,29 @@ RESPOND WITH JSON ONLY:
 
     const passed = result.isLivePerson && result.challengePassed && result.isRealPhoto && !result.isAIGenerated && !result.isPhotoOfPhoto && result.confidence >= 0.6;
 
-    // Log the attempt
+    // Ensure verification data columns exist
+    try {
+      await run(`ALTER TABLE verification_attempts ADD COLUMN IF NOT EXISTS details JSONB`);
+      await run(`ALTER TABLE verification_attempts ADD COLUMN IF NOT EXISTS challenge_id VARCHAR(20)`);
+      await run(`ALTER TABLE verification_attempts ADD COLUMN IF NOT EXISTS selfie_data TEXT`);
+    } catch (e) { /* columns may already exist */ }
+
+    // Log the attempt with full details
     try {
       await run(
-        `INSERT INTO verification_attempts (user_id, type, result, provider) VALUES ($1, 'identity', $2, 'claude-vision')`,
-        [user.id, passed ? 'passed' : 'failed']
+        `INSERT INTO verification_attempts (user_id, type, result, provider, challenge_id, details, selfie_data)
+         VALUES ($1, 'identity', $2, 'claude-vision', $3, $4, $5)`,
+        [user.id, passed ? 'passed' : 'failed', challenge_id, JSON.stringify(result), base64]
       );
-    } catch (e) { /* table may not exist */ }
+    } catch (e) {
+      // Fallback without new columns if migration hasn't run
+      try {
+        await run(
+          `INSERT INTO verification_attempts (user_id, type, result, provider) VALUES ($1, 'identity', $2, 'claude-vision')`,
+          [user.id, passed ? 'passed' : 'failed']
+        );
+      } catch (e2) { console.error('[Verify] Failed to log attempt:', e2.message); }
+    }
 
     if (passed) {
       // Mark identity as verified

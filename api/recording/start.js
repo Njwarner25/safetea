@@ -62,6 +62,17 @@ module.exports = async function handler(req, res) {
     let emailsSent = 0;
     let contacts = [];
     try {
+      // Ensure contact_email column exists (may not if contacts endpoint hasn't been called yet)
+      await run(`CREATE TABLE IF NOT EXISTS recording_contacts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        contact_name VARCHAR(100) NOT NULL,
+        contact_phone VARCHAR(30) NOT NULL,
+        contact_email VARCHAR(150),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, contact_phone)
+      )`);
+      try { await run(`ALTER TABLE recording_contacts ADD COLUMN IF NOT EXISTS contact_email VARCHAR(150)`); } catch(e) {}
       contacts = await getMany(
         'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]

@@ -39,6 +39,7 @@ module.exports = async function handler(req, res) {
     let emailsSent = 0;
     let contacts = [];
     try {
+      try { await run(`ALTER TABLE recording_contacts ADD COLUMN IF NOT EXISTS contact_email VARCHAR(150)`); } catch(e) {}
       contacts = await getMany(
         'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]

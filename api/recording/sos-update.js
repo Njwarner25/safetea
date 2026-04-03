@@ -54,9 +54,10 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    // Get contacts FIRST — this is fast
+    // Get contacts FIRST — ensure contact_email column exists
     var contacts = [];
     try {
+      try { await run(`ALTER TABLE recording_contacts ADD COLUMN IF NOT EXISTS contact_email VARCHAR(150)`); } catch(e) {}
       contacts = await getMany(
         'SELECT contact_name, contact_phone, contact_email FROM recording_contacts WHERE user_id = $1',
         [user.id]

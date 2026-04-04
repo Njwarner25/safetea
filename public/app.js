@@ -2327,7 +2327,9 @@
 
     function stegoEmbed(dataUrl, userId, callback) {
         var img = new Image();
-        img.crossOrigin = 'anonymous';
+        if (dataUrl && dataUrl.indexOf('data:') !== 0) {
+            img.crossOrigin = 'anonymous';
+        }
         img.onload = function() {
             var w = img.width, h = img.height;
             var canvas = document.createElement('canvas');
@@ -2362,7 +2364,10 @@
                 var uid = u ? parseInt(u.id) || 0 : 0;
 
                 var imgEl = new Image();
-                imgEl.crossOrigin = 'anonymous';
+                // Only set crossOrigin for HTTP URLs, NOT for data: URLs
+                if (src && src.indexOf('data:') !== 0) {
+                    imgEl.crossOrigin = 'anonymous';
+                }
                 imgEl.onload = function() {
                     var canvas = el;
                     var dpr = window.devicePixelRatio || 1;
@@ -2403,8 +2408,8 @@
                     canvas.style.opacity = '1';
                     console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'blocks:', Math.floor(bufW/WM_BLOCK) + 'x' + Math.floor(bufH/WM_BLOCK), 'dpr:', dpr);
                 };
-                imgEl.onerror = function() {
-                    console.warn('[SafeTea WM] Image failed to load:', src);
+                imgEl.onerror = function(e) {
+                    console.error('[SafeTea WM] Image failed to load:', src ? src.substring(0, 80) + '...' : 'null', 'error:', e);
                     el.style.opacity = '1';
                 };
                 imgEl.src = src;

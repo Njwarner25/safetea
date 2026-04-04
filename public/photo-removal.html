@@ -283,12 +283,25 @@
       if(email) payload.email = email;
       if(details) payload.details = details;
 
+      var jsonBody = JSON.stringify(payload);
+      if(jsonBody.length > 4 * 1024 * 1024){
+        showResult('Image is still too large after compression. Please try a smaller photo.', 'error');
+        submitBtn.textContent = 'Submit Removal Request';
+        submitBtn.disabled = false;
+        return;
+      }
+
       var r = await fetch('/api/photos/removal-public', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: jsonBody
       });
-      var data = await r.json();
+
+      var data;
+      try { data = await r.json(); } catch(parseErr) {
+        throw new Error('Server returned status ' + r.status);
+      }
+
       submitBtn.textContent = 'Submit Removal Request';
       if(data.success){
         if(data.watermark_detected){
@@ -306,7 +319,7 @@
     } catch(e) {
       submitBtn.textContent = 'Submit Removal Request';
       submitBtn.disabled = false;
-      showResult('Network error. Please check your connection and try again.', 'error');
+      showResult('Error: ' + e.message, 'error');
     }
   });
 })();

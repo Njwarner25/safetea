@@ -1,4 +1,5 @@
-const { sql } = require('@vercel/postgres');
+const { parseBody } = require('../_utils/auth');
+const { getOne, run } = require('../_utils/db');
 const crypto = require('crypto');
 const { extractWatermark } = require('../_utils/watermark');
 
@@ -22,7 +23,7 @@ function validateEmail(email) {
 }
 
 module.exports = async function handler(req, res) {
-  // CORS open — public endpoint
+  // Public endpoint — open CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -33,19 +34,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Parse body
-    let body;
-    if (typeof req.body === 'object' && req.body !== null) {
-      body = req.body;
-    } else {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      body = JSON.parse(Buffer.concat(chunks).toString());
-    }
+    const body = await parseBody(req);
 
     const { image, email, details } = body;
 
-    // Validate required fields
     if (!image) {
       return res.status(400).json({ error: 'image (base64) is required' });
     }
@@ -54,7 +46,6 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid email address' });
     }
 
-    // Validate image
     const validated = validateBase64Image(image);
     if (!validated) {
       return res.status(400).json({
@@ -66,36 +57,29 @@ module.exports = async function handler(req, res) {
     const imageHash = crypto.createHash('sha256').update(imageBuffer).digest('hex').substring(0, 64);
 
     // Extract watermark
-    const watermarkResult = extractWatermark(imageBuffer);
-    const watermarkVerified = watermarkResult.found && watermarkResult.verified;
-    const watermarkUserId = watermarkVerified ? watermarkResult.userId : null;
+    let watermarkVerified = false;
+    let watermarkUserId = null;
+    try {
+      const watermarkResult = extractWatermark(imageBuffer);
+      watermarkVerified = watermarkResult.found && watermarkResult.verified;
+      watermarkUserId = watermarkVerified ? watermarkResult.userId : null;
+    } catch (e) {
+      console.error('Watermark extraction error (non-fatal):', e.message);
+    }
 
     let autoActionTaken = null;
 
     if (watermarkVerified && watermarkUserId) {
-      // Look up the leaker
-      const leaker = await sql`
-        SELECT id, display_name, banned FROM users WHERE id = ${parseInt(watermarkUserId, 10)}
-      `;
+      const leaker = await getOne('SELECT id, display_name, banned FROM users WHERE id = $1', [parseInt(watermarkUserId, 10)]);
 
-      if (leaker.rows.length > 0 && !leaker.rows[0].banned) {
-        // Auto-ban the leaker
-        await sql`
-          UPDATE users
-          SET banned = true,
-              banned_at = NOW(),
-              ban_reason = 'Photo leaked outside SafeTea (watermark verified)',
-              ban_type = 'permanent'
-          WHERE id = ${parseInt(watermarkUserId, 10)}
-        `;
-
-        // Hide all their posts
-        await sql`
-          UPDATE posts SET hidden = true WHERE user_id = ${parseInt(watermarkUserId, 10)}
-        `;
-
+      if (leaker && !leaker.banned) {
+        await run(
+          `UPDATE users SET banned = true, banned_at = NOW(), ban_reason = $1, ban_type = 'permanent' WHERE id = $2`,
+          ['Photo leaked outside SafeTea (watermark verified)', parseInt(watermarkUserId, 10)]
+        );
+        await run('UPDATE posts SET hidden = true WHERE user_id = $1', [parseInt(watermarkUserId, 10)]);
         autoActionTaken = 'account_banned_posts_hidden';
-      } else if (leaker.rows.length > 0 && leaker.rows[0].banned) {
+      } else if (leaker && leaker.banned) {
         autoActionTaken = 'already_banned';
       }
     }
@@ -105,26 +89,22 @@ module.exports = async function handler(req, res) {
     const sanitizedEmail = email ? String(email).substring(0, 255) : null;
     const status = watermarkVerified ? 'auto_resolved' : 'manual_review';
 
-    const result = await sql`
-      INSERT INTO removal_requests
-        (reason, details, status, reporter_email, leaked_image_hash, watermark_user_id, auto_action_taken, created_at)
-      VALUES
-        ('photo_leaked', ${sanitizedDetails}, ${status}, ${sanitizedEmail}, ${imageHash}, ${watermarkUserId ? parseInt(watermarkUserId, 10) : null}, ${autoActionTaken}, NOW())
-      RETURNING id, status, created_at
-    `;
-
-    const request = result.rows[0];
+    const request = await getOne(
+      `INSERT INTO removal_requests (reason, details, status, reporter_email, leaked_image_hash, watermark_user_id, auto_action_taken, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING id, status, created_at`,
+      ['photo_leaked', sanitizedDetails, status, sanitizedEmail, imageHash, watermarkUserId ? parseInt(watermarkUserId, 10) : null, autoActionTaken]
+    );
 
     if (watermarkVerified) {
-      return res.status(200).json({
+      return res.json({
         success: true,
         request_id: request.id,
         watermark_detected: true,
         action_taken: autoActionTaken,
-        message: 'Watermark verified. The leaker\'s account has been automatically suspended and all their posts have been hidden. Thank you for reporting this.'
+        message: 'Watermark verified. Action has been taken. Thank you for reporting this.'
       });
     } else {
-      return res.status(200).json({
+      return res.json({
         success: true,
         request_id: request.id,
         watermark_detected: false,
@@ -133,6 +113,6 @@ module.exports = async function handler(req, res) {
     }
   } catch (error) {
     console.error('Public photo removal request error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 };

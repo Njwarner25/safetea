@@ -184,7 +184,7 @@
         <i class="fas fa-info-circle"></i>
         <strong>How it works:</strong> Every photo uploaded to SafeTea is invisibly watermarked with the uploader's identity using LSB steganography. This watermark survives screenshots, crops, and re-sharing. Even if someone screenshots content, the watermark identifies the source.
       </div>
-      <div id="removal-debug" style="display:none;margin-top:12px;padding:12px 16px;border-radius:10px;background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);font-size:0.82rem;line-height:1.5"></div>
+      <div id="removal-debug" style="margin-top:12px;padding:12px 16px;border-radius:10px;background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);font-size:0.82rem;line-height:1.5"><span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Running watermark self-test...</span></div>
       <div class="removal-note" style="margin-top:10px">
         <i class="fas fa-clock"></i>
         <strong>Auto-deletion policy:</strong> All community posts containing photos of men are automatically removed from feeds within 7 days to further protect privacy.
@@ -371,84 +371,88 @@
 
   // ===== SELF-TEST: proves QIM encode→decode works =====
   function runSelfTest(){
-    var testW = 400, testH = 300, testUid = 12345;
-    var canvas = document.createElement('canvas');
-    canvas.width = testW; canvas.height = testH;
-    var ctx = canvas.getContext('2d');
-
-    // Draw a gradient test image
-    for(var y = 0; y < testH; y++){
-      for(var x = 0; x < testW; x++){
-        var r = Math.round((x / testW) * 200 + 20);
-        var g = Math.round((y / testH) * 200 + 20);
-        var b = Math.round(((x + y) / (testW + testH)) * 200 + 20);
-        ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
-        ctx.fillRect(x, y, 1, 1);
-      }
-    }
-
-    // Read pixels
-    var imageData = ctx.getImageData(0, 0, testW, testH);
-    var px = imageData.data;
-
-    // Apply QIM watermark (same algorithm as app.js encoder)
-    var bits = [];
-    for(var i = 7; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
-    var uid = (testUid >>> 0) & 0xFFFFFFFF;
-    for(var i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
-
-    var blocksX = Math.floor(testW / WM_BLOCK);
-    var blocksY = Math.floor(testH / WM_BLOCK);
-    var totalBlocks = blocksX * blocksY;
-
-    for(var b = 0; b < totalBlocks; b++){
-      var bit = bits[b % bits.length];
-      var bx = (b % blocksX) * WM_BLOCK;
-      var by = Math.floor(b / blocksX) * WM_BLOCK;
-      var sum = 0, count = 0;
-      for(var py = by; py < by + WM_BLOCK && py < testH; py++){
-        for(var px2 = bx; px2 < bx + WM_BLOCK && px2 < testW; px2++){
-          var idx = (py * testW + px2) * 4;
-          sum += px[idx] + px[idx+1] + px[idx+2];
-          count++;
-        }
-      }
-      var avg = sum / (count * 3);
-      var target;
-      if(bit === 0){
-        target = Math.round(avg / WM_STEP) * WM_STEP;
-      } else {
-        target = Math.round((avg - WM_STEP / 2) / WM_STEP) * WM_STEP + WM_STEP / 2;
-      }
-      var delta = Math.round(target - avg);
-      if(delta > WM_STEP / 2) delta = WM_STEP / 2;
-      if(delta < -WM_STEP / 2) delta = -WM_STEP / 2;
-      for(var py = by; py < by + WM_BLOCK && py < testH; py++){
-        for(var px2 = bx; px2 < bx + WM_BLOCK && px2 < testW; px2++){
-          var idx = (py * testW + px2) * 4;
-          var rv = px[idx] + delta;
-          var gv = px[idx+1] + delta;
-          var bv = px[idx+2] + delta;
-          px[idx] = rv < 0 ? 0 : rv > 255 ? 255 : rv;
-          px[idx+1] = gv < 0 ? 0 : gv > 255 ? 255 : gv;
-          px[idx+2] = bv < 0 ? 0 : bv > 255 ? 255 : bv;
-        }
-      }
-    }
-
-    // Now decode
-    var result = tryQIMDecode(px, testW, testH, WM_BLOCK, WM_STEP, 0, 0);
     var debugEl = document.getElementById('removal-debug');
-    if(result && result.userId === testUid){
-      debugEl.innerHTML = '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> Self-test PASSED — QIM codec works correctly (decoded uid=' + result.userId + ', confidence=' + result.confidence + '%)</span>';
-    } else {
-      debugEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> Self-test FAILED — codec bug detected. Got: ' + JSON.stringify(result) + ', expected uid=' + testUid + '</span>';
+    try {
+      var testW = 400, testH = 300, testUid = 12345;
+      var canvas = document.createElement('canvas');
+      canvas.width = testW; canvas.height = testH;
+      var ctx = canvas.getContext('2d');
+
+      // Draw gradient using imageData (fast, no fillRect)
+      var imageData = ctx.createImageData(testW, testH);
+      var d = imageData.data;
+      for(var y = 0; y < testH; y++){
+        for(var x = 0; x < testW; x++){
+          var i = (y * testW + x) * 4;
+          d[i]   = Math.round((x / testW) * 200 + 20);
+          d[i+1] = Math.round((y / testH) * 200 + 20);
+          d[i+2] = Math.round(((x + y) / (testW + testH)) * 200 + 20);
+          d[i+3] = 255;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      // Re-read pixels (ensures same pipeline as real usage)
+      var readBack = ctx.getImageData(0, 0, testW, testH);
+      var px = readBack.data;
+
+      // Apply QIM watermark (same algorithm as app.js wmApply)
+      var bits = [];
+      for(var mi = 7; mi >= 0; mi--) bits.push((WM_MAGIC >> mi) & 1);
+      var uid = (testUid >>> 0) & 0xFFFFFFFF;
+      for(var mi = 31; mi >= 0; mi--) bits.push((uid >> mi) & 1);
+
+      var blocksX = Math.floor(testW / WM_BLOCK);
+      var blocksY = Math.floor(testH / WM_BLOCK);
+      var totalBlocks = blocksX * blocksY;
+
+      for(var bl = 0; bl < totalBlocks; bl++){
+        var bit = bits[bl % bits.length];
+        var bx = (bl % blocksX) * WM_BLOCK;
+        var by = Math.floor(bl / blocksX) * WM_BLOCK;
+        var sum = 0, cnt = 0;
+        for(var py = by; py < by + WM_BLOCK; py++){
+          for(var px2 = bx; px2 < bx + WM_BLOCK; px2++){
+            var idx = (py * testW + px2) * 4;
+            sum += px[idx] + px[idx+1] + px[idx+2];
+            cnt++;
+          }
+        }
+        var avg = sum / (cnt * 3);
+        var target;
+        if(bit === 0){
+          target = Math.round(avg / WM_STEP) * WM_STEP;
+        } else {
+          target = Math.round((avg - WM_STEP / 2) / WM_STEP) * WM_STEP + WM_STEP / 2;
+        }
+        var delta = Math.round(target - avg);
+        if(delta > WM_STEP / 2) delta = WM_STEP / 2;
+        if(delta < -WM_STEP / 2) delta = -WM_STEP / 2;
+        for(var py = by; py < by + WM_BLOCK; py++){
+          for(var px2 = bx; px2 < bx + WM_BLOCK; px2++){
+            var idx = (py * testW + px2) * 4;
+            px[idx]   = Math.max(0, Math.min(255, px[idx] + delta));
+            px[idx+1] = Math.max(0, Math.min(255, px[idx+1] + delta));
+            px[idx+2] = Math.max(0, Math.min(255, px[idx+2] + delta));
+          }
+        }
+      }
+
+      // Now decode
+      var result = tryQIMDecode(px, testW, testH, WM_BLOCK, WM_STEP, 0, 0);
+      if(result && result.userId === testUid){
+        debugEl.innerHTML = '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> Watermark system online — self-test passed (uid=' + result.userId + ', confidence=' + result.confidence + '%)</span>';
+      } else {
+        debugEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> Self-test FAILED — result: ' + JSON.stringify(result) + ', expected uid=' + testUid + '</span>';
+      }
+    } catch(err) {
+      debugEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> Self-test ERROR: ' + err.message + '</span>';
+      console.error('[WM SelfTest]', err);
     }
-    debugEl.style.display = 'block';
   }
 
   // Run self-test on page load
-  setTimeout(runSelfTest, 500);
+  setTimeout(runSelfTest, 300);
 
   // ===== SUBMIT =====
   submitBtn.addEventListener('click', async function(){

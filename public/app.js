@@ -2327,18 +2327,16 @@
                 var uid = u ? parseInt(u.id) || 0 : 0;
 
                 var imgEl = new Image();
-                // Only set crossOrigin for HTTP URLs, NOT for data: URLs
-                if (src && src.indexOf('data:') !== 0) {
-                    imgEl.crossOrigin = 'anonymous';
-                }
+                // No crossOrigin needed — we only DRAW to the canvas (never getImageData/toDataURL).
+                // Setting crossOrigin on hosts without CORS headers causes images to fail loading entirely.
                 imgEl.onload = function() {
                     var canvas = el;
                     var dpr = window.devicePixelRatio || 1;
 
                     // Calculate CSS display dimensions from container + image aspect ratio
-                    var container = canvas.parentElement;
-                    var containerW = (container ? container.clientWidth : 0) || 500;
-                    var maxCssH = 300; // matches the max-height:300px CSS on stego canvases
+                    var parentEl = canvas.parentElement;
+                    var containerW = (parentEl ? parentEl.clientWidth : 0) || 500;
+                    var maxCssH = 300;
                     var imgRatio = imgEl.naturalWidth / imgEl.naturalHeight;
 
                     var cssW = containerW;
@@ -2349,13 +2347,11 @@
                         if (cssW > containerW) cssW = containerW;
                     }
 
-                    // Set CSS display size explicitly — prevents browser scaling mismatch
                     canvas.style.width = cssW + 'px';
                     canvas.style.height = cssH + 'px';
                     canvas.style.maxHeight = 'none';
                     canvas.style.maxWidth = '100%';
 
-                    // Set canvas buffer to CSS × DPR = exact screenshot pixel resolution
                     var bufW = Math.round(cssW * dpr);
                     var bufH = Math.round(cssH * dpr);
                     canvas.width = bufW;
@@ -2367,11 +2363,18 @@
                     // Apply invisible text watermark (survives screenshots + JPEG)
                     wmApplyText(ctx, bufW, bufH, uid);
                     canvas.style.opacity = '1';
+                    // Hide the loading spinner
+                    var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;
+                    if (spinner) spinner.style.display = 'none';
                     console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
                 };
                 imgEl.onerror = function(e) {
-                    console.error('[SafeTea WM] Image failed to load:', src ? src.substring(0, 80) + '...' : 'null', 'error:', e);
-                    el.style.opacity = '1';
+                    console.error('[SafeTea WM] Image failed to load:', src ? src.substring(0, 80) + '...' : 'null');
+                    // Fallback: show original image as regular <img> tag
+                    var fallback = document.createElement('img');
+                    fallback.src = src;
+                    fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
+                    el.parentElement.replaceChild(fallback, el);
                 };
                 imgEl.src = src;
             });

@@ -6,6 +6,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Cache for 5 minutes — cities rarely change
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+
   try {
     // Try migration column names first (city_name, vote_count), fallback to alternatives
     // Featured cities appear first, then sort by vote count

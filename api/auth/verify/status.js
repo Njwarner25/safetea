@@ -6,6 +6,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Cache for 2 minutes — verification status changes infrequently
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+
   try {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });

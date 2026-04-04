@@ -11,6 +11,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Cache for 60 seconds — ban status doesn't change rapidly
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 

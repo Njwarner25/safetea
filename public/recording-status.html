@@ -500,9 +500,9 @@
                         buildAudioPlayers(data.chunks);
                     }
 
-                    // Auto-refresh if active (every 10 seconds)
+                    // Auto-refresh if active (every 30 seconds to save API calls)
                     if (s.status === 'active') {
-                        setTimeout(loadSession, 10000);
+                        setTimeout(loadSession, 30000);
                     }
                 })
                 .catch(function() {

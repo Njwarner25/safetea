@@ -107,7 +107,7 @@ module.exports = async function handler(req, res) {
 
     if (contacts.length > 0) {
       // Short SMS ping via Twilio
-      const shortSms = `You're a trusted contact for ${displayName} on SafeTea. They may need your help — check your email immediately.`;
+      const shortSms = `You're a trusted contact for ${displayName} on SafeTea. They may need your help — check your email immediately (check spam/junk folder too).`;
 
       if (twilioConfigured) {
         const twilio = require('twilio')(twilioSid, twilioAuth);

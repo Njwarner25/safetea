@@ -107,8 +107,8 @@ module.exports = async function handler(req, res) {
 
     // Short SMS ping via Twilio + full email via SendGrid
     var shortSms = secondsActive <= 45
-      ? "You're a trusted contact for " + displayName + " on SafeTea. They may need your help \u2014 check your email immediately."
-      : "URGENT: " + displayName + "'s SafeTea recording has been active for " + secondsActive + " seconds. Check your email for updated location and audio.";
+      ? "You're a trusted contact for " + displayName + " on SafeTea. They may need your help \u2014 check your email immediately (check spam/junk folder too)."
+      : "URGENT: " + displayName + "'s SafeTea recording has been active for " + secondsActive + " seconds. Check your email for updated location and audio (check spam/junk folder too).";
 
     var contactsNotified = 0;
     var emailsSent = 0;

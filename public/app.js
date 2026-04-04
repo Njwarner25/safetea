@@ -867,7 +867,7 @@
         if (!list) return;
         var row = document.createElement('div');
         row.className = 'dc-contact-row';
-        row.innerHTML = '<input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone (e.g. 630-675-8076)" class="dc-contact-phone"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>';
+        row.innerHTML = '<input type="text" placeholder="Name" class="dc-contact-name"><input type="tel" placeholder="Phone" class="dc-contact-phone"><input type="email" placeholder="Email" class="dc-contact-email"><button class="dc-contact-remove" onclick="this.parentElement.remove()" title="Remove">&times;</button>';
         list.appendChild(row);
     };
 
@@ -892,12 +892,13 @@
             return;
         }
 
-        // Gather trusted contacts
+        // Gather trusted contacts (name + phone + email)
         var contacts = [];
         document.querySelectorAll('#dc-contacts-list .dc-contact-row').forEach(function(row) {
             var name = row.querySelector('.dc-contact-name').value.trim();
             var phone = row.querySelector('.dc-contact-phone').value.trim();
-            if (name && phone) contacts.push({ name: name, phone: phone });
+            var email = row.querySelector('.dc-contact-email') ? row.querySelector('.dc-contact-email').value.trim() : '';
+            if (name && phone) contacts.push({ name: name, phone: phone, email: email || undefined });
         });
 
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking out...'; }

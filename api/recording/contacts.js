@@ -36,8 +36,8 @@ module.exports = async function handler(req, res) {
       const body = await parseBody(req);
       const { contactName, contactPhone, contactEmail } = body;
 
-      if (!contactName || !contactPhone) {
-        return res.status(400).json({ error: 'Contact name and phone number are required' });
+      if (!contactName || !contactPhone || !contactEmail) {
+        return res.status(400).json({ error: 'Contact name, phone number, and email are all required' });
       }
 
       // Clean phone number

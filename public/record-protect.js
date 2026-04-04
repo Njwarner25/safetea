@@ -1977,7 +1977,7 @@
                     '<input id="ec-name" type="text" placeholder="Name (e.g. Mom, Sarah)" maxlength="100" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:8px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
                     '<input id="ec-phone" type="tel" placeholder="Phone number" maxlength="20" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:8px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
                     '<input id="ec-email" type="email" placeholder="Email (for emergency reports)" maxlength="150" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:#fff;font-size:14px;margin-bottom:10px;box-sizing:border-box;font-family:\'Inter\',sans-serif" />' +
-                    '<p style="color:#555;font-size:11px;margin:0 0 10px;line-height:1.4">Phone gets a short text alert. Email gets the full emergency report with GPS, audio transcript, and live tracking link.</p>' +
+                    '<p style="color:#555;font-size:11px;margin:0 0 10px;line-height:1.4">Both phone and email are required. Phone gets a short text alert. Email gets the full emergency report with GPS, audio, and live tracking link.</p>' +
                     '<button id="ec-add-btn" style="width:100%;background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Add Contact</button>' +
                 '</div>' +
 
@@ -1996,8 +1996,8 @@
             var name = document.getElementById('ec-name').value.trim();
             var phone = document.getElementById('ec-phone').value.trim();
             var email = document.getElementById('ec-email') ? document.getElementById('ec-email').value.trim() : '';
-            if (!name || !phone) {
-                if (typeof showToast === 'function') showToast('Please enter both name and phone number');
+            if (!name || !phone || !email) {
+                if (typeof showToast === 'function') showToast('Please enter name, phone number, and email');
                 return;
             }
             var btn = document.getElementById('ec-add-btn');

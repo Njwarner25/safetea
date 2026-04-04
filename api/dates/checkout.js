@@ -64,9 +64,11 @@ module.exports = async function handler(req, res) {
         checkout_id INTEGER REFERENCES date_checkouts(id) ON DELETE CASCADE,
         contact_name VARCHAR(255),
         contact_phone VARCHAR(50),
+        contact_email VARCHAR(150),
         notified BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT NOW()
       )`);
+      try { await run(`ALTER TABLE date_trusted_contacts ADD COLUMN IF NOT EXISTS contact_email VARCHAR(150)`); } catch(e) {}
 
       const checkout = await getOne(
         `INSERT INTO date_checkouts
@@ -88,10 +90,10 @@ module.exports = async function handler(req, res) {
         for (const contact of trustedContacts.slice(0, 5)) { // Max 5 contacts
           if (contact.name && contact.phone) {
             const saved = await getOne(
-              `INSERT INTO date_trusted_contacts (checkout_id, contact_name, contact_phone, notified)
-               VALUES ($1, $2, $3, false)
+              `INSERT INTO date_trusted_contacts (checkout_id, contact_name, contact_phone, contact_email, notified)
+               VALUES ($1, $2, $3, $4, false)
                RETURNING *`,
-              [checkout.id, contact.name, contact.phone]
+              [checkout.id, contact.name, contact.phone, contact.email || null]
             );
             savedContacts.push(saved);
           }

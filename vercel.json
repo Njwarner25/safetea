@@ -23,7 +23,8 @@
         { "path": "/api/cron/unlock-cities", "schedule": "0 5 * * *" },
         { "path": "/api/cron/lift-suspensions", "schedule": "0 1 * * *" },
         { "path": "/api/cron/weekly-report", "schedule": "0 8 * * 1" },
-        { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" }
+        { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" },
+        { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -92,6 +93,7 @@
         { "source": "/api/admin/ban", "destination": "/api/admin/ban" },
         { "source": "/api/admin/warn", "destination": "/api/admin/warn" },
         { "source": "/api/admin/ai-enforce", "destination": "/api/admin/ai-enforce" },
+        { "source": "/api/admin/ai-admin", "destination": "/api/admin/ai-admin" },
         { "source": "/api/admin/moderators", "destination": "/api/admin/moderators" },
         { "source": "/api/admin/reports", "destination": "/api/admin/reports" },
         { "source": "/api/admin/stats", "destination": "/api/admin/stats" },
@@ -162,6 +164,9 @@
         { "source": "/api/cron/weekly-report", "destination": "/api/cron/weekly-report" },
         { "source": "/api/cron/lift-suspensions", "destination": "/api/cron/lift-suspensions" },
         { "source": "/api/cron/recalc-trust-scores", "destination": "/api/cron/recalc-trust-scores" },
+        { "source": "/api/cron/run-ai-tasks", "destination": "/api/cron/run-ai-tasks" },
+        { "source": "/api/admin/ai-tasks", "destination": "/api/admin/ai-tasks" },
+        { "source": "/api/migrate-ai-tasks", "destination": "/api/migrate-ai-tasks" },
         { "source": "/api/moderation/analyze-leak", "destination": "/api/moderation/analyze-leak" },
         { "source": "/api/moderation/appeal", "destination": "/api/moderation/appeal" },
         { "source": "/api/moderation/status", "destination": "/api/moderation/status" },

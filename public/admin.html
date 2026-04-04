@@ -212,6 +212,9 @@
             <a data-section="feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
             <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
             <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
+            <a data-section="watermark"><i class="fas fa-fingerprint"></i> Watermark Decoder</a>
+            <a data-section="ai-assistant"><i class="fas fa-robot"></i> AI Assistant</a>
+            <a data-section="ai-tasks"><i class="fas fa-calendar-check"></i> AI Task Scheduler</a>
         </nav>
         <div class="sidebar-bottom">
             <a href="/dashboard.html" class="sidebar-nav"><i class="fas fa-arrow-left"></i> Back to App</a>
@@ -483,6 +486,137 @@
                     <div id="delete-user-result" style="margin-top:12px"></div>
                 </div>
             </div>
+
+            <!-- WATERMARK DECODER -->
+            <div id="section-watermark" class="section">
+                <div class="card">
+                    <h3><i class="fas fa-fingerprint"></i> Steganographic Watermark Decoder</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Upload a screenshot or leaked image to decode the embedded viewer ID. Every photo on SafeTea is invisibly watermarked with the viewer's user ID — if someone screenshots and shares it, this tool traces it back to them.</p>
+                    <div id="wm-drop-zone" style="border:2px dashed rgba(232,160,181,0.3);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(232,160,181,0.03)" ondragover="event.preventDefault();this.style.borderColor='#E8A0B5';this.style.background='rgba(232,160,181,0.08)'" ondragleave="this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)'" ondrop="event.preventDefault();this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)';handleWmDrop(event)" onclick="document.getElementById('wm-file-input').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>
+                        <p style="color:#fff;font-weight:600;margin-bottom:4px">Drop an image here or click to upload</p>
+                        <p style="color:#666;font-size:12px">Supports PNG, JPG, WebP</p>
+                        <input type="file" id="wm-file-input" accept="image/*" style="display:none" onchange="handleWmFile(this.files[0])">
+                    </div>
+                    <div id="wm-preview" style="display:none;margin-top:20px">
+                        <div style="display:flex;gap:20px;flex-wrap:wrap">
+                            <div style="flex:1;min-width:200px">
+                                <p style="font-size:12px;color:#8080A0;margin-bottom:8px">Uploaded Image</p>
+                                <canvas id="wm-canvas" style="max-width:100%;border-radius:10px;border:1px solid rgba(255,255,255,0.06)"></canvas>
+                            </div>
+                            <div style="flex:1;min-width:250px">
+                                <div id="wm-result" style="background:#141428;border-radius:10px;padding:20px">
+                                    <p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding watermark...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI ASSISTANT -->
+            <div id="section-ai-assistant" class="section">
+                <!-- Report Scanner -->
+                <div class="card">
+                    <h3><i class="fas fa-search"></i> Report Scanner</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">AI-powered review of reported posts. Enter a report ID to get an AI recommendation + watermark scan for photo posts.</p>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <input type="number" class="form-input" id="ai-report-id" placeholder="Report ID" style="width:150px">
+                        <button class="btn btn-primary" onclick="aiReviewReport()"><i class="fas fa-brain"></i> AI Review</button>
+                        <button class="btn btn-ghost" onclick="aiScanWatermark()"><i class="fas fa-fingerprint"></i> Scan Watermark</button>
+                    </div>
+                    <div id="ai-report-result" style="margin-top:16px;display:none"></div>
+                </div>
+
+                <!-- Bulk Review -->
+                <div class="card">
+                    <h3><i class="fas fa-tasks"></i> Bulk AI Review</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">AI reviews all unreviewed reports and recommends actions. You can apply recommendations individually or in bulk.</p>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <button class="btn btn-primary" onclick="aiBulkReview()" id="bulk-review-btn"><i class="fas fa-bolt"></i> AI Review All Reports</button>
+                        <span id="bulk-review-status" style="font-size:13px;color:#8080A0"></span>
+                    </div>
+                    <div id="bulk-review-results" style="margin-top:16px;display:none"></div>
+                </div>
+
+                <!-- Chat Interface -->
+                <div class="card">
+                    <h3><i class="fas fa-comments"></i> AI Admin Chat</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Ask anything about users, posts, reports, or moderation. Try: "What's the risk level of user #42?" or "Show me recent report trends."</p>
+                    <div id="ai-chat-messages" style="max-height:400px;overflow-y:auto;margin-bottom:16px;display:flex;flex-direction:column;gap:12px"></div>
+                    <div style="display:flex;gap:10px">
+                        <input type="text" class="form-input" id="ai-chat-input" placeholder="Ask the AI assistant..." style="flex:1" onkeydown="if(event.key==='Enter')aiAsk()">
+                        <button class="btn btn-primary" onclick="aiAsk()"><i class="fas fa-paper-plane"></i> Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Task Scheduler -->
+            <div id="section-ai-tasks" class="section">
+                <!-- Task List -->
+                <div class="card" id="ai-tasks-list-card">
+                    <h3><i class="fas fa-calendar-check"></i> AI Moderation Tasks <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="showCreateTaskForm()"><i class="fas fa-plus"></i> New Task</button></h3>
+                    <div id="ai-tasks-list"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading tasks...</div></div>
+                </div>
+
+                <!-- Create/Edit Form (hidden by default) -->
+                <div class="card" id="ai-task-form-card" style="display:none">
+                    <h3><i class="fas fa-edit"></i> <span id="ai-task-form-title">Create Task</span></h3>
+                    <div class="form-group">
+                        <label>Task Name</label>
+                        <input class="form-input" id="ai-task-name" placeholder="e.g. Flag drug mentions">
+                    </div>
+                    <div class="form-group">
+                        <label>AI Instruction</label>
+                        <textarea class="form-input" id="ai-task-instruction" rows="4" placeholder="e.g. Flag any posts that mention illegal drugs, drug use, or drug dealing. Include slang terms." style="resize:vertical"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Schedule</label>
+                            <select class="form-input" id="ai-task-schedule" onchange="toggleIntervalField()">
+                                <option value="once">Once</option>
+                                <option value="hourly">Hourly</option>
+                                <option value="daily" selected>Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="ai-task-interval-group" style="display:none">
+                            <label>Interval (hours)</label>
+                            <input class="form-input" type="number" id="ai-task-interval" min="1" max="168" value="1" placeholder="Hours between runs">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Scope</label>
+                            <select class="form-input" id="ai-task-scope">
+                                <option value="all">All (Community + Rooms)</option>
+                                <option value="community">Community Posts Only</option>
+                                <option value="rooms">Room Posts Only</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Action Level</label>
+                            <select class="form-input" id="ai-task-action">
+                                <option value="flag">Flag Only</option>
+                                <option value="warn">Flag + Warn User</option>
+                                <option value="remove">Flag + Warn + Remove Post</option>
+                                <option value="auto">Full Auto (includes ban for critical)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:8px">
+                        <input type="hidden" id="ai-task-edit-id">
+                        <button class="btn btn-primary" onclick="saveAiTask()"><i class="fas fa-save"></i> Save Task</button>
+                        <button class="btn btn-ghost" onclick="hideTaskForm()"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Execution Logs (hidden by default) -->
+                <div class="card" id="ai-task-logs-card" style="display:none">
+                    <h3><i class="fas fa-history"></i> Execution Logs — <span id="ai-task-logs-name"></span> <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="hideTaskLogs()"><i class="fas fa-arrow-left"></i> Back</button></h3>
+                    <div id="ai-task-logs"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading logs...</div></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -549,6 +683,7 @@
                 if (section === 'reports') loadReports();
                 if (section === 'room-reports') loadRoomReports();
                 if (section === 'feedback') loadFeedback();
+                if (section === 'ai-tasks') loadAiTasks();
             });
         });
 
@@ -1552,6 +1687,717 @@
         function handleLogout() {
             localStorage.removeItem('safetea_token');
             window.location.href = '/';
+        }
+
+        // ===== WATERMARK DECODER =====
+        const STEGO_BLOCK = 32;
+        const STEGO_MAGIC = 0xAA; // 10101010
+
+        function handleWmDrop(event) {
+            var file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) handleWmFile(file);
+        }
+
+        function handleWmFile(file) {
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.getElementById('wm-canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    document.getElementById('wm-preview').style.display = 'block';
+                    decodeWatermark(ctx, img.width, img.height);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function decodeWatermark(ctx, w, h) {
+            var resultEl = document.getElementById('wm-result');
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding watermark...</p>';
+
+            var imageData = ctx.getImageData(0, 0, w, h);
+            var px = imageData.data;
+            var blocksX = Math.floor(w / STEGO_BLOCK);
+            var blocksY = Math.floor(h / STEGO_BLOCK);
+            var totalBlocks = blocksX * blocksY;
+
+            if (totalBlocks < 40) {
+                resultEl.innerHTML = '<p style="color:#e74c3c"><i class="fas fa-times"></i> Image too small to contain a watermark (' + totalBlocks + ' blocks, need at least 40)</p>';
+                return;
+            }
+
+            // Read average green channel per block
+            var blockAvgs = [];
+            for (var b = 0; b < totalBlocks; b++) {
+                var bx = (b % blocksX) * STEGO_BLOCK;
+                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
+                var sum = 0, count = 0;
+                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
+                        sum += px[(py * w + px2) * 4 + 1];
+                        count++;
+                    }
+                }
+                blockAvgs.push(sum / count);
+            }
+
+            // Majority voting across payload repetitions (40 bits per repetition)
+            var payloadLen = 40;
+            var reps = Math.floor(totalBlocks / payloadLen);
+            if (reps === 0) reps = 1;
+
+            var bitVotes = new Array(payloadLen).fill(0);
+            for (var rep = 0; rep < reps; rep++) {
+                // For each bit position, compare adjacent blocks to determine relative shift
+                for (var bit = 0; bit < payloadLen; bit++) {
+                    var idx = rep * payloadLen + bit;
+                    if (idx >= totalBlocks) break;
+                    // Compute local average from surrounding blocks
+                    var localSum = 0, localCount = 0;
+                    var bRow = Math.floor(idx / blocksX);
+                    var bCol = idx % blocksX;
+                    for (var dr = -1; dr <= 1; dr++) {
+                        for (var dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            var nr = bRow + dr, nc = bCol + dc;
+                            if (nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX) {
+                                localSum += blockAvgs[nr * blocksX + nc];
+                                localCount++;
+                            }
+                        }
+                    }
+                    if (localCount === 0) continue;
+                    var localAvg = localSum / localCount;
+                    // If block is brighter than neighbors → bit=1, darker → bit=0
+                    if (blockAvgs[idx] > localAvg) bitVotes[bit]++;
+                    else bitVotes[bit]--;
+                }
+            }
+
+            // Decode bits from votes
+            var bits = bitVotes.map(function(v) { return v > 0 ? 1 : 0; });
+
+            // Check magic header (first 8 bits should be 10101010)
+            var magic = 0;
+            for (var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
+
+            var confidence = 0;
+            // Compute confidence from vote strength
+            var totalVoteStrength = 0;
+            for (var i = 0; i < payloadLen; i++) totalVoteStrength += Math.abs(bitVotes[i]);
+            confidence = Math.min(100, Math.round((totalVoteStrength / payloadLen / Math.max(reps, 1)) * 100));
+
+            if (magic !== STEGO_MAGIC) {
+                resultEl.innerHTML = '<div style="text-align:center;padding:20px">' +
+                    '<i class="fas fa-question-circle" style="font-size:32px;color:#f1c40f;margin-bottom:12px;display:block"></i>' +
+                    '<p style="color:#fff;font-weight:600;margin-bottom:8px">No Watermark Detected</p>' +
+                    '<p style="color:#8080A0;font-size:13px">This image may not have been captured from SafeTea, or the watermark was destroyed by heavy compression/editing.</p>' +
+                    '<p style="color:#666;font-size:11px;margin-top:8px">Magic header: 0x' + magic.toString(16).toUpperCase().padStart(2, '0') + ' (expected 0xAA)</p>' +
+                '</div>';
+                return;
+            }
+
+            // Extract 32-bit user ID
+            var userId = 0;
+            for (var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+            userId = userId >>> 0; // ensure unsigned
+
+            // Show result and look up user
+            resultEl.innerHTML = '<div style="text-align:center;padding:12px">' +
+                '<i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;margin-bottom:12px;display:block"></i>' +
+                '<p style="color:#2ecc71;font-weight:700;font-size:16px;margin-bottom:4px">Watermark Decoded!</p>' +
+                '<p style="color:#fff;font-size:14px;margin-bottom:4px">Viewer User ID: <strong>#' + userId + '</strong></p>' +
+                '<p style="color:#8080A0;font-size:12px;margin-bottom:16px">Confidence: ' + confidence + '%</p>' +
+                '<div id="wm-user-card"><p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up user...</p></div>' +
+            '</div>';
+
+            // Look up user details
+            fetch(API_BASE + '/admin/users?search=' + userId, { headers: authHeaders() })
+                .then(r => r.json())
+                .then(data => {
+                    var users = data.users || data;
+                    var found = null;
+                    if (Array.isArray(users)) {
+                        found = users.find(u => u.id === userId || String(u.id) === String(userId));
+                    }
+                    var card = document.getElementById('wm-user-card');
+                    if (found) {
+                        card.innerHTML = '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;text-align:left">' +
+                            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+                                '<div style="width:40px;height:40px;border-radius:50%;background:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">' + (found.display_name || 'U')[0].toUpperCase() + '</div>' +
+                                '<div>' +
+                                    '<div style="font-weight:600;color:#fff">' + escapeHtml(found.custom_display_name || found.display_name || 'Unknown') + '</div>' +
+                                    '<div style="font-size:12px;color:#8080A0">' + escapeHtml(found.email || '') + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
+                                '<div><span style="color:#8080A0">City:</span> <span style="color:#ccc">' + escapeHtml(found.city || 'N/A') + '</span></div>' +
+                                '<div><span style="color:#8080A0">Tier:</span> <span style="color:#ccc">' + escapeHtml(found.tier || 'free') + '</span></div>' +
+                                '<div><span style="color:#8080A0">Trust:</span> <span style="color:#ccc">' + (found.trust_score || 'N/A') + '</span></div>' +
+                                '<div><span style="color:#8080A0">Warnings:</span> <span style="color:#ccc">' + (found.warning_count || 0) + '</span></div>' +
+                            '</div>' +
+                            '<div style="display:flex;gap:8px;margin-top:12px">' +
+                                '<button class="btn btn-sm btn-ghost" onclick="applyAIDecision(0, \'warn\', ' + found.id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
+                                '<button class="btn btn-sm btn-flag" onclick="quickBan(' + found.id + ', 7)"><i class="fas fa-clock"></i> Suspend 7d</button>' +
+                                '<button class="btn btn-sm btn-danger" onclick="quickBan(' + found.id + ', 0)"><i class="fas fa-ban"></i> Ban</button>' +
+                            '</div>' +
+                        '</div>';
+                    } else {
+                        card.innerHTML = '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + userId + ' not found in database</p>';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('wm-user-card').innerHTML = '<p style="color:#e74c3c;font-size:12px">Failed to look up user</p>';
+                });
+        }
+
+        async function quickBan(userId, days) {
+            var action = days === 0 ? 'permanently ban' : 'suspend for ' + days + ' days';
+            if (!confirm('Are you sure you want to ' + action + ' user #' + userId + '?')) return;
+            try {
+                var res = await fetch(API_BASE + '/admin/ban', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({
+                        user_id: userId,
+                        reason: 'Screenshot sharing detected via watermark tracing',
+                        duration_days: days || null,
+                        permanent: days === 0
+                    })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(days === 0 ? 'User permanently banned' : 'User suspended for ' + days + ' days');
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        // ===== AI ASSISTANT =====
+        async function aiReviewReport() {
+            var reportId = document.getElementById('ai-report-id').value;
+            if (!reportId) { showToast('Enter a report ID', true); return; }
+            var result = document.getElementById('ai-report-result');
+            result.style.display = 'block';
+            result.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> AI is reviewing report #' + reportId + '...</span>';
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-admin', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action: 'review_report', data: { report_id: parseInt(reportId) } })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                var d = data.ai_decision;
+                var actionColor = d.action === 'dismiss' ? '#2ecc71' : d.action === 'warn' ? '#f1c40f' : '#e74c3c';
+
+                result.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
+                    '<div style="display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap">' +
+                        '<span style="font-size:14px;font-weight:700;color:' + actionColor + ';text-transform:uppercase;background:rgba(0,0,0,0.3);padding:6px 14px;border-radius:6px">' + escapeHtml(d.action || '?') + '</span>' +
+                        '<span style="font-size:13px;color:#8080A0">Confidence: <strong style="color:#fff">' + (d.confidence || '?') + '%</strong></span>' +
+                    '</div>' +
+                    '<p style="font-size:13px;color:#ccc;margin-bottom:8px"><strong style="color:#fff">Post:</strong> "' + escapeHtml((data.post_body || '').substring(0, 200)) + '"</p>' +
+                    '<p style="font-size:13px;color:#ccc;margin-bottom:8px"><strong style="color:#fff">Report reason:</strong> ' + escapeHtml(data.report_reason || '') + '</p>' +
+                    '<p style="font-size:13px;color:#C0C0D0;margin-bottom:12px"><strong style="color:#fff">AI reasoning:</strong> ' + escapeHtml(d.reasoning || '') + '</p>' +
+                    (d.risk_factors && d.risk_factors.length > 0 ? '<div style="margin-bottom:12px">' + d.risk_factors.map(function(f) { return '<span style="background:rgba(231,76,60,0.1);color:#e74c3c;padding:3px 8px;border-radius:4px;font-size:11px;margin-right:4px">' + escapeHtml(f) + '</span>'; }).join('') + '</div>' : '') +
+                    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+                        '<button class="btn btn-sm btn-approve" onclick="applyReportAction(' + data.report_id + ', \'dismiss\', ' + data.author_id + ')"><i class="fas fa-check"></i> Dismiss</button>' +
+                        '<button class="btn btn-sm btn-ghost" style="color:#f1c40f" onclick="applyReportAction(' + data.report_id + ', \'warn\', ' + data.author_id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
+                        '<button class="btn btn-sm btn-flag" onclick="quickBan(' + data.author_id + ', 7)"><i class="fas fa-clock"></i> Suspend 7d</button>' +
+                        '<button class="btn btn-sm btn-danger" onclick="quickBan(' + data.author_id + ', 0)"><i class="fas fa-ban"></i> Ban</button>' +
+                    '</div>' +
+                '</div>';
+            } catch (err) {
+                result.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        async function aiScanWatermark() {
+            var reportId = document.getElementById('ai-report-id').value;
+            if (!reportId) { showToast('Enter a report ID', true); return; }
+            var result = document.getElementById('ai-report-result');
+            result.style.display = 'block';
+            result.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Scanning watermark for report #' + reportId + '...</span>';
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-admin', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action: 'scan_watermark', data: { report_id: parseInt(reportId) } })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                // Decode the image client-side
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // Re-use decoder
+                    var preview = document.getElementById('wm-preview');
+                    var wmCanvas = document.getElementById('wm-canvas');
+                    wmCanvas.width = img.width;
+                    wmCanvas.height = img.height;
+                    wmCanvas.getContext('2d').drawImage(img, 0, 0);
+
+                    // Show in report result instead of switching tabs
+                    result.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
+                        '<p style="color:#fff;font-weight:600;margin-bottom:8px"><i class="fas fa-fingerprint" style="color:#E8A0B5"></i> Watermark Scan — Report #' + reportId + '</p>' +
+                        '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+                            '<canvas id="wm-scan-canvas" style="max-width:200px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)"></canvas>' +
+                            '<div id="wm-scan-result" style="flex:1;min-width:200px"><p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding...</p></div>' +
+                        '</div>' +
+                    '</div>';
+
+                    var scanCanvas = document.getElementById('wm-scan-canvas');
+                    scanCanvas.width = img.width;
+                    scanCanvas.height = img.height;
+                    var scanCtx = scanCanvas.getContext('2d');
+                    scanCtx.drawImage(img, 0, 0);
+
+                    // Decode using same algorithm
+                    setTimeout(function() {
+                        decodeWatermarkInline(scanCtx, img.width, img.height, 'wm-scan-result');
+                    }, 100);
+                };
+                img.onerror = function() {
+                    result.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> Failed to load image from report</span>';
+                };
+                img.src = data.image_url;
+            } catch (err) {
+                result.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        function decodeWatermarkInline(ctx, w, h, resultElId) {
+            var resultEl = document.getElementById(resultElId);
+            var imageData = ctx.getImageData(0, 0, w, h);
+            var px = imageData.data;
+            var blocksX = Math.floor(w / STEGO_BLOCK);
+            var blocksY = Math.floor(h / STEGO_BLOCK);
+            var totalBlocks = blocksX * blocksY;
+
+            if (totalBlocks < 40) {
+                resultEl.innerHTML = '<p style="color:#e74c3c;font-size:13px"><i class="fas fa-times"></i> Image too small</p>';
+                return;
+            }
+
+            var blockAvgs = [];
+            for (var b = 0; b < totalBlocks; b++) {
+                var bx = (b % blocksX) * STEGO_BLOCK;
+                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
+                var sum = 0, count = 0;
+                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
+                        sum += px[(py * w + px2) * 4 + 1];
+                        count++;
+                    }
+                }
+                blockAvgs.push(sum / count);
+            }
+
+            var payloadLen = 40;
+            var reps = Math.floor(totalBlocks / payloadLen) || 1;
+            var bitVotes = new Array(payloadLen).fill(0);
+
+            for (var rep = 0; rep < reps; rep++) {
+                for (var bit = 0; bit < payloadLen; bit++) {
+                    var idx = rep * payloadLen + bit;
+                    if (idx >= totalBlocks) break;
+                    var localSum = 0, localCount = 0;
+                    var bRow = Math.floor(idx / blocksX);
+                    var bCol = idx % blocksX;
+                    for (var dr = -1; dr <= 1; dr++) {
+                        for (var dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            var nr = bRow + dr, nc = bCol + dc;
+                            if (nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX) {
+                                localSum += blockAvgs[nr * blocksX + nc];
+                                localCount++;
+                            }
+                        }
+                    }
+                    if (localCount === 0) continue;
+                    var localAvg = localSum / localCount;
+                    if (blockAvgs[idx] > localAvg) bitVotes[bit]++;
+                    else bitVotes[bit]--;
+                }
+            }
+
+            var bits = bitVotes.map(function(v) { return v > 0 ? 1 : 0; });
+            var magic = 0;
+            for (var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
+
+            if (magic !== STEGO_MAGIC) {
+                resultEl.innerHTML = '<p style="color:#f1c40f;font-size:13px"><i class="fas fa-question-circle"></i> No watermark detected in this image</p>';
+                return;
+            }
+
+            var userId = 0;
+            for (var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+            userId = userId >>> 0;
+
+            resultEl.innerHTML = '<div>' +
+                '<p style="color:#2ecc71;font-weight:700;margin-bottom:4px"><i class="fas fa-check-circle"></i> Watermark Found</p>' +
+                '<p style="color:#fff;font-size:14px;margin-bottom:8px">Viewer: <strong>User #' + userId + '</strong></p>' +
+                '<div id="wm-inline-user"><p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up...</p></div>' +
+            '</div>';
+
+            fetch(API_BASE + '/admin/users?search=' + userId, { headers: authHeaders() })
+                .then(r => r.json())
+                .then(data => {
+                    var users = data.users || data;
+                    var found = Array.isArray(users) ? users.find(u => String(u.id) === String(userId)) : null;
+                    var el = document.getElementById('wm-inline-user');
+                    if (found) {
+                        el.innerHTML = '<p style="font-size:13px;color:#ccc">' + escapeHtml(found.custom_display_name || found.display_name) + ' (' + escapeHtml(found.email || '') + ')</p>' +
+                            '<div style="display:flex;gap:6px;margin-top:8px">' +
+                                '<button class="btn btn-sm btn-ghost" onclick="quickBan(' + found.id + ', 7)"><i class="fas fa-clock"></i> Suspend 7d</button>' +
+                                '<button class="btn btn-sm btn-danger" onclick="quickBan(' + found.id + ', 0)"><i class="fas fa-ban"></i> Ban</button>' +
+                            '</div>';
+                    } else {
+                        el.innerHTML = '<p style="color:#f1c40f;font-size:12px">User #' + userId + ' not found</p>';
+                    }
+                }).catch(() => {});
+        }
+
+        async function applyReportAction(reportId, action, userId) {
+            if (!confirm('Apply "' + action + '" for report #' + reportId + '?')) return;
+            try {
+                if (action === 'dismiss') {
+                    showToast('Report dismissed');
+                } else if (action === 'warn') {
+                    await fetch(API_BASE + '/admin/warn', {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({ user_id: userId, reason: 'Community guideline violation (AI-reviewed report #' + reportId + ')' })
+                    });
+                    showToast('Warning sent to user #' + userId);
+                }
+            } catch (err) {
+                showToast('Failed: ' + err.message, true);
+            }
+        }
+
+        async function aiBulkReview() {
+            var btn = document.getElementById('bulk-review-btn');
+            var status = document.getElementById('bulk-review-status');
+            var results = document.getElementById('bulk-review-results');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reviewing...';
+            status.textContent = '';
+            results.style.display = 'none';
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-admin', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action: 'bulk_review', data: { limit: 20 } })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bolt"></i> AI Review All Reports';
+
+                if (!data.results || data.results.length === 0) {
+                    status.textContent = 'No unreviewed reports found.';
+                    return;
+                }
+
+                status.textContent = data.results.length + ' reports reviewed';
+                results.style.display = 'block';
+
+                var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+                    '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.08)">' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">Report</th>' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">Post</th>' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">Reason</th>' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">AI Action</th>' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">Confidence</th>' +
+                        '<th style="text-align:left;padding:8px;color:#8080A0">Actions</th>' +
+                    '</tr></thead><tbody>';
+
+                data.results.forEach(function(r) {
+                    if (r.error) {
+                        html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04)"><td style="padding:8px" colspan="6"><span style="color:#e74c3c">#' + r.report_id + ' — Error: ' + escapeHtml(r.error) + '</span></td></tr>';
+                        return;
+                    }
+                    var d = r.ai_decision || {};
+                    var actionColor = d.action === 'dismiss' ? '#2ecc71' : d.action === 'warn' ? '#f1c40f' : '#e74c3c';
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">' +
+                        '<td style="padding:8px;color:#ccc">#' + r.report_id + '</td>' +
+                        '<td style="padding:8px;color:#ccc;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escapeHtml(r.post_body || '') + '">' + escapeHtml((r.post_body || '').substring(0, 60)) + '</td>' +
+                        '<td style="padding:8px;color:#ccc">' + escapeHtml(r.report_reason || '') + '</td>' +
+                        '<td style="padding:8px"><span style="color:' + actionColor + ';font-weight:600;text-transform:uppercase">' + escapeHtml(d.action || '?') + '</span></td>' +
+                        '<td style="padding:8px;color:#ccc">' + (d.confidence || '?') + '%</td>' +
+                        '<td style="padding:8px">' +
+                            '<div style="display:flex;gap:4px">' +
+                                '<button class="btn btn-sm btn-approve" onclick="applyReportAction(' + r.report_id + ',\'dismiss\',' + r.author_id + ')" title="Dismiss"><i class="fas fa-check"></i></button>' +
+                                '<button class="btn btn-sm btn-ghost" style="color:#f1c40f" onclick="applyReportAction(' + r.report_id + ',\'warn\',' + r.author_id + ')" title="Warn"><i class="fas fa-exclamation-triangle"></i></button>' +
+                                '<button class="btn btn-sm btn-flag" onclick="quickBan(' + r.author_id + ',7)" title="Suspend 7d"><i class="fas fa-clock"></i></button>' +
+                                '<button class="btn btn-sm btn-danger" onclick="quickBan(' + r.author_id + ',0)" title="Ban"><i class="fas fa-ban"></i></button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                results.innerHTML = html;
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bolt"></i> AI Review All Reports';
+                status.textContent = '';
+                showToast('Bulk review failed: ' + err.message, true);
+            }
+        }
+
+        // ===== AI CHAT =====
+        async function aiAsk() {
+            var input = document.getElementById('ai-chat-input');
+            var question = input.value.trim();
+            if (!question) return;
+            input.value = '';
+
+            var messages = document.getElementById('ai-chat-messages');
+
+            // Add user message
+            messages.innerHTML += '<div style="align-self:flex-end;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:10px 14px;border-radius:12px 12px 4px 12px;max-width:80%;font-size:13px">' + escapeHtml(question) + '</div>';
+
+            // Add loading
+            var loadId = 'ai-load-' + Date.now();
+            messages.innerHTML += '<div id="' + loadId + '" style="align-self:flex-start;background:#22223A;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:12px 12px 12px 4px;max-width:80%;font-size:13px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Thinking...</div>';
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                var res = await fetch(API_BASE + '/admin/ai-admin', {
+                    method: 'POST',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ action: 'ask', data: { question: question } })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                var loadEl = document.getElementById(loadId);
+                if (loadEl) {
+                    loadEl.innerHTML = '<div style="color:#ccc;white-space:pre-wrap">' + escapeHtml(data.answer || 'No response') + '</div>';
+                    loadEl.style.color = '#ccc';
+                }
+            } catch (err) {
+                var loadEl = document.getElementById(loadId);
+                if (loadEl) {
+                    loadEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+                }
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // ===== AI TASK SCHEDULER =====
+        async function loadAiTasks() {
+            const el = document.getElementById('ai-tasks-list');
+            el.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading tasks...</div>';
+            try {
+                const res = await fetch(API_BASE + '/admin/ai-tasks', { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                const tasks = data.tasks || [];
+                if (tasks.length === 0) {
+                    el.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No AI moderation tasks yet. Click "New Task" to create one.</p></div>';
+                    return;
+                }
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+                html += '<thead><tr style="color:#8080A0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="padding:10px 8px">Name</th><th style="padding:10px 8px">Schedule</th><th style="padding:10px 8px">Scope</th><th style="padding:10px 8px">Action</th><th style="padding:10px 8px">Status</th><th style="padding:10px 8px">Last Run</th><th style="padding:10px 8px">Next Run</th><th style="padding:10px 8px">Actions</th></tr></thead><tbody>';
+                for (const t of tasks) {
+                    const statusBadge = t.active
+                        ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-circle" style="font-size:8px"></i> Active</span>'
+                        : '<span style="color:#8080A0"><i class="fas fa-pause-circle"></i> Paused</span>';
+                    const schedLabel = t.schedule_type === 'hourly' ? 'Every ' + t.schedule_interval + 'h' : t.schedule_type.charAt(0).toUpperCase() + t.schedule_type.slice(1);
+                    const actionLabels = { flag: 'Flag', warn: 'Warn', remove: 'Remove', auto: 'Auto' };
+                    const scopeLabels = { all: 'All', community: 'Community', rooms: 'Rooms' };
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
+                    html += '<td style="padding:10px 8px;color:#fff;font-weight:500">' + escapeHtml(t.name) + '</td>';
+                    html += '<td style="padding:10px 8px">' + schedLabel + '</td>';
+                    html += '<td style="padding:10px 8px">' + (scopeLabels[t.scope] || t.scope) + '</td>';
+                    html += '<td style="padding:10px 8px">' + (actionLabels[t.action_level] || t.action_level) + '</td>';
+                    html += '<td style="padding:10px 8px">' + statusBadge + '</td>';
+                    html += '<td style="padding:10px 8px">' + (t.last_run_at ? timeAgo(t.last_run_at) : '—') + '</td>';
+                    html += '<td style="padding:10px 8px">' + (t.next_run_at ? timeAgo(t.next_run_at) : '—') + '</td>';
+                    html += '<td style="padding:10px 8px;white-space:nowrap">';
+                    html += '<button class="btn btn-ghost btn-sm" onclick="viewTaskLogs(' + t.id + ',\'' + escapeHtml(t.name).replace(/'/g, "\\'") + '\')" title="Logs"><i class="fas fa-history"></i></button> ';
+                    html += '<button class="btn btn-ghost btn-sm" onclick="editAiTask(' + t.id + ')" title="Edit"><i class="fas fa-edit"></i></button> ';
+                    html += '<button class="btn btn-ghost btn-sm" onclick="toggleAiTask(' + t.id + ',' + (t.active ? 'false' : 'true') + ')" title="' + (t.active ? 'Pause' : 'Resume') + '"><i class="fas fa-' + (t.active ? 'pause' : 'play') + '"></i></button> ';
+                    html += '<button class="btn btn-danger btn-sm" onclick="deleteAiTask(' + t.id + ')" title="Delete"><i class="fas fa-trash"></i></button>';
+                    html += '</td></tr>';
+                }
+                html += '</tbody></table>';
+                el.innerHTML = html;
+            } catch (err) {
+                el.innerHTML = '<div class="empty-state" style="color:#e74c3c"><i class="fas fa-exclamation-triangle"></i><p>' + escapeHtml(err.message) + '</p></div>';
+            }
+        }
+
+        function showCreateTaskForm() {
+            document.getElementById('ai-task-form-card').style.display = '';
+            document.getElementById('ai-task-form-title').textContent = 'Create Task';
+            document.getElementById('ai-task-edit-id').value = '';
+            document.getElementById('ai-task-name').value = '';
+            document.getElementById('ai-task-instruction').value = '';
+            document.getElementById('ai-task-schedule').value = 'daily';
+            document.getElementById('ai-task-interval').value = '1';
+            document.getElementById('ai-task-scope').value = 'all';
+            document.getElementById('ai-task-action').value = 'flag';
+            toggleIntervalField();
+        }
+
+        function hideTaskForm() {
+            document.getElementById('ai-task-form-card').style.display = 'none';
+        }
+
+        function toggleIntervalField() {
+            const sched = document.getElementById('ai-task-schedule').value;
+            document.getElementById('ai-task-interval-group').style.display = sched === 'hourly' ? '' : 'none';
+        }
+
+        async function saveAiTask() {
+            const editId = document.getElementById('ai-task-edit-id').value;
+            const payload = {
+                name: document.getElementById('ai-task-name').value,
+                instruction: document.getElementById('ai-task-instruction').value,
+                schedule_type: document.getElementById('ai-task-schedule').value,
+                schedule_interval: parseInt(document.getElementById('ai-task-interval').value) || 1,
+                scope: document.getElementById('ai-task-scope').value,
+                action_level: document.getElementById('ai-task-action').value
+            };
+            if (!payload.name || !payload.instruction) {
+                showToast('Name and instruction are required', true);
+                return;
+            }
+            try {
+                let res;
+                if (editId) {
+                    payload.id = parseInt(editId);
+                    res = await fetch(API_BASE + '/admin/ai-tasks', { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+                } else {
+                    res = await fetch(API_BASE + '/admin/ai-tasks', { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+                }
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(editId ? 'Task updated' : 'Task created');
+                hideTaskForm();
+                loadAiTasks();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function editAiTask(id) {
+            try {
+                const res = await fetch(API_BASE + '/admin/ai-tasks?task_id=' + id, { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                const t = data.task;
+                document.getElementById('ai-task-form-card').style.display = '';
+                document.getElementById('ai-task-form-title').textContent = 'Edit Task';
+                document.getElementById('ai-task-edit-id').value = t.id;
+                document.getElementById('ai-task-name').value = t.name;
+                document.getElementById('ai-task-instruction').value = t.instruction;
+                document.getElementById('ai-task-schedule').value = t.schedule_type;
+                document.getElementById('ai-task-interval').value = t.schedule_interval || 1;
+                document.getElementById('ai-task-scope').value = t.scope;
+                document.getElementById('ai-task-action').value = t.action_level;
+                toggleIntervalField();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function toggleAiTask(id, active) {
+            try {
+                const res = await fetch(API_BASE + '/admin/ai-tasks', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ id, active }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast(active ? 'Task resumed' : 'Task paused');
+                loadAiTasks();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function deleteAiTask(id) {
+            if (!confirm('Delete this AI moderation task? This cannot be undone.')) return;
+            try {
+                const res = await fetch(API_BASE + '/admin/ai-tasks', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id }) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Task deleted');
+                loadAiTasks();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        function hideTaskLogs() {
+            document.getElementById('ai-task-logs-card').style.display = 'none';
+            document.getElementById('ai-tasks-list-card').style.display = '';
+        }
+
+        async function viewTaskLogs(id, name) {
+            document.getElementById('ai-tasks-list-card').style.display = 'none';
+            document.getElementById('ai-task-form-card').style.display = 'none';
+            document.getElementById('ai-task-logs-card').style.display = '';
+            document.getElementById('ai-task-logs-name').textContent = name;
+            const el = document.getElementById('ai-task-logs');
+            el.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading logs...</div>';
+            try {
+                const res = await fetch(API_BASE + '/admin/ai-tasks?task_id=' + id, { headers: authHeaders() });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                const runs = data.runs || [];
+                if (runs.length === 0) {
+                    el.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No execution logs yet. This task hasn\'t run.</p></div>';
+                    return;
+                }
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+                html += '<thead><tr style="color:#8080A0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="padding:10px 8px">Run Time</th><th style="padding:10px 8px">Posts</th><th style="padding:10px 8px">Actions Taken</th><th style="padding:10px 8px">Duration</th><th style="padding:10px 8px">Status</th></tr></thead><tbody>';
+                for (const r of runs) {
+                    const actions = r.actions_taken || {};
+                    const actionParts = [];
+                    if (actions.flagged) actionParts.push(actions.flagged + ' flagged');
+                    if (actions.warned) actionParts.push(actions.warned + ' warned');
+                    if (actions.removed) actionParts.push(actions.removed + ' removed');
+                    if (actions.banned) actionParts.push(actions.banned + ' banned');
+                    if (actions.errors) actionParts.push(actions.errors + ' errors');
+                    const actionStr = actionParts.length > 0 ? actionParts.join(', ') : 'No actions';
+                    const duration = r.completed_at && r.started_at ? Math.round((new Date(r.completed_at) - new Date(r.started_at)) / 1000) + 's' : '—';
+                    const status = r.error ? '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> Error</span>' : (r.completed_at ? '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> Done</span>' : '<span style="color:#f1c40f"><i class="fas fa-spinner fa-spin"></i> Running</span>');
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
+                    html += '<td style="padding:10px 8px">' + timeAgo(r.started_at) + '</td>';
+                    html += '<td style="padding:10px 8px">' + (r.posts_reviewed || 0) + '</td>';
+                    html += '<td style="padding:10px 8px">' + actionStr + '</td>';
+                    html += '<td style="padding:10px 8px">' + duration + '</td>';
+                    html += '<td style="padding:10px 8px">' + status + '</td>';
+                    html += '</tr>';
+                    if (r.error) {
+                        html += '<tr><td colspan="5" style="padding:4px 8px 10px;color:#e74c3c;font-size:12px">' + escapeHtml(r.error) + '</td></tr>';
+                    }
+                }
+                html += '</tbody></table>';
+                el.innerHTML = html;
+            } catch (err) {
+                el.innerHTML = '<div class="empty-state" style="color:#e74c3c"><i class="fas fa-exclamation-triangle"></i><p>' + escapeHtml(err.message) + '</p></div>';
+            }
         }
 
         // Init

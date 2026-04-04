@@ -3493,6 +3493,11 @@
     })();
     // ============ TAB SWITCHING ============
     function switchTab(tab) {
+        // Show content disclaimer on first community visit
+        if (tab === 'community' && !localStorage.getItem('safetea_disclaimer_accepted')) {
+            showContentDisclaimer();
+            return;
+        }
         // Hide all tab sections
         document.querySelectorAll('.tab-section').forEach(function(s) { s.classList.remove('active'); });
         // Show selected tab
@@ -4697,6 +4702,47 @@
         .catch(function() { showToast('Network error — please try again'); });
     }
 
+    </script>
+    <!-- Content Disclaimer Modal -->
+    <div id="content-disclaimer-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px">
+        <div style="background:#fff;border-radius:20px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+            <div style="padding:28px 24px 0;text-align:center">
+                <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#E8A0B5,#D4768E);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px">
+                    <i class="fas fa-shield-alt" style="color:#fff;font-size:24px"></i>
+                </div>
+                <h2 style="font-size:20px;font-weight:800;color:#1A1A2E;margin:0 0 4px;font-family:'Inter',sans-serif">SafeTea Content Disclaimer</h2>
+            </div>
+            <div style="padding:20px 24px;font-size:13.5px;line-height:1.7;color:#444;font-family:'Inter',sans-serif">
+                <p style="margin:0 0 12px">SafeTea is a user-driven platform that enables individuals to share personal experiences and opinions. All content is submitted by users and does not reflect the views, opinions, or endorsements of SafeTea.</p>
+                <p style="margin:0 0 12px">SafeTea does not independently verify user-submitted content and makes no representations or warranties regarding its accuracy, completeness, or reliability. Content is provided for informational purposes only and should not be considered factual, investigative, or legal conclusions about any individual.</p>
+                <p style="margin:0 0 12px">SafeTea provides moderation tools and review processes to address reported content; however, content may be visible prior to review. While we make reasonable efforts to review and remove content that violates our policies, we do not guarantee immediate review or removal in all cases.</p>
+                <p style="margin:0 0 12px">SafeTea is not intended to defame, harm, or target any individual. Our platform is designed to support time-limited, community-based sharing of personal experiences for awareness and safety purposes.</p>
+                <p style="margin:0 0 12px">All content is temporary and subject to removal in accordance with our policies. SafeTea reserves the right, in its sole discretion, to remove, restrict, or modify content at any time.</p>
+                <p style="margin:0 0 12px">Users are solely responsible for the content they submit and agree not to post false, misleading, or harmful information.</p>
+                <p style="margin:0 0 0;font-weight:600;color:#1A1A2E">By using SafeTea, you acknowledge and agree that any reliance on user-submitted content is at your own risk.</p>
+            </div>
+            <div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:10px">
+                <button id="disclaimer-accept-btn" onclick="acceptContentDisclaimer()" style="width:100%;padding:14px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s">I Understand & Accept</button>
+                <button onclick="declineContentDisclaimer()" style="width:100%;padding:12px;background:none;color:#999;border:1px solid #eee;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">Go Back</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    function showContentDisclaimer() {
+        var modal = document.getElementById('content-disclaimer-modal');
+        modal.style.display = 'flex';
+    }
+    function acceptContentDisclaimer() {
+        localStorage.setItem('safetea_disclaimer_accepted', '1');
+        document.getElementById('content-disclaimer-modal').style.display = 'none';
+        // Now actually switch to community
+        switchTab('community');
+    }
+    function declineContentDisclaimer() {
+        document.getElementById('content-disclaimer-modal').style.display = 'none';
+        // Go back to home tab
+        switchTab('hub');
+    }
     </script>
     <script src="record-protect.js"></script>
     <script src="app.js"></script>

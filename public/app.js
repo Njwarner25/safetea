@@ -2371,6 +2371,19 @@
 
                     // Apply invisible text watermark (survives screenshots + JPEG)
                     wmApplyText(ctx, bufW, bufH, uid);
+
+                    // In debug mode, also draw a big obvious banner directly on the canvas
+                    if (WM_DEBUG) {
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                        ctx.fillRect(0, 0, bufW, Math.round(32 * dpr));
+                        ctx.font = 'bold ' + Math.round(20 * dpr) + 'px monospace';
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText('WATERMARK ACTIVE — Viewer ID: ' + uid, Math.round(8 * dpr), Math.round(6 * dpr));
+                        ctx.restore();
+                    }
+
                     canvas.style.opacity = '1';
                     // Hide the loading spinner, show success badge
                     var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;

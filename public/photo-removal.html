@@ -162,9 +162,9 @@
         <p>Our invisible steganography watermark is embedded in every photo uploaded to SafeTea.</p>
       </div>
       <div class="removal-step">
-        <div class="removal-step-icon"><i class="fas fa-user-slash"></i></div>
-        <h4>Leaker is suspended</h4>
-        <p>If verified, the leaker's account is automatically banned and all their posts are hidden.</p>
+        <div class="removal-step-icon"><i class="fas fa-check-circle"></i></div>
+        <h4>Action is taken</h4>
+        <p>If our watermark is verified, we take immediate action and notify you of the outcome.</p>
       </div>
     </div>
 
@@ -174,7 +174,7 @@
         <p>Drag &amp; drop your photo here, or <strong style="color:#E8A0B5">click to browse</strong></p>
         <p style="font-size:0.78rem;color:#6060A0;margin-top:6px">PNG, JPEG, or WebP &mdash; max 10MB</p>
         <div class="file-name" id="removal-file-name" style="display:none"></div>
-        <input type="file" id="removal-file-input" accept="image/png,image/jpeg,image/webp" style="display:none">
+        <input type="file" id="removal-file-input" accept="image/png,image/jpeg,image/webp" style="position:absolute;opacity:0;width:0;height:0;overflow:hidden">
       </div>
       <input type="email" class="removal-input" id="removal-email" placeholder="Your email (for follow-up)" maxlength="255">
       <textarea class="removal-input" id="removal-details" placeholder="Where did you find this photo? (optional)" maxlength="2000"></textarea>
@@ -201,7 +201,7 @@
   var resultDiv = document.getElementById('removal-result');
   var selectedFile = null;
 
-  dropZone.addEventListener('click', function(){ fileInput.click(); });
+  dropZone.addEventListener('click', function(e){ if(e.target===fileInput) return; fileInput.click(); });
   dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('dragover'); });
   dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('dragover'); });
   dropZone.addEventListener('drop', function(e){

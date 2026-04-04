@@ -1964,8 +1964,9 @@
                 var container = document.createElement('div');
                 container.innerHTML =
                     '<p style="color:#E8A0B5;font-weight:600;margin-bottom:8px"><i class="fas fa-search-plus"></i> Watermark Decoder</p>' +
-                    '<p style="color:#8080A0;font-size:12px;margin-bottom:12px">Look for repeated "ST:XXXXX" text in either view. The number after "ST:" is the viewer\'s user ID.</p>' +
-                    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+                    '<p style="color:#8080A0;font-size:12px;margin-bottom:12px">Look for repeated "ST:XXXXX" text or use AI Scan to auto-detect the viewer\'s user ID.</p>' +
+                    '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">' +
+                        '<button id="wm-mode-ai" class="btn btn-ghost" onclick="wmAiScan()" style="font-size:12px;border-color:#2ecc71;color:#2ecc71"><i class="fas fa-robot"></i> AI Scan</button>' +
                         '<button id="wm-mode-hp" class="btn btn-ghost" onclick="wmSwitchMode(\'hp\')" style="font-size:12px;border-color:#E8A0B5;color:#E8A0B5"><i class="fas fa-filter"></i> High-Pass</button>' +
                         '<button id="wm-mode-direct" class="btn btn-ghost" onclick="wmSwitchMode(\'direct\')" style="font-size:12px"><i class="fas fa-adjust"></i> Direct Contrast</button>' +
                     '</div>' +
@@ -2030,6 +2031,81 @@
                 controls.style.display = 'none';
                 ac.appendChild(makeAmpCanvas(st.directData, st.w, st.h));
             }
+        }
+
+        function wmAiScan() {
+            var canvas = document.getElementById('wm-canvas');
+            if (!canvas || canvas.width === 0) { showToast('Upload an image first', true); return; }
+            var resultEl = document.getElementById('wm-result');
+            var aiBtn = document.getElementById('wm-mode-ai');
+            if (aiBtn) { aiBtn.disabled = true; aiBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...'; }
+
+            // Convert canvas to base64 JPEG
+            var imageData = canvas.toDataURL('image/jpeg', 0.95);
+
+            fetch(API_BASE + '/admin/scan-watermark', {
+                method: 'POST',
+                headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (aiBtn) { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fas fa-robot"></i> AI Scan'; }
+                if (data.error) {
+                    showToast('AI scan failed: ' + data.error, true);
+                    return;
+                }
+
+                var html = '<div style="background:#141428;border-radius:10px;padding:16px;margin-bottom:12px">';
+                html += '<h4 style="color:#2ecc71;margin-bottom:12px"><i class="fas fa-robot"></i> AI Scan Results</h4>';
+
+                if (data.viewer) {
+                    html += '<div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);border-radius:8px;padding:12px;margin-bottom:8px">';
+                    html += '<p style="color:#2ecc71;font-weight:700;margin-bottom:4px"><i class="fas fa-eye"></i> Viewer (Leaker): ' + data.viewer.watermark + '</p>';
+                    if (data.viewer.found && data.viewer.user) {
+                        var u = data.viewer.user;
+                        html += '<p style="color:#fff;font-size:13px">' + escapeHtml(u.custom_display_name || u.display_name || 'Unknown') + ' — ' + escapeHtml(u.email || '') + '</p>';
+                        html += '<p style="color:#8080A0;font-size:11px">City: ' + escapeHtml(u.city || 'N/A') + ' | Tier: ' + (u.tier || 'free') + ' | Trust: ' + (u.trust_score || 'N/A') + '</p>';
+                        html += '<div style="display:flex;gap:8px;margin-top:8px">';
+                        html += '<button class="btn btn-sm btn-ghost" onclick="applyAIDecision(0,\'warn\',' + u.id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>';
+                        html += '<button class="btn btn-sm btn-flag" onclick="quickBan(' + u.id + ',7)"><i class="fas fa-clock"></i> Suspend</button>';
+                        html += '<button class="btn btn-sm btn-danger" onclick="quickBan(' + u.id + ',0)"><i class="fas fa-ban"></i> Ban</button>';
+                        html += '</div>';
+                    } else {
+                        html += '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + data.viewer.userId + ' not found in database</p>';
+                    }
+                    html += '</div>';
+                }
+
+                if (data.uploader) {
+                    html += '<div style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);border-radius:8px;padding:12px;margin-bottom:8px">';
+                    html += '<p style="color:#E8A0B5;font-weight:700;margin-bottom:4px"><i class="fas fa-upload"></i> Uploader: ' + data.uploader.watermark + '</p>';
+                    if (data.uploader.found && data.uploader.user) {
+                        var up = data.uploader.user;
+                        html += '<p style="color:#fff;font-size:13px">' + escapeHtml(up.custom_display_name || up.display_name || 'Unknown') + ' — ' + escapeHtml(up.email || '') + '</p>';
+                    } else {
+                        html += '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + data.uploader.userId + ' not found</p>';
+                    }
+                    html += '</div>';
+                }
+
+                if (!data.viewer && !data.uploader) {
+                    html += '<p style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> No watermark detected. The image may not have been viewed through SafeTea, or the watermark was removed.</p>';
+                }
+
+                if (data.aiResponse && data.aiResponse.notes) {
+                    html += '<p style="color:#8080A0;font-size:11px;margin-top:8px"><i class="fas fa-info-circle"></i> ' + escapeHtml(data.aiResponse.notes) + '</p>';
+                }
+
+                html += '</div>';
+                // Keep existing amplified view below
+                var existingContent = resultEl.innerHTML;
+                resultEl.innerHTML = html + existingContent;
+            })
+            .catch(function(err) {
+                if (aiBtn) { aiBtn.disabled = false; aiBtn.innerHTML = '<i class="fas fa-robot"></i> AI Scan'; }
+                showToast('AI scan error: ' + err.message, true);
+            });
         }
 
         function wmLookupUser() {

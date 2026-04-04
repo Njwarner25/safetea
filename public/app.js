@@ -166,6 +166,14 @@
                 if (data.user) {
                     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
                     renderProfile(data.user);
+                    // Re-process watermarked canvases if user ID changed (fixes stale UID)
+                    var freshUid = parseInt(data.user.id) || 0;
+                    console.log('[SafeTea WM] Profile loaded — user ID:', freshUid);
+                    var processed = document.querySelectorAll('canvas[data-stego-processed]');
+                    if (processed.length > 0) {
+                        processed.forEach(function(c) { c.removeAttribute('data-stego-processed'); });
+                        if (typeof observeStegoCanvases === 'function') observeStegoCanvases();
+                    }
                 }
             })
             .catch(function() {});
@@ -2318,29 +2326,32 @@
     }
     window.stegoEmbed = stegoEmbed;
 
+    // Image URL map — stores image data by post ID to avoid putting huge base64 in HTML attributes
+    var _wmImageMap = {};
+    window._wmImageMap = _wmImageMap;
+
+    // Register an image URL for a post (called from rendering functions)
+    window.wmRegisterImage = function(postId, imageUrl) {
+        _wmImageMap[postId] = imageUrl;
+    };
+
     // Direct canvas watermark processing — loads image, draws it, overlays viewer ID text
-    // Called immediately when canvases are added to DOM (no IntersectionObserver needed)
     function processStegCanvas(el) {
         if (el.dataset.stegoProcessed) return;
 
-        var src = el.dataset.stegoSrc;
-        if (!src) {
-            console.warn('[SafeTea WM] Canvas has no data-stego-src');
-            return;
-        }
+        // Get image source: prefer JS map (by post ID), fallback to data attribute
+        var postId = el.dataset.wmPostid;
+        var src = (postId && _wmImageMap[postId]) ? _wmImageMap[postId] : el.dataset.stegoSrc;
 
-        // Skip if parent container has zero width (tab is display:none)
-        // Canvas will be re-processed when the tab becomes visible
-        var parentEl = el.parentElement;
-        if (parentEl && parentEl.clientWidth === 0) {
-            console.log('[SafeTea WM] Skipping canvas — parent has 0 width (hidden tab)');
+        if (!src) {
+            console.warn('[SafeTea WM] Canvas has no image source — postId:', postId);
             return;
         }
 
         el.dataset.stegoProcessed = '1';
         var u = getUser();
         var uid = u ? parseInt(u.id) || 0 : 0;
-        console.log('[SafeTea WM] Processing canvas — uid:', uid, 'src length:', src.length);
+        console.log('[SafeTea WM] Processing canvas — uid:', uid, 'postId:', postId, 'src length:', src.length);
 
         var imgEl = new Image();
         imgEl.onload = function() {
@@ -2390,19 +2401,18 @@
             }
 
             canvas.style.opacity = '1';
-            // Hide the loading spinner, show success badge
+            // Hide the loading spinner
             var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;
             if (spinner) spinner.innerHTML = WM_DEBUG
                 ? '<span style="background:rgba(255,0,0,0.8);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">WM: uid=' + uid + '</span>'
                 : '';
-            console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
+            console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH);
         };
         imgEl.onerror = function(e) {
-            console.error('[SafeTea WM] Image FAILED to load — src type:', typeof src, 'length:', src.length, 'starts with:', src.substring(0, 40));
-            // Show error on spinner
+            console.error('[SafeTea WM] Image FAILED — postId:', postId, 'src starts:', src.substring(0, 50));
             var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
             if (spinner) spinner.innerHTML = '<span style="color:#e74c3c;font-size:11px"><i class="fas fa-times-circle"></i> Load failed</span>';
-            // Fallback: show original image as regular <img> tag
+            // Fallback: show as regular <img>
             var fallback = document.createElement('img');
             fallback.src = src;
             fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
@@ -2412,10 +2422,10 @@
         imgEl.src = src;
     }
 
-    // Process all stego canvases in a container — called after feed renders
+    // Process all stego canvases in a container
     function observeStegoCanvases(container) {
-        var canvases = (container || document).querySelectorAll('canvas[data-stego-src]:not([data-stego-processed])');
-        console.log('[SafeTea WM] observeStegoCanvases called — found', canvases.length, 'canvases');
+        var canvases = (container || document).querySelectorAll('canvas[data-wm-postid]:not([data-stego-processed]),canvas[data-stego-src]:not([data-stego-processed])');
+        console.log('[SafeTea WM] observeStegoCanvases — found', canvases.length, 'canvases');
         canvases.forEach(function(c) { processStegCanvas(c); });
     }
     window.observeStegoCanvases = observeStegoCanvases;
@@ -2423,8 +2433,8 @@
     // Catch-up: process any canvases that were rendered before app.js loaded
     setTimeout(function() { observeStegoCanvases(); }, 200);
 
-    // MutationObserver failsafe: auto-process any canvas[data-stego-src] added to the DOM
-    // This catches ALL rendering paths — community feed, hub, rooms, etc.
+    // MutationObserver failsafe: auto-process any watermark canvas added to the DOM
+    var _wmSelector = 'canvas[data-wm-postid]:not([data-stego-processed]),canvas[data-stego-src]:not([data-stego-processed])';
     try {
         var stegoMO = new MutationObserver(function(mutations) {
             for (var i = 0; i < mutations.length; i++) {
@@ -2432,13 +2442,13 @@
                 for (var j = 0; j < nodes.length; j++) {
                     var node = nodes[j];
                     if (node.nodeType !== 1) continue;
-                    // Check if the added node itself is a stego canvas
-                    if (node.tagName === 'CANVAS' && node.dataset.stegoSrc && !node.dataset.stegoProcessed) {
+                    // Check if the added node itself is a watermark canvas
+                    if (node.tagName === 'CANVAS' && (node.dataset.wmPostid || node.dataset.stegoSrc) && !node.dataset.stegoProcessed) {
                         processStegCanvas(node);
                     }
                     // Check children of the added node
                     if (node.querySelectorAll) {
-                        var nested = node.querySelectorAll('canvas[data-stego-src]:not([data-stego-processed])');
+                        var nested = node.querySelectorAll(_wmSelector);
                         for (var k = 0; k < nested.length; k++) processStegCanvas(nested[k]);
                     }
                 }
@@ -2850,7 +2860,7 @@
                 '</div>' +
             '</div>' +
             '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;margin-bottom:16px">' + hubFormatBody(post.body) + '</div>' +
-            (post.image_url ? '<div style="margin-bottom:12px;position:relative"><canvas data-stego-src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>' : '') +
+            (post.image_url ? (function(){ if(typeof wmRegisterImage==='function')wmRegisterImage(post.id,post.image_url); return '<div style="margin-bottom:12px;position:relative"><canvas data-wm-postid="' + post.id + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>'; })() : '') +
             // Action bar
             '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
                 '<button id="like-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userLiked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
@@ -3000,7 +3010,7 @@
                 '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtmlSafe(personName) + '</div>' +
                 (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtmlSafe(post.city) + '</span>' : '') +
             '</div>' +
-            (post.image_url ? '<div style="margin-bottom:12px;position:relative"><canvas data-stego-src="' + escapeHtmlSafe(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>' : '') +
+            (post.image_url ? (function(){ if(typeof wmRegisterImage==='function')wmRegisterImage(post.id,post.image_url); return '<div style="margin-bottom:12px;position:relative"><canvas data-wm-postid="' + post.id + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>'; })() : '') +
             '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
             // Ask About Him button
             (post.user_id ? '<div style="margin-bottom:12px"><button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button></div>' : '') +
@@ -3613,7 +3623,9 @@
 
         var imageHtml = '';
         if (post.image_data) {
-            imageHtml = '<div style="margin-bottom:14px;position:relative"><canvas data-stego-src="' + post.image_data + '" style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
+            var roomPostId = post.id || ('room-' + Math.random().toString(36).substr(2,6));
+            if (typeof wmRegisterImage === 'function') wmRegisterImage(roomPostId, post.image_data);
+            imageHtml = '<div style="margin-bottom:14px;position:relative"><canvas data-wm-postid="' + roomPostId + '" style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
         }
 
         var bumpLabel = bumpCount > 0 ? ' ' + bumpCount : '';

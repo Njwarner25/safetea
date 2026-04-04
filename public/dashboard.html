@@ -4098,7 +4098,9 @@
         var imageHtml = '';
         var photoTimerHtml = '';
         if (post.image_url) {
-            imageHtml = '<div style="margin-bottom:8px;position:relative"><canvas data-stego-src="' + escapeHtml(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
+            // Store image data in JS map (avoids putting huge base64 in HTML attributes)
+            if (typeof wmRegisterImage === 'function') wmRegisterImage(post.id, post.image_url);
+            imageHtml = '<div style="margin-bottom:8px;position:relative"><canvas data-wm-postid="' + post.id + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
             // 7-day auto-removal countdown for photo posts
             var postCreated = new Date(post.created_at).getTime();
             var expiresAt = postCreated + 7 * 24 * 60 * 60 * 1000;

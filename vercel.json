@@ -96,6 +96,7 @@
         { "source": "/api/admin/warn", "destination": "/api/admin/warn" },
         { "source": "/api/admin/ai-enforce", "destination": "/api/admin/ai-enforce" },
         { "source": "/api/admin/ai-admin", "destination": "/api/admin/ai-admin" },
+        { "source": "/api/admin/scan-watermark", "destination": "/api/admin/scan-watermark" },
         { "source": "/api/admin/moderators", "destination": "/api/admin/moderators" },
         { "source": "/api/admin/reports", "destination": "/api/admin/reports" },
         { "source": "/api/admin/stats", "destination": "/api/admin/stats" },

@@ -1873,18 +1873,13 @@
     });
 
     document.addEventListener('visibilitychange', function() {
-        if (document.hidden && state.recording) {
-            // Stop current recorder to save current audio, start fresh
-            if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
-                try { state.mediaRecorder.stop(); } catch (e) {}
-                if (state.audioStream && state.audioStream.active && state.createRecorder) {
-                    try { state.mediaRecorder = state.createRecorder(); } catch (e2) {}
-                }
-            }
-        } else if (!document.hidden && state.recording) {
-            // Resume upload on foreground
+        if (!document.hidden && state.recording) {
+            // Page came back to foreground — flush any pending uploads
             uploadLoop();
         }
+        // Do NOT stop/restart recorder on visibility change — it cuts clips short.
+        // The 30-second cycle interval handles clip boundaries.
+        // MediaRecorder continues recording in the background on most browsers.
     });
 
     // ============ FAKE CALL SETTINGS ============

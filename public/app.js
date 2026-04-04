@@ -2267,15 +2267,22 @@
 
     function wmApplyText(ctx, w, h, userId) {
         var text = 'ST:' + userId;
+        // Scale font by DPR so text appears consistent size regardless of screen density
+        var dpr = window.devicePixelRatio || 1;
+        var fontSize = Math.round(22 * dpr);
+        var spacingY = Math.round(48 * dpr);
+        var spacingX = Math.round(140 * dpr);
+
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
         var pCtx = pat.getContext('2d');
-        pCtx.font = 'bold 18px monospace';
+        pCtx.font = 'bold ' + fontSize + 'px monospace';
         pCtx.textBaseline = 'top';
         pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
         pCtx.rotate(-0.06);
-        for (var y = -40; y < h + 80; y += 28) {
-            for (var x = -40; x < w + 80; x += 110) {
+        var margin = Math.round(60 * dpr);
+        for (var y = -margin; y < h + margin; y += spacingY) {
+            for (var x = -margin; x < w + margin; x += spacingX) {
                 pCtx.fillText(text, x, y);
             }
         }
@@ -2283,7 +2290,7 @@
         ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.08;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
-        if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn on canvas — text:', text, 'size:', w + 'x' + h, 'alpha: 50% RED');
+        if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr);
     }
 
     // Legacy function name kept for stegoEmbed compatibility

@@ -1767,15 +1767,16 @@
         // Text overlay encoder for self-test (mirrors app.js wmApplyText)
         function wmApplyTextAdmin(ctx, w, h, userId) {
             var text = 'ST:' + userId;
+            // For self-test: use fixed 22px since test canvas is at 1:1 (no DPR scaling)
             var pat = document.createElement('canvas');
             pat.width = w; pat.height = h;
             var pCtx = pat.getContext('2d');
-            pCtx.font = 'bold 18px monospace';
+            pCtx.font = 'bold 22px monospace';
             pCtx.textBaseline = 'top';
             pCtx.fillStyle = '#ffffff';
             pCtx.rotate(-0.06);
-            for (var y = -40; y < h + 80; y += 28) {
-                for (var x = -40; x < w + 80; x += 110) {
+            for (var y = -60; y < h + 60; y += 48) {
+                for (var x = -60; x < w + 60; x += 140) {
                     pCtx.fillText(text, x, y);
                 }
             }

@@ -2262,16 +2262,17 @@
     // To decode: amplify contrast — text becomes readable.
     // Used by enterprise leak-tracking products (same technique).
 
+    // Debug mode: add ?wmdebug=1 to URL to make watermark bright red and obvious
+    var WM_DEBUG = window.location.search.indexOf('wmdebug=1') !== -1;
+
     function wmApplyText(ctx, w, h, userId) {
         var text = 'ST:' + userId;
-        // Render white text at full opacity on a separate canvas, then composite at 8% alpha.
-        // 8% creates pixel changes of 5-20 — survives screenshots, still subtle on photos.
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
         var pCtx = pat.getContext('2d');
         pCtx.font = 'bold 18px monospace';
         pCtx.textBaseline = 'top';
-        pCtx.fillStyle = '#ffffff';
+        pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
         pCtx.rotate(-0.06);
         for (var y = -40; y < h + 80; y += 28) {
             for (var x = -40; x < w + 80; x += 110) {
@@ -2279,9 +2280,10 @@
             }
         }
         ctx.save();
-        ctx.globalAlpha = 0.08;
+        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.08;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
+        if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn on canvas — text:', text, 'size:', w + 'x' + h, 'alpha: 50% RED');
     }
 
     // Legacy function name kept for stegoEmbed compatibility
@@ -2363,18 +2365,24 @@
                     // Apply invisible text watermark (survives screenshots + JPEG)
                     wmApplyText(ctx, bufW, bufH, uid);
                     canvas.style.opacity = '1';
-                    // Hide the loading spinner
+                    // Hide the loading spinner, show success badge
                     var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;
-                    if (spinner) spinner.style.display = 'none';
+                    if (spinner) spinner.innerHTML = WM_DEBUG
+                        ? '<span style="background:rgba(255,0,0,0.8);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">WM: uid=' + uid + '</span>'
+                        : '';
                     console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
                 };
                 imgEl.onerror = function(e) {
-                    console.error('[SafeTea WM] Image failed to load:', src ? src.substring(0, 80) + '...' : 'null');
+                    console.error('[SafeTea WM] Image FAILED to load:', src ? src.substring(0, 80) + '...' : 'null');
+                    // Show error on spinner
+                    var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+                    if (spinner) spinner.innerHTML = '<span style="color:#e74c3c;font-size:11px"><i class="fas fa-times-circle"></i> Load failed</span>';
                     // Fallback: show original image as regular <img> tag
                     var fallback = document.createElement('img');
                     fallback.src = src;
                     fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
-                    el.parentElement.replaceChild(fallback, el);
+                    if (el.parentElement) el.parentElement.insertBefore(fallback, el);
+                    el.style.display = 'none';
                 };
                 imgEl.src = src;
             });

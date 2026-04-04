@@ -2256,74 +2256,33 @@
     }
     window.addWatermark = addWatermark;
 
-    // ==================== STEGANOGRAPHIC WATERMARK ====================
-    // Embeds viewer's user ID into image pixels using block-based luminance modulation.
-    // QIM (Quantization Index Modulation) watermark — robust to screenshots & JPEG
-    // 40-bit payload: 8-bit magic (0xAA) + 32-bit user ID
-    // Encodes into 32×32 blocks by quantizing block luminance averages
-    // All channels (R+G+B) modified equally for 3× signal strength
-    // Tolerates noise up to ±step/4 = ±7.5 per block average
+    // ==================== INVISIBLE TEXT WATERMARK ====================
+    // Embeds viewer's user ID as near-invisible tiled text across the image.
+    // Survives screenshots, JPEG compression, and resizing.
+    // To decode: amplify contrast — text becomes readable.
+    // Used by enterprise leak-tracking products (same technique).
 
-    var WM_BLOCK = 32;
-    var WM_MAGIC = 0xAA55; // 16-bit magic header — 1/65536 false positive rate
-    var WM_BITS = 40;      // total payload: 16 magic + 24 user ID
-    var WM_STEP = 30;      // QIM quantization step
-
-    function wmBuildPayload(userId) {
-        var uid = (userId >>> 0) & 0xFFFFFF; // 24-bit user ID (supports up to 16.7M)
-        var bits = [];
-        for (var i = 15; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
-        for (var i = 23; i >= 0; i--) bits.push((uid >> i) & 1);
-        return bits;
-    }
-
-    function wmApply(px, w, h, userId) {
-        var bits = wmBuildPayload(userId);
-        var blocksX = Math.floor(w / WM_BLOCK);
-        var blocksY = Math.floor(h / WM_BLOCK);
-        var totalBlocks = blocksX * blocksY;
-        if (totalBlocks === 0) return;
-
-        for (var b = 0; b < totalBlocks; b++) {
-            var bit = bits[b % bits.length];
-            var bx = (b % blocksX) * WM_BLOCK;
-            var by = Math.floor(b / blocksX) * WM_BLOCK;
-
-            // Compute block average luminance (mean of R,G,B)
-            var sum = 0, count = 0;
-            for (var py = by; py < by + WM_BLOCK && py < h; py++) {
-                for (var px2 = bx; px2 < bx + WM_BLOCK && px2 < w; px2++) {
-                    var idx = (py * w + px2) * 4;
-                    sum += px[idx] + px[idx + 1] + px[idx + 2];
-                    count++;
-                }
-            }
-            var avg = sum / (count * 3);
-
-            // QIM: quantize avg to encode the bit
-            var target;
-            if (bit === 0) {
-                target = Math.round(avg / WM_STEP) * WM_STEP;
-            } else {
-                target = Math.round((avg - WM_STEP / 2) / WM_STEP) * WM_STEP + WM_STEP / 2;
-            }
-            var delta = Math.round(target - avg);
-            if (delta > WM_STEP / 2) delta = WM_STEP / 2;
-            if (delta < -WM_STEP / 2) delta = -WM_STEP / 2;
-
-            // Apply delta to all channels equally
-            for (var py = by; py < by + WM_BLOCK && py < h; py++) {
-                for (var px2 = bx; px2 < bx + WM_BLOCK && px2 < w; px2++) {
-                    var idx = (py * w + px2) * 4;
-                    var r = px[idx] + delta;
-                    var g = px[idx + 1] + delta;
-                    var bl = px[idx + 2] + delta;
-                    px[idx] = r < 0 ? 0 : r > 255 ? 255 : r;
-                    px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-                    px[idx + 2] = bl < 0 ? 0 : bl > 255 ? 255 : bl;
-                }
+    function wmApplyText(ctx, w, h, userId) {
+        var text = 'ST:' + userId;
+        ctx.save();
+        ctx.font = '11px monospace';
+        ctx.textBaseline = 'top';
+        // White at 2% opacity — invisible to naked eye, visible after contrast amplification
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        // Slight rotation makes it harder to filter out
+        ctx.rotate(-0.08);
+        for (var y = -20; y < h + 40; y += 40) {
+            for (var x = -20; x < w + 40; x += 90) {
+                ctx.fillText(text, x, y);
             }
         }
+        ctx.restore();
+    }
+
+    // Legacy function name kept for stegoEmbed compatibility
+    function wmApply(px, w, h, userId) {
+        // No-op — text watermark is applied via canvas context, not pixel data
+        // See wmApplyText() which is called on the context directly
     }
 
     function stegoEmbed(dataUrl, userId, callback) {
@@ -2337,9 +2296,7 @@
             canvas.width = w; canvas.height = h;
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
-            var imageData = ctx.getImageData(0, 0, w, h);
-            wmApply(imageData.data, w, h, userId);
-            ctx.putImageData(imageData, 0, 0);
+            wmApplyText(ctx, w, h, userId);
             callback(canvas.toDataURL('image/jpeg', 0.95));
         };
         img.onerror = function() { callback(dataUrl); };
@@ -2348,7 +2305,7 @@
     window.stegoEmbed = stegoEmbed;
 
     // IntersectionObserver: lazy-process photo post canvases when they enter viewport
-    // Embeds QIM watermark at exact CSS×DPR resolution so canvas buffer = screenshot pixels
+    // Embeds invisible text watermark at exact CSS×DPR resolution so canvas buffer = screenshot pixels
     function initStegoObserver() {
         if (!window.IntersectionObserver) return;
         var observer = new IntersectionObserver(function(entries) {
@@ -2402,12 +2359,10 @@
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(imgEl, 0, 0, bufW, bufH);
 
-                    // Apply QIM watermark at buffer resolution (= screenshot resolution)
-                    var imageData = ctx.getImageData(0, 0, bufW, bufH);
-                    wmApply(imageData.data, bufW, bufH, uid);
-                    ctx.putImageData(imageData, 0, 0);
+                    // Apply invisible text watermark (survives screenshots + JPEG)
+                    wmApplyText(ctx, bufW, bufH, uid);
                     canvas.style.opacity = '1';
-                    console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'blocks:', Math.floor(bufW/WM_BLOCK) + 'x' + Math.floor(bufH/WM_BLOCK), 'dpr:', dpr);
+                    console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
                 };
                 imgEl.onerror = function(e) {
                     console.error('[SafeTea WM] Image failed to load:', src ? src.substring(0, 80) + '...' : 'null', 'error:', e);

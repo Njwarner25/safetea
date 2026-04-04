@@ -1715,325 +1715,197 @@
             window.location.href = '/';
         }
 
-        // ===== WATERMARK DECODER (QIM-based, matches encoder in app.js) =====
-        const WM_MAGIC = 0xAA55; // 16-bit magic header
-        const WM_BITS = 40;     // 16 magic + 24 user ID
-        const WM_STEP = 30;
+        // ===== WATERMARK DECODER (Contrast Amplification — matches text overlay encoder in app.js) =====
+        // The encoder tiles "ST:{userId}" text at 2% white opacity across images.
+        // To decode: apply high-pass filter (subtract blur) + amplify residual → text becomes readable.
 
-        function adminQIMDecode(px, w, h, blockSize, step) {
-            var blocksX = Math.floor(w / blockSize);
-            var blocksY = Math.floor(h / blockSize);
-            var totalBlocks = blocksX * blocksY;
-            if (totalBlocks < 40) return null;
-
-            var rawBits = [];
-            for (var b = 0; b < totalBlocks; b++) {
-                var bx = (b % blocksX) * blockSize;
-                var by = Math.floor(b / blocksX) * blockSize;
-                var sum = 0, count = 0;
-                for (var py = by; py < by + blockSize && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
-                        var idx = (py * w + px2) * 4;
-                        sum += px[idx] + px[idx + 1] + px[idx + 2];
-                        count++;
-                    }
-                }
-                var avg = sum / (count * 3);
-                var remainder = ((avg % step) + step) % step;
-                rawBits.push((remainder > step / 4 && remainder < 3 * step / 4) ? 1 : 0);
-            }
-
-            var payloadLen = WM_BITS;
-            var reps = Math.floor(totalBlocks / payloadLen) || 1;
-            var votedBits = [];
-            for (var i = 0; i < payloadLen; i++) {
-                var ones = 0, total = 0;
-                for (var r = 0; r < reps; r++) {
-                    var idx = r * payloadLen + i;
-                    if (idx >= totalBlocks) break;
-                    if (rawBits[idx] === 1) ones++;
-                    total++;
-                }
-                votedBits.push(ones > total / 2 ? 1 : 0);
-            }
-
-            // 16-bit magic check — use Hamming distance (allow up to 3 bit errors)
-            var magic = 0;
-            for (var i = 0; i < 16; i++) magic = (magic << 1) | votedBits[i];
-            var xor = magic ^ WM_MAGIC;
-            var bitErrors = 0;
-            for (var i = 0; i < 16; i++) bitErrors += (xor >> i) & 1;
-            if (bitErrors > 3) return null; // reject if more than 3/16 magic bits wrong
-
-            // 24-bit user ID
-            var userId = 0;
-            for (var i = 16; i < 40; i++) userId = (userId << 1) | votedBits[i];
-            userId = userId >>> 0;
-            if (userId === 0) return null;
-
-            // Raw confidence: check magic bit accuracy across all repetitions
-            var expectedMagic = [];
-            for (var i = 15; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
-            var matchCount = 0, totalChecks = 0;
-            for (var r = 0; r < reps; r++) {
-                for (var i = 0; i < 16; i++) {
-                    var idx = r * payloadLen + i;
-                    if (idx >= totalBlocks) break;
-                    totalChecks++;
-                    if (rawBits[idx] === expectedMagic[i]) matchCount++;
+        function boxBlurGray(gray, w, h, r) {
+            var tmp = new Float32Array(w * h);
+            var out = new Float32Array(w * h);
+            // Horizontal pass
+            for (var y = 0; y < h; y++) {
+                for (var x = 0; x < w; x++) {
+                    var sum = 0, count = 0;
+                    var x0 = x - r; if (x0 < 0) x0 = 0;
+                    var x1 = x + r; if (x1 >= w) x1 = w - 1;
+                    for (var dx = x0; dx <= x1; dx++) { sum += gray[y * w + dx]; count++; }
+                    tmp[y * w + x] = sum / count;
                 }
             }
-            var rawConf = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
-            // Combine raw confidence with magic accuracy for final score
-            var magicAccuracy = Math.round(((16 - bitErrors) / 16) * 100);
-            var confidence = Math.round(rawConf * 0.7 + magicAccuracy * 0.3);
-            if (confidence < 45) return null;
-            return { userId: userId, confidence: confidence, blockSize: blockSize, magicErrors: bitErrors };
+            // Vertical pass
+            for (var x = 0; x < w; x++) {
+                for (var y = 0; y < h; y++) {
+                    var sum = 0, count = 0;
+                    var y0 = y - r; if (y0 < 0) y0 = 0;
+                    var y1 = y + r; if (y1 >= h) y1 = h - 1;
+                    for (var dy = y0; dy <= y1; dy++) { sum += tmp[dy * w + x]; count++; }
+                    out[y * w + x] = sum / count;
+                }
+            }
+            return out;
         }
 
-        function adminDecodeMultiScale(px, w, h) {
-            var blockSizes = [32, 16, 24, 48, 64, 96, 28, 30, 31, 33, 34, 36, 40, 63, 65, 95, 97];
-            var best = null;
-            for (var i = 0; i < blockSizes.length; i++) {
-                var result = adminQIMDecode(px, w, h, blockSizes[i], WM_STEP);
-                if (result) {
-                    console.log('[WM Decode] block=' + blockSizes[i] + ' userId=' + result.userId + ' conf=' + result.confidence + '%');
-                    if (!best || result.confidence > best.confidence) best = result;
+        function amplifyWatermark(srcCtx, w, h, gain, blurRadius) {
+            var srcData = srcCtx.getImageData(0, 0, w, h);
+            var src = srcData.data;
+            var gray = new Float32Array(w * h);
+            for (var i = 0; i < w * h; i++) {
+                var idx = i * 4;
+                gray[i] = 0.299 * src[idx] + 0.587 * src[idx + 1] + 0.114 * src[idx + 2];
+            }
+            var blurred = boxBlurGray(gray, w, h, blurRadius || 12);
+            var out = new Uint8ClampedArray(w * h * 4);
+            for (var i = 0; i < w * h; i++) {
+                var diff = gray[i] - blurred[i];
+                var val = Math.round(128 + diff * gain);
+                if (val < 0) val = 0; if (val > 255) val = 255;
+                out[i * 4] = val; out[i * 4 + 1] = val; out[i * 4 + 2] = val; out[i * 4 + 3] = 255;
+            }
+            return new ImageData(out, w, h);
+        }
+
+        // Text overlay encoder for self-test (mirrors app.js wmApplyText)
+        function wmApplyTextAdmin(ctx, w, h, userId) {
+            var text = 'ST:' + userId;
+            ctx.save();
+            ctx.font = '11px monospace';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.rotate(-0.08);
+            for (var y = -20; y < h + 40; y += 40) {
+                for (var x = -20; x < w + 40; x += 90) {
+                    ctx.fillText(text, x, y);
                 }
             }
-            if (!best) console.log('[WM Decode] No watermark found in ' + w + 'x' + h + ' image across ' + blockSizes.length + ' block sizes');
-            return best;
+            ctx.restore();
         }
 
-        // ===== WATERMARK ENCODER (for self-test — mirrors app.js wmApply) =====
-        function wmBuildPayloadAdmin(userId) {
-            var uid = (userId >>> 0) & 0xFFFFFF;
-            var bits = [];
-            for (var i = 15; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
-            for (var i = 23; i >= 0; i--) bits.push((uid >> i) & 1);
-            return bits;
+        function makeAmpCanvas(ampData, w, h) {
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            c.getContext('2d').putImageData(ampData, 0, 0);
+            c.style.maxWidth = '100%';
+            c.style.borderRadius = '8px';
+            c.style.border = '1px solid rgba(255,255,255,0.1)';
+            return c;
         }
 
-        function wmApplyAdmin(px, w, h, userId) {
-            var blockSize = 32;
-            var step = WM_STEP;
-            var bits = wmBuildPayloadAdmin(userId);
-            var blocksX = Math.floor(w / blockSize);
-            var blocksY = Math.floor(h / blockSize);
-            var totalBlocks = blocksX * blocksY;
-            if (totalBlocks === 0) return;
-
-            for (var b = 0; b < totalBlocks; b++) {
-                var bit = bits[b % bits.length];
-                var bx = (b % blocksX) * blockSize;
-                var by = Math.floor(b / blocksX) * blockSize;
-
-                var sum = 0, count = 0;
-                for (var py = by; py < by + blockSize && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
-                        var idx = (py * w + px2) * 4;
-                        sum += px[idx] + px[idx + 1] + px[idx + 2];
-                        count++;
-                    }
-                }
-                var avg = sum / (count * 3);
-
-                var target;
-                if (bit === 0) {
-                    target = Math.round(avg / step) * step;
-                } else {
-                    target = Math.round((avg - step / 2) / step) * step + step / 2;
-                }
-                var delta = Math.round(target - avg);
-                if (delta > step / 2) delta = step / 2;
-                if (delta < -step / 2) delta = -step / 2;
-
-                for (var py = by; py < by + blockSize && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
-                        var idx = (py * w + px2) * 4;
-                        var r = px[idx] + delta;
-                        var g = px[idx + 1] + delta;
-                        var bl = px[idx + 2] + delta;
-                        px[idx] = r < 0 ? 0 : r > 255 ? 255 : r;
-                        px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-                        px[idx + 2] = bl < 0 ? 0 : bl > 255 ? 255 : bl;
-                    }
-                }
-            }
-        }
-
-        // ===== SELF-TEST: encode → decode round-trip =====
+        // ===== SELF-TEST: encode text watermark → amplify → show result =====
         function wmSelfTest() {
             var resultEl = document.getElementById('wm-selftest-result');
             resultEl.style.display = 'block';
             resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Running self-test...</p>';
 
-            var testUserId = 42;
-            var w = 640, h = 480;
-            var canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
-            var ctx = canvas.getContext('2d');
+            setTimeout(function() {
+                var testUserId = 42;
+                var w = 640, h = 480;
+                var canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                var ctx = canvas.getContext('2d');
 
-            // Draw a gradient with some noise (simulates a real photo)
-            for (var y = 0; y < h; y++) {
-                for (var x = 0; x < w; x++) {
-                    var r = Math.floor(50 + (x / w) * 150 + Math.random() * 10);
-                    var g = Math.floor(80 + (y / h) * 120 + Math.random() * 10);
-                    var b = Math.floor(100 + ((x + y) / (w + h)) * 100 + Math.random() * 10);
-                    ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
-                    ctx.fillRect(x, y, 1, 1);
+                // Draw gradient with noise (simulates a photo)
+                var gradient = ctx.createLinearGradient(0, 0, w, h);
+                gradient.addColorStop(0, '#4A7C9B');
+                gradient.addColorStop(0.5, '#7B9DAF');
+                gradient.addColorStop(1, '#8E6B5A');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, w, h);
+                var imgData = ctx.getImageData(0, 0, w, h);
+                for (var i = 0; i < imgData.data.length; i += 4) {
+                    var noise = Math.floor(Math.random() * 8 - 4);
+                    imgData.data[i] = Math.max(0, Math.min(255, imgData.data[i] + noise));
+                    imgData.data[i + 1] = Math.max(0, Math.min(255, imgData.data[i + 1] + noise));
+                    imgData.data[i + 2] = Math.max(0, Math.min(255, imgData.data[i + 2] + noise));
                 }
-            }
+                ctx.putImageData(imgData, 0, 0);
 
-            // Read pixels, apply watermark
-            var imageData = ctx.getImageData(0, 0, w, h);
-            wmApplyAdmin(imageData.data, w, h, testUserId);
-            ctx.putImageData(imageData, 0, 0);
+                // Apply text watermark
+                wmApplyTextAdmin(ctx, w, h, testUserId);
 
-            // Test 1: decode directly from canvas (no compression)
-            var rawData = ctx.getImageData(0, 0, w, h);
-            var rawResult = adminDecodeMultiScale(rawData.data, w, h);
+                // Amplify raw
+                var ampRaw = amplifyWatermark(ctx, w, h, 40, 12);
 
-            // Test 2: encode to JPEG 0.95 and decode (simulates stegoEmbed output)
-            var jpegUrl = canvas.toDataURL('image/jpeg', 0.95);
-            var jpegImg = new Image();
-            jpegImg.onload = function() {
-                var c2 = document.createElement('canvas');
-                c2.width = jpegImg.width; c2.height = jpegImg.height;
-                var ctx2 = c2.getContext('2d');
-                ctx2.drawImage(jpegImg, 0, 0);
-                var jpegData = ctx2.getImageData(0, 0, c2.width, c2.height);
-                var jpegResult = adminDecodeMultiScale(jpegData.data, c2.width, c2.height);
+                // JPEG round-trip test
+                var jpegUrl = canvas.toDataURL('image/jpeg', 0.92);
+                var jpegImg = new Image();
+                jpegImg.onload = function() {
+                    var c2 = document.createElement('canvas');
+                    c2.width = jpegImg.width; c2.height = jpegImg.height;
+                    var ctx2 = c2.getContext('2d');
+                    ctx2.drawImage(jpegImg, 0, 0);
+                    var ampJpeg = amplifyWatermark(ctx2, c2.width, c2.height, 40, 12);
 
-                // Test 3: encode to PNG and decode (simulates screenshot)
-                var pngUrl = canvas.toDataURL('image/png');
-                var pngImg = new Image();
-                pngImg.onload = function() {
-                    var c3 = document.createElement('canvas');
-                    c3.width = pngImg.width; c3.height = pngImg.height;
-                    var ctx3 = c3.getContext('2d');
-                    ctx3.drawImage(pngImg, 0, 0);
-                    var pngData = ctx3.getImageData(0, 0, c3.width, c3.height);
-                    var pngResult = adminDecodeMultiScale(pngData.data, c3.width, c3.height);
-
-                    // Show results
                     var html = '<div style="background:#141428;border-radius:10px;padding:16px">';
-                    html += '<h4 style="color:#fff;margin-bottom:12px;font-size:14px"><i class="fas fa-vial" style="color:#E8A0B5"></i> Self-Test Results (expected userId=' + testUserId + ')</h4>';
-
-                    // Raw test
-                    html += '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
-                    if (rawResult && rawResult.userId === testUserId) {
-                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> RAW (no compression): PASS</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + rawResult.userId + ' conf=' + rawResult.confidence + '% block=' + rawResult.blockSize + '</span>';
-                    } else {
-                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> RAW (no compression): FAIL</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (rawResult ? 'got userId=' + rawResult.userId : 'no detection') + '</span>';
-                    }
+                    html += '<h4 style="color:#fff;margin-bottom:12px;font-size:14px"><i class="fas fa-vial" style="color:#E8A0B5"></i> Self-Test — Look for "ST:' + testUserId + '" in amplified images</h4>';
+                    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">Raw — Amplified (40x)</p><div id="st-raw-amp"></div></div>';
+                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">JPEG 0.92 — Amplified (40x)</p><div id="st-jpeg-amp"></div></div>';
                     html += '</div>';
-
-                    // JPEG test
-                    html += '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
-                    if (jpegResult && jpegResult.userId === testUserId) {
-                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> JPEG 0.95: PASS</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + jpegResult.userId + ' conf=' + jpegResult.confidence + '% block=' + jpegResult.blockSize + '</span>';
-                    } else {
-                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> JPEG 0.95: FAIL</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (jpegResult ? 'got userId=' + jpegResult.userId : 'no detection') + '</span>';
-                    }
-                    html += '</div>';
-
-                    // PNG test
-                    html += '<div style="padding:6px 0">';
-                    if (pngResult && pngResult.userId === testUserId) {
-                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> PNG (screenshot sim): PASS</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + pngResult.userId + ' conf=' + pngResult.confidence + '% block=' + pngResult.blockSize + '</span>';
-                    } else {
-                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> PNG (screenshot sim): FAIL</span>';
-                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (pngResult ? 'got userId=' + pngResult.userId : 'no detection') + '</span>';
-                    }
-                    html += '</div>';
-
-                    var allPass = rawResult && rawResult.userId === testUserId &&
-                                  jpegResult && jpegResult.userId === testUserId &&
-                                  pngResult && pngResult.userId === testUserId;
-                    if (allPass) {
-                        html += '<p style="color:#2ecc71;font-weight:600;margin-top:12px;font-size:13px"><i class="fas fa-check-double"></i> Encode/decode pipeline working. If real images fail, the issue is CORS or image delivery.</p>';
-                    } else {
-                        html += '<p style="color:#e74c3c;font-weight:600;margin-top:12px;font-size:13px"><i class="fas fa-exclamation-triangle"></i> Encode/decode pipeline has a bug. Contact support.</p>';
-                    }
-
+                    html += '<p style="color:#2ecc71;font-weight:600;font-size:13px"><i class="fas fa-info-circle"></i> If you can read "ST:42" in both images, the watermark system is working correctly.</p>';
                     html += '</div>';
                     resultEl.innerHTML = html;
+                    document.getElementById('st-raw-amp').appendChild(makeAmpCanvas(ampRaw, w, h));
+                    document.getElementById('st-jpeg-amp').appendChild(makeAmpCanvas(ampJpeg, c2.width, c2.height));
                 };
-                pngImg.src = pngUrl;
-            };
-            jpegImg.src = jpegUrl;
+                jpegImg.src = jpegUrl;
+            }, 50);
         }
 
         // ===== GENERATE TEST IMAGE: create watermarked image for download =====
         function wmGenerateTestImage() {
             var resultEl = document.getElementById('wm-selftest-result');
             resultEl.style.display = 'block';
-            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Generating watermarked test image...</p>';
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Generating test image...</p>';
 
-            var testUserId = 12345;
-            var w = 800, h = 600;
-            var canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
-            var ctx = canvas.getContext('2d');
+            setTimeout(function() {
+                var testUserId = 12345;
+                var w = 800, h = 600;
+                var canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                var ctx = canvas.getContext('2d');
 
-            // Draw a realistic photo-like gradient
-            var gradient = ctx.createLinearGradient(0, 0, w, h);
-            gradient.addColorStop(0, '#4A7C9B');
-            gradient.addColorStop(0.3, '#7B9DAF');
-            gradient.addColorStop(0.6, '#C5A882');
-            gradient.addColorStop(1, '#8E6B5A');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, w, h);
+                var gradient = ctx.createLinearGradient(0, 0, w, h);
+                gradient.addColorStop(0, '#4A7C9B');
+                gradient.addColorStop(0.3, '#7B9DAF');
+                gradient.addColorStop(0.6, '#C5A882');
+                gradient.addColorStop(1, '#8E6B5A');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, w, h);
+                var imgData = ctx.getImageData(0, 0, w, h);
+                for (var i = 0; i < imgData.data.length; i += 4) {
+                    var noise = Math.floor(Math.random() * 10 - 5);
+                    imgData.data[i] = Math.max(0, Math.min(255, imgData.data[i] + noise));
+                    imgData.data[i + 1] = Math.max(0, Math.min(255, imgData.data[i + 1] + noise));
+                    imgData.data[i + 2] = Math.max(0, Math.min(255, imgData.data[i + 2] + noise));
+                }
+                ctx.putImageData(imgData, 0, 0);
 
-            // Add noise to simulate photo texture
-            var imgData = ctx.getImageData(0, 0, w, h);
-            for (var i = 0; i < imgData.data.length; i += 4) {
-                var noise = Math.floor(Math.random() * 12 - 6);
-                imgData.data[i] = Math.max(0, Math.min(255, imgData.data[i] + noise));
-                imgData.data[i+1] = Math.max(0, Math.min(255, imgData.data[i+1] + noise));
-                imgData.data[i+2] = Math.max(0, Math.min(255, imgData.data[i+2] + noise));
-            }
+                // Apply watermark
+                wmApplyTextAdmin(ctx, w, h, testUserId);
 
-            // Apply watermark
-            wmApplyAdmin(imgData.data, w, h, testUserId);
-            ctx.putImageData(imgData, 0, 0);
+                // Label
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.font = '20px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('SafeTea Watermark Test — userId=' + testUserId, w / 2, h / 2);
+                ctx.font = '14px Inter, sans-serif';
+                ctx.fillText('Upload this to the decoder above to verify', w / 2, h / 2 + 30);
 
-            // Add text overlay
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '20px Inter, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('SafeTea Watermark Test — userId=' + testUserId, w / 2, h / 2);
-            ctx.font = '14px Inter, sans-serif';
-            ctx.fillText('Upload this image to the decoder above to verify detection', w / 2, h / 2 + 30);
+                // Download as PNG
+                var a = document.createElement('a');
+                a.href = canvas.toDataURL('image/png');
+                a.download = 'safetea-watermark-test-uid' + testUserId + '.png';
+                a.click();
 
-            // Download as PNG (lossless — guaranteed to work)
-            var pngUrl = canvas.toDataURL('image/png');
-            var a = document.createElement('a');
-            a.href = pngUrl;
-            a.download = 'safetea-watermark-test-uid' + testUserId + '.png';
-            a.click();
-
-            // Immediately verify
-            var verifyData = ctx.getImageData(0, 0, w, h);
-            var verifyResult = adminDecodeMultiScale(verifyData.data, w, h);
-
-            if (verifyResult && verifyResult.userId === testUserId) {
+                // Show amplified preview
+                var ampData = amplifyWatermark(ctx, w, h, 40, 12);
                 resultEl.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
                     '<p style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Test image downloaded (userId=' + testUserId + ')</p>' +
-                    '<p style="color:#8080A0;font-size:12px;margin-top:4px">Self-verify: PASS (conf=' + verifyResult.confidence + '%). Upload this PNG to the decoder above to test the full pipeline.</p>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-top:8px">Amplified preview — look for "ST:12345":</p>' +
+                    '<div id="st-gen-preview" style="margin-top:8px"></div>' +
                 '</div>';
-            } else {
-                resultEl.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
-                    '<p style="color:#e74c3c;font-weight:600"><i class="fas fa-times-circle"></i> Self-verify FAILED for generated test image</p>' +
-                    '<p style="color:#8080A0;font-size:12px;margin-top:4px">' + (verifyResult ? 'Detected userId=' + verifyResult.userId + ' (expected ' + testUserId + ')' : 'No watermark detected at all') + '</p>' +
-                '</div>';
-            }
+                document.getElementById('st-gen-preview').appendChild(makeAmpCanvas(ampData, w, h));
+            }, 50);
         }
 
         function handleWmDrop(event) {
@@ -2062,82 +1934,68 @@
 
         function decodeWatermark(ctx, w, h) {
             var resultEl = document.getElementById('wm-result');
-            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding QIM watermark (' + w + 'x' + h + ', trying 17 block sizes)...</p>';
-            console.log('[WM] Decoding image ' + w + 'x' + h + ' = ' + (w*h) + ' pixels');
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Amplifying watermark (' + w + 'x' + h + ')...</p>';
 
-            var imageData = ctx.getImageData(0, 0, w, h);
-            var result = adminDecodeMultiScale(imageData.data, w, h);
+            setTimeout(function() {
+                var gain = 40;
+                var ampData = amplifyWatermark(ctx, w, h, gain, 12);
+                var ampCanvas = makeAmpCanvas(ampData, w, h);
 
-            if (!result) {
-                // Debug: show best partial matches
-                var debugInfo = '';
-                var blockSizes = [32, 16, 24, 48, 64, 96, 28, 30, 31, 33, 34, 36, 40, 63, 65, 95, 97];
-                for (var di = 0; di < blockSizes.length; di++) {
-                    var bs = blockSizes[di];
-                    var bx2 = Math.floor(w / bs), by2 = Math.floor(h / bs);
-                    if (bx2 * by2 < 40) continue;
-                    // Quick check: compute first 16 raw bits and see how many match magic
-                    var rawTest = [];
-                    for (var tb = 0; tb < Math.min(16, bx2 * by2); tb++) {
-                        var tbx = (tb % bx2) * bs;
-                        var tby = Math.floor(tb / bx2) * bs;
-                        var tsum = 0, tcount = 0;
-                        for (var tpy = tby; tpy < tby + bs && tpy < h; tpy++) {
-                            for (var tpx = tbx; tpx < tbx + bs && tpx < w; tpx++) {
-                                var tidx = (tpy * w + tpx) * 4;
-                                tsum += imageData.data[tidx] + imageData.data[tidx+1] + imageData.data[tidx+2];
-                                tcount++;
-                            }
-                        }
-                        var tavg = tsum / (tcount * 3);
-                        var trem = ((tavg % WM_STEP) + WM_STEP) % WM_STEP;
-                        rawTest.push((trem > WM_STEP / 4 && trem < 3 * WM_STEP / 4) ? 1 : 0);
-                    }
-                    var expectedMagicBits = [];
-                    for (var ei = 15; ei >= 0; ei--) expectedMagicBits.push((WM_MAGIC >> ei) & 1);
-                    var match = 0;
-                    for (var mi = 0; mi < rawTest.length; mi++) {
-                        if (rawTest[mi] === expectedMagicBits[mi]) match++;
-                    }
-                    if (match >= 8) { // show if at least half match
-                        debugInfo += 'bs=' + bs + ': ' + match + '/16 magic bits match; ';
-                    }
-                }
+                resultEl.innerHTML = '';
+                var container = document.createElement('div');
+                container.innerHTML =
+                    '<p style="color:#E8A0B5;font-weight:600;margin-bottom:8px"><i class="fas fa-search-plus"></i> Contrast-Amplified View</p>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-bottom:8px">Look for repeated "ST:XXXXX" text. The number after "ST:" is the viewer\'s user ID.</p>' +
+                    '<div style="margin-bottom:12px">' +
+                        '<label style="color:#8080A0;font-size:11px">Amplification: <span id="wm-gain-label">' + gain + 'x</span></label>' +
+                        '<input type="range" id="wm-gain-slider" min="10" max="100" value="' + gain + '" style="width:100%;margin-top:4px;accent-color:#E8A0B5" />' +
+                    '</div>' +
+                    '<div id="wm-amp-container" style="margin-bottom:12px"></div>' +
+                    '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">' +
+                        '<p style="color:#fff;font-weight:600;font-size:13px;margin-bottom:8px">Enter the User ID you see:</p>' +
+                        '<div style="display:flex;gap:8px">' +
+                            '<input type="number" id="wm-userid-input" placeholder="e.g. 42" style="flex:1;background:#22223A;border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:8px;font-size:14px" />' +
+                            '<button class="btn btn-ghost" onclick="wmLookupUser()" style="white-space:nowrap"><i class="fas fa-search"></i> Look Up</button>' +
+                        '</div>' +
+                        '<div id="wm-user-card" style="margin-top:12px"></div>' +
+                    '</div>';
 
-                resultEl.innerHTML = '<div style="text-align:center;padding:20px">' +
-                    '<i class="fas fa-question-circle" style="font-size:32px;color:#f1c40f;margin-bottom:12px;display:block"></i>' +
-                    '<p style="color:#fff;font-weight:600;margin-bottom:8px">No Watermark Detected</p>' +
-                    '<p style="color:#8080A0;font-size:13px">This image may not have been captured from SafeTea, or the watermark was destroyed by heavy compression/editing.</p>' +
-                    '<p style="color:#666;font-size:11px;margin-top:8px">Image: ' + w + 'x' + h + ' | Tried 17 block sizes (16-97)</p>' +
-                    (debugInfo ? '<p style="color:#555;font-size:10px;margin-top:6px;word-break:break-all">Partial: ' + debugInfo + '</p>' : '') +
-                    '<p style="color:#555;font-size:11px;margin-top:8px">Use "Run Self-Test" below to verify the encode/decode pipeline works.</p>' +
-                '</div>';
-                return;
-            }
+                resultEl.appendChild(container);
+                document.getElementById('wm-amp-container').appendChild(ampCanvas);
 
-            var userId = result.userId;
-            var confidence = result.confidence;
-            userId = userId >>> 0; // ensure unsigned
+                // Gain slider — re-amplify on change
+                var slider = document.getElementById('wm-gain-slider');
+                var label = document.getElementById('wm-gain-label');
+                var debounce = null;
+                slider.addEventListener('input', function() {
+                    var newGain = parseInt(slider.value);
+                    label.textContent = newGain + 'x';
+                    clearTimeout(debounce);
+                    debounce = setTimeout(function() {
+                        var newAmp = amplifyWatermark(ctx, w, h, newGain, 12);
+                        var ampContainer = document.getElementById('wm-amp-container');
+                        ampContainer.innerHTML = '';
+                        ampContainer.appendChild(makeAmpCanvas(newAmp, w, h));
+                    }, 150);
+                });
+            }, 50);
+        }
 
-            // Show result and look up user
-            resultEl.innerHTML = '<div style="text-align:center;padding:12px">' +
-                '<i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;margin-bottom:12px;display:block"></i>' +
-                '<p style="color:#2ecc71;font-weight:700;font-size:16px;margin-bottom:4px">Watermark Decoded!</p>' +
-                '<p style="color:#fff;font-size:14px;margin-bottom:4px">Viewer User ID: <strong>#' + userId + '</strong></p>' +
-                '<p style="color:#8080A0;font-size:12px;margin-bottom:16px">Confidence: ' + confidence + '%' + (result.magicErrors ? ' (magic: ' + result.magicErrors + ' bit errors)' : '') + ' | Block: ' + result.blockSize + 'px</p>' +
-                '<div id="wm-user-card"><p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up user...</p></div>' +
-            '</div>';
+        function wmLookupUser() {
+            var userId = document.getElementById('wm-userid-input').value;
+            if (!userId) { showToast('Enter a user ID', true); return; }
+            userId = parseInt(userId);
+            var card = document.getElementById('wm-user-card');
+            card.innerHTML = '<p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up user #' + userId + '...</p>';
 
-            // Look up user details
             fetch(API_BASE + '/admin/users?search=' + userId, { headers: authHeaders() })
-                .then(r => r.json())
-                .then(data => {
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     var users = data.users || data;
                     var found = null;
                     if (Array.isArray(users)) {
-                        found = users.find(u => u.id === userId || String(u.id) === String(userId));
+                        found = users.find(function(u) { return u.id === userId || String(u.id) === String(userId); });
                     }
-                    var card = document.getElementById('wm-user-card');
                     if (found) {
                         card.innerHTML = '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;text-align:left">' +
                             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
@@ -2163,8 +2021,8 @@
                         card.innerHTML = '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + userId + ' not found in database</p>';
                     }
                 })
-                .catch(() => {
-                    document.getElementById('wm-user-card').innerHTML = '<p style="color:#e74c3c;font-size:12px">Failed to look up user</p>';
+                .catch(function() {
+                    card.innerHTML = '<p style="color:#e74c3c;font-size:12px">Failed to look up user</p>';
                 });
         }
 
@@ -2294,38 +2152,45 @@
 
         function decodeWatermarkInline(ctx, w, h, resultElId) {
             var resultEl = document.getElementById(resultElId);
-            var imageData = ctx.getImageData(0, 0, w, h);
-            var result = adminDecodeMultiScale(imageData.data, w, h);
+            var ampData = amplifyWatermark(ctx, w, h, 40, 12);
+            var ampCanvas = makeAmpCanvas(ampData, w, h);
+            ampCanvas.style.marginTop = '8px';
+            ampCanvas.style.maxHeight = '200px';
 
-            if (!result) {
-                resultEl.innerHTML = '<p style="color:#f1c40f;font-size:13px"><i class="fas fa-question-circle"></i> No watermark detected in this image</p>';
-                return;
-            }
-
-            var userId = result.userId;
-
+            var uid = 'wm-inline-uid-' + Date.now();
+            var card = 'wm-inline-card-' + Date.now();
             resultEl.innerHTML = '<div>' +
-                '<p style="color:#2ecc71;font-weight:700;margin-bottom:4px"><i class="fas fa-check-circle"></i> Watermark Found</p>' +
-                '<p style="color:#fff;font-size:14px;margin-bottom:8px">Viewer: <strong>User #' + userId + '</strong></p>' +
-                '<div id="wm-inline-user"><p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up...</p></div>' +
+                '<p style="color:#E8A0B5;font-weight:600;margin-bottom:4px"><i class="fas fa-search-plus"></i> Amplified View — look for "ST:XXXXX"</p>' +
+                '<div id="' + uid + '-amp"></div>' +
+                '<div style="display:flex;gap:8px;margin-top:8px">' +
+                    '<input type="number" id="' + uid + '" placeholder="User ID" style="flex:1;background:#22223A;border:1px solid rgba(255,255,255,0.1);color:#fff;padding:6px 10px;border-radius:6px;font-size:13px" />' +
+                    '<button class="btn btn-sm btn-ghost" onclick="wmInlineLookup(\'' + uid + '\',\'' + card + '\')"><i class="fas fa-search"></i> Look Up</button>' +
+                '</div>' +
+                '<div id="' + card + '" style="margin-top:8px"></div>' +
             '</div>';
+            document.getElementById(uid + '-amp').appendChild(ampCanvas);
+        }
 
+        function wmInlineLookup(inputId, cardId) {
+            var userId = parseInt(document.getElementById(inputId).value);
+            if (!userId) { showToast('Enter the user ID from the amplified image', true); return; }
+            var card = document.getElementById(cardId);
+            card.innerHTML = '<p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up...</p>';
             fetch(API_BASE + '/admin/users?search=' + userId, { headers: authHeaders() })
-                .then(r => r.json())
-                .then(data => {
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     var users = data.users || data;
-                    var found = Array.isArray(users) ? users.find(u => String(u.id) === String(userId)) : null;
-                    var el = document.getElementById('wm-inline-user');
+                    var found = Array.isArray(users) ? users.find(function(u) { return String(u.id) === String(userId); }) : null;
                     if (found) {
-                        el.innerHTML = '<p style="font-size:13px;color:#ccc">' + escapeHtml(found.custom_display_name || found.display_name) + ' (' + escapeHtml(found.email || '') + ')</p>' +
+                        card.innerHTML = '<p style="font-size:13px;color:#ccc">' + escapeHtml(found.custom_display_name || found.display_name) + ' (' + escapeHtml(found.email || '') + ')</p>' +
                             '<div style="display:flex;gap:6px;margin-top:8px">' +
                                 '<button class="btn btn-sm btn-ghost" onclick="quickBan(' + found.id + ', 7)"><i class="fas fa-clock"></i> Suspend 7d</button>' +
                                 '<button class="btn btn-sm btn-danger" onclick="quickBan(' + found.id + ', 0)"><i class="fas fa-ban"></i> Ban</button>' +
                             '</div>';
                     } else {
-                        el.innerHTML = '<p style="color:#f1c40f;font-size:12px">User #' + userId + ' not found</p>';
+                        card.innerHTML = '<p style="color:#f1c40f;font-size:12px">User #' + userId + ' not found</p>';
                     }
-                }).catch(() => {});
+                }).catch(function() { card.innerHTML = '<p style="color:#e74c3c;font-size:12px">Lookup failed</p>'; });
         }
 
         async function applyReportAction(reportId, action, userId) {

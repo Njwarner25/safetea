@@ -184,6 +184,7 @@
         <i class="fas fa-info-circle"></i>
         <strong>How it works:</strong> Every photo uploaded to SafeTea is invisibly watermarked with the uploader's identity using LSB steganography. This watermark survives screenshots, crops, and re-sharing. Even if someone screenshots content, the watermark identifies the source.
       </div>
+      <div id="removal-debug" style="display:none;margin-top:12px;padding:12px 16px;border-radius:10px;background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);font-size:0.82rem;line-height:1.5"></div>
       <div class="removal-note" style="margin-top:10px">
         <i class="fas fa-clock"></i>
         <strong>Auto-deletion policy:</strong> All community posts containing photos of men are automatically removed from feeds within 7 days to further protect privacy.
@@ -195,8 +196,9 @@
 <script>
 (function(){
   // QIM watermark decoder — matches the QIM encoder in app.js
+  var WM_BLOCK = 32;
   var WM_MAGIC = 0xAA;
-  var WM_STEP = 30; // must match encoder
+  var WM_STEP = 30;
 
   var dropZone = document.getElementById('removal-drop-zone');
   var fileInput = document.getElementById('removal-file-input');
@@ -229,65 +231,26 @@
   }
 
   function showResult(msg, type){
-    resultDiv.textContent = msg;
     resultDiv.className = 'removal-result ' + type;
+    resultDiv.innerHTML = msg;
     resultDiv.style.display = 'block';
   }
 
-  // QIM decoder — tries multiple block sizes to handle different DPR values
-  // On 1× displays: blocks are 32px in screenshot
-  // On 2× displays: blocks are 64px in screenshot
-  // On 3× displays: blocks are 96px in screenshot
-  function decodeQIMWatermark(file){
-    return new Promise(function(resolve){
-      var reader = new FileReader();
-      reader.onload = function(){
-        var img = new Image();
-        img.onload = function(){
-          try {
-            var canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            var imageData = ctx.getImageData(0, 0, img.width, img.height);
-            var px = imageData.data;
-            var w = img.width, h = img.height;
-
-            // Try block sizes for common DPR values (1×, 1.5×, 2×, 3×)
-            // and nearby sizes for slight rounding differences
-            var blockSizes = [30, 31, 32, 33, 34, 46, 47, 48, 49, 50, 62, 63, 64, 65, 66, 94, 95, 96, 97, 98];
-            var bestResult = null;
-
-            for(var si = 0; si < blockSizes.length; si++){
-              var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP);
-              if(result && (!bestResult || result.confidence > bestResult.confidence)){
-                bestResult = result;
-              }
-            }
-
-            resolve(bestResult);
-          } catch(e){ resolve(null); }
-        };
-        img.onerror = function(){ resolve(null); };
-        img.src = reader.result;
-      };
-      reader.onerror = function(){ resolve(null); };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function tryQIMDecode(px, w, h, blockSize, step){
-    var blocksX = Math.floor(w / blockSize);
-    var blocksY = Math.floor(h / blockSize);
+  // ===== QIM CORE DECODE (single block size, single origin) =====
+  function tryQIMDecode(px, w, h, blockSize, step, offX, offY){
+    offX = offX || 0;
+    offY = offY || 0;
+    var usableW = w - offX;
+    var usableH = h - offY;
+    var blocksX = Math.floor(usableW / blockSize);
+    var blocksY = Math.floor(usableH / blockSize);
     var totalBlocks = blocksX * blocksY;
     if(totalBlocks < 40) return null;
 
-    // Decode raw bits from each block using QIM
     var rawBits = [];
     for(var b = 0; b < totalBlocks; b++){
-      var bx = (b % blocksX) * blockSize;
-      var by = Math.floor(b / blocksX) * blockSize;
-
+      var bx = offX + (b % blocksX) * blockSize;
+      var by = offY + Math.floor(b / blocksX) * blockSize;
       var sum = 0, count = 0;
       for(var py = by; py < by + blockSize && py < h; py++){
         for(var px2 = bx; px2 < bx + blockSize && px2 < w; px2++){
@@ -297,17 +260,12 @@
         }
       }
       var avg = sum / (count * 3);
-
-      // QIM decode: check which quantization grid the average falls on
       var remainder = ((avg % step) + step) % step;
       rawBits.push((remainder > step / 4 && remainder < 3 * step / 4) ? 1 : 0);
     }
 
-    // Majority vote across payload repetitions
     var payloadLen = 40;
-    var reps = Math.floor(totalBlocks / payloadLen);
-    if(reps === 0) reps = 1;
-
+    var reps = Math.floor(totalBlocks / payloadLen) || 1;
     var votedBits = [];
     for(var i = 0; i < payloadLen; i++){
       var ones = 0, total = 0;
@@ -320,21 +278,18 @@
       votedBits.push(ones > total / 2 ? 1 : 0);
     }
 
-    // Check magic header (0xAA = 10101010)
     var magic = 0;
     for(var i = 0; i < 8; i++) magic = (magic << 1) | votedBits[i];
     if(magic !== WM_MAGIC) return null;
 
-    // Extract user ID (bits 8-39)
     var userId = 0;
     for(var i = 8; i < 40; i++) userId = (userId << 1) | votedBits[i];
     userId = userId >>> 0;
     if(userId === 0) return null;
 
-    // Confidence: what % of raw magic bits match across all repetitions
-    var matchCount = 0, totalChecks = 0;
     var expectedMagic = [];
     for(var i = 7; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
+    var matchCount = 0, totalChecks = 0;
     for(var r = 0; r < reps; r++){
       for(var i = 0; i < 8; i++){
         var idx = r * payloadLen + i;
@@ -344,10 +299,158 @@
       }
     }
     var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
-
-    return { userId: userId, confidence: confidence, blockSize: blockSize };
+    return { userId: userId, confidence: confidence, blockSize: blockSize, offX: offX, offY: offY };
   }
 
+  // ===== FULL DECODE: tries block sizes + sub-region offsets =====
+  function fullDecode(px, w, h){
+    var blockSizes = [32, 64, 96, 31, 33, 48, 30, 34, 63, 65, 62, 66, 95, 97];
+    var best = null;
+
+    // Pass 1: Try from (0,0) — perfect crop
+    for(var si = 0; si < blockSizes.length; si++){
+      var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, 0, 0);
+      if(result && (!best || result.confidence > best.confidence)) best = result;
+    }
+    if(best && best.confidence >= 80) return best;
+
+    // Pass 2: Try sub-region offsets — screenshot may include UI around the photo
+    // Scan y offsets (nav bars, status bars) in increments of 16px
+    // Scan x offsets in case of side padding
+    var xOffsets = [0, 8, 16, 24, 32];
+    var yOffsets = [];
+    for(var y = 0; y <= Math.min(h * 0.6, 600); y += 16) yOffsets.push(y);
+
+    for(var yi = 0; yi < yOffsets.length; yi++){
+      for(var xi = 0; xi < xOffsets.length; xi++){
+        if(yOffsets[yi] === 0 && xOffsets[xi] === 0) continue; // already tried
+        for(var si = 0; si < blockSizes.length; si++){
+          var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, xOffsets[xi], yOffsets[yi]);
+          if(result && (!best || result.confidence > best.confidence)) best = result;
+          if(best && best.confidence >= 80) return best; // early exit
+        }
+      }
+    }
+
+    return best;
+  }
+
+  // ===== DECODE FROM FILE =====
+  function decodeQIMWatermark(file){
+    return new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          try {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var imageData = ctx.getImageData(0, 0, img.width, img.height);
+            console.log('[WM Decode] Image:', img.width + 'x' + img.height, 'pixels');
+            var result = fullDecode(imageData.data, img.width, img.height);
+            if(result){
+              console.log('[WM Decode] FOUND — userId:', result.userId, 'confidence:', result.confidence + '%', 'blockSize:', result.blockSize, 'offset:', result.offX + ',' + result.offY);
+            } else {
+              console.log('[WM Decode] No watermark found after scanning all block sizes and offsets');
+            }
+            resolve(result);
+          } catch(e){
+            console.error('[WM Decode] Error:', e);
+            resolve(null);
+          }
+        };
+        img.onerror = function(){ resolve(null); };
+        img.src = reader.result;
+      };
+      reader.onerror = function(){ resolve(null); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ===== SELF-TEST: proves QIM encode→decode works =====
+  function runSelfTest(){
+    var testW = 400, testH = 300, testUid = 12345;
+    var canvas = document.createElement('canvas');
+    canvas.width = testW; canvas.height = testH;
+    var ctx = canvas.getContext('2d');
+
+    // Draw a gradient test image
+    for(var y = 0; y < testH; y++){
+      for(var x = 0; x < testW; x++){
+        var r = Math.round((x / testW) * 200 + 20);
+        var g = Math.round((y / testH) * 200 + 20);
+        var b = Math.round(((x + y) / (testW + testH)) * 200 + 20);
+        ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    // Read pixels
+    var imageData = ctx.getImageData(0, 0, testW, testH);
+    var px = imageData.data;
+
+    // Apply QIM watermark (same algorithm as app.js encoder)
+    var bits = [];
+    for(var i = 7; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
+    var uid = (testUid >>> 0) & 0xFFFFFFFF;
+    for(var i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
+
+    var blocksX = Math.floor(testW / WM_BLOCK);
+    var blocksY = Math.floor(testH / WM_BLOCK);
+    var totalBlocks = blocksX * blocksY;
+
+    for(var b = 0; b < totalBlocks; b++){
+      var bit = bits[b % bits.length];
+      var bx = (b % blocksX) * WM_BLOCK;
+      var by = Math.floor(b / blocksX) * WM_BLOCK;
+      var sum = 0, count = 0;
+      for(var py = by; py < by + WM_BLOCK && py < testH; py++){
+        for(var px2 = bx; px2 < bx + WM_BLOCK && px2 < testW; px2++){
+          var idx = (py * testW + px2) * 4;
+          sum += px[idx] + px[idx+1] + px[idx+2];
+          count++;
+        }
+      }
+      var avg = sum / (count * 3);
+      var target;
+      if(bit === 0){
+        target = Math.round(avg / WM_STEP) * WM_STEP;
+      } else {
+        target = Math.round((avg - WM_STEP / 2) / WM_STEP) * WM_STEP + WM_STEP / 2;
+      }
+      var delta = Math.round(target - avg);
+      if(delta > WM_STEP / 2) delta = WM_STEP / 2;
+      if(delta < -WM_STEP / 2) delta = -WM_STEP / 2;
+      for(var py = by; py < by + WM_BLOCK && py < testH; py++){
+        for(var px2 = bx; px2 < bx + WM_BLOCK && px2 < testW; px2++){
+          var idx = (py * testW + px2) * 4;
+          var rv = px[idx] + delta;
+          var gv = px[idx+1] + delta;
+          var bv = px[idx+2] + delta;
+          px[idx] = rv < 0 ? 0 : rv > 255 ? 255 : rv;
+          px[idx+1] = gv < 0 ? 0 : gv > 255 ? 255 : gv;
+          px[idx+2] = bv < 0 ? 0 : bv > 255 ? 255 : bv;
+        }
+      }
+    }
+
+    // Now decode
+    var result = tryQIMDecode(px, testW, testH, WM_BLOCK, WM_STEP, 0, 0);
+    var debugEl = document.getElementById('removal-debug');
+    if(result && result.userId === testUid){
+      debugEl.innerHTML = '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> Self-test PASSED — QIM codec works correctly (decoded uid=' + result.userId + ', confidence=' + result.confidence + '%)</span>';
+    } else {
+      debugEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> Self-test FAILED — codec bug detected. Got: ' + JSON.stringify(result) + ', expected uid=' + testUid + '</span>';
+    }
+    debugEl.style.display = 'block';
+  }
+
+  // Run self-test on page load
+  setTimeout(runSelfTest, 500);
+
+  // ===== SUBMIT =====
   submitBtn.addEventListener('click', async function(){
     if(!selectedFile) return;
     submitBtn.disabled = true;
@@ -355,10 +458,8 @@
     resultDiv.style.display = 'none';
 
     try {
-      // Step 1: Decode QIM watermark from screenshot
       var wmResult = await decodeQIMWatermark(selectedFile);
 
-      // Step 2: Read file as base64
       submitBtn.textContent = 'Submitting...';
       var base64 = await new Promise(function(resolve, reject){
         var reader = new FileReader();
@@ -385,24 +486,24 @@
         return;
       }
 
-      var r = await fetch('/api/photos/removal-public', {
+      var resp = await fetch('/api/photos/removal-public', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: jsonBody
       });
 
       var data;
-      try { data = await r.json(); } catch(parseErr) {
-        throw new Error('Server returned status ' + r.status);
+      try { data = await resp.json(); } catch(parseErr) {
+        throw new Error('Server returned status ' + resp.status);
       }
 
       submitBtn.textContent = 'Submit Removal Request';
       if(data.success){
-        if(data.watermark_detected){
-          showResult(data.message, 'success');
-        } else {
-          showResult(data.message, 'info');
+        var msg = data.message;
+        if(wmResult && wmResult.userId){
+          msg += '<br><small style="opacity:0.7">Watermark: viewer #' + wmResult.userId + ' (confidence: ' + wmResult.confidence + '%, block: ' + wmResult.blockSize + 'px, offset: ' + wmResult.offX + ',' + wmResult.offY + ')</small>';
         }
+        showResult(msg, data.watermark_detected ? 'success' : 'info');
         selectedFile = null;
         fileName.style.display = 'none';
         fileInput.value = '';

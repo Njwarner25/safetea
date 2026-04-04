@@ -2400,8 +2400,12 @@
                     wmApply(imageData.data, bufW, bufH, uid);
                     ctx.putImageData(imageData, 0, 0);
                     canvas.style.opacity = '1';
+                    console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'blocks:', Math.floor(bufW/WM_BLOCK) + 'x' + Math.floor(bufH/WM_BLOCK), 'dpr:', dpr);
                 };
-                imgEl.onerror = function() { el.style.opacity = '1'; };
+                imgEl.onerror = function() {
+                    console.warn('[SafeTea WM] Image failed to load:', src);
+                    el.style.opacity = '1';
+                };
                 imgEl.src = src;
             });
         }, { rootMargin: '200px' });

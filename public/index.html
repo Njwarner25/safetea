@@ -842,7 +842,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
 </section>
 <script>
 (function(){
-  fetch('https://www.getsafetea.app/api/cities')
+  fetch('https://getsafetea.app/api/cities')
     .then(function(r){return r.json()})
     .then(function(cities){
       var grid=document.getElementById('cities-grid');
@@ -867,7 +867,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
     });
 
   // Load requested/waitlist cities
-  fetch('https://www.getsafetea.app/api/cities/requested')
+  fetch('https://getsafetea.app/api/cities/requested')
     .then(function(r){return r.json()})
     .then(function(data){
       var container=document.getElementById('requested-cities-landing');

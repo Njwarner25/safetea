@@ -83,8 +83,8 @@ module.exports = async function handler(req, res) {
           ? `https://maps.google.com/?q=${latitude},${longitude}`
           : null;
         const trackingUrl = recordingSessionKey
-          ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
-          : `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`;
+          ? `https://getsafetea.app/recording-status?key=${recordingSessionKey}`
+          : `https://getsafetea.app/date-status?code=${activeCheckout.share_code}`;
 
         const twilioSid = process.env.TWILIO_ACCOUNT_SID;
         const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
@@ -146,8 +146,8 @@ module.exports = async function handler(req, res) {
           displayName: user.custom_display_name || user.display_name || 'A SafeTea user',
           gpsLink: latitude && longitude ? `https://maps.google.com/?q=${latitude},${longitude}` : null,
           trackingUrl: recordingSessionKey
-            ? `https://www.getsafetea.app/recording-status?key=${recordingSessionKey}`
-            : `https://www.getsafetea.app/date-status?code=${activeCheckout.share_code}`
+            ? `https://getsafetea.app/recording-status?key=${recordingSessionKey}`
+            : `https://getsafetea.app/date-status?code=${activeCheckout.share_code}`
         },
       });
     } catch (err) {

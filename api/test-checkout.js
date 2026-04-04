@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
             `Where: The Violet Hour, 1520 N Damen Ave, Chicago, IL 60622\n` +
             `When: ${scheduledTime.toLocaleString('en-US', { timeZone: 'America/Chicago' })}\n` +
             `Expected back: ${estimatedReturn.toLocaleString('en-US', { timeZone: 'America/Chicago' })}\n\n` +
-            `Track status: https://www.getsafetea.app/date-status?code=${shareCode}\n\n` +
+            `Track status: https://getsafetea.app/date-status?code=${shareCode}\n\n` +
             `If they don't check in, you'll be notified.\n\n- SafeTea: Stay Safe`,
           from: twilioPhone,
           to: phone,
@@ -149,7 +149,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       summary: `${results.filter(r => r.status === 'OK').length}/${results.length} steps passed`,
       allPassed: allOk,
-      shareUrl: `https://www.getsafetea.app/date-status?code=${shareCode}`,
+      shareUrl: `https://getsafetea.app/date-status?code=${shareCode}`,
       results,
     });
   } catch (err) {

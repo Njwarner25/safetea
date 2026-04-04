@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
             var excerpt = tResult.transcript.length > 500
               ? tResult.transcript.substring(0, 500) + '...'
               : tResult.transcript;
-            var recordingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
+            var recordingUrl = 'https://getsafetea.app/recording-status?key=' + sessionKey;
 
             var followUpMsg =
               '📝 SOS RECORDING TRANSCRIPT — SafeTea\n' +

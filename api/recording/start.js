@@ -96,7 +96,7 @@ module.exports = async function handler(req, res) {
     const gpsLink = latitude && longitude
       ? `https://maps.google.com/?q=${latitude},${longitude}`
       : null;
-    const trackingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
+    const trackingUrl = `https://getsafetea.app/recording-status?key=${sessionKey}`;
 
     const twilioSid = process.env.TWILIO_ACCOUNT_SID;
     const twilioAuth = process.env.TWILIO_AUTH_TOKEN;

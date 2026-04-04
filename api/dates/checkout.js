@@ -125,7 +125,7 @@ module.exports = async function handler(req, res) {
         notes: notes || null,
         status: 'checked_out',
         createdAt: checkout.created_at,
-        trackingUrl: `https://www.getsafetea.app/date-status?code=${shareCode}`,
+        trackingUrl: `https://getsafetea.app/date-status?code=${shareCode}`,
         contactsNotified: savedContacts.length,
       };
 
@@ -186,7 +186,7 @@ module.exports = async function handler(req, res) {
           createdAt: checkout.created_at,
         },
         report,
-        shareUrl: `https://www.getsafetea.app/date-status?code=${shareCode}`,
+        shareUrl: `https://getsafetea.app/date-status?code=${shareCode}`,
         smsMessage: savedContacts.length > 0
           ? `SafeTea Report sent to ${savedContacts.length} trusted contact(s) via SMS`
           : 'No trusted contacts provided (SMS not sent)',

@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
       userId: user.id,
       role: user.role,
       subscription: 'pro',
-      loginUrl: 'https://www.getsafetea.app/login.html'
+      loginUrl: 'https://getsafetea.app/login.html'
     });
   } catch (err) {
     console.error('Create test user error:', err);

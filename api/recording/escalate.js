@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
       const gpsLink = session.latitude && session.longitude
         ? `https://maps.google.com/?q=${session.latitude},${session.longitude}`
         : null;
-      const recordingUrl = `https://www.getsafetea.app/recording-status?key=${sessionKey}`;
+      const recordingUrl = `https://getsafetea.app/recording-status?key=${sessionKey}`;
 
       const escalationLevel = parseInt(level) || 1;
       const minutesLabel = escalationLevel >= 2 ? '30+' : '15+';

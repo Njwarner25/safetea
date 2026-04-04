@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
           checkedInAt: checkout.checked_in_at,
           safetyRating: checkout.safety_rating,
           createdAt: checkout.created_at,
-          trackingUrl: `https://www.getsafetea.app/date-status?code=${checkout.share_code}`,
+          trackingUrl: `https://getsafetea.app/date-status?code=${checkout.share_code}`,
           contacts: contacts.map(c => ({ name: c.contact_name, notified: c.notified })),
         },
       });
@@ -119,7 +119,7 @@ module.exports = async function handler(req, res) {
           `When: ${dateTime}\n` +
           `${transport ? 'Getting there: ' + transport + (checkout.transport_details ? ' (' + checkout.transport_details + ')' : '') + '\n' : ''}` +
           `${checkout.estimated_return ? 'Expected back: ' + new Date(checkout.estimated_return).toLocaleString('en-US', { timeZone: 'America/Chicago' }) + '\n' : ''}` +
-          `\nTrack live: https://www.getsafetea.app/date-status?code=${checkout.share_code}\n` +
+          `\nTrack live: https://getsafetea.app/date-status?code=${checkout.share_code}\n` +
           `━━━━━━━━━━━━━━━━━\n` +
           `Sent via SafeTea`;
 
@@ -169,7 +169,7 @@ module.exports = async function handler(req, res) {
           `When: ${dateTime}\n` +
           `${transport ? 'Getting there: ' + transport + (checkout.transport_details ? ' - ' + checkout.transport_details : '') + '\n' : ''}` +
           `${checkout.estimated_return ? 'Expected back: ' + new Date(checkout.estimated_return).toLocaleString('en-US', { timeZone: 'America/Chicago' }) + '\n' : ''}` +
-          `\nTrack my status: https://www.getsafetea.app/date-status?code=${checkout.share_code}`;
+          `\nTrack my status: https://getsafetea.app/date-status?code=${checkout.share_code}`;
 
         // Insert into messages table (uses existing inbox system)
         await run(

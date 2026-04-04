@@ -1466,7 +1466,7 @@
                 var user = getUser();
                 var name = user ? (user.custom_display_name || user.display_name || 'A SafeTea user') : 'A SafeTea user';
                 var gps = state.lastLat && state.lastLng ? 'https://maps.google.com/?q=' + state.lastLat + ',' + state.lastLng : null;
-                var tracking = 'https://www.getsafetea.app/recording-status?key=' + state.sessionKey;
+                var tracking = 'https://getsafetea.app/recording-status?key=' + state.sessionKey;
                 shareEmergencyReport(name, gps, tracking);
             }
         };
@@ -1618,7 +1618,7 @@
         // Start MediaRecorder — stop/restart every 30s so each clip is a complete playable WebM file
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
         var recorderOptions = { mimeType: mimeType };
-        try { recorderOptions.audioBitsPerSecond = 32000; } catch (e) {}
+        try { recorderOptions.audioBitsPerSecond = 128000; } catch (e) {}
         state.audioStream = stream; // keep reference for restart cycle
 
         state.createRecorder = function() {

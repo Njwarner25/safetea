@@ -2264,14 +2264,15 @@
     // Tolerates noise up to ±step/4 = ±7.5 per block average
 
     var WM_BLOCK = 32;
-    var WM_MAGIC = 0xAA;
-    var WM_STEP = 30; // QIM quantization step — higher = more robust, slightly more visible
+    var WM_MAGIC = 0xAA55; // 16-bit magic header — 1/65536 false positive rate
+    var WM_BITS = 40;      // total payload: 16 magic + 24 user ID
+    var WM_STEP = 30;      // QIM quantization step
 
     function wmBuildPayload(userId) {
-        var uid = (userId >>> 0) & 0xFFFFFFFF;
+        var uid = (userId >>> 0) & 0xFFFFFF; // 24-bit user ID (supports up to 16.7M)
         var bits = [];
-        for (var i = 7; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
-        for (var i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
+        for (var i = 15; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
+        for (var i = 23; i >= 0; i--) bits.push((uid >> i) & 1);
         return bits;
     }
 

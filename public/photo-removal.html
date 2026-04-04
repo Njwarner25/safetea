@@ -197,7 +197,8 @@
 (function(){
   // QIM watermark decoder — matches the QIM encoder in app.js
   var WM_BLOCK = 32;
-  var WM_MAGIC = 0xAA;
+  var WM_MAGIC = 0xAA55; // 16-bit magic — matches encoder
+  var WM_BITS = 40;      // 16 magic + 24 user ID
   var WM_STEP = 30;
 
   var dropZone = document.getElementById('removal-drop-zone');
@@ -264,7 +265,7 @@
       rawBits.push((remainder > step / 4 && remainder < 3 * step / 4) ? 1 : 0);
     }
 
-    var payloadLen = 40;
+    var payloadLen = WM_BITS;
     var reps = Math.floor(totalBlocks / payloadLen) || 1;
     var votedBits = [];
     for(var i = 0; i < payloadLen; i++){
@@ -278,20 +279,23 @@
       votedBits.push(ones > total / 2 ? 1 : 0);
     }
 
+    // 16-bit magic header check (0xAA55)
     var magic = 0;
-    for(var i = 0; i < 8; i++) magic = (magic << 1) | votedBits[i];
+    for(var i = 0; i < 16; i++) magic = (magic << 1) | votedBits[i];
     if(magic !== WM_MAGIC) return null;
 
+    // 24-bit user ID (bits 16-39)
     var userId = 0;
-    for(var i = 8; i < 40; i++) userId = (userId << 1) | votedBits[i];
+    for(var i = 16; i < 40; i++) userId = (userId << 1) | votedBits[i];
     userId = userId >>> 0;
     if(userId === 0) return null;
 
+    // Confidence: % of magic bits correct across all repetitions
     var expectedMagic = [];
-    for(var i = 7; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
+    for(var i = 15; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
     var matchCount = 0, totalChecks = 0;
     for(var r = 0; r < reps; r++){
-      for(var i = 0; i < 8; i++){
+      for(var i = 0; i < 16; i++){
         var idx = r * payloadLen + i;
         if(idx >= totalBlocks) break;
         totalChecks++;
@@ -299,35 +303,42 @@
       }
     }
     var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
+    if(confidence < 65) return null; // reject weak matches
     return { userId: userId, confidence: confidence, blockSize: blockSize, offX: offX, offY: offY };
   }
 
   // ===== FULL DECODE: tries block sizes + sub-region offsets =====
   function fullDecode(px, w, h){
-    var blockSizes = [32, 64, 96, 31, 33, 48, 30, 34, 63, 65, 62, 66, 95, 97];
+    // Primary block sizes: 32 (1× DPR), 64 (2× DPR), 96 (3× DPR)
+    // Plus ±1 for rounding differences
+    var blockSizes = [32, 64, 96, 31, 33, 63, 65, 95, 97];
     var best = null;
 
-    // Pass 1: Try from (0,0) — perfect crop
+    // Pass 1: Try from (0,0) — perfectly cropped photo
     for(var si = 0; si < blockSizes.length; si++){
       var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, 0, 0);
       if(result && (!best || result.confidence > best.confidence)) best = result;
     }
-    if(best && best.confidence >= 80) return best;
+    if(best && best.confidence >= 75) return best;
 
-    // Pass 2: Try sub-region offsets — screenshot may include UI around the photo
-    // Scan y offsets (nav bars, status bars) in increments of 16px
-    // Scan x offsets in case of side padding
-    var xOffsets = [0, 8, 16, 24, 32];
-    var yOffsets = [];
-    for(var y = 0; y <= Math.min(h * 0.6, 600); y += 16) yOffsets.push(y);
+    // Pass 2: Try y-offsets for screenshots with UI above the photo
+    // Scan in 32px increments (one block) up to 50% of image height
+    for(var offY = 32; offY <= Math.min(h * 0.5, 500); offY += 32){
+      for(var si = 0; si < blockSizes.length; si++){
+        var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, 0, offY);
+        if(result && (!best || result.confidence > best.confidence)) best = result;
+        if(best && best.confidence >= 75) return best;
+      }
+    }
 
-    for(var yi = 0; yi < yOffsets.length; yi++){
+    // Pass 3: Also try with small x-offsets (side padding)
+    var xOffsets = [16, 32];
+    for(var offY = 0; offY <= Math.min(h * 0.5, 500); offY += 32){
       for(var xi = 0; xi < xOffsets.length; xi++){
-        if(yOffsets[yi] === 0 && xOffsets[xi] === 0) continue; // already tried
-        for(var si = 0; si < blockSizes.length; si++){
-          var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, xOffsets[xi], yOffsets[yi]);
+        for(var si = 0; si < 3; si++){ // only primary sizes for x-offset scan
+          var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP, xOffsets[xi], offY);
           if(result && (!best || result.confidence > best.confidence)) best = result;
-          if(best && best.confidence >= 80) return best; // early exit
+          if(best && best.confidence >= 75) return best;
         }
       }
     }
@@ -398,9 +409,9 @@
 
       // Apply QIM watermark (same algorithm as app.js wmApply)
       var bits = [];
-      for(var mi = 7; mi >= 0; mi--) bits.push((WM_MAGIC >> mi) & 1);
-      var uid = (testUid >>> 0) & 0xFFFFFFFF;
-      for(var mi = 31; mi >= 0; mi--) bits.push((uid >> mi) & 1);
+      for(var mi = 15; mi >= 0; mi--) bits.push((WM_MAGIC >> mi) & 1);
+      var uid = (testUid >>> 0) & 0xFFFFFF; // 24-bit
+      for(var mi = 23; mi >= 0; mi--) bits.push((uid >> mi) & 1);
 
       var blocksX = Math.floor(testW / WM_BLOCK);
       var blocksY = Math.floor(testH / WM_BLOCK);

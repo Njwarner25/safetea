@@ -104,7 +104,7 @@ module.exports = async function handler(req, res) {
     var gpsLink = latitude && longitude
       ? 'https://maps.google.com/?q=' + latitude + ',' + longitude
       : (session.latitude && session.longitude ? 'https://maps.google.com/?q=' + session.latitude + ',' + session.longitude : null);
-    var trackingUrl = 'https://getsafetea.app/recording-status?key=' + sessionKey;
+    var trackingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
 
     // Short SMS ping via Twilio + full email via SendGrid
     var shortSms = minutesActive <= 1

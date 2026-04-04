@@ -71,7 +71,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       success: true,
       summary: summary.formatted,
-      shareUrl: `https://getsafetea.app/date-status?code=${checkout.share_code}`,
+      shareUrl: `https://www.getsafetea.app/date-status?code=${checkout.share_code}`,
       smsText: summary.smsText,
       smsSent,
     });
@@ -116,7 +116,7 @@ function buildSummary(checkout, user) {
     `When: ${formatted.dateTime}`,
     formatted.estimatedReturn ? `Expected back by: ${formatted.estimatedReturn}` : '',
     ``,
-    `Track status: https://getsafetea.app/date-status?code=${formatted.shareCode}`,
+    `Track status: https://www.getsafetea.app/date-status?code=${formatted.shareCode}`,
     ``,
     `- SafeTea: Stay Safe`,
   ].filter(Boolean).join('\n');

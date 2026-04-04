@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         success: true,
         referralCode: codeRow.code,
-        shareUrl: `https://getsafetea.app/?ref=${codeRow.code}`,
+        shareUrl: `https://www.getsafetea.app/?ref=${codeRow.code}`,
         referralCount: count,
         referrals: referrals || [],
         activeRewards: activeRewards || [],

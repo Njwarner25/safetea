@@ -1159,7 +1159,7 @@
         var eReturn = report.estimatedReturn || report.estimated_return;
         if (eReturn) rows += reportRow('fa-home', 'Expected Back', formatDateTime(eReturn));
         if (report.notes) rows += reportRow('fa-sticky-note', 'Notes', escapeHtmlSafe(report.notes));
-        var trackUrl = report.trackingUrl || ('https://getsafetea.app/date-status?code=' + (report.shareCode || report.share_code || ''));
+        var trackUrl = report.trackingUrl || ('https://www.getsafetea.app/date-status?code=' + (report.shareCode || report.share_code || ''));
         rows += reportRow('fa-link', 'Live Tracking', '<a href="' + escapeHtmlSafe(trackUrl) + '" target="_blank" style="color:#E8A0B5;text-decoration:underline;word-break:break-all">' + escapeHtmlSafe(trackUrl) + '</a>');
 
         var userName = report.userName || report.user_name || '';
@@ -1225,7 +1225,7 @@
     window.shareDateLink = function() {
         var code = activeDateData && (activeDateData.share_code || activeDateData.shareCode);
         if (!code) { if (typeof showToast === 'function') showToast('No active date link available'); return; }
-        var url = 'https://getsafetea.app/date-status?code=' + code;
+        var url = 'https://www.getsafetea.app/date-status?code=' + code;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url).then(function() { if (typeof showToast === 'function') showToast('Share link copied!'); });
         }
@@ -1241,7 +1241,7 @@
         var timeStr = c.scheduledTime || c.scheduled_time;
         var dateTime = timeStr ? formatDateTime(timeStr) : '';
         var code = c.shareCode || c.share_code || '';
-        var trackUrl = 'https://getsafetea.app/date-status?code=' + code;
+        var trackUrl = 'https://www.getsafetea.app/date-status?code=' + code;
 
         var msg = 'SafeTea Report\n';
         msg += 'Meeting: ' + name + '\n';

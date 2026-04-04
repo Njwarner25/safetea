@@ -46,8 +46,8 @@ module.exports = async function handler(req, res) {
         price: pkg.priceId,
         quantity: 1,
       }],
-      success_url: 'https://getsafetea.app/photo-check-success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://getsafetea.app/photo-check-cancel',
+      success_url: 'https://www.getsafetea.app/photo-check-success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://www.getsafetea.app/photo-check-cancel',
       metadata: {
         user_id: user.id.toString(),
         type: 'photo_check_extra',

@@ -1466,7 +1466,7 @@
                 var user = getUser();
                 var name = user ? (user.custom_display_name || user.display_name || 'A SafeTea user') : 'A SafeTea user';
                 var gps = state.lastLat && state.lastLng ? 'https://maps.google.com/?q=' + state.lastLat + ',' + state.lastLng : null;
-                var tracking = 'https://getsafetea.app/recording-status?key=' + state.sessionKey;
+                var tracking = 'https://www.getsafetea.app/recording-status?key=' + state.sessionKey;
                 shareEmergencyReport(name, gps, tracking);
             }
         };

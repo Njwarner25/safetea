@@ -43,7 +43,7 @@ function cors(res, req) {
     // SECURITY: Restrict CORS to trusted origins only
     const allowedOrigins = [
       'https://getsafetea.app',
-      'https://getsafetea.app',
+      'https://www.getsafetea.app',
       'https://safetea-landing.vercel.app',
     ];
     // Allow localhost in development
@@ -58,7 +58,7 @@ function cors(res, req) {
       res.setHeader('Access-Control-Allow-Origin', '*');
     } else {
       // Unknown origin — set to main domain (browser will block cross-origin)
-      res.setHeader('Access-Control-Allow-Origin', 'https://getsafetea.app');
+      res.setHeader('Access-Control-Allow-Origin', 'https://www.getsafetea.app');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');

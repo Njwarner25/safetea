@@ -227,30 +227,32 @@
   // Resize image to stay under Vercel 4.5MB body limit
   function resizeImage(file, maxBytes){
     return new Promise(function(resolve){
-      var img = new Image();
-      img.onload = function(){
-        var canvas = document.createElement('canvas');
-        var w = img.width, h = img.height;
-        // Scale down if needed (max 2000px on longest side)
-        var maxDim = 2000;
-        if(w > maxDim || h > maxDim){
-          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h); h = maxDim; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        // Try quality levels until under limit
-        var quality = 0.9;
-        var dataUrl;
-        do {
-          dataUrl = canvas.toDataURL('image/jpeg', quality);
-          quality -= 0.1;
-        } while(dataUrl.length > maxBytes && quality > 0.1);
-        URL.revokeObjectURL(img.src);
-        resolve(dataUrl);
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          var canvas = document.createElement('canvas');
+          var w = img.width, h = img.height;
+          var maxDim = 2000;
+          if(w > maxDim || h > maxDim){
+            if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          var quality = 0.9;
+          var dataUrl;
+          do {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+            quality -= 0.1;
+          } while(dataUrl.length > maxBytes && quality > 0.1);
+          resolve(dataUrl);
+        };
+        img.onerror = function(){ resolve(reader.result); };
+        img.src = reader.result;
       };
-      img.onerror = function(){ URL.revokeObjectURL(img.src); resolve(null); };
-      img.src = URL.createObjectURL(file);
+      reader.onerror = function(){ resolve(null); };
+      reader.readAsDataURL(file);
     });
   }
 

@@ -499,6 +499,11 @@
                         <p style="color:#666;font-size:12px">Supports PNG, JPG, WebP</p>
                         <input type="file" id="wm-file-input" accept="image/*" style="display:none" onchange="handleWmFile(this.files[0])">
                     </div>
+                    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-ghost" onclick="wmSelfTest()" style="font-size:12px"><i class="fas fa-vial"></i> Run Self-Test</button>
+                        <button class="btn btn-ghost" onclick="wmGenerateTestImage()" style="font-size:12px"><i class="fas fa-image"></i> Generate Test Image</button>
+                    </div>
+                    <div id="wm-selftest-result" style="margin-top:12px;display:none"></div>
                     <div id="wm-preview" style="display:none;margin-top:20px">
                         <div style="display:flex;gap:20px;flex-wrap:wrap">
                             <div style="flex:1;min-width:200px">
@@ -1775,18 +1780,253 @@
                 }
             }
             var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
-            if (confidence < 65) return null;
+            if (confidence < 55) return null;
             return { userId: userId, confidence: confidence, blockSize: blockSize };
         }
 
         function adminDecodeMultiScale(px, w, h) {
-            var blockSizes = [32, 64, 96, 31, 33, 63, 65, 95, 97];
+            var blockSizes = [32, 16, 24, 48, 64, 96, 28, 30, 31, 33, 34, 36, 40, 63, 65, 95, 97];
             var best = null;
             for (var i = 0; i < blockSizes.length; i++) {
                 var result = adminQIMDecode(px, w, h, blockSizes[i], WM_STEP);
-                if (result && (!best || result.confidence > best.confidence)) best = result;
+                if (result) {
+                    console.log('[WM Decode] block=' + blockSizes[i] + ' userId=' + result.userId + ' conf=' + result.confidence + '%');
+                    if (!best || result.confidence > best.confidence) best = result;
+                }
             }
+            if (!best) console.log('[WM Decode] No watermark found in ' + w + 'x' + h + ' image across ' + blockSizes.length + ' block sizes');
             return best;
+        }
+
+        // ===== WATERMARK ENCODER (for self-test — mirrors app.js wmApply) =====
+        function wmBuildPayloadAdmin(userId) {
+            var uid = (userId >>> 0) & 0xFFFFFF;
+            var bits = [];
+            for (var i = 15; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
+            for (var i = 23; i >= 0; i--) bits.push((uid >> i) & 1);
+            return bits;
+        }
+
+        function wmApplyAdmin(px, w, h, userId) {
+            var blockSize = 32;
+            var step = WM_STEP;
+            var bits = wmBuildPayloadAdmin(userId);
+            var blocksX = Math.floor(w / blockSize);
+            var blocksY = Math.floor(h / blockSize);
+            var totalBlocks = blocksX * blocksY;
+            if (totalBlocks === 0) return;
+
+            for (var b = 0; b < totalBlocks; b++) {
+                var bit = bits[b % bits.length];
+                var bx = (b % blocksX) * blockSize;
+                var by = Math.floor(b / blocksX) * blockSize;
+
+                var sum = 0, count = 0;
+                for (var py = by; py < by + blockSize && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
+                        var idx = (py * w + px2) * 4;
+                        sum += px[idx] + px[idx + 1] + px[idx + 2];
+                        count++;
+                    }
+                }
+                var avg = sum / (count * 3);
+
+                var target;
+                if (bit === 0) {
+                    target = Math.round(avg / step) * step;
+                } else {
+                    target = Math.round((avg - step / 2) / step) * step + step / 2;
+                }
+                var delta = Math.round(target - avg);
+                if (delta > step / 2) delta = step / 2;
+                if (delta < -step / 2) delta = -step / 2;
+
+                for (var py = by; py < by + blockSize && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
+                        var idx = (py * w + px2) * 4;
+                        var r = px[idx] + delta;
+                        var g = px[idx + 1] + delta;
+                        var bl = px[idx + 2] + delta;
+                        px[idx] = r < 0 ? 0 : r > 255 ? 255 : r;
+                        px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+                        px[idx + 2] = bl < 0 ? 0 : bl > 255 ? 255 : bl;
+                    }
+                }
+            }
+        }
+
+        // ===== SELF-TEST: encode → decode round-trip =====
+        function wmSelfTest() {
+            var resultEl = document.getElementById('wm-selftest-result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Running self-test...</p>';
+
+            var testUserId = 42;
+            var w = 640, h = 480;
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+
+            // Draw a gradient with some noise (simulates a real photo)
+            for (var y = 0; y < h; y++) {
+                for (var x = 0; x < w; x++) {
+                    var r = Math.floor(50 + (x / w) * 150 + Math.random() * 10);
+                    var g = Math.floor(80 + (y / h) * 120 + Math.random() * 10);
+                    var b = Math.floor(100 + ((x + y) / (w + h)) * 100 + Math.random() * 10);
+                    ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+
+            // Read pixels, apply watermark
+            var imageData = ctx.getImageData(0, 0, w, h);
+            wmApplyAdmin(imageData.data, w, h, testUserId);
+            ctx.putImageData(imageData, 0, 0);
+
+            // Test 1: decode directly from canvas (no compression)
+            var rawData = ctx.getImageData(0, 0, w, h);
+            var rawResult = adminDecodeMultiScale(rawData.data, w, h);
+
+            // Test 2: encode to JPEG 0.95 and decode (simulates stegoEmbed output)
+            var jpegUrl = canvas.toDataURL('image/jpeg', 0.95);
+            var jpegImg = new Image();
+            jpegImg.onload = function() {
+                var c2 = document.createElement('canvas');
+                c2.width = jpegImg.width; c2.height = jpegImg.height;
+                var ctx2 = c2.getContext('2d');
+                ctx2.drawImage(jpegImg, 0, 0);
+                var jpegData = ctx2.getImageData(0, 0, c2.width, c2.height);
+                var jpegResult = adminDecodeMultiScale(jpegData.data, c2.width, c2.height);
+
+                // Test 3: encode to PNG and decode (simulates screenshot)
+                var pngUrl = canvas.toDataURL('image/png');
+                var pngImg = new Image();
+                pngImg.onload = function() {
+                    var c3 = document.createElement('canvas');
+                    c3.width = pngImg.width; c3.height = pngImg.height;
+                    var ctx3 = c3.getContext('2d');
+                    ctx3.drawImage(pngImg, 0, 0);
+                    var pngData = ctx3.getImageData(0, 0, c3.width, c3.height);
+                    var pngResult = adminDecodeMultiScale(pngData.data, c3.width, c3.height);
+
+                    // Show results
+                    var html = '<div style="background:#141428;border-radius:10px;padding:16px">';
+                    html += '<h4 style="color:#fff;margin-bottom:12px;font-size:14px"><i class="fas fa-vial" style="color:#E8A0B5"></i> Self-Test Results (expected userId=' + testUserId + ')</h4>';
+
+                    // Raw test
+                    html += '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
+                    if (rawResult && rawResult.userId === testUserId) {
+                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> RAW (no compression): PASS</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + rawResult.userId + ' conf=' + rawResult.confidence + '% block=' + rawResult.blockSize + '</span>';
+                    } else {
+                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> RAW (no compression): FAIL</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (rawResult ? 'got userId=' + rawResult.userId : 'no detection') + '</span>';
+                    }
+                    html += '</div>';
+
+                    // JPEG test
+                    html += '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
+                    if (jpegResult && jpegResult.userId === testUserId) {
+                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> JPEG 0.95: PASS</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + jpegResult.userId + ' conf=' + jpegResult.confidence + '% block=' + jpegResult.blockSize + '</span>';
+                    } else {
+                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> JPEG 0.95: FAIL</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (jpegResult ? 'got userId=' + jpegResult.userId : 'no detection') + '</span>';
+                    }
+                    html += '</div>';
+
+                    // PNG test
+                    html += '<div style="padding:6px 0">';
+                    if (pngResult && pngResult.userId === testUserId) {
+                        html += '<span style="color:#2ecc71"><i class="fas fa-check-circle"></i> PNG (screenshot sim): PASS</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">userId=' + pngResult.userId + ' conf=' + pngResult.confidence + '% block=' + pngResult.blockSize + '</span>';
+                    } else {
+                        html += '<span style="color:#e74c3c"><i class="fas fa-times-circle"></i> PNG (screenshot sim): FAIL</span>';
+                        html += '<span style="color:#8080A0;font-size:11px;margin-left:8px">' + (pngResult ? 'got userId=' + pngResult.userId : 'no detection') + '</span>';
+                    }
+                    html += '</div>';
+
+                    var allPass = rawResult && rawResult.userId === testUserId &&
+                                  jpegResult && jpegResult.userId === testUserId &&
+                                  pngResult && pngResult.userId === testUserId;
+                    if (allPass) {
+                        html += '<p style="color:#2ecc71;font-weight:600;margin-top:12px;font-size:13px"><i class="fas fa-check-double"></i> Encode/decode pipeline working. If real images fail, the issue is CORS or image delivery.</p>';
+                    } else {
+                        html += '<p style="color:#e74c3c;font-weight:600;margin-top:12px;font-size:13px"><i class="fas fa-exclamation-triangle"></i> Encode/decode pipeline has a bug. Contact support.</p>';
+                    }
+
+                    html += '</div>';
+                    resultEl.innerHTML = html;
+                };
+                pngImg.src = pngUrl;
+            };
+            jpegImg.src = jpegUrl;
+        }
+
+        // ===== GENERATE TEST IMAGE: create watermarked image for download =====
+        function wmGenerateTestImage() {
+            var resultEl = document.getElementById('wm-selftest-result');
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Generating watermarked test image...</p>';
+
+            var testUserId = 12345;
+            var w = 800, h = 600;
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+
+            // Draw a realistic photo-like gradient
+            var gradient = ctx.createLinearGradient(0, 0, w, h);
+            gradient.addColorStop(0, '#4A7C9B');
+            gradient.addColorStop(0.3, '#7B9DAF');
+            gradient.addColorStop(0.6, '#C5A882');
+            gradient.addColorStop(1, '#8E6B5A');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+
+            // Add noise to simulate photo texture
+            var imgData = ctx.getImageData(0, 0, w, h);
+            for (var i = 0; i < imgData.data.length; i += 4) {
+                var noise = Math.floor(Math.random() * 12 - 6);
+                imgData.data[i] = Math.max(0, Math.min(255, imgData.data[i] + noise));
+                imgData.data[i+1] = Math.max(0, Math.min(255, imgData.data[i+1] + noise));
+                imgData.data[i+2] = Math.max(0, Math.min(255, imgData.data[i+2] + noise));
+            }
+
+            // Apply watermark
+            wmApplyAdmin(imgData.data, w, h, testUserId);
+            ctx.putImageData(imgData, 0, 0);
+
+            // Add text overlay
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '20px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('SafeTea Watermark Test — userId=' + testUserId, w / 2, h / 2);
+            ctx.font = '14px Inter, sans-serif';
+            ctx.fillText('Upload this image to the decoder above to verify detection', w / 2, h / 2 + 30);
+
+            // Download as PNG (lossless — guaranteed to work)
+            var pngUrl = canvas.toDataURL('image/png');
+            var a = document.createElement('a');
+            a.href = pngUrl;
+            a.download = 'safetea-watermark-test-uid' + testUserId + '.png';
+            a.click();
+
+            // Immediately verify
+            var verifyData = ctx.getImageData(0, 0, w, h);
+            var verifyResult = adminDecodeMultiScale(verifyData.data, w, h);
+
+            if (verifyResult && verifyResult.userId === testUserId) {
+                resultEl.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
+                    '<p style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Test image downloaded (userId=' + testUserId + ')</p>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-top:4px">Self-verify: PASS (conf=' + verifyResult.confidence + '%). Upload this PNG to the decoder above to test the full pipeline.</p>' +
+                '</div>';
+            } else {
+                resultEl.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
+                    '<p style="color:#e74c3c;font-weight:600"><i class="fas fa-times-circle"></i> Self-verify FAILED for generated test image</p>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-top:4px">' + (verifyResult ? 'Detected userId=' + verifyResult.userId + ' (expected ' + testUserId + ')' : 'No watermark detected at all') + '</p>' +
+                '</div>';
+            }
         }
 
         function handleWmDrop(event) {
@@ -1815,17 +2055,55 @@
 
         function decodeWatermark(ctx, w, h) {
             var resultEl = document.getElementById('wm-result');
-            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding QIM watermark (trying multiple scales)...</p>';
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding QIM watermark (' + w + 'x' + h + ', trying 17 block sizes)...</p>';
+            console.log('[WM] Decoding image ' + w + 'x' + h + ' = ' + (w*h) + ' pixels');
 
             var imageData = ctx.getImageData(0, 0, w, h);
             var result = adminDecodeMultiScale(imageData.data, w, h);
 
             if (!result) {
+                // Debug: show best partial matches
+                var debugInfo = '';
+                var blockSizes = [32, 16, 24, 48, 64, 96, 28, 30, 31, 33, 34, 36, 40, 63, 65, 95, 97];
+                for (var di = 0; di < blockSizes.length; di++) {
+                    var bs = blockSizes[di];
+                    var bx2 = Math.floor(w / bs), by2 = Math.floor(h / bs);
+                    if (bx2 * by2 < 40) continue;
+                    // Quick check: compute first 16 raw bits and see how many match magic
+                    var rawTest = [];
+                    for (var tb = 0; tb < Math.min(16, bx2 * by2); tb++) {
+                        var tbx = (tb % bx2) * bs;
+                        var tby = Math.floor(tb / bx2) * bs;
+                        var tsum = 0, tcount = 0;
+                        for (var tpy = tby; tpy < tby + bs && tpy < h; tpy++) {
+                            for (var tpx = tbx; tpx < tbx + bs && tpx < w; tpx++) {
+                                var tidx = (tpy * w + tpx) * 4;
+                                tsum += imageData.data[tidx] + imageData.data[tidx+1] + imageData.data[tidx+2];
+                                tcount++;
+                            }
+                        }
+                        var tavg = tsum / (tcount * 3);
+                        var trem = ((tavg % WM_STEP) + WM_STEP) % WM_STEP;
+                        rawTest.push((trem > WM_STEP / 4 && trem < 3 * WM_STEP / 4) ? 1 : 0);
+                    }
+                    var expectedMagicBits = [];
+                    for (var ei = 15; ei >= 0; ei--) expectedMagicBits.push((WM_MAGIC >> ei) & 1);
+                    var match = 0;
+                    for (var mi = 0; mi < rawTest.length; mi++) {
+                        if (rawTest[mi] === expectedMagicBits[mi]) match++;
+                    }
+                    if (match >= 8) { // show if at least half match
+                        debugInfo += 'bs=' + bs + ': ' + match + '/16 magic bits match; ';
+                    }
+                }
+
                 resultEl.innerHTML = '<div style="text-align:center;padding:20px">' +
                     '<i class="fas fa-question-circle" style="font-size:32px;color:#f1c40f;margin-bottom:12px;display:block"></i>' +
                     '<p style="color:#fff;font-weight:600;margin-bottom:8px">No Watermark Detected</p>' +
                     '<p style="color:#8080A0;font-size:13px">This image may not have been captured from SafeTea, or the watermark was destroyed by heavy compression/editing.</p>' +
-                    '<p style="color:#666;font-size:11px;margin-top:8px">Tried block sizes: 30-34, 46-50, 62-66, 94-98</p>' +
+                    '<p style="color:#666;font-size:11px;margin-top:8px">Image: ' + w + 'x' + h + ' | Tried 17 block sizes (16-97)</p>' +
+                    (debugInfo ? '<p style="color:#555;font-size:10px;margin-top:6px;word-break:break-all">Partial: ' + debugInfo + '</p>' : '') +
+                    '<p style="color:#555;font-size:11px;margin-top:8px">Use "Run Self-Test" below to verify the encode/decode pipeline works.</p>' +
                 '</div>';
                 return;
             }

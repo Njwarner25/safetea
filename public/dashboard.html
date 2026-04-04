@@ -4071,6 +4071,9 @@
                     return;
                 }
                 feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
+                startPhotoTimerUpdates();
+                // Activate steganographic watermarks on photo post canvases
+                if (typeof observeStegoCanvases === 'function') observeStegoCanvases(feed);
             })
             .catch(function(err) {
                 feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">Failed to load posts. Try again.</div>';
@@ -4088,8 +4091,20 @@
         var neighborhood = post.neighborhood ? ' &middot; ' + escapeHtml(post.neighborhood) : '';
         var cityTag = post.city ? ' <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:1px 6px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtml(post.city) + '</span>' : '';
         var imageHtml = '';
+        var photoTimerHtml = '';
         if (post.image_url) {
-            imageHtml = '<img class="community-post-image" src="' + escapeHtml(post.image_url) + '" alt="Post image" loading="lazy">';
+            imageHtml = '<div style="margin-bottom:8px;position:relative"><canvas data-stego-src="' + escapeHtml(post.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
+            // 7-day auto-removal countdown for photo posts
+            var postCreated = new Date(post.created_at).getTime();
+            var expiresAt = postCreated + 7 * 24 * 60 * 60 * 1000;
+            var remaining = expiresAt - Date.now();
+            if (remaining > 0) {
+                var days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+                var hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                var timerText = days > 0 ? 'Expires in ' + days + 'd ' + hours + 'h' : (hours > 0 ? 'Expires in ' + hours + 'h' : 'Expires today');
+                var timerColor = days < 1 ? '#e74c3c' : (days < 3 ? '#e67e22' : '#8080A0');
+                photoTimerHtml = '<div class="photo-expire-timer" data-expires="' + expiresAt + '" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600;color:' + timerColor + ';background:rgba(128,128,160,0.1);margin-top:6px"><i class="far fa-clock" style="font-size:9px"></i> ' + timerText + '</div>';
+            }
         }
         var likeCount = parseInt(post.like_count) || 0;
         var dislikeCount = parseInt(post.dislike_count) || 0;
@@ -4118,6 +4133,7 @@
             '</div>' +
             '<div class="community-post-body">' + formatPostContent(post.body || post.content) + '</div>' +
             imageHtml +
+            photoTimerHtml +
             '<div class="community-post-actions">' +
                 '<button id="clike-btn-' + post.id + '" class="community-post-action" onclick="communityVote(' + post.id + ',\'like\')" style="color:' + (userLiked ? '#E8A0B5' : '') + '"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="clike-count-' + post.id + '">' + likeCount + '</span></button>' +
                 '<button id="cdislike-btn-' + post.id + '" class="community-post-action" onclick="communityVote(' + post.id + ',\'dislike\')" style="color:' + (userDisliked ? '#E8A0B5' : '') + '"><i class="' + (userDisliked ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="cdislike-count-' + post.id + '">' + dislikeCount + '</span></button>' +
@@ -4130,6 +4146,31 @@
             '</div>' +
             '<div id="creplies-' + post.id + '" style="display:none;padding:12px 0 0;border-top:1px solid rgba(0,0,0,0.06);margin-top:12px"></div>' +
         '</div>';
+    }
+
+    // ─── Photo Post Expiry Timer Updates ───
+    var _photoTimerInterval = null;
+    function startPhotoTimerUpdates() {
+        if (_photoTimerInterval) clearInterval(_photoTimerInterval);
+        _photoTimerInterval = setInterval(function() {
+            var timers = document.querySelectorAll('.photo-expire-timer');
+            for (var t = 0; t < timers.length; t++) {
+                var el = timers[t];
+                var exp = parseInt(el.getAttribute('data-expires'));
+                if (!exp) continue;
+                var remaining = exp - Date.now();
+                if (remaining <= 0) {
+                    el.innerHTML = '<i class="far fa-clock" style="font-size:9px"></i> Expired';
+                    el.style.color = '#e74c3c';
+                    continue;
+                }
+                var days = Math.floor(remaining / (24 * 60 * 60 * 1000));
+                var hours = Math.floor((remaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                var txt = days > 0 ? 'Expires in ' + days + 'd ' + hours + 'h' : (hours > 0 ? 'Expires in ' + hours + 'h' : 'Expires today');
+                el.innerHTML = '<i class="far fa-clock" style="font-size:9px"></i> ' + txt;
+                el.style.color = days < 1 ? '#e74c3c' : (days < 3 ? '#e67e22' : '#8080A0');
+            }
+        }, 60000); // Update every minute
     }
 
     // ─── Community Post Interactions ───

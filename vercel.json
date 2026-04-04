@@ -24,7 +24,8 @@
         { "path": "/api/cron/lift-suspensions", "schedule": "0 1 * * *" },
         { "path": "/api/cron/weekly-report", "schedule": "0 8 * * 1" },
         { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" },
-        { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" }
+        { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" },
+        { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -49,6 +50,7 @@
         { "source": "/api/recording/resolve", "destination": "/api/recording/resolve" },
         { "source": "/api/recording/sos-update", "destination": "/api/recording/sos-update" },
         { "source": "/api/recording/transcribe", "destination": "/api/recording/transcribe" },
+        { "source": "/api/recording/confirm", "destination": "/api/recording/confirm" },
         { "source": "/api/recording/contacts", "destination": "/api/recording/contacts" },
         { "source": "/api/recording/debug-sms", "destination": "/api/recording/debug-sms" },
         { "source": "/api/migrate-recording", "destination": "/api/migrate-recording" },
@@ -165,6 +167,7 @@
         { "source": "/api/cron/lift-suspensions", "destination": "/api/cron/lift-suspensions" },
         { "source": "/api/cron/recalc-trust-scores", "destination": "/api/cron/recalc-trust-scores" },
         { "source": "/api/cron/run-ai-tasks", "destination": "/api/cron/run-ai-tasks" },
+        { "source": "/api/cron/expire-photo-posts", "destination": "/api/cron/expire-photo-posts" },
         { "source": "/api/admin/ai-tasks", "destination": "/api/admin/ai-tasks" },
         { "source": "/api/admin/removal-requests", "destination": "/api/admin/removal-requests" },
         { "source": "/api/migrate-ai-tasks", "destination": "/api/migrate-ai-tasks" },

@@ -165,55 +165,7 @@ module.exports = async function handler(req, res) {
       );
     } catch (e) {}
 
-    // Try transcription AFTER sending SMS (best-effort, for next update)
-    // Only attempt if we have chunks and no existing transcript
-    if (chunkCount > 0 && !transcriptExcerpt) {
-      try {
-        var { transcribeAudio } = require('./transcribe');
-        // Clear cache and re-transcribe — but with a 5-second internal timeout
-        await run('UPDATE recording_sessions SET transcript = NULL WHERE session_key = $1', [sessionKey]);
-        // Only transcribe the latest 3 chunks to stay within time limits
-        var latestChunks = await getMany(
-          'SELECT audio_data, chunk_number, duration_ms FROM recording_chunks WHERE session_key = $1 ORDER BY chunk_number DESC LIMIT 3',
-          [sessionKey]
-        );
-        if (latestChunks && latestChunks.length > 0) {
-          var OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-          if (OPENAI_API_KEY) {
-            var transcripts = [];
-            for (var c = latestChunks.length - 1; c >= 0; c--) {
-              try {
-                var chunk = latestChunks[c];
-                var audioBuffer = Buffer.from(chunk.audio_data, 'base64');
-                var boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
-                var formParts = [];
-                formParts.push('--' + boundary + '\r\nContent-Disposition: form-data; name="file"; filename="chunk-' + chunk.chunk_number + '.webm"\r\nContent-Type: audio/webm\r\n\r\n');
-                formParts.push(audioBuffer);
-                formParts.push('\r\n--' + boundary + '\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n');
-                formParts.push('--' + boundary + '\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n');
-                formParts.push('--' + boundary + '--\r\n');
-                var bodyParts = formParts.map(function(p) { return typeof p === 'string' ? Buffer.from(p) : p; });
-                var bodyBuffer = Buffer.concat(bodyParts);
-                var resp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-                  method: 'POST',
-                  headers: { 'Authorization': 'Bearer ' + OPENAI_API_KEY, 'Content-Type': 'multipart/form-data; boundary=' + boundary },
-                  body: bodyBuffer,
-                });
-                if (resp.ok) {
-                  var data = await resp.json();
-                  if (data.text && data.text.trim()) transcripts.push(data.text.trim());
-                }
-              } catch (te) {}
-            }
-            if (transcripts.length > 0) {
-              await run('UPDATE recording_sessions SET transcript = $1 WHERE session_key = $2', [transcripts.join(' '), sessionKey]);
-            }
-          }
-        }
-      } catch (e) {
-        console.error('[Update] Background transcription failed:', e.message);
-      }
-    }
+    // Transcription removed from live updates — handled post-session only (in stop.js / resolve.js)
 
     return res.status(200).json({
       success: true,

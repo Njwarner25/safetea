@@ -81,11 +81,22 @@
             <div id="map-container"></div>
             <div id="last-updated" class="last-updated"></div>
 
+            <!-- Live Elapsed Timer -->
+            <div id="elapsed-timer" class="status-card" style="text-align:center;display:none">
+                <div style="font-size:11px;color:#8080A0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Recording Duration</div>
+                <div id="elapsed-value" style="font-size:28px;font-weight:300;color:#e74c3c;font-variant-numeric:tabular-nums">00:00:00</div>
+            </div>
+
             <!-- Quick actions -->
             <div id="action-btns" class="action-btns">
                 <a id="btn-call-user" href="#" class="action-btn btn-call"><i class="fas fa-phone"></i> Call Them</a>
                 <a href="tel:911" class="action-btn btn-911"><i class="fas fa-exclamation-triangle"></i> Call 911</a>
             </div>
+
+            <!-- Export Evidence -->
+            <button id="export-evidence-btn" class="download-btn" style="display:none;margin-bottom:16px;background:linear-gradient(135deg,#2ecc71,#27ae60)">
+                <i class="fas fa-file-archive"></i> Export Evidence Package
+            </button>
 
             <!-- Outcry witness card -->
             <div class="outcry-card">
@@ -186,6 +197,28 @@
             map.panTo(latlng);
         }
 
+        var elapsedInterval = null;
+        var sessionStartTime = null;
+
+        function startElapsedTimer(createdAt) {
+            sessionStartTime = new Date(createdAt).getTime();
+            var timerEl = document.getElementById('elapsed-timer');
+            var valEl = document.getElementById('elapsed-value');
+            if (timerEl) timerEl.style.display = 'block';
+            if (elapsedInterval) clearInterval(elapsedInterval);
+            elapsedInterval = setInterval(function() {
+                var elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                var h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+                var m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+                var sec = String(elapsed % 60).padStart(2, '0');
+                if (valEl) valEl.textContent = h + ':' + m + ':' + sec;
+            }, 1000);
+        }
+
+        function stopElapsedTimer() {
+            if (elapsedInterval) { clearInterval(elapsedInterval); elapsedInterval = null; }
+        }
+
         function updateStatus(s) {
             var badge = document.getElementById('status-badge');
             var statusText = document.getElementById('status-text');
@@ -195,12 +228,24 @@
                 badge.className = 'status-badge status-stopped';
                 statusText.textContent = 'User Marked Safe — Recording Ended';
                 safeBanner.style.display = 'block';
+                stopElapsedTimer();
+                // Show final elapsed time
+                if (sessionStartTime && s.stoppedAt) {
+                    var finalElapsed = Math.floor((new Date(s.stoppedAt).getTime() - sessionStartTime) / 1000);
+                    var fh = String(Math.floor(finalElapsed / 3600)).padStart(2, '0');
+                    var fm = String(Math.floor((finalElapsed % 3600) / 60)).padStart(2, '0');
+                    var fs = String(finalElapsed % 60).padStart(2, '0');
+                    var valEl = document.getElementById('elapsed-value');
+                    if (valEl) { valEl.textContent = fh + ':' + fm + ':' + fs; valEl.style.color = '#2ecc71'; }
+                }
             } else if (s.escalatedAt) {
                 badge.className = 'status-badge status-escalated';
                 statusText.textContent = 'Escalated — No Response';
+                startElapsedTimer(s.createdAt);
             } else {
                 badge.className = 'status-badge status-active';
                 statusText.textContent = 'Recording Active — Live Tracking';
+                startElapsedTimer(s.createdAt);
             }
 
             var infoHtml = '';
@@ -262,7 +307,7 @@
             var chunksContainer = document.getElementById('chunks-container');
 
             if (!chunks || chunks.length === 0) {
-                chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio chunks yet. Recording may still be starting.</p>';
+                chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio clips yet. First 30-second clip will appear shortly.</p>';
                 return;
             }
 
@@ -301,7 +346,7 @@
             var playerTimer = document.getElementById('player-timer');
             var playerBar = document.getElementById('player-bar');
 
-            playerProgress.textContent = '0 / ' + chunks.length + ' chunks';
+            playerProgress.textContent = '0 / ' + chunks.length + ' clip(s)';
 
             function playChunk(idx) {
                 if (idx >= chunkBlobUrls.length) {
@@ -312,7 +357,7 @@
                     return;
                 }
                 currentChunkIdx = idx;
-                playerProgress.textContent = (idx + 1) + ' / ' + chunkBlobUrls.length + ' chunks';
+                playerProgress.textContent = (idx + 1) + ' / ' + chunkBlobUrls.length + ' clip(s)';
                 playerBar.style.width = ((idx / chunkBlobUrls.length) * 100) + '%';
 
                 currentAudio = new Audio(chunkBlobUrls[idx]);
@@ -353,7 +398,7 @@
 
             // Individual chunk players using blob URLs
             if (canPlayWebm) {
-                var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Individual Chunks (' + chunks.length + '):</div>';
+                var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Audio Clips (' + chunks.length + ' × 30s):</div>';
                 for (var i = 0; i < chunks.length; i++) {
                     chunksHtml += '<div class="chunk-player">' +
                         '<span>#' + (i + 1) + '</span>' +
@@ -373,7 +418,7 @@
                     var dlUrl = URL.createObjectURL(dlBlob);
                     var a = document.createElement('a');
                     a.href = dlUrl;
-                    a.download = 'safetea-recording-chunk-' + (d + 1) + '.webm';
+                    a.download = 'safetea-recording-clip-' + (d + 1) + '.webm';
                     a.click();
                     URL.revokeObjectURL(dlUrl);
                 }
@@ -399,6 +444,58 @@
 
                     // Always update status, map, timestamp
                     updateStatus(s);
+
+                    // Wire "Call Them" button with user's phone if available
+                    var callBtn = document.getElementById('btn-call-user');
+                    if (callBtn && s.userPhone) {
+                        callBtn.href = 'tel:' + s.userPhone;
+                    } else if (callBtn) {
+                        callBtn.style.opacity = '0.5';
+                        callBtn.title = 'Phone number not available';
+                    }
+
+                    // Export evidence button — concatenate chunks into downloadable bundle
+                    var exportBtn = document.getElementById('export-evidence-btn');
+                    if (exportBtn && data.chunks && data.chunks.length > 0) {
+                        exportBtn.style.display = 'block';
+                        exportBtn.onclick = function() {
+                            exportBtn.disabled = true;
+                            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+                            var blobs = [];
+                            for (var e = 0; e < data.chunks.length; e++) {
+                                blobs.push(base64ToBlob(data.chunks[e].audioData));
+                            }
+                            var combined = new Blob(blobs, { type: 'audio/webm;codecs=opus' });
+                            var url = URL.createObjectURL(combined);
+                            var a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'safetea-evidence-' + key.substring(0, 8) + '.webm';
+                            a.click();
+                            setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+
+                            // Also export metadata
+                            var meta = {
+                                sessionKey: key,
+                                exportedAt: new Date().toISOString(),
+                                userName: s.userName,
+                                startedAt: s.createdAt,
+                                stoppedAt: s.stoppedAt || null,
+                                latitude: s.latitude,
+                                longitude: s.longitude,
+                                totalChunks: data.chunks.length,
+                                chunkTimestamps: data.chunks.map(function(c) { return c.createdAt; })
+                            };
+                            var metaBlob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
+                            var metaUrl = URL.createObjectURL(metaBlob);
+                            var a2 = document.createElement('a');
+                            a2.href = metaUrl;
+                            a2.download = 'safetea-evidence-' + key.substring(0, 8) + '-metadata.json';
+                            setTimeout(function() { a2.click(); URL.revokeObjectURL(metaUrl); }, 500);
+
+                            exportBtn.disabled = false;
+                            exportBtn.innerHTML = '<i class="fas fa-file-archive"></i> Export Evidence Package';
+                        };
+                    }
 
                     // Always update transcript
                     updateTranscript(s, data.chunks);

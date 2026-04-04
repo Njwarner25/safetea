@@ -1015,6 +1015,405 @@
         });
     }
 
+    // ============ INDEXEDDB MANAGER ============
+    var IDB_NAME = 'safetea_recording';
+    var IDB_VERSION = 1;
+
+    function openRecordingDB() {
+        return new Promise(function(resolve, reject) {
+            var req = indexedDB.open(IDB_NAME, IDB_VERSION);
+            req.onupgradeneeded = function(e) {
+                var db = e.target.result;
+                if (!db.objectStoreNames.contains('segments')) {
+                    var segStore = db.createObjectStore('segments', { keyPath: 'id', autoIncrement: true });
+                    segStore.createIndex('sessionKey', 'sessionKey', { unique: false });
+                    segStore.createIndex('status', 'status', { unique: false });
+                }
+                if (!db.objectStoreNames.contains('sessions')) {
+                    db.createObjectStore('sessions', { keyPath: 'sessionKey' });
+                }
+                if (!db.objectStoreNames.contains('gpsLog')) {
+                    var gpsStore = db.createObjectStore('gpsLog', { keyPath: 'id', autoIncrement: true });
+                    gpsStore.createIndex('sessionKey', 'sessionKey', { unique: false });
+                }
+            };
+            req.onsuccess = function() { resolve(req.result); };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    function saveSegment(db, sessionKey, segmentNumber, blob, lat, lng) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readwrite');
+            var store = tx.objectStore('segments');
+            store.add({
+                sessionKey: sessionKey,
+                segmentNumber: segmentNumber,
+                blob: blob,
+                status: 'pending',
+                uploadAttempts: 0,
+                lat: lat || null,
+                lng: lng || null,
+                createdAt: Date.now()
+            });
+            tx.oncomplete = function() { resolve(); };
+            tx.onerror = function() { reject(tx.error); };
+        });
+    }
+
+    function getPendingSegments(db, sessionKey) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readonly');
+            var store = tx.objectStore('segments');
+            var idx = store.index('status');
+            var req = idx.getAll('pending');
+            req.onsuccess = function() {
+                var results = (req.result || []).filter(function(s) {
+                    return !sessionKey || s.sessionKey === sessionKey;
+                });
+                results.sort(function(a, b) { return a.segmentNumber - b.segmentNumber; });
+                resolve(results);
+            };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    function getUploadingSegments(db) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readonly');
+            var store = tx.objectStore('segments');
+            var idx = store.index('status');
+            var req = idx.getAll('uploading');
+            req.onsuccess = function() { resolve(req.result || []); };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    function markSegmentStatus(db, segId, newStatus, incAttempts) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readwrite');
+            var store = tx.objectStore('segments');
+            var req = store.get(segId);
+            req.onsuccess = function() {
+                var seg = req.result;
+                if (seg) {
+                    seg.status = newStatus;
+                    if (incAttempts) seg.uploadAttempts = (seg.uploadAttempts || 0) + 1;
+                    store.put(seg);
+                }
+            };
+            tx.oncomplete = function() { resolve(); };
+            tx.onerror = function() { reject(tx.error); };
+        });
+    }
+
+    function deleteConfirmedSegments(db, sessionKey) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readwrite');
+            var store = tx.objectStore('segments');
+            var idx = store.index('status');
+            var req = idx.openCursor('confirmed');
+            req.onsuccess = function() {
+                var cursor = req.result;
+                if (cursor) {
+                    if (!sessionKey || cursor.value.sessionKey === sessionKey) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                }
+            };
+            tx.oncomplete = function() { resolve(); };
+            tx.onerror = function() { reject(tx.error); };
+        });
+    }
+
+    function saveGPSPoint(db, sessionKey, lat, lng, accuracy) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('gpsLog', 'readwrite');
+            tx.objectStore('gpsLog').add({
+                sessionKey: sessionKey,
+                lat: lat,
+                lng: lng,
+                accuracy: accuracy || null,
+                timestamp: Date.now()
+            });
+            tx.oncomplete = function() { resolve(); };
+            tx.onerror = function() { reject(tx.error); };
+        });
+    }
+
+    function getGPSLog(db, sessionKey) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('gpsLog', 'readonly');
+            var idx = tx.objectStore('gpsLog').index('sessionKey');
+            var req = idx.getAll(sessionKey);
+            req.onsuccess = function() { resolve(req.result || []); };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    function saveSessionMeta(db, sessionKey, meta) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('sessions', 'readwrite');
+            tx.objectStore('sessions').put(Object.assign({ sessionKey: sessionKey }, meta));
+            tx.oncomplete = function() { resolve(); };
+            tx.onerror = function() { reject(tx.error); };
+        });
+    }
+
+    function getAllLocalSessions(db) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('sessions', 'readonly');
+            var req = tx.objectStore('sessions').getAll();
+            req.onsuccess = function() { resolve(req.result || []); };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    function getAllSegmentsForSession(db, sessionKey) {
+        return new Promise(function(resolve, reject) {
+            var tx = db.transaction('segments', 'readonly');
+            var idx = tx.objectStore('segments').index('sessionKey');
+            var req = idx.getAll(sessionKey);
+            req.onsuccess = function() {
+                var results = req.result || [];
+                results.sort(function(a, b) { return a.segmentNumber - b.segmentNumber; });
+                resolve(results);
+            };
+            req.onerror = function() { reject(req.error); };
+        });
+    }
+
+    // ============ UPLOAD MANAGER ============
+    var uploadManagerInterval = null;
+    var uploadManagerRunning = false;
+
+    function blobToBase64(blob) {
+        return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onloadend = function() { resolve(reader.result.split(',')[1]); };
+            reader.onerror = function() { reject(reader.error); };
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    function getBackoffDelay(attempts) {
+        var delays = [0, 5000, 15000, 30000, 60000];
+        return delays[Math.min(attempts, delays.length - 1)];
+    }
+
+    async function uploadSingleSegment(db, segment) {
+        await markSegmentStatus(db, segment.id, 'uploading', true);
+        try {
+            var base64 = await blobToBase64(segment.blob);
+            // Check size — base64 adds ~33%, Vercel limit 4.5MB
+            if (base64.length > 4000000) {
+                console.warn('[Upload] Segment ' + segment.segmentNumber + ' too large, marking confirmed (skip)');
+                await markSegmentStatus(db, segment.id, 'confirmed', false);
+                return true;
+            }
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 30000);
+            var resp = await fetch('/api/recording/chunk', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    sessionKey: segment.sessionKey,
+                    chunkNumber: segment.segmentNumber,
+                    audioData: base64,
+                    durationMs: 30000,
+                    latitude: segment.lat,
+                    longitude: segment.lng
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            var data = await resp.json();
+            if (data.success) {
+                // Confirm with server
+                try {
+                    await fetch('/api/recording/confirm', {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({ sessionKey: segment.sessionKey, chunkNumber: segment.segmentNumber })
+                    });
+                } catch (e) { /* confirm is best-effort */ }
+                await markSegmentStatus(db, segment.id, 'confirmed', false);
+                return true;
+            } else {
+                await markSegmentStatus(db, segment.id, 'pending', false);
+                return false;
+            }
+        } catch (err) {
+            console.warn('[Upload] Segment ' + segment.segmentNumber + ' failed:', err.message || err);
+            await markSegmentStatus(db, segment.id, 'pending', false);
+            return false;
+        }
+    }
+
+    async function uploadLoop() {
+        if (uploadManagerRunning) return;
+        uploadManagerRunning = true;
+        try {
+            var db = await openRecordingDB();
+            // Reset any stuck 'uploading' segments back to pending
+            var stuck = await getUploadingSegments(db);
+            for (var s = 0; s < stuck.length; s++) {
+                await markSegmentStatus(db, stuck[s].id, 'pending', false);
+            }
+            var pending = await getPendingSegments(db);
+            if (pending.length === 0) {
+                uploadManagerRunning = false;
+                updateIntegrityIndicator('green');
+                return;
+            }
+            updateIntegrityIndicator(pending.length > 5 ? 'red' : 'yellow');
+            // Take up to 3 FIFO
+            var batch = pending.slice(0, 3);
+            var allOk = true;
+            for (var i = 0; i < batch.length; i++) {
+                var seg = batch[i];
+                var delay = getBackoffDelay(seg.uploadAttempts);
+                if (delay > 0) {
+                    await new Promise(function(r) { setTimeout(r, delay); });
+                }
+                var ok = await uploadSingleSegment(db, seg);
+                if (!ok) allOk = false;
+            }
+            // Clean up confirmed
+            await deleteConfirmedSegments(db);
+            // Recheck pending count for indicator
+            var remaining = await getPendingSegments(db);
+            if (remaining.length === 0) {
+                updateIntegrityIndicator('green');
+            } else if (!allOk) {
+                updateIntegrityIndicator('red');
+            }
+        } catch (err) {
+            console.error('[Upload] Loop error:', err);
+            updateIntegrityIndicator('red');
+        }
+        uploadManagerRunning = false;
+    }
+
+    function startUploadManager() {
+        if (uploadManagerInterval) return;
+        uploadLoop(); // run immediately
+        uploadManagerInterval = setInterval(uploadLoop, 15000);
+    }
+
+    function stopUploadManager() {
+        if (uploadManagerInterval) { clearInterval(uploadManagerInterval); uploadManagerInterval = null; }
+        // Final flush
+        uploadLoop();
+    }
+
+    // ============ INTEGRITY INDICATOR ============
+    function updateIntegrityIndicator(color) {
+        var dot = document.getElementById('rp-integrity-dot');
+        if (!dot) return;
+        var colors = { green: '#2ecc71', yellow: '#f1c40f', red: '#e74c3c' };
+        var labels = { green: 'Recording + uploading', yellow: 'Uploads queued', red: 'Uploads failing' };
+        dot.style.background = colors[color] || colors.green;
+        dot.title = labels[color] || '';
+        var labelEl = document.getElementById('rp-integrity-label');
+        if (labelEl) labelEl.textContent = labels[color] || '';
+    }
+
+    // ============ EVIDENCE EXPORT ============
+    async function exportEvidencePackage(sessionKey) {
+        try {
+            if (typeof showToast === 'function') showToast('Preparing evidence package...');
+            var db = await openRecordingDB();
+            var segments = await getAllSegmentsForSession(db, sessionKey);
+            var gpsLog = await getGPSLog(db, sessionKey);
+
+            if (segments.length === 0) {
+                if (typeof showToast === 'function') showToast('No local recording data found for this session.');
+                return;
+            }
+
+            // Concatenate blobs into single .webm
+            var blobs = [];
+            for (var i = 0; i < segments.length; i++) {
+                if (segments[i].blob) blobs.push(segments[i].blob);
+            }
+            if (blobs.length === 0) {
+                if (typeof showToast === 'function') showToast('No audio data available.');
+                return;
+            }
+            var combinedBlob = new Blob(blobs, { type: 'audio/webm;codecs=opus' });
+
+            // Build metadata JSON
+            var metadata = {
+                sessionKey: sessionKey,
+                exportedAt: new Date().toISOString(),
+                totalSegments: segments.length,
+                totalDurationEstimate: segments.length * 30 + 's',
+                segments: segments.map(function(s) {
+                    return {
+                        number: s.segmentNumber,
+                        status: s.status,
+                        uploadAttempts: s.uploadAttempts,
+                        lat: s.lat,
+                        lng: s.lng,
+                        createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : null
+                    };
+                }),
+                gpsTimeline: gpsLog.map(function(g) {
+                    return {
+                        lat: g.lat,
+                        lng: g.lng,
+                        accuracy: g.accuracy,
+                        timestamp: new Date(g.timestamp).toISOString()
+                    };
+                })
+            };
+
+            // Download audio
+            var audioUrl = URL.createObjectURL(combinedBlob);
+            var a1 = document.createElement('a');
+            a1.href = audioUrl;
+            a1.download = 'safetea-evidence-' + sessionKey.substring(0, 8) + '.webm';
+            a1.click();
+            setTimeout(function() { URL.revokeObjectURL(audioUrl); }, 5000);
+
+            // Download metadata
+            var metaBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
+            var metaUrl = URL.createObjectURL(metaBlob);
+            var a2 = document.createElement('a');
+            a2.href = metaUrl;
+            a2.download = 'safetea-evidence-' + sessionKey.substring(0, 8) + '-metadata.json';
+            setTimeout(function() { a2.click(); URL.revokeObjectURL(metaUrl); }, 500);
+
+            if (typeof showToast === 'function') showToast('Evidence package downloaded (' + segments.length + ' segments)');
+        } catch (err) {
+            console.error('[Export] Error:', err);
+            if (typeof showToast === 'function') showToast('Export failed: ' + err.message);
+        }
+    }
+
+    // ============ RESUME UPLOAD QUEUE ============
+    async function resumeUploadQueue() {
+        try {
+            var db = await openRecordingDB();
+            var sessions = await getAllLocalSessions(db);
+            for (var i = 0; i < sessions.length; i++) {
+                var sess = sessions[i];
+                if (sess.status === 'active' || sess.status === 'stopping') {
+                    var pending = await getPendingSegments(db, sess.sessionKey);
+                    if (pending.length > 0) {
+                        console.log('[Resume] Found ' + pending.length + ' pending segments for session ' + sess.sessionKey);
+                        startUploadManager();
+                        return;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('[Resume] IndexedDB not available:', e.message);
+        }
+    }
+
     // ============ STEALTH OVERLAY ============
     function showStealthOverlay() {
         var overlay = document.createElement('div');
@@ -1030,11 +1429,16 @@
                 '</div>' +
                 '<p style="color:#e74c3c;font-size:16px;font-weight:600;margin-bottom:6px">Recording Active</p>' +
                 '<p id="rp-timer" style="color:#8080A0;font-size:24px;font-weight:300;margin-bottom:6px;font-variant-numeric:tabular-nums">00:00</p>' +
+                '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">' +
+                    '<div id="rp-integrity-dot" style="width:8px;height:8px;border-radius:50%;background:#2ecc71" title="Recording + uploading"></div>' +
+                    '<span id="rp-integrity-label" style="color:#555;font-size:10px">Recording + uploading</span>' +
+                '</div>' +
                 '<p id="rp-sms-status" style="color:#888;font-size:12px;margin-bottom:6px"></p>' +
-                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Waiting for first audio chunk...</p>' +
+                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Recording 30s audio clips...</p>' +
                 '<p id="rp-gps-status" style="color:#555;font-size:11px;margin-bottom:24px"></p>' +
                 '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
                     '<button id="rp-reshare-btn" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:12px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-share-alt"></i> Re-share</button>' +
+                    '<button id="rp-export-btn" style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:#2ecc71;padding:12px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-download"></i> Export</button>' +
                     '<button id="rp-stealth-btn" style="background:rgba(255,255,255,0.06);color:#8080A0;border:none;padding:12px 20px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-eye-slash"></i> Stealth</button>' +
                     '<button id="rp-stop-btn" style="background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-check-circle"></i> I\'m Safe — Stop</button>' +
                 '</div>' +
@@ -1051,6 +1455,9 @@
         document.getElementById('rp-stop-btn').onclick = stopRecording;
         document.getElementById('rp-stealth-btn').onclick = function() {
             toggleStealthMode();
+        };
+        document.getElementById('rp-export-btn').onclick = function() {
+            if (state.sessionKey) exportEvidencePackage(state.sessionKey);
         };
         document.getElementById('rp-reshare-btn').onclick = function() {
             if (state.shareData) {
@@ -1181,6 +1588,19 @@
             return;
         }
 
+        // Save session to IndexedDB
+        try {
+            var db = await openRecordingDB();
+            await saveSessionMeta(db, state.sessionKey, {
+                status: 'active',
+                lastSegmentNumber: -1,
+                startedAt: Date.now()
+            });
+            state.recordingDB = db;
+        } catch (dbErr) {
+            console.warn('[Record] IndexedDB init failed, recording will continue without local backup:', dbErr.message);
+        }
+
         state.recording = true;
         state.chunkNumber = 0;
 
@@ -1195,26 +1615,65 @@
             shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
         }
 
-        // Start MediaRecorder — use low bitrate to keep chunks small (Vercel 4.5MB body limit)
+        // Start MediaRecorder — stop/restart every 30s so each clip is a complete playable WebM file
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
         var recorderOptions = { mimeType: mimeType };
-        // Try to set a low bitrate to keep base64 payload under 4MB
         try { recorderOptions.audioBitsPerSecond = 32000; } catch (e) {}
-        state.mediaRecorder = new MediaRecorder(stream, recorderOptions);
+        state.audioStream = stream; // keep reference for restart cycle
 
-        state.mediaRecorder.ondataavailable = function(e) {
-            if (e.data && e.data.size > 0) {
-                uploadChunk(e.data);
+        state.createRecorder = function() {
+            var recorder = new MediaRecorder(state.audioStream, recorderOptions);
+            var chunks = [];
+
+            recorder.ondataavailable = function(e) {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+
+            recorder.onstop = async function() {
+                if (chunks.length === 0) return;
+                // Combine all data into one complete WebM blob (has proper header)
+                var completeBlob = new Blob(chunks, { type: mimeType });
+                var segNum = state.chunkNumber++;
+                var statusEl = document.getElementById('rp-chunk-status');
+
+                // Save to IndexedDB FIRST (never lose data)
+                try {
+                    if (state.recordingDB) {
+                        await saveSegment(state.recordingDB, state.sessionKey, segNum, completeBlob, state.lastLat, state.lastLng);
+                        if (statusEl) statusEl.textContent = '30s audio clip #' + (segNum + 1) + ' captured (' + Math.round(completeBlob.size / 1024) + ' KB)';
+                        updateIntegrityIndicator('yellow');
+                        // Trigger immediate upload
+                        uploadLoop();
+                    }
+                } catch (dbErr) {
+                    console.error('[Record] Failed to save clip to IndexedDB:', dbErr);
+                    if (statusEl) statusEl.textContent = 'Local save failed for clip ' + (segNum + 1);
+                    updateIntegrityIndicator('red');
+                }
+            };
+
+            recorder.start(); // no timeslice — stop() will produce a complete file
+            return recorder;
+        };
+
+        state.mediaRecorder = state.createRecorder();
+
+        // Every 30 seconds: stop current recorder (triggers onstop → saves complete clip), start new one
+        state.recorderCycleInterval = setInterval(function() {
+            if (!state.recording) return;
+            if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+                state.mediaRecorder.stop(); // produces a complete playable WebM
+                // Start a new recorder immediately on the same stream
+                if (state.audioStream && state.audioStream.active) {
+                    state.mediaRecorder = state.createRecorder();
+                }
             }
-        };
+        }, 30000);
 
-        state.mediaRecorder.onstop = function() {
-            stream.getTracks().forEach(function(t) { t.stop(); });
-        };
+        // Start upload manager (separate from recording)
+        startUploadManager();
 
-        state.mediaRecorder.start(5000); // 5-second chunks (smaller = faster upload, stays under body limit)
-
-        // Start GPS tracking
+        // Start GPS tracking — save to IndexedDB + push to server every 30s
         if (navigator.geolocation) {
             state.watchId = navigator.geolocation.watchPosition(
                 function(pos) {
@@ -1222,22 +1681,36 @@
                     state.lastLng = pos.coords.longitude;
                     var gpsEl = document.getElementById('rp-gps-status');
                     if (gpsEl) gpsEl.textContent = 'GPS: ' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
+                    // Save GPS to IndexedDB
+                    if (state.recordingDB && state.sessionKey) {
+                        saveGPSPoint(state.recordingDB, state.sessionKey, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy).catch(function() {});
+                    }
                 },
                 function() {},
                 { enableHighAccuracy: true, maximumAge: 15000 }
             );
+
+            // Push GPS to server every 30s
+            state.gpsUploadInterval = setInterval(function() {
+                if (!state.recording || !state.sessionKey) return;
+                if (state.lastLat && state.lastLng) {
+                    fetch('/api/recording/location', {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify({ sessionKey: state.sessionKey, latitude: state.lastLat, longitude: state.lastLng })
+                    }).catch(function() {});
+                }
+            }, 30000);
         }
 
-        // Send updates at 1 min and 3 min only (contacts have live tracking page after that)
+        // Send contact updates at 2 min only (contacts have live tracking page after that)
         state.updateCount = 0;
         function sendPeriodicUpdate(updateLabel) {
             if (!state.recording || !state.sessionKey) return;
             state.updateCount++;
-            var updateNum = state.updateCount;
-            var label = updateLabel || ('Update #' + updateNum);
+            var label = updateLabel || ('Update #' + state.updateCount);
             console.log('[Record] Sending ' + label);
             var statusEl = document.getElementById('rp-chunk-status');
-            if (statusEl) statusEl.textContent = 'Sending ' + label + ' to contacts...';
 
             var controller = new AbortController();
             var timeoutId = setTimeout(function() { controller.abort(); }, 20000);
@@ -1254,46 +1727,30 @@
             })
             .then(function(r) { clearTimeout(timeoutId); return r.json(); })
             .then(function(data) {
-                console.log('[Record] ' + label + ' response:', JSON.stringify(data));
                 var smsEl = document.getElementById('rp-sms-status');
                 var notified = (data.contactsNotified || 0) + (data.emailsSent || 0);
                 if (data.success && data.skipped) {
-                    if (statusEl) statusEl.textContent = label + ' skipped (already sent)';
+                    /* skip */
                 } else if (data.success && notified > 0) {
-                    if (statusEl) statusEl.textContent = label + ' sent';
                     if (smsEl) smsEl.innerHTML = '<span style="color:#2ecc71">&#10003; ' + label + ' sent to ' + notified + ' contact(s)</span>';
-                } else if (data.contactsFound === 0) {
-                    if (statusEl) statusEl.textContent = 'No emergency contacts saved';
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; No emergency contacts saved</span>';
-                } else if (data.error) {
-                    if (statusEl) statusEl.textContent = label + ' error: ' + data.error;
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#e74c3c">&#10007; ' + data.error + '</span>';
-                } else {
-                    if (statusEl) statusEl.textContent = label + ' — delivery pending';
-                    if (smsEl) smsEl.innerHTML = '<span style="color:#e67e22">&#9888; Contacts notified via live tracking page</span>';
                 }
             })
             .catch(function(err) {
                 clearTimeout(timeoutId);
                 console.error('[Record] ' + label + ' failed:', err.message || err);
-                if (statusEl) statusEl.textContent = label + ' failed';
             });
         }
-        // 1-minute update
+        // Single 2-minute update
         state.updateTimeout1 = setTimeout(function() {
-            sendPeriodicUpdate('1-min alert');
-        }, 60000);
-        // 3-minute update
-        state.updateTimeout2 = setTimeout(function() {
-            sendPeriodicUpdate('3-min alert');
-        }, 180000);
+            sendPeriodicUpdate('2-min alert');
+        }, 120000);
 
         // Show persistent status on overlay
         var smsStatusEl = document.getElementById('rp-sms-status');
         var totalNotified = (state.contactsNotified || 0) + (state.emailsSent || 0);
         if (totalNotified > 0) {
             if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#2ecc71">&#10003; ' + totalNotified + ' contact(s) notified (SMS + email)</span>';
-            if (typeof showToast === 'function') showToast('Recording started. ' + totalNotified + ' contact(s) notified. Updates at 1 & 3 min.');
+            if (typeof showToast === 'function') showToast('Recording started. ' + totalNotified + ' contact(s) notified.');
         } else {
             var reason = '';
             if (state.contactsFound === 0) {
@@ -1303,7 +1760,7 @@
             } else if (state.smsErrors && state.smsErrors.length > 0) {
                 reason = 'SMS error: ' + state.smsErrors[0];
             } else {
-                reason = 'Contacts notified via share — updates at 1 & 3 min';
+                reason = 'Contacts notified via share';
             }
             if (smsStatusEl) smsStatusEl.innerHTML = '<span style="color:#e67e22">&#9888; ' + reason + '</span>';
             if (typeof showToast === 'function') showToast('Recording started — ' + reason);
@@ -1315,86 +1772,25 @@
         }
     }
 
-    // ============ UPLOAD CHUNK ============
-    function uploadChunk(blob) {
-        var chunkNum = state.chunkNumber++;
-        var statusEl = document.getElementById('rp-chunk-status');
-
-        // Check blob size — base64 adds ~33%, Vercel limit is 4.5MB
-        var estimatedBase64Size = blob.size * 1.37;
-        if (estimatedBase64Size > 4000000) {
-            console.warn('[Record] Chunk too large (' + Math.round(blob.size / 1024) + 'KB), skipping');
-            if (statusEl) statusEl.textContent = 'Chunk ' + (chunkNum + 1) + ' too large, skipped';
-            return;
-        }
-
-        if (statusEl) statusEl.textContent = 'Uploading chunk ' + (chunkNum + 1) + '...';
-
-        var reader = new FileReader();
-        reader.onloadend = function() {
-            var base64 = reader.result.split(',')[1];
-            var payload = JSON.stringify({
-                sessionKey: state.sessionKey,
-                chunkNumber: chunkNum,
-                audioData: base64,
-                durationMs: 5000,
-                latitude: state.lastLat,
-                longitude: state.lastLng
-            });
-
-            // Use AbortController for 15-second timeout
-            var controller = new AbortController();
-            var timeoutId = setTimeout(function() { controller.abort(); }, 15000);
-
-            fetch('/api/recording/chunk', {
-                method: 'POST',
-                headers: authHeaders(),
-                body: payload,
-                signal: controller.signal
-            })
-            .then(function(r) {
-                clearTimeout(timeoutId);
-                return r.json();
-            })
-            .then(function(data) {
-                if (statusEl) {
-                    statusEl.textContent = data.success
-                        ? 'Chunk ' + (chunkNum + 1) + ' saved'
-                        : 'Upload error: ' + (data.error || 'unknown');
-                }
-            })
-            .catch(function(err) {
-                clearTimeout(timeoutId);
-                var msg = err.name === 'AbortError' ? 'Upload timed out' : 'Upload failed';
-                if (statusEl) statusEl.textContent = msg + ' — retrying chunk ' + (chunkNum + 1) + '...';
-                // Retry once after 3 seconds
-                setTimeout(function() {
-                    var ctrl2 = new AbortController();
-                    var tid2 = setTimeout(function() { ctrl2.abort(); }, 15000);
-                    fetch('/api/recording/chunk', {
-                        method: 'POST',
-                        headers: authHeaders(),
-                        body: payload,
-                        signal: ctrl2.signal
-                    })
-                    .then(function(r) { clearTimeout(tid2); return r.json(); })
-                    .then(function(data) {
-                        if (statusEl && data.success) statusEl.textContent = 'Chunk ' + (chunkNum + 1) + ' saved (retry)';
-                    })
-                    .catch(function() { clearTimeout(tid2); });
-                }, 3000);
-            });
-        };
-        reader.readAsDataURL(blob);
-    }
-
     // ============ STOP RECORDING ============
-    function stopRecording() {
+    async function stopRecording() {
         if (!state.recording) return;
         state.recording = false;
 
-        if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+        // Stop the 30-second cycle interval
+        if (state.recorderCycleInterval) { clearInterval(state.recorderCycleInterval); state.recorderCycleInterval = null; }
+
+        // Stop current MediaRecorder — this triggers onstop which saves the final partial clip
+        if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
             state.mediaRecorder.stop();
+        }
+        // Wait for onstop handler to finish saving the final clip
+        await new Promise(function(r) { setTimeout(r, 500); });
+
+        // Stop the audio stream
+        if (state.audioStream) {
+            state.audioStream.getTracks().forEach(function(t) { t.stop(); });
+            state.audioStream = null;
         }
 
         if (state.watchId !== null) {
@@ -1402,10 +1798,26 @@
             state.watchId = null;
         }
 
+        if (state.gpsUploadInterval) { clearInterval(state.gpsUploadInterval); state.gpsUploadInterval = null; }
         if (state.updateTimeout1) { clearTimeout(state.updateTimeout1); state.updateTimeout1 = null; }
         if (state.updateTimeout2) { clearTimeout(state.updateTimeout2); state.updateTimeout2 = null; }
         if (state.updateInterval) { clearInterval(state.updateInterval); state.updateInterval = null; }
 
+        // Stop upload manager, final flush
+        stopUploadManager();
+
+        // Update session meta
+        if (state.recordingDB && state.sessionKey) {
+            try {
+                await saveSessionMeta(state.recordingDB, state.sessionKey, {
+                    status: 'stopping',
+                    lastSegmentNumber: state.chunkNumber - 1,
+                    startedAt: Date.now()
+                });
+            } catch (e) {}
+        }
+
+        var savedSessionKey = state.sessionKey;
         var savedShareData = state.shareData;
         if (state.sessionKey) {
             fetch('/api/recording/resolve', {
@@ -1418,6 +1830,7 @@
                 if (data.success) {
                     var msg = 'Recording saved. ' + (data.totalChunks || 0) + ' chunk(s) stored securely.';
                     if (data.contactsNotified > 0) msg += ' ' + data.contactsNotified + ' contact(s) notified you are safe.';
+                    msg += ' Evidence kept locally for export.';
                     if (typeof showToast === 'function') showToast(msg);
 
                     // Offer to share "I'm safe" message
@@ -1431,13 +1844,14 @@
                 }
             })
             .catch(function() {
-                if (typeof showToast === 'function') showToast('Recording stopped locally. Server sync pending.');
+                if (typeof showToast === 'function') showToast('Recording stopped locally. Server sync pending — data safe in browser.');
             });
         }
 
         state.sessionKey = null;
         state.chunkNumber = 0;
         state.shareData = null;
+        state.recordingDB = null;
 
         // Restore SOS floating button
         var sosBtn = document.getElementById('sos-floating-btn');
@@ -1445,6 +1859,33 @@
 
         hideStealthOverlay();
     }
+
+    // ============ FAIL-SAFE HANDLERS ============
+    window.addEventListener('beforeunload', function(e) {
+        if (state.recording) {
+            // Stop current recorder to save whatever audio we have as a complete clip
+            if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+                try { state.mediaRecorder.stop(); } catch (ex) {}
+            }
+            e.preventDefault();
+            e.returnValue = 'Recording is active. Are you sure you want to leave? Your audio data is saved locally.';
+        }
+    });
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && state.recording) {
+            // Stop current recorder to save current audio, start fresh
+            if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+                try { state.mediaRecorder.stop(); } catch (e) {}
+                if (state.audioStream && state.audioStream.active && state.createRecorder) {
+                    try { state.mediaRecorder = state.createRecorder(); } catch (e2) {}
+                }
+            }
+        } else if (!document.hidden && state.recording) {
+            // Resume upload on foreground
+            uploadLoop();
+        }
+    });
 
     // ============ FAKE CALL SETTINGS ============
     window.showFakeCallSettings = function() {
@@ -1695,6 +2136,16 @@
         if (sosBtn && user && !isPaidUser(user)) {
             sosBtn.classList.add('sos-locked');
         }
+
+        // Register service worker for upload persistence (progressive enhancement)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-upload.js').catch(function(err) {
+                console.log('[SW] Registration skipped:', err.message);
+            });
+        }
+
+        // Resume any pending uploads from previous sessions
+        resumeUploadQueue();
     };
 
     window.startRecordProtect = startRecording;

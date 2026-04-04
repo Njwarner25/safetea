@@ -10,10 +10,12 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   const body = await parseBody(req);
-  const { sessionKey, chunkNumber, audioData, durationMs, latitude, longitude } = body;
+  const { sessionKey, audioData, durationMs, latitude, longitude } = body;
+  // Accept segmentNumber as alias for chunkNumber
+  const chunkNumber = body.chunkNumber !== undefined ? body.chunkNumber : body.segmentNumber;
 
   if (!sessionKey || chunkNumber === undefined || !audioData) {
-    return res.status(400).json({ error: 'Missing required fields: sessionKey, chunkNumber, audioData' });
+    return res.status(400).json({ error: 'Missing required fields: sessionKey, chunkNumber/segmentNumber, audioData' });
   }
 
   try {
@@ -31,7 +33,7 @@ module.exports = async function handler(req, res) {
     await run(
       `INSERT INTO recording_chunks (session_key, chunk_number, audio_data, duration_ms)
        VALUES ($1, $2, $3, $4)`,
-      [sessionKey, chunkNumber, audioData, durationMs || null]
+      [sessionKey, chunkNumber, audioData, durationMs || 30000]
     );
 
     // Update GPS if provided

@@ -1727,10 +1727,16 @@
                 console.error('[Record] ' + label + ' failed:', err.message || err);
             });
         }
-        // Single 2-minute update
+        // Auto-send reports at 30s, 60s, 90s
         state.updateTimeout1 = setTimeout(function() {
-            sendPeriodicUpdate('2-min alert');
-        }, 120000);
+            sendPeriodicUpdate('30-second report');
+        }, 30000);
+        state.updateTimeout2 = setTimeout(function() {
+            sendPeriodicUpdate('60-second report');
+        }, 60000);
+        state.updateTimeout3 = setTimeout(function() {
+            sendPeriodicUpdate('90-second report');
+        }, 90000);
 
         // Show persistent status on overlay
         var smsStatusEl = document.getElementById('rp-sms-status');
@@ -1787,6 +1793,7 @@
         if (state.gpsUploadInterval) { clearInterval(state.gpsUploadInterval); state.gpsUploadInterval = null; }
         if (state.updateTimeout1) { clearTimeout(state.updateTimeout1); state.updateTimeout1 = null; }
         if (state.updateTimeout2) { clearTimeout(state.updateTimeout2); state.updateTimeout2 = null; }
+        if (state.updateTimeout3) { clearTimeout(state.updateTimeout3); state.updateTimeout3 = null; }
         if (state.updateInterval) { clearInterval(state.updateInterval); state.updateInterval = null; }
 
         // Stop upload manager, final flush

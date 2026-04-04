@@ -31,18 +31,17 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Active recording not found' });
     }
 
-    // Only send at 1-minute and 3-minute marks (contacts have live tracking page after that)
-    var minutesActive = Math.round((Date.now() - new Date(session.created_at).getTime()) / 60000);
-    var updatesSent = 0;
+    // Auto-send reports at 30s, 60s, 90s — then contacts use the live tracking page
+    var secondsActive = Math.round((Date.now() - new Date(session.created_at).getTime()) / 1000);
+    var minutesActive = Math.round(secondsActive / 60);
     if (session.last_update_sent_at) {
-      // Count how many updates have been sent by checking the timestamp pattern
       var secondsSinceLast = (Date.now() - new Date(session.last_update_sent_at).getTime()) / 1000;
-      if (secondsSinceLast < 50) {
+      if (secondsSinceLast < 20) {
         return res.status(200).json({ success: true, skipped: true, reason: 'Too soon since last update' });
       }
     }
-    // After 4 minutes, stop sending updates — contacts have the live tracking page
-    if (minutesActive > 4) {
+    // After 3 minutes, stop auto-updates — contacts have the live tracking page
+    if (secondsActive > 180) {
       return res.status(200).json({ success: true, skipped: true, reason: 'Auto-updates complete (contacts have live tracking)' });
     }
 
@@ -107,9 +106,9 @@ module.exports = async function handler(req, res) {
     var trackingUrl = 'https://www.getsafetea.app/recording-status?key=' + sessionKey;
 
     // Short SMS ping via Twilio + full email via SendGrid
-    var shortSms = minutesActive <= 1
+    var shortSms = secondsActive <= 45
       ? "You're a trusted contact for " + displayName + " on SafeTea. They may need your help \u2014 check your email immediately."
-      : "URGENT: " + displayName + "'s SafeTea recording has been active for " + minutesActive + " minutes. Check your email for updated location and audio.";
+      : "URGENT: " + displayName + "'s SafeTea recording has been active for " + secondsActive + " seconds. Check your email for updated location and audio.";
 
     var contactsNotified = 0;
     var emailsSent = 0;

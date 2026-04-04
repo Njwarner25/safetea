@@ -1757,10 +1757,13 @@
                 votedBits.push(ones > total / 2 ? 1 : 0);
             }
 
-            // 16-bit magic check
+            // 16-bit magic check — use Hamming distance (allow up to 3 bit errors)
             var magic = 0;
             for (var i = 0; i < 16; i++) magic = (magic << 1) | votedBits[i];
-            if (magic !== WM_MAGIC) return null;
+            var xor = magic ^ WM_MAGIC;
+            var bitErrors = 0;
+            for (var i = 0; i < 16; i++) bitErrors += (xor >> i) & 1;
+            if (bitErrors > 3) return null; // reject if more than 3/16 magic bits wrong
 
             // 24-bit user ID
             var userId = 0;
@@ -1768,6 +1771,7 @@
             userId = userId >>> 0;
             if (userId === 0) return null;
 
+            // Raw confidence: check magic bit accuracy across all repetitions
             var expectedMagic = [];
             for (var i = 15; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
             var matchCount = 0, totalChecks = 0;
@@ -1779,9 +1783,12 @@
                     if (rawBits[idx] === expectedMagic[i]) matchCount++;
                 }
             }
-            var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
-            if (confidence < 55) return null;
-            return { userId: userId, confidence: confidence, blockSize: blockSize };
+            var rawConf = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
+            // Combine raw confidence with magic accuracy for final score
+            var magicAccuracy = Math.round(((16 - bitErrors) / 16) * 100);
+            var confidence = Math.round(rawConf * 0.7 + magicAccuracy * 0.3);
+            if (confidence < 45) return null;
+            return { userId: userId, confidence: confidence, blockSize: blockSize, magicErrors: bitErrors };
         }
 
         function adminDecodeMultiScale(px, w, h) {
@@ -2117,7 +2124,7 @@
                 '<i class="fas fa-check-circle" style="font-size:32px;color:#2ecc71;margin-bottom:12px;display:block"></i>' +
                 '<p style="color:#2ecc71;font-weight:700;font-size:16px;margin-bottom:4px">Watermark Decoded!</p>' +
                 '<p style="color:#fff;font-size:14px;margin-bottom:4px">Viewer User ID: <strong>#' + userId + '</strong></p>' +
-                '<p style="color:#8080A0;font-size:12px;margin-bottom:16px">Confidence: ' + confidence + '%</p>' +
+                '<p style="color:#8080A0;font-size:12px;margin-bottom:16px">Confidence: ' + confidence + '%' + (result.magicErrors ? ' (magic: ' + result.magicErrors + ' bit errors)' : '') + ' | Block: ' + result.blockSize + 'px</p>' +
                 '<div id="wm-user-card"><p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up user...</p></div>' +
             '</div>';
 

@@ -11,9 +11,10 @@ module.exports = async function handler(req, res) {
   }
 
   const body = await parseBody(req);
-  // image = contrast-amplified version (viewer watermark "ST:X" clearly visible)
+  // image = thresholded binary (black/white, watermark text as white on black)
+  // softImage = softer amplification with more context
   // rawImage = original screenshot (upload watermark "SafeTea #X" visible)
-  const { image, rawImage } = body;
+  const { image, softImage, rawImage } = body;
 
   if (!image) {
     return res.status(400).json({ error: 'Missing image data' });
@@ -35,17 +36,26 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const amp = extractBase64(image);
+    // Build message with multiple processed versions for best detection
+    const content = [];
 
-    // Build message content — always include the amplified image
-    const content = [
-      {
+    // Thresholded binary image (clearest for text detection)
+    const thresh = extractBase64(image);
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: thresh.media, data: thresh.base64 },
+    });
+
+    // Softer amplification (more context/gradation)
+    if (softImage) {
+      const soft = extractBase64(softImage);
+      content.push({
         type: 'image',
-        source: { type: 'base64', media_type: amp.media, data: amp.base64 },
-      },
-    ];
+        source: { type: 'base64', media_type: soft.media, data: soft.base64 },
+      });
+    }
 
-    // If raw image provided, include it too (for reading "SafeTea #X" upload watermark)
+    // Raw image for upload watermark
     if (rawImage) {
       const raw = extractBase64(rawImage);
       content.push({
@@ -56,9 +66,11 @@ module.exports = async function handler(req, res) {
 
     content.push({
       type: 'text',
-      text: 'These images are from a watermark detection system. The FIRST image has been contrast-amplified to reveal hidden watermark text. Look for repeating text patterns like "ST:" followed by a number (e.g., "ST:2", "ST:9", "ST:42"). The text appears as a repeating tiled pattern across the image. ' +
-        (rawImage ? 'The SECOND image is the original photo — look for faint text like "SafeTea #" followed by a number (e.g., "SafeTea #2"). ' : '') +
-        'Read and report ALL text you find. Respond in this exact JSON format: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
+      text: 'You are analyzing images for hidden watermark text. ' +
+        'Image 1 is a THRESHOLDED binary version — white text patterns on black background. Look for repeating text that reads "ST:" followed by a number (like "ST:2" or "ST:9"). The text is tiled diagonally across the entire image in a repeating grid pattern. Each instance shows the same "ST:NUMBER" text. ' +
+        (softImage ? 'Image 2 is a softer contrast-amplified version showing the same watermark with more gradation. ' : '') +
+        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' is the original photo — look for faint translucent text like "SafeTea #" followed by a number. ' : '') +
+        'Focus on reading the "ST:" text in the first image. The characters S, T, colon, and digits should be visible as a repeating pattern. Report what you find. Respond in this exact JSON format: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
     });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {

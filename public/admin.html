@@ -2043,20 +2043,37 @@
             var w = canvas.width, h = canvas.height;
             var ctx = canvas.getContext('2d');
 
-            // Apply high-pass amplification BEFORE sending to AI — makes "ST:X" text clearly visible
-            var ampData = amplifyWatermark(ctx, w, h, 80, 20);
-            var ampCanvas = document.createElement('canvas');
-            ampCanvas.width = w; ampCanvas.height = h;
-            ampCanvas.getContext('2d').putImageData(ampData, 0, 0);
-            var amplifiedImage = ampCanvas.toDataURL('image/png');
+            // Multi-pass processing to make watermark text clearly readable for AI:
+            // 1. High-pass with large blur (removes photo texture, keeps text pattern)
+            var ampData = amplifyWatermark(ctx, w, h, 40, 50);
+            var ampPixels = ampData.data;
 
-            // Send amplified image (viewer watermark) + raw image (upload watermark)
+            // 2. Threshold to binary (pure black/white) — eliminates noise, text pops
+            var threshCanvas = document.createElement('canvas');
+            threshCanvas.width = w; threshCanvas.height = h;
+            var threshOut = new Uint8ClampedArray(w * h * 4);
+            for (var i = 0; i < w * h; i++) {
+                var idx = i * 4;
+                var bright = ampPixels[idx] > 140 ? 255 : 0;
+                threshOut[idx] = bright; threshOut[idx+1] = bright; threshOut[idx+2] = bright; threshOut[idx+3] = 255;
+            }
+            threshCanvas.getContext('2d').putImageData(new ImageData(threshOut, w, h), 0, 0);
+            var threshImage = threshCanvas.toDataURL('image/png');
+
+            // 3. Also do a softer amplification for context
+            var softAmp = amplifyWatermark(ctx, w, h, 60, 35);
+            var softCanvas = document.createElement('canvas');
+            softCanvas.width = w; softCanvas.height = h;
+            softCanvas.getContext('2d').putImageData(softAmp, 0, 0);
+            var softImage = softCanvas.toDataURL('image/png');
+
+            // Send both processed versions + raw image
             var rawImage = canvas.toDataURL('image/jpeg', 0.95);
 
             fetch(API_BASE + '/admin/scan-watermark', {
                 method: 'POST',
                 headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
-                body: JSON.stringify({ image: amplifiedImage, rawImage: rawImage })
+                body: JSON.stringify({ image: threshImage, softImage: softImage, rawImage: rawImage })
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {

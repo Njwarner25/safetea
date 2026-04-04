@@ -1770,17 +1770,17 @@
             var pat = document.createElement('canvas');
             pat.width = w; pat.height = h;
             var pCtx = pat.getContext('2d');
-            pCtx.font = 'bold 14px monospace';
+            pCtx.font = 'bold 18px monospace';
             pCtx.textBaseline = 'top';
             pCtx.fillStyle = '#ffffff';
-            pCtx.rotate(-0.08);
-            for (var y = -30; y < h + 60; y += 32) {
-                for (var x = -30; x < w + 60; x += 100) {
+            pCtx.rotate(-0.06);
+            for (var y = -40; y < h + 80; y += 28) {
+                for (var x = -40; x < w + 80; x += 110) {
                     pCtx.fillText(text, x, y);
                 }
             }
             ctx.save();
-            ctx.globalAlpha = 0.04;
+            ctx.globalAlpha = 0.08;
             ctx.drawImage(pat, 0, 0);
             ctx.restore();
         }
@@ -1828,7 +1828,7 @@
                 wmApplyTextAdmin(ctx, w, h, testUserId);
 
                 // Amplify raw
-                var ampRaw = amplifyWatermark(ctx, w, h, 40, 20);
+                var ampRaw = amplifyWatermark(ctx, w, h, 60, 20);
 
                 // JPEG round-trip test
                 var jpegUrl = canvas.toDataURL('image/jpeg', 0.92);
@@ -1838,13 +1838,13 @@
                     c2.width = jpegImg.width; c2.height = jpegImg.height;
                     var ctx2 = c2.getContext('2d');
                     ctx2.drawImage(jpegImg, 0, 0);
-                    var ampJpeg = amplifyWatermark(ctx2, c2.width, c2.height, 40, 20);
+                    var ampJpeg = amplifyWatermark(ctx2, c2.width, c2.height, 60, 20);
 
                     var html = '<div style="background:#141428;border-radius:10px;padding:16px">';
                     html += '<h4 style="color:#fff;margin-bottom:12px;font-size:14px"><i class="fas fa-vial" style="color:#E8A0B5"></i> Self-Test — Look for "ST:' + testUserId + '" in amplified images</h4>';
                     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
-                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">Raw — Amplified (40x)</p><div id="st-raw-amp"></div></div>';
-                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">JPEG 0.92 — Amplified (40x)</p><div id="st-jpeg-amp"></div></div>';
+                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">Raw — Amplified (60x)</p><div id="st-raw-amp"></div></div>';
+                    html += '<div><p style="color:#8080A0;font-size:11px;margin-bottom:4px">JPEG 0.92 — Amplified (60x)</p><div id="st-jpeg-amp"></div></div>';
                     html += '</div>';
                     html += '<p style="color:#2ecc71;font-weight:600;font-size:13px"><i class="fas fa-info-circle"></i> If you can read "ST:42" in both images, the watermark system is working correctly.</p>';
                     html += '</div>';
@@ -1903,7 +1903,7 @@
                 a.click();
 
                 // Show amplified preview
-                var ampData = amplifyWatermark(ctx, w, h, 40, 20);
+                var ampData = amplifyWatermark(ctx, w, h, 60, 20);
                 resultEl.innerHTML = '<div style="background:#141428;border-radius:10px;padding:16px">' +
                     '<p style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Test image downloaded (userId=' + testUserId + ')</p>' +
                     '<p style="color:#8080A0;font-size:12px;margin-top:8px">Amplified preview — look for "ST:12345":</p>' +
@@ -1942,20 +1942,37 @@
             resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Amplifying watermark (' + w + 'x' + h + ')...</p>';
 
             setTimeout(function() {
-                var gain = 40;
+                var gain = 60;
+                // High-pass amplification (removes photo, reveals watermark text)
                 var ampData = amplifyWatermark(ctx, w, h, gain, 20);
-                var ampCanvas = makeAmpCanvas(ampData, w, h);
+
+                // Also generate a direct contrast stretch (backup method)
+                var srcData = ctx.getImageData(0, 0, w, h);
+                var directOut = new Uint8ClampedArray(w * h * 4);
+                for (var i = 0; i < w * h; i++) {
+                    var idx = i * 4;
+                    var lum = 0.299 * srcData.data[idx] + 0.587 * srcData.data[idx+1] + 0.114 * srcData.data[idx+2];
+                    // Extreme contrast: stretch narrow range around the local value
+                    var v = Math.round((lum - 120) * 15 + 128);
+                    if (v < 0) v = 0; if (v > 255) v = 255;
+                    directOut[idx] = v; directOut[idx+1] = v; directOut[idx+2] = v; directOut[idx+3] = 255;
+                }
+                var directData = new ImageData(directOut, w, h);
 
                 resultEl.innerHTML = '';
                 var container = document.createElement('div');
                 container.innerHTML =
-                    '<p style="color:#E8A0B5;font-weight:600;margin-bottom:8px"><i class="fas fa-search-plus"></i> Contrast-Amplified View</p>' +
-                    '<p style="color:#8080A0;font-size:12px;margin-bottom:8px">Look for repeated "ST:XXXXX" text. The number after "ST:" is the viewer\'s user ID.</p>' +
-                    '<div style="margin-bottom:12px">' +
-                        '<label style="color:#8080A0;font-size:11px">Amplification: <span id="wm-gain-label">' + gain + 'x</span></label>' +
-                        '<input type="range" id="wm-gain-slider" min="10" max="100" value="' + gain + '" style="width:100%;margin-top:4px;accent-color:#E8A0B5" />' +
+                    '<p style="color:#E8A0B5;font-weight:600;margin-bottom:8px"><i class="fas fa-search-plus"></i> Watermark Decoder</p>' +
+                    '<p style="color:#8080A0;font-size:12px;margin-bottom:12px">Look for repeated "ST:XXXXX" text in either view. The number after "ST:" is the viewer\'s user ID.</p>' +
+                    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+                        '<button id="wm-mode-hp" class="btn btn-ghost" onclick="wmSwitchMode(\'hp\')" style="font-size:12px;border-color:#E8A0B5;color:#E8A0B5"><i class="fas fa-filter"></i> High-Pass</button>' +
+                        '<button id="wm-mode-direct" class="btn btn-ghost" onclick="wmSwitchMode(\'direct\')" style="font-size:12px"><i class="fas fa-adjust"></i> Direct Contrast</button>' +
                     '</div>' +
-                    '<div id="wm-amp-container" style="margin-bottom:12px"></div>' +
+                    '<div id="wm-mode-controls" style="margin-bottom:8px">' +
+                        '<label style="color:#8080A0;font-size:11px">Gain: <span id="wm-gain-label">' + gain + 'x</span></label>' +
+                        '<input type="range" id="wm-gain-slider" min="10" max="150" value="' + gain + '" style="width:100%;margin-top:4px;accent-color:#E8A0B5" />' +
+                    '</div>' +
+                    '<div id="wm-amp-container" style="margin-bottom:12px;background:#000;border-radius:8px;overflow:hidden"></div>' +
                     '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">' +
                         '<p style="color:#fff;font-weight:600;font-size:13px;margin-bottom:8px">Enter the User ID you see:</p>' +
                         '<div style="display:flex;gap:8px">' +
@@ -1966,24 +1983,52 @@
                     '</div>';
 
                 resultEl.appendChild(container);
-                document.getElementById('wm-amp-container').appendChild(ampCanvas);
+                document.getElementById('wm-amp-container').appendChild(makeAmpCanvas(ampData, w, h));
 
-                // Gain slider — re-amplify on change
+                // Store state for mode switching
+                window._wmDecodeState = { ctx: ctx, w: w, h: h, directData: directData, mode: 'hp' };
+
+                // Gain slider — re-amplify on change (high-pass mode only)
                 var slider = document.getElementById('wm-gain-slider');
                 var label = document.getElementById('wm-gain-label');
                 var debounce = null;
                 slider.addEventListener('input', function() {
+                    if (window._wmDecodeState.mode !== 'hp') return;
                     var newGain = parseInt(slider.value);
                     label.textContent = newGain + 'x';
                     clearTimeout(debounce);
                     debounce = setTimeout(function() {
                         var newAmp = amplifyWatermark(ctx, w, h, newGain, 20);
-                        var ampContainer = document.getElementById('wm-amp-container');
-                        ampContainer.innerHTML = '';
-                        ampContainer.appendChild(makeAmpCanvas(newAmp, w, h));
+                        var ac = document.getElementById('wm-amp-container');
+                        ac.innerHTML = '';
+                        ac.appendChild(makeAmpCanvas(newAmp, w, h));
                     }, 150);
                 });
             }, 50);
+        }
+
+        function wmSwitchMode(mode) {
+            var st = window._wmDecodeState;
+            if (!st) return;
+            st.mode = mode;
+            var ac = document.getElementById('wm-amp-container');
+            ac.innerHTML = '';
+            var hpBtn = document.getElementById('wm-mode-hp');
+            var dirBtn = document.getElementById('wm-mode-direct');
+            var controls = document.getElementById('wm-mode-controls');
+            if (mode === 'hp') {
+                hpBtn.style.borderColor = '#E8A0B5'; hpBtn.style.color = '#E8A0B5';
+                dirBtn.style.borderColor = ''; dirBtn.style.color = '';
+                controls.style.display = '';
+                var gain = parseInt(document.getElementById('wm-gain-slider').value) || 60;
+                var ampData = amplifyWatermark(st.ctx, st.w, st.h, gain, 20);
+                ac.appendChild(makeAmpCanvas(ampData, st.w, st.h));
+            } else {
+                dirBtn.style.borderColor = '#E8A0B5'; dirBtn.style.color = '#E8A0B5';
+                hpBtn.style.borderColor = ''; hpBtn.style.color = '';
+                controls.style.display = 'none';
+                ac.appendChild(makeAmpCanvas(st.directData, st.w, st.h));
+            }
         }
 
         function wmLookupUser() {
@@ -2157,7 +2202,7 @@
 
         function decodeWatermarkInline(ctx, w, h, resultElId) {
             var resultEl = document.getElementById(resultElId);
-            var ampData = amplifyWatermark(ctx, w, h, 40, 20);
+            var ampData = amplifyWatermark(ctx, w, h, 60, 20);
             var ampCanvas = makeAmpCanvas(ampData, w, h);
             ampCanvas.style.marginTop = '8px';
             ampCanvas.style.maxHeight = '200px';

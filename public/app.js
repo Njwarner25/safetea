@@ -2264,23 +2264,22 @@
 
     function wmApplyText(ctx, w, h, userId) {
         var text = 'ST:' + userId;
-        // Render white text at full opacity on a separate canvas, then composite at low alpha.
-        // This avoids anti-aliasing dilution from direct low-opacity fillText.
+        // Render white text at full opacity on a separate canvas, then composite at 8% alpha.
+        // 8% creates pixel changes of 5-20 — survives screenshots, still subtle on photos.
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
         var pCtx = pat.getContext('2d');
-        pCtx.font = 'bold 14px monospace';
+        pCtx.font = 'bold 18px monospace';
         pCtx.textBaseline = 'top';
         pCtx.fillStyle = '#ffffff';
-        pCtx.rotate(-0.08);
-        for (var y = -30; y < h + 60; y += 32) {
-            for (var x = -30; x < w + 60; x += 100) {
+        pCtx.rotate(-0.06);
+        for (var y = -40; y < h + 80; y += 28) {
+            for (var x = -40; x < w + 80; x += 110) {
                 pCtx.fillText(text, x, y);
             }
         }
-        // Composite the text pattern at 4% opacity — invisible on photos, clear after amplification
         ctx.save();
-        ctx.globalAlpha = 0.04;
+        ctx.globalAlpha = 0.08;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
     }

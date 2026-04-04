@@ -2348,6 +2348,15 @@
             return;
         }
 
+        // Skip invalid/corrupted image data
+        if (src.length < 200 && src.startsWith('data:')) {
+            console.warn('[SafeTea WM] Skipping too-short base64 image — postId:', postId, 'length:', src.length);
+            el.dataset.stegoProcessed = '1';
+            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+            if (spinner) spinner.innerHTML = '<span style="color:#8080A0;font-size:11px">No image</span>';
+            return;
+        }
+
         el.dataset.stegoProcessed = '1';
         var u = getUser();
         var uid = u ? parseInt(u.id) || 0 : 0;

@@ -11,7 +11,9 @@ module.exports = async function handler(req, res) {
   }
 
   const body = await parseBody(req);
-  const { image } = body; // base64 data URL or raw base64
+  // image = contrast-amplified version (viewer watermark "ST:X" clearly visible)
+  // rawImage = original screenshot (upload watermark "SafeTea #X" visible)
+  const { image, rawImage } = body;
 
   if (!image) {
     return res.status(400).json({ error: 'Missing image data' });
@@ -22,19 +24,43 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
   }
 
+  function extractBase64(dataUrl) {
+    let base64 = dataUrl;
+    let media = 'image/jpeg';
+    if (dataUrl.startsWith('data:')) {
+      const m = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (m) { media = m[1]; base64 = m[2]; }
+    }
+    return { base64, media };
+  }
+
   try {
-    // Extract base64 and media type from data URL
-    let base64Data = image;
-    let mediaType = 'image/jpeg';
-    if (image.startsWith('data:')) {
-      const match = image.match(/^data:(image\/\w+);base64,(.+)$/);
-      if (match) {
-        mediaType = match[1];
-        base64Data = match[2];
-      }
+    const amp = extractBase64(image);
+
+    // Build message content — always include the amplified image
+    const content = [
+      {
+        type: 'image',
+        source: { type: 'base64', media_type: amp.media, data: amp.base64 },
+      },
+    ];
+
+    // If raw image provided, include it too (for reading "SafeTea #X" upload watermark)
+    if (rawImage) {
+      const raw = extractBase64(rawImage);
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: raw.media, data: raw.base64 },
+      });
     }
 
-    // Send to Claude Vision to read watermark text
+    content.push({
+      type: 'text',
+      text: 'These images are from a watermark detection system. The FIRST image has been contrast-amplified to reveal hidden watermark text. Look for repeating text patterns like "ST:" followed by a number (e.g., "ST:2", "ST:9", "ST:42"). The text appears as a repeating tiled pattern across the image. ' +
+        (rawImage ? 'The SECOND image is the original photo — look for faint text like "SafeTea #" followed by a number (e.g., "SafeTea #2"). ' : '') +
+        'Read and report ALL text you find. Respond in this exact JSON format: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
+    });
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -45,19 +71,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType, data: base64Data },
-            },
-            {
-              type: 'text',
-              text: 'This image may contain a faint, semi-transparent repeating watermark text pattern. Look very carefully for any text that follows the format "ST:" followed by a number (like "ST:9" or "ST:42" or "ST:12345"). The text may be very faint white text tiled diagonally across the image. Also look for text like "SafeTea #" followed by a number. Report ALL text patterns you find. Respond in this exact JSON format: {"viewer_watermark": "ST:NUMBER or null if not found", "upload_watermark": "SafeTea #NUMBER or null if not found", "confidence": "high/medium/low", "notes": "brief description of what you see"}'
-            }
-          ]
-        }]
+        messages: [{ role: 'user', content }]
       })
     });
 
@@ -70,7 +84,7 @@ module.exports = async function handler(req, res) {
     const result = await response.json();
     const aiText = result.content?.[0]?.text || '';
 
-    // Try to parse JSON from AI response
+    // Parse JSON from AI response
     let parsed = null;
     try {
       const jsonMatch = aiText.match(/\{[\s\S]*\}/);
@@ -92,7 +106,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Also try regex on raw text as fallback
+    // Fallback regex on raw text
     if (!viewerId) {
       const stMatch = aiText.match(/ST:(\d+)/);
       if (stMatch) viewerId = parseInt(stMatch[1]);
@@ -102,7 +116,7 @@ module.exports = async function handler(req, res) {
       if (safeMatch) uploaderId = parseInt(safeMatch[1]);
     }
 
-    // Look up users if found
+    // Look up users
     const { getOne } = require('../_utils/db');
     let viewerUser = null;
     let uploaderUser = null;

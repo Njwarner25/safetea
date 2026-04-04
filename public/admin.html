@@ -2040,13 +2040,23 @@
             var aiBtn = document.getElementById('wm-mode-ai');
             if (aiBtn) { aiBtn.disabled = true; aiBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...'; }
 
-            // Convert canvas to base64 JPEG
-            var imageData = canvas.toDataURL('image/jpeg', 0.95);
+            var w = canvas.width, h = canvas.height;
+            var ctx = canvas.getContext('2d');
+
+            // Apply high-pass amplification BEFORE sending to AI — makes "ST:X" text clearly visible
+            var ampData = amplifyWatermark(ctx, w, h, 80, 20);
+            var ampCanvas = document.createElement('canvas');
+            ampCanvas.width = w; ampCanvas.height = h;
+            ampCanvas.getContext('2d').putImageData(ampData, 0, 0);
+            var amplifiedImage = ampCanvas.toDataURL('image/png');
+
+            // Send amplified image (viewer watermark) + raw image (upload watermark)
+            var rawImage = canvas.toDataURL('image/jpeg', 0.95);
 
             fetch(API_BASE + '/admin/scan-watermark', {
                 method: 'POST',
                 headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
-                body: JSON.stringify({ image: imageData })
+                body: JSON.stringify({ image: amplifiedImage, rawImage: rawImage })
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {

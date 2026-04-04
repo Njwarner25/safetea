@@ -2292,7 +2292,7 @@
                 var bit = bits[b % bits.length];
                 var bx = (b % blocksX) * STEGO_BLOCK;
                 var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                var delta = bit ? 3 : -3;
+                var delta = bit ? 5 : -5;
                 for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
                     for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
                         var idx = (py * w + px2) * 4;

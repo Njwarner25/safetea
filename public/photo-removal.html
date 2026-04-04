@@ -233,7 +233,8 @@
     resultDiv.style.display = 'block';
   }
 
-  // Decode the client-side luminance watermark (same algo as admin decoder)
+  // Decode luminance watermark — tries multiple block sizes to handle screenshots
+  // at different display scales (photos display at CSS width, not native resolution)
   function decodeLuminanceWatermark(file){
     return new Promise(function(resolve){
       var reader = new FileReader();
@@ -248,63 +249,20 @@
             var imageData = ctx.getImageData(0, 0, img.width, img.height);
             var px = imageData.data;
             var w = img.width, h = img.height;
-            var blocksX = Math.floor(w / STEGO_BLOCK);
-            var blocksY = Math.floor(h / STEGO_BLOCK);
-            var totalBlocks = blocksX * blocksY;
-            if(totalBlocks < 40){ resolve(null); return; }
 
-            var blockAvgs = [];
-            for(var b = 0; b < totalBlocks; b++){
-              var bx = (b % blocksX) * STEGO_BLOCK;
-              var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-              var sum = 0, count = 0;
-              for(var py = by; py < by + STEGO_BLOCK && py < h; py++){
-                for(var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++){
-                  sum += px[(py * w + px2) * 4 + 1]; count++;
-                }
-              }
-              blockAvgs.push(sum / count);
-            }
+            // Try multiple block sizes (original is 32, but screenshots scale it)
+            var blockSizes = [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48];
+            var bestResult = null;
 
-            var payloadLen = 40;
-            var reps = Math.max(1, Math.floor(totalBlocks / payloadLen));
-            var bitVotes = new Array(payloadLen).fill(0);
-            for(var rep = 0; rep < reps; rep++){
-              for(var bit = 0; bit < payloadLen; bit++){
-                var idx = rep * payloadLen + bit;
-                if(idx >= totalBlocks) break;
-                var localSum = 0, localCount = 0;
-                var bRow = Math.floor(idx / blocksX), bCol = idx % blocksX;
-                for(var dr = -1; dr <= 1; dr++){
-                  for(var dc = -1; dc <= 1; dc++){
-                    if(dr === 0 && dc === 0) continue;
-                    var nr = bRow + dr, nc = bCol + dc;
-                    if(nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX){
-                      localSum += blockAvgs[nr * blocksX + nc]; localCount++;
-                    }
-                  }
-                }
-                if(localCount === 0) continue;
-                var localAvg = localSum / localCount;
-                if(blockAvgs[idx] > localAvg) bitVotes[bit]++;
-                else bitVotes[bit]--;
+            for(var si = 0; si < blockSizes.length; si++){
+              var blockSize = blockSizes[si];
+              var result = tryDecodeAtBlockSize(px, w, h, blockSize);
+              if(result && (!bestResult || result.confidence > bestResult.confidence)){
+                bestResult = result;
               }
             }
 
-            var bits = bitVotes.map(function(v){ return v > 0 ? 1 : 0; });
-            var magic = 0;
-            for(var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
-            if(magic !== STEGO_MAGIC){ resolve(null); return; }
-
-            var userId = 0;
-            for(var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
-            userId = userId >>> 0;
-
-            var totalVoteStrength = 0;
-            for(var i = 0; i < payloadLen; i++) totalVoteStrength += Math.abs(bitVotes[i]);
-            var confidence = Math.min(100, Math.round((totalVoteStrength / payloadLen / Math.max(reps, 1)) * 100));
-
-            resolve({ userId: userId, confidence: confidence });
+            resolve(bestResult);
           } catch(e){ resolve(null); }
         };
         img.onerror = function(){ resolve(null); };
@@ -313,6 +271,103 @@
       reader.onerror = function(){ resolve(null); };
       reader.readAsDataURL(file);
     });
+  }
+
+  function tryDecodeAtBlockSize(px, w, h, blockSize){
+    var blocksX = Math.floor(w / blockSize);
+    var blocksY = Math.floor(h / blockSize);
+    var totalBlocks = blocksX * blocksY;
+    if(totalBlocks < 40) return null;
+
+    // Compute average green per block
+    var blockAvgs = [];
+    for(var b = 0; b < totalBlocks; b++){
+      var bx = (b % blocksX) * blockSize;
+      var by = Math.floor(b / blocksX) * blockSize;
+      var sum = 0, count = 0;
+      for(var py = by; py < by + blockSize && py < h; py++){
+        for(var px2 = bx; px2 < bx + blockSize && px2 < w; px2++){
+          sum += px[(py * w + px2) * 4 + 1]; count++;
+        }
+      }
+      blockAvgs.push(sum / count);
+    }
+
+    var payloadLen = 40;
+    var reps = Math.max(1, Math.floor(totalBlocks / payloadLen));
+
+    // Method 1: Per-bit average across repetitions vs global median
+    var bitAvgs = new Array(payloadLen).fill(0);
+    var bitCounts = new Array(payloadLen).fill(0);
+    for(var b = 0; b < totalBlocks; b++){
+      var pos = b % payloadLen;
+      bitAvgs[pos] += blockAvgs[b];
+      bitCounts[pos]++;
+    }
+    for(var i = 0; i < payloadLen; i++){
+      if(bitCounts[i] > 0) bitAvgs[i] /= bitCounts[i];
+    }
+    // Global average of all block averages
+    var globalSum = 0;
+    for(var i = 0; i < totalBlocks; i++) globalSum += blockAvgs[i];
+    var globalAvg = globalSum / totalBlocks;
+
+    // Bits above global avg → 1, below → 0
+    var bits1 = bitAvgs.map(function(v){ return v > globalAvg ? 1 : 0; });
+    var magic1 = 0;
+    for(var i = 0; i < 8; i++) magic1 = (magic1 << 1) | bits1[i];
+
+    // Method 2: Neighbor-relative comparison with majority voting
+    var bitVotes = new Array(payloadLen).fill(0);
+    for(var rep = 0; rep < reps; rep++){
+      for(var bit = 0; bit < payloadLen; bit++){
+        var idx = rep * payloadLen + bit;
+        if(idx >= totalBlocks) break;
+        var localSum = 0, localCount = 0;
+        var bRow = Math.floor(idx / blocksX), bCol = idx % blocksX;
+        for(var dr = -1; dr <= 1; dr++){
+          for(var dc = -1; dc <= 1; dc++){
+            if(dr === 0 && dc === 0) continue;
+            var nr = bRow + dr, nc = bCol + dc;
+            if(nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX){
+              localSum += blockAvgs[nr * blocksX + nc]; localCount++;
+            }
+          }
+        }
+        if(localCount === 0) continue;
+        if(blockAvgs[idx] > localSum / localCount) bitVotes[bit]++;
+        else bitVotes[bit]--;
+      }
+    }
+    var bits2 = bitVotes.map(function(v){ return v > 0 ? 1 : 0; });
+    var magic2 = 0;
+    for(var i = 0; i < 8; i++) magic2 = (magic2 << 1) | bits2[i];
+
+    // Pick whichever method got the magic header right
+    var bits, magic;
+    if(magic1 === STEGO_MAGIC){
+      bits = bits1; magic = magic1;
+    } else if(magic2 === STEGO_MAGIC){
+      bits = bits2; magic = magic2;
+    } else {
+      return null;
+    }
+
+    var userId = 0;
+    for(var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+    userId = userId >>> 0;
+    if(userId === 0) return null;
+
+    // Confidence from deviation strength
+    var deviations = [];
+    for(var i = 0; i < payloadLen; i++){
+      deviations.push(Math.abs(bitAvgs[i] - globalAvg));
+    }
+    deviations.sort(function(a,b){ return a - b; });
+    var medianDev = deviations[Math.floor(deviations.length / 2)];
+    var confidence = Math.min(100, Math.round(medianDev * 20));
+
+    return { userId: userId, confidence: confidence, blockSize: blockSize };
   }
 
   submitBtn.addEventListener('click', async function(){

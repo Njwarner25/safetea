@@ -68,8 +68,8 @@ module.exports = async function handler(req, res) {
         }
 
         if (userId) {
-          // Determine tier from plan
-          const tier = (plan && plan.startsWith('pro')) ? 'pro' : 'plus';
+          // All paid plans map to 'plus' (legacy 'pro' consolidated into SafeTea+)
+          const tier = 'plus';
 
           await run(
             `UPDATE users SET subscription_tier = $1, stripe_subscription_id = $2, updated_at = NOW() WHERE id = $3`,
@@ -93,9 +93,8 @@ module.exports = async function handler(req, res) {
             const item = subscription.items && subscription.items.data && subscription.items.data[0];
             const priceId = item && item.price && item.price.id;
 
-            // Pro prices
-            const proPrices = ['price_1TDXN5FaKA9n89CXeDxnAJMh', 'price_1TEdJfFaKA9n89CXZebr3UxW'];
-            const tier = proPrices.includes(priceId) ? 'pro' : 'plus';
+            // All paid plans map to 'plus' (legacy 'pro' consolidated into SafeTea+)
+            const tier = 'plus';
 
             await run(
               'UPDATE users SET subscription_tier = $1, updated_at = NOW() WHERE id = $2',

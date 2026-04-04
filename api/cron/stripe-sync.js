@@ -2,10 +2,12 @@ const { getMany, run } = require('../_utils/db');
 const { stripe, PRICES } = require('../_utils/stripe');
 const { cors } = require('../_utils/auth');
 
-// Reverse lookup: price ID -> tier name
+// Reverse lookup: price ID -> tier name (all paid tiers are 'plus' after consolidation)
 function tierFromPriceId(priceId) {
   if (priceId === PRICES.plus) return 'plus';
-  if (priceId === PRICES.pro) return 'pro';
+  if (priceId === PRICES.plus_yearly) return 'plus';
+  if (priceId === PRICES.pro) return 'plus';       // legacy pro → plus
+  if (priceId === PRICES.pro_yearly) return 'plus'; // legacy pro yearly → plus
   return null;
 }
 

@@ -54,8 +54,8 @@ module.exports = async function handler(req, res) {
                 }
 
                 if (userId && plan) {
-                    // Normalize plan to tier: 'plus_monthly'/'plus_yearly' -> 'plus'
-                    const tier = plan.startsWith('plus') ? 'plus' : plan;
+                    // All paid plans map to 'plus' (legacy 'pro' consolidated into SafeTea+)
+                    const tier = 'plus';
                     await run(
                         'UPDATE users SET subscription_tier = $1, stripe_subscription_id = $2, stripe_customer_id = $3 WHERE id = $4',
                         [tier, subscriptionId, customerId, parseInt(userId)]
@@ -86,8 +86,7 @@ module.exports = async function handler(req, res) {
                     if (sub.status === 'past_due' || sub.status === 'unpaid') {
                         await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', ['free', user.id]);
                     } else if (sub.status === 'active') {
-                        const plan = sub.metadata.plan || 'plus';
-                        await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', [plan, user.id]);
+                        await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', ['plus', user.id]);
                     }
                 }
                 break;

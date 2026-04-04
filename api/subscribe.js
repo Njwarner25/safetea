@@ -108,8 +108,8 @@ module.exports = async function handler(req, res) {
         },
       ],
       mode: 'subscription',
-      success_url: 'https://www.getsafetea.app/dashboard.html?upgraded=true',
-      cancel_url: 'https://www.getsafetea.app/dashboard.html?upgraded=false',
+      success_url: 'https://www.getsafetea.app/dashboard.html?tab=profile&upgrade=success',
+      cancel_url: 'https://www.getsafetea.app/dashboard.html?tab=profile',
       metadata: {
         safetea_user_id: String(user.id),
         plan: validPrices[priceId].plan,

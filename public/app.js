@@ -1389,7 +1389,7 @@
     };
 
     // ============ UPGRADE / PREMIUM ============
-    var upgradeInterval = 'monthly'; // default billing interval
+    window._upgradeInterval = 'monthly'; // default billing interval (on window so inline onclick can access)
 
     window.showUpgradePrompt = function() {
         // Remove existing modal if open
@@ -1404,7 +1404,7 @@
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
         modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
 
-        var isYearly = upgradeInterval === 'yearly';
+        var isYearly = window._upgradeInterval === 'yearly';
         var plusPrice = isYearly ? '$66.99' : '$7.99';
         var plusPer = isYearly ? '/yr' : '/mo';
         var saveBadge = isYearly ? ' <span style="color:#2ecc71;font-size:11px;font-weight:600">Save 30%</span>' : '';
@@ -1420,8 +1420,8 @@
         var yrStyle = isYearly ? 'background:#E8A0B5;color:#1A1A2E;font-weight:600' : 'background:transparent;color:#8080A0';
         html += '<div style="display:flex;justify-content:center;margin-bottom:20px">';
         html += '<div style="display:inline-flex;background:#22223A;border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,0.06)">';
-        html += '<button onclick="upgradeInterval=\'monthly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + moStyle + '">Monthly</button>';
-        html += '<button onclick="upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly' + (isYearly ? '' : ' <span style="color:#2ecc71;font-size:10px">Save 30%</span>') + '</button>';
+        html += '<button onclick="window._upgradeInterval=\'monthly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + moStyle + '">Monthly</button>';
+        html += '<button onclick="window._upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly' + (isYearly ? '' : ' <span style="color:#2ecc71;font-size:10px">Save 30%</span>') + '</button>';
         html += '</div></div>';
 
         // SafeTea+ card (single paid tier)
@@ -1456,6 +1456,9 @@
     };
 
     window.startCheckout = function(plan) {
+        var interval = window._upgradeInterval || 'monthly';
+        console.log('[Stripe] Starting checkout — plan:', plan, 'interval:', interval);
+
         // Find the button that was clicked and show loading state
         var modal = document.getElementById('upgrade-modal');
         if (modal) {
@@ -1466,21 +1469,28 @@
         fetch('/api/subscriptions/checkout', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ plan: plan, interval: upgradeInterval })
+            body: JSON.stringify({ plan: plan, interval: interval })
         })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            console.log('[Stripe] Response status:', r.status);
+            return r.json();
+        })
         .then(function(data) {
+            console.log('[Stripe] Response data:', data);
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                if (typeof showToast === 'function') showToast(data.error || 'Failed to start checkout');
+                var errMsg = data.error || data.details || 'Failed to start checkout';
+                console.error('[Stripe] No checkout URL returned:', errMsg);
+                if (typeof showToast === 'function') showToast(errMsg);
                 if (modal) {
                     var buttons = modal.querySelectorAll('button');
                     buttons.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
                 }
             }
         })
-        .catch(function() {
+        .catch(function(err) {
+            console.error('[Stripe] Checkout fetch error:', err);
             if (typeof showToast === 'function') showToast('Network error — please try again');
             if (modal) {
                 var buttons = modal.querySelectorAll('button');

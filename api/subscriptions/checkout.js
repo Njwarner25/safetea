@@ -10,16 +10,20 @@ module.exports = async function handler(req, res) {
     const user = await authenticate(req);
     if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ error: 'Stripe not configured — STRIPE_SECRET_KEY missing' });
+    }
+
     try {
         const body = await parseBody(req);
         const { plan, interval } = body;
 
-        // Support: plus, pro, plus_yearly, pro_yearly
-        const priceKey = (interval === 'yearly') ? plan + '_yearly' : plan;
-        const basePlan = plan.replace('_yearly', '');
+        // Support: plus (legacy 'pro' accepted and mapped to 'plus')
+        const normalizedPlan = (plan === 'pro') ? 'plus' : plan;
+        const priceKey = (interval === 'yearly') ? normalizedPlan + '_yearly' : normalizedPlan;
 
-        if (!basePlan || !['plus', 'pro'].includes(basePlan) || !PRICES[priceKey]) {
-            return res.status(400).json({ error: 'Invalid plan. Must be "plus" or "pro".' });
+        if (normalizedPlan !== 'plus' || !PRICES[priceKey]) {
+            return res.status(400).json({ error: 'Invalid plan. Must be "plus".' });
         }
 
         // Get or create Stripe customer
@@ -43,9 +47,9 @@ module.exports = async function handler(req, res) {
                         id: sub.items.data[0].id,
                         price: PRICES[priceKey]
                     }],
-                    metadata: { plan: basePlan }
+                    metadata: { plan: 'plus' }
                 });
-                await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', [basePlan, user.id]);
+                await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', ['plus', user.id]);
                 return res.status(200).json({ url: APP_URL + '/dashboard.html?tab=profile&upgrade=success' });
             }
         }
@@ -55,7 +59,7 @@ module.exports = async function handler(req, res) {
             mode: 'subscription',
             payment_method_types: ['card'],
             line_items: [{ price: PRICES[priceKey], quantity: 1 }],
-            metadata: { plan: basePlan, user_id: String(user.id) },
+            metadata: { plan: 'plus', safetea_user_id: String(user.id) },
             success_url: APP_URL + '/dashboard.html?tab=profile&upgrade=success',
             cancel_url: APP_URL + '/dashboard.html?tab=profile'
         });

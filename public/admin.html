@@ -1716,7 +1716,7 @@
         }
 
         // ===== WATERMARK DECODER (Contrast Amplification — matches text overlay encoder in app.js) =====
-        // The encoder tiles "ST:{userId}" text at 2% white opacity across images.
+        // The encoder tiles "ST:{userId}" text at 20% white opacity across images.
         // To decode: apply high-pass filter (subtract blur) + amplify residual → text becomes readable.
 
         function boxBlurGray(gray, w, h, r) {
@@ -1767,21 +1767,21 @@
         // Text overlay encoder for self-test (mirrors app.js wmApplyText)
         function wmApplyTextAdmin(ctx, w, h, userId) {
             var text = 'ST:' + userId;
-            // For self-test: use fixed 22px since test canvas is at 1:1 (no DPR scaling)
+            // For self-test: use fixed 32px since test canvas is at 1:1 (no DPR scaling)
             var pat = document.createElement('canvas');
             pat.width = w; pat.height = h;
             var pCtx = pat.getContext('2d');
-            pCtx.font = 'bold 22px monospace';
+            pCtx.font = 'bold 32px monospace';
             pCtx.textBaseline = 'top';
             pCtx.fillStyle = '#ffffff';
             pCtx.rotate(-0.06);
-            for (var y = -60; y < h + 60; y += 48) {
-                for (var x = -60; x < w + 60; x += 140) {
+            for (var y = -80; y < h + 80; y += 64) {
+                for (var x = -80; x < w + 80; x += 200) {
                     pCtx.fillText(text, x, y);
                 }
             }
             ctx.save();
-            ctx.globalAlpha = 0.08;
+            ctx.globalAlpha = 0.20;
             ctx.drawImage(pat, 0, 0);
             ctx.restore();
         }

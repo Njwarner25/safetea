@@ -2269,9 +2269,9 @@
         var text = 'ST:' + userId;
         // Scale font by DPR so text appears consistent size regardless of screen density
         var dpr = window.devicePixelRatio || 1;
-        var fontSize = Math.round(22 * dpr);
-        var spacingY = Math.round(48 * dpr);
-        var spacingX = Math.round(140 * dpr);
+        var fontSize = Math.round(32 * dpr);
+        var spacingY = Math.round(64 * dpr);
+        var spacingX = Math.round(200 * dpr);
 
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
@@ -2280,14 +2280,14 @@
         pCtx.textBaseline = 'top';
         pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
         pCtx.rotate(-0.06);
-        var margin = Math.round(60 * dpr);
+        var margin = Math.round(80 * dpr);
         for (var y = -margin; y < h + margin; y += spacingY) {
             for (var x = -margin; x < w + margin; x += spacingX) {
                 pCtx.fillText(text, x, y);
             }
         }
         ctx.save();
-        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.08;
+        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.20;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
         if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr);
@@ -2421,8 +2421,34 @@
     window.observeStegoCanvases = observeStegoCanvases;
 
     // Catch-up: process any canvases that were rendered before app.js loaded
-    // (e.g., community feed auto-loaded from saved city while scripts were still loading)
     setTimeout(function() { observeStegoCanvases(); }, 200);
+
+    // MutationObserver failsafe: auto-process any canvas[data-stego-src] added to the DOM
+    // This catches ALL rendering paths — community feed, hub, rooms, etc.
+    try {
+        var stegoMO = new MutationObserver(function(mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var nodes = mutations[i].addedNodes;
+                for (var j = 0; j < nodes.length; j++) {
+                    var node = nodes[j];
+                    if (node.nodeType !== 1) continue;
+                    // Check if the added node itself is a stego canvas
+                    if (node.tagName === 'CANVAS' && node.dataset.stegoSrc && !node.dataset.stegoProcessed) {
+                        processStegCanvas(node);
+                    }
+                    // Check children of the added node
+                    if (node.querySelectorAll) {
+                        var nested = node.querySelectorAll('canvas[data-stego-src]:not([data-stego-processed])');
+                        for (var k = 0; k < nested.length; k++) processStegCanvas(nested[k]);
+                    }
+                }
+            }
+        });
+        stegoMO.observe(document.body, { childList: true, subtree: true });
+        console.log('[SafeTea WM] MutationObserver failsafe active');
+    } catch(e) {
+        console.warn('[SafeTea WM] MutationObserver not available:', e.message);
+    }
 
     function canModifyPost(post) {
         var u = getUser();

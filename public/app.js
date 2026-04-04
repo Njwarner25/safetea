@@ -2318,106 +2318,111 @@
     }
     window.stegoEmbed = stegoEmbed;
 
-    // IntersectionObserver: lazy-process photo post canvases when they enter viewport
-    // Embeds invisible text watermark at exact CSS×DPR resolution so canvas buffer = screenshot pixels
-    function initStegoObserver() {
-        if (!window.IntersectionObserver) return;
-        var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-                if (!entry.isIntersecting) return;
-                var el = entry.target;
-                if (el.dataset.stegoProcessed) return;
-                el.dataset.stegoProcessed = '1';
-                observer.unobserve(el);
+    // Direct canvas watermark processing — loads image, draws it, overlays viewer ID text
+    // Called immediately when canvases are added to DOM (no IntersectionObserver needed)
+    function processStegCanvas(el) {
+        if (el.dataset.stegoProcessed) return;
 
-                var src = el.dataset.stegoSrc;
-                if (!src) return;
-                var u = getUser();
-                var uid = u ? parseInt(u.id) || 0 : 0;
+        var src = el.dataset.stegoSrc;
+        if (!src) {
+            console.warn('[SafeTea WM] Canvas has no data-stego-src');
+            return;
+        }
 
-                var imgEl = new Image();
-                // No crossOrigin needed — we only DRAW to the canvas (never getImageData/toDataURL).
-                // Setting crossOrigin on hosts without CORS headers causes images to fail loading entirely.
-                imgEl.onload = function() {
-                    var canvas = el;
-                    var dpr = window.devicePixelRatio || 1;
+        // Skip if parent container has zero width (tab is display:none)
+        // Canvas will be re-processed when the tab becomes visible
+        var parentEl = el.parentElement;
+        if (parentEl && parentEl.clientWidth === 0) {
+            console.log('[SafeTea WM] Skipping canvas — parent has 0 width (hidden tab)');
+            return;
+        }
 
-                    // Calculate CSS display dimensions from container + image aspect ratio
-                    var parentEl = canvas.parentElement;
-                    var containerW = (parentEl ? parentEl.clientWidth : 0) || 500;
-                    var maxCssH = 300;
-                    var imgRatio = imgEl.naturalWidth / imgEl.naturalHeight;
+        el.dataset.stegoProcessed = '1';
+        var u = getUser();
+        var uid = u ? parseInt(u.id) || 0 : 0;
+        console.log('[SafeTea WM] Processing canvas — uid:', uid, 'src length:', src.length);
 
-                    var cssW = containerW;
-                    var cssH = Math.round(containerW / imgRatio);
-                    if (cssH > maxCssH) {
-                        cssH = maxCssH;
-                        cssW = Math.round(maxCssH * imgRatio);
-                        if (cssW > containerW) cssW = containerW;
-                    }
+        var imgEl = new Image();
+        imgEl.onload = function() {
+            var canvas = el;
+            var dpr = window.devicePixelRatio || 1;
 
-                    canvas.style.width = cssW + 'px';
-                    canvas.style.height = cssH + 'px';
-                    canvas.style.maxHeight = 'none';
-                    canvas.style.maxWidth = '100%';
+            // Calculate CSS display dimensions from container + image aspect ratio
+            var parentEl = canvas.parentElement;
+            var containerW = (parentEl ? parentEl.clientWidth : 0) || 500;
+            var maxCssH = 300;
+            var imgRatio = imgEl.naturalWidth / imgEl.naturalHeight;
 
-                    var bufW = Math.round(cssW * dpr);
-                    var bufH = Math.round(cssH * dpr);
-                    canvas.width = bufW;
-                    canvas.height = bufH;
+            var cssW = containerW;
+            var cssH = Math.round(containerW / imgRatio);
+            if (cssH > maxCssH) {
+                cssH = maxCssH;
+                cssW = Math.round(maxCssH * imgRatio);
+                if (cssW > containerW) cssW = containerW;
+            }
 
-                    var ctx = canvas.getContext('2d');
-                    ctx.drawImage(imgEl, 0, 0, bufW, bufH);
+            canvas.style.width = cssW + 'px';
+            canvas.style.height = cssH + 'px';
+            canvas.style.maxHeight = 'none';
+            canvas.style.maxWidth = '100%';
 
-                    // Apply invisible text watermark (survives screenshots + JPEG)
-                    wmApplyText(ctx, bufW, bufH, uid);
+            var bufW = Math.round(cssW * dpr);
+            var bufH = Math.round(cssH * dpr);
+            canvas.width = bufW;
+            canvas.height = bufH;
 
-                    // In debug mode, also draw a big obvious banner directly on the canvas
-                    if (WM_DEBUG) {
-                        ctx.save();
-                        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
-                        ctx.fillRect(0, 0, bufW, Math.round(32 * dpr));
-                        ctx.font = 'bold ' + Math.round(20 * dpr) + 'px monospace';
-                        ctx.fillStyle = '#ffffff';
-                        ctx.textBaseline = 'top';
-                        ctx.fillText('WATERMARK ACTIVE — Viewer ID: ' + uid, Math.round(8 * dpr), Math.round(6 * dpr));
-                        ctx.restore();
-                    }
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(imgEl, 0, 0, bufW, bufH);
 
-                    canvas.style.opacity = '1';
-                    // Hide the loading spinner, show success badge
-                    var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;
-                    if (spinner) spinner.innerHTML = WM_DEBUG
-                        ? '<span style="background:rgba(255,0,0,0.8);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">WM: uid=' + uid + '</span>'
-                        : '';
-                    console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
-                };
-                imgEl.onerror = function(e) {
-                    console.error('[SafeTea WM] Image FAILED to load:', src ? src.substring(0, 80) + '...' : 'null');
-                    // Show error on spinner
-                    var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
-                    if (spinner) spinner.innerHTML = '<span style="color:#e74c3c;font-size:11px"><i class="fas fa-times-circle"></i> Load failed</span>';
-                    // Fallback: show original image as regular <img> tag
-                    var fallback = document.createElement('img');
-                    fallback.src = src;
-                    fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
-                    if (el.parentElement) el.parentElement.insertBefore(fallback, el);
-                    el.style.display = 'none';
-                };
-                imgEl.src = src;
-            });
-        }, { rootMargin: '200px' });
-        window._stegoObserver = observer;
+            // Apply invisible text watermark (survives screenshots + JPEG)
+            wmApplyText(ctx, bufW, bufH, uid);
+
+            // In debug mode, also draw a big obvious banner directly on the canvas
+            if (WM_DEBUG) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, bufW, Math.round(32 * dpr));
+                ctx.font = 'bold ' + Math.round(20 * dpr) + 'px monospace';
+                ctx.fillStyle = '#ffffff';
+                ctx.textBaseline = 'top';
+                ctx.fillText('WATERMARK ACTIVE — Viewer ID: ' + uid, Math.round(8 * dpr), Math.round(6 * dpr));
+                ctx.restore();
+            }
+
+            canvas.style.opacity = '1';
+            // Hide the loading spinner, show success badge
+            var spinner = canvas.parentElement ? canvas.parentElement.querySelector('.stego-spinner') : null;
+            if (spinner) spinner.innerHTML = WM_DEBUG
+                ? '<span style="background:rgba(255,0,0,0.8);color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">WM: uid=' + uid + '</span>'
+                : '';
+            console.log('[SafeTea WM] Text watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH, 'dpr:', dpr);
+        };
+        imgEl.onerror = function(e) {
+            console.error('[SafeTea WM] Image FAILED to load — src type:', typeof src, 'length:', src.length, 'starts with:', src.substring(0, 40));
+            // Show error on spinner
+            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+            if (spinner) spinner.innerHTML = '<span style="color:#e74c3c;font-size:11px"><i class="fas fa-times-circle"></i> Load failed</span>';
+            // Fallback: show original image as regular <img> tag
+            var fallback = document.createElement('img');
+            fallback.src = src;
+            fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
+            if (el.parentElement) el.parentElement.insertBefore(fallback, el);
+            el.style.display = 'none';
+        };
+        imgEl.src = src;
     }
-    initStegoObserver();
 
-    // Observe new stego canvases after feed renders
+    // Process all stego canvases in a container — called after feed renders
     function observeStegoCanvases(container) {
-        if (!window._stegoObserver) return;
         var canvases = (container || document).querySelectorAll('canvas[data-stego-src]:not([data-stego-processed])');
-        canvases.forEach(function(c) { window._stegoObserver.observe(c); });
+        console.log('[SafeTea WM] observeStegoCanvases called — found', canvases.length, 'canvases');
+        canvases.forEach(function(c) { processStegCanvas(c); });
     }
     window.observeStegoCanvases = observeStegoCanvases;
+
+    // Catch-up: process any canvases that were rendered before app.js loaded
+    // (e.g., community feed auto-loaded from saved city while scripts were still loading)
+    setTimeout(function() { observeStegoCanvases(); }, 200);
 
     function canModifyPost(post) {
         var u = getUser();

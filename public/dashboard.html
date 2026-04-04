@@ -3517,6 +3517,11 @@
         if (tab === 'inbox' && typeof loadConversations === 'function') {
             loadConversations();
         }
+        // Re-process any photo watermark canvases that loaded while tab was hidden
+        if (tab === 'community' && typeof observeStegoCanvases === 'function') {
+            // Small delay to let the tab become visible (so container widths are correct)
+            setTimeout(function() { observeStegoCanvases(); }, 50);
+        }
     }
 
     // ============ HUB SUB-TAB SWITCHING ============

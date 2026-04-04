@@ -212,6 +212,7 @@
             <a data-section="feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
             <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
             <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
+            <a data-section="removal-requests"><i class="fas fa-image"></i> Removal Requests</a>
             <a data-section="watermark"><i class="fas fa-fingerprint"></i> Watermark Decoder</a>
             <a data-section="ai-assistant"><i class="fas fa-robot"></i> AI Assistant</a>
             <a data-section="ai-tasks"><i class="fas fa-calendar-check"></i> AI Task Scheduler</a>
@@ -551,6 +552,25 @@
                 </div>
             </div>
 
+            <!-- Removal Requests -->
+            <div id="section-removal-requests" class="section">
+                <div class="card">
+                    <h3><i class="fas fa-image"></i> Photo Removal Requests</h3>
+                    <div class="mod-toolbar">
+                        <div class="mod-filters">
+                            <select class="mod-filter" id="removal-status-filter" onchange="loadRemovalRequests()">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="manual_review">Manual Review</option>
+                                <option value="auto_resolved">Auto-Resolved</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="removal-requests-list"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+                </div>
+            </div>
+
             <!-- AI Task Scheduler -->
             <div id="section-ai-tasks" class="section">
                 <!-- Task List -->
@@ -684,6 +704,7 @@
                 if (section === 'room-reports') loadRoomReports();
                 if (section === 'feedback') loadFeedback();
                 if (section === 'ai-tasks') loadAiTasks();
+                if (section === 'removal-requests') loadRemovalRequests();
             });
         });
 
@@ -2202,6 +2223,71 @@
                 }
             }
             messages.scrollTop = messages.scrollHeight;
+        }
+
+        // ===== REMOVAL REQUESTS =====
+        async function loadRemovalRequests() {
+            var el = document.getElementById('removal-requests-list');
+            el.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            var status = document.getElementById('removal-status-filter').value;
+            var qs = status ? '?status=' + status : '';
+            try {
+                var res = await fetch(API_BASE + '/admin/removal-requests' + qs, { headers: authHeaders() });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                var requests = data.requests || [];
+                if (requests.length === 0) {
+                    el.innerHTML = '<div class="empty-state"><i class="fas fa-image"></i><p>No removal requests found.</p></div>';
+                    return;
+                }
+                var html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+                html += '<thead><tr style="color:#8080A0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="padding:10px 8px">ID</th><th style="padding:10px 8px">Email</th><th style="padding:10px 8px">Details</th><th style="padding:10px 8px">Status</th><th style="padding:10px 8px">Watermark</th><th style="padding:10px 8px">Action Taken</th><th style="padding:10px 8px">Submitted</th><th style="padding:10px 8px">Actions</th></tr></thead><tbody>';
+                for (var r of requests) {
+                    var statusBadge = '';
+                    if (r.status === 'auto_resolved') statusBadge = '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Auto-Resolved</span>';
+                    else if (r.status === 'resolved') statusBadge = '<span style="color:#2ecc71"><i class="fas fa-check"></i> Resolved</span>';
+                    else if (r.status === 'manual_review') statusBadge = '<span style="color:#f1c40f"><i class="fas fa-eye"></i> Manual Review</span>';
+                    else statusBadge = '<span style="color:#8080A0"><i class="fas fa-clock"></i> Pending</span>';
+
+                    var wmBadge = r.watermark_user_id
+                        ? '<span style="color:#E8A0B5;font-weight:600"><i class="fas fa-fingerprint"></i> User #' + r.watermark_user_id + '</span>'
+                        : '<span style="color:#8080A0">None</span>';
+
+                    html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
+                    html += '<td style="padding:10px 8px;color:#fff">#' + r.id + '</td>';
+                    html += '<td style="padding:10px 8px">' + escapeHtml(r.reporter_email || '—') + '</td>';
+                    html += '<td style="padding:10px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(r.details || '—') + '</td>';
+                    html += '<td style="padding:10px 8px">' + statusBadge + '</td>';
+                    html += '<td style="padding:10px 8px">' + wmBadge + '</td>';
+                    html += '<td style="padding:10px 8px">' + escapeHtml(r.auto_action_taken || '—') + '</td>';
+                    html += '<td style="padding:10px 8px">' + timeAgo(r.created_at) + '</td>';
+                    html += '<td style="padding:10px 8px;white-space:nowrap">';
+                    if (r.status !== 'resolved' && r.status !== 'auto_resolved') {
+                        html += '<button class="btn btn-approve btn-sm" onclick="resolveRemovalRequest(' + r.id + ')" title="Mark Resolved"><i class="fas fa-check"></i></button> ';
+                    }
+                    html += '</td></tr>';
+                }
+                html += '</tbody></table>';
+                el.innerHTML = html;
+            } catch (err) {
+                el.innerHTML = '<div class="empty-state" style="color:#e74c3c"><i class="fas fa-exclamation-triangle"></i><p>' + escapeHtml(err.message) + '</p></div>';
+            }
+        }
+
+        async function resolveRemovalRequest(id) {
+            try {
+                var res = await fetch(API_BASE + '/admin/removal-requests', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id: id, status: 'resolved' })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('Request marked as resolved');
+                loadRemovalRequests();
+            } catch (err) {
+                showToast(err.message, true);
+            }
         }
 
         // ===== AI TASK SCHEDULER =====

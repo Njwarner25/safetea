@@ -166,6 +166,7 @@
         { "source": "/api/cron/recalc-trust-scores", "destination": "/api/cron/recalc-trust-scores" },
         { "source": "/api/cron/run-ai-tasks", "destination": "/api/cron/run-ai-tasks" },
         { "source": "/api/admin/ai-tasks", "destination": "/api/admin/ai-tasks" },
+        { "source": "/api/admin/removal-requests", "destination": "/api/admin/removal-requests" },
         { "source": "/api/migrate-ai-tasks", "destination": "/api/migrate-ai-tasks" },
         { "source": "/api/moderation/analyze-leak", "destination": "/api/moderation/analyze-leak" },
         { "source": "/api/moderation/appeal", "destination": "/api/moderation/appeal" },

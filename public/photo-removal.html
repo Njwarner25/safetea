@@ -224,56 +224,90 @@
     resultDiv.style.display = 'none';
   }
 
+  // Resize image to stay under Vercel 4.5MB body limit
+  function resizeImage(file, maxBytes){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement('canvas');
+        var w = img.width, h = img.height;
+        // Scale down if needed (max 2000px on longest side)
+        var maxDim = 2000;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        // Try quality levels until under limit
+        var quality = 0.9;
+        var dataUrl;
+        do {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+          quality -= 0.1;
+        } while(dataUrl.length > maxBytes && quality > 0.1);
+        URL.revokeObjectURL(img.src);
+        resolve(dataUrl);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(img.src); resolve(null); };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   function showResult(msg, type){
     resultDiv.textContent = msg;
     resultDiv.className = 'removal-result ' + type;
     resultDiv.style.display = 'block';
   }
 
-  submitBtn.addEventListener('click', function(){
+  submitBtn.addEventListener('click', async function(){
     if(!selectedFile) return;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+    submitBtn.textContent = 'Processing image...';
     resultDiv.style.display = 'none';
 
-    var reader = new FileReader();
-    reader.onload = function(){
-      var base64 = reader.result;
+    try {
+      // Resize to stay under Vercel 4.5MB body limit (~3MB base64 target)
+      var base64 = await resizeImage(selectedFile, 3 * 1024 * 1024);
+      if(!base64){
+        showResult('Could not process image. Please try a different file.', 'error');
+        submitBtn.textContent = 'Submit Removal Request';
+        submitBtn.disabled = false;
+        return;
+      }
+
+      submitBtn.textContent = 'Submitting...';
       var payload = { image: base64 };
       var email = document.getElementById('removal-email').value.trim();
       var details = document.getElementById('removal-details').value.trim();
       if(email) payload.email = email;
       if(details) payload.details = details;
 
-      fetch('/api/photos/removal-public', {
+      var r = await fetch('/api/photos/removal-public', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      })
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        submitBtn.textContent = 'Submit Removal Request';
-        if(data.success){
-          if(data.watermark_detected){
-            showResult(data.message, 'success');
-          } else {
-            showResult(data.message, 'info');
-          }
-          selectedFile = null;
-          fileName.style.display = 'none';
-          fileInput.value = '';
-        } else {
-          showResult(data.error || 'Something went wrong. Please try again.', 'error');
-          submitBtn.disabled = false;
-        }
-      })
-      .catch(function(){
-        submitBtn.textContent = 'Submit Removal Request';
-        submitBtn.disabled = false;
-        showResult('Network error. Please check your connection and try again.', 'error');
       });
-    };
-    reader.readAsDataURL(selectedFile);
+      var data = await r.json();
+      submitBtn.textContent = 'Submit Removal Request';
+      if(data.success){
+        if(data.watermark_detected){
+          showResult(data.message, 'success');
+        } else {
+          showResult(data.message, 'info');
+        }
+        selectedFile = null;
+        fileName.style.display = 'none';
+        fileInput.value = '';
+      } else {
+        showResult(data.error || 'Something went wrong. Please try again.', 'error');
+        submitBtn.disabled = false;
+      }
+    } catch(e) {
+      submitBtn.textContent = 'Submit Removal Request';
+      submitBtn.disabled = false;
+      showResult('Network error. Please check your connection and try again.', 'error');
+    }
   });
 })();
 </script>

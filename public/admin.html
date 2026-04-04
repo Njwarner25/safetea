@@ -1710,9 +1710,80 @@
             window.location.href = '/';
         }
 
-        // ===== WATERMARK DECODER =====
-        const STEGO_BLOCK = 32;
-        const STEGO_MAGIC = 0xAA; // 10101010
+        // ===== WATERMARK DECODER (QIM-based, matches encoder in app.js) =====
+        const WM_MAGIC = 0xAA;
+        const WM_STEP = 30; // must match encoder
+
+        function adminQIMDecode(px, w, h, blockSize, step) {
+            var blocksX = Math.floor(w / blockSize);
+            var blocksY = Math.floor(h / blockSize);
+            var totalBlocks = blocksX * blocksY;
+            if (totalBlocks < 40) return null;
+
+            var rawBits = [];
+            for (var b = 0; b < totalBlocks; b++) {
+                var bx = (b % blocksX) * blockSize;
+                var by = Math.floor(b / blocksX) * blockSize;
+                var sum = 0, count = 0;
+                for (var py = by; py < by + blockSize && py < h; py++) {
+                    for (var px2 = bx; px2 < bx + blockSize && px2 < w; px2++) {
+                        var idx = (py * w + px2) * 4;
+                        sum += px[idx] + px[idx + 1] + px[idx + 2];
+                        count++;
+                    }
+                }
+                var avg = sum / (count * 3);
+                var remainder = ((avg % step) + step) % step;
+                rawBits.push((remainder > step / 4 && remainder < 3 * step / 4) ? 1 : 0);
+            }
+
+            var payloadLen = 40;
+            var reps = Math.floor(totalBlocks / payloadLen) || 1;
+            var votedBits = [];
+            for (var i = 0; i < payloadLen; i++) {
+                var ones = 0, total = 0;
+                for (var r = 0; r < reps; r++) {
+                    var idx = r * payloadLen + i;
+                    if (idx >= totalBlocks) break;
+                    if (rawBits[idx] === 1) ones++;
+                    total++;
+                }
+                votedBits.push(ones > total / 2 ? 1 : 0);
+            }
+
+            var magic = 0;
+            for (var i = 0; i < 8; i++) magic = (magic << 1) | votedBits[i];
+            if (magic !== WM_MAGIC) return null;
+
+            var userId = 0;
+            for (var i = 8; i < 40; i++) userId = (userId << 1) | votedBits[i];
+            userId = userId >>> 0;
+            if (userId === 0) return null;
+
+            var expectedMagic = [];
+            for (var i = 7; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
+            var matchCount = 0, totalChecks = 0;
+            for (var r = 0; r < reps; r++) {
+                for (var i = 0; i < 8; i++) {
+                    var idx = r * payloadLen + i;
+                    if (idx >= totalBlocks) break;
+                    totalChecks++;
+                    if (rawBits[idx] === expectedMagic[i]) matchCount++;
+                }
+            }
+            var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
+            return { userId: userId, confidence: confidence, blockSize: blockSize };
+        }
+
+        function adminDecodeMultiScale(px, w, h) {
+            var blockSizes = [30, 31, 32, 33, 34, 46, 47, 48, 49, 50, 62, 63, 64, 65, 66, 94, 95, 96, 97, 98];
+            var best = null;
+            for (var i = 0; i < blockSizes.length; i++) {
+                var result = adminQIMDecode(px, w, h, blockSizes[i], WM_STEP);
+                if (result && (!best || result.confidence > best.confidence)) best = result;
+            }
+            return best;
+        }
 
         function handleWmDrop(event) {
             var file = event.dataTransfer.files[0];
@@ -1740,93 +1811,23 @@
 
         function decodeWatermark(ctx, w, h) {
             var resultEl = document.getElementById('wm-result');
-            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding watermark...</p>';
+            resultEl.innerHTML = '<p style="color:#8080A0;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Decoding QIM watermark (trying multiple scales)...</p>';
 
             var imageData = ctx.getImageData(0, 0, w, h);
-            var px = imageData.data;
-            var blocksX = Math.floor(w / STEGO_BLOCK);
-            var blocksY = Math.floor(h / STEGO_BLOCK);
-            var totalBlocks = blocksX * blocksY;
+            var result = adminDecodeMultiScale(imageData.data, w, h);
 
-            if (totalBlocks < 40) {
-                resultEl.innerHTML = '<p style="color:#e74c3c"><i class="fas fa-times"></i> Image too small to contain a watermark (' + totalBlocks + ' blocks, need at least 40)</p>';
-                return;
-            }
-
-            // Read average green channel per block
-            var blockAvgs = [];
-            for (var b = 0; b < totalBlocks; b++) {
-                var bx = (b % blocksX) * STEGO_BLOCK;
-                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                var sum = 0, count = 0;
-                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
-                        sum += px[(py * w + px2) * 4 + 1];
-                        count++;
-                    }
-                }
-                blockAvgs.push(sum / count);
-            }
-
-            // Majority voting across payload repetitions (40 bits per repetition)
-            var payloadLen = 40;
-            var reps = Math.floor(totalBlocks / payloadLen);
-            if (reps === 0) reps = 1;
-
-            var bitVotes = new Array(payloadLen).fill(0);
-            for (var rep = 0; rep < reps; rep++) {
-                // For each bit position, compare adjacent blocks to determine relative shift
-                for (var bit = 0; bit < payloadLen; bit++) {
-                    var idx = rep * payloadLen + bit;
-                    if (idx >= totalBlocks) break;
-                    // Compute local average from surrounding blocks
-                    var localSum = 0, localCount = 0;
-                    var bRow = Math.floor(idx / blocksX);
-                    var bCol = idx % blocksX;
-                    for (var dr = -1; dr <= 1; dr++) {
-                        for (var dc = -1; dc <= 1; dc++) {
-                            if (dr === 0 && dc === 0) continue;
-                            var nr = bRow + dr, nc = bCol + dc;
-                            if (nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX) {
-                                localSum += blockAvgs[nr * blocksX + nc];
-                                localCount++;
-                            }
-                        }
-                    }
-                    if (localCount === 0) continue;
-                    var localAvg = localSum / localCount;
-                    // If block is brighter than neighbors → bit=1, darker → bit=0
-                    if (blockAvgs[idx] > localAvg) bitVotes[bit]++;
-                    else bitVotes[bit]--;
-                }
-            }
-
-            // Decode bits from votes
-            var bits = bitVotes.map(function(v) { return v > 0 ? 1 : 0; });
-
-            // Check magic header (first 8 bits should be 10101010)
-            var magic = 0;
-            for (var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
-
-            var confidence = 0;
-            // Compute confidence from vote strength
-            var totalVoteStrength = 0;
-            for (var i = 0; i < payloadLen; i++) totalVoteStrength += Math.abs(bitVotes[i]);
-            confidence = Math.min(100, Math.round((totalVoteStrength / payloadLen / Math.max(reps, 1)) * 100));
-
-            if (magic !== STEGO_MAGIC) {
+            if (!result) {
                 resultEl.innerHTML = '<div style="text-align:center;padding:20px">' +
                     '<i class="fas fa-question-circle" style="font-size:32px;color:#f1c40f;margin-bottom:12px;display:block"></i>' +
                     '<p style="color:#fff;font-weight:600;margin-bottom:8px">No Watermark Detected</p>' +
                     '<p style="color:#8080A0;font-size:13px">This image may not have been captured from SafeTea, or the watermark was destroyed by heavy compression/editing.</p>' +
-                    '<p style="color:#666;font-size:11px;margin-top:8px">Magic header: 0x' + magic.toString(16).toUpperCase().padStart(2, '0') + ' (expected 0xAA)</p>' +
+                    '<p style="color:#666;font-size:11px;margin-top:8px">Tried block sizes: 30-34, 46-50, 62-66, 94-98</p>' +
                 '</div>';
                 return;
             }
 
-            // Extract 32-bit user ID
-            var userId = 0;
-            for (var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+            var userId = result.userId;
+            var confidence = result.confidence;
             userId = userId >>> 0; // ensure unsigned
 
             // Show result and look up user
@@ -2005,70 +2006,14 @@
         function decodeWatermarkInline(ctx, w, h, resultElId) {
             var resultEl = document.getElementById(resultElId);
             var imageData = ctx.getImageData(0, 0, w, h);
-            var px = imageData.data;
-            var blocksX = Math.floor(w / STEGO_BLOCK);
-            var blocksY = Math.floor(h / STEGO_BLOCK);
-            var totalBlocks = blocksX * blocksY;
+            var result = adminDecodeMultiScale(imageData.data, w, h);
 
-            if (totalBlocks < 40) {
-                resultEl.innerHTML = '<p style="color:#e74c3c;font-size:13px"><i class="fas fa-times"></i> Image too small</p>';
-                return;
-            }
-
-            var blockAvgs = [];
-            for (var b = 0; b < totalBlocks; b++) {
-                var bx = (b % blocksX) * STEGO_BLOCK;
-                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                var sum = 0, count = 0;
-                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
-                        sum += px[(py * w + px2) * 4 + 1];
-                        count++;
-                    }
-                }
-                blockAvgs.push(sum / count);
-            }
-
-            var payloadLen = 40;
-            var reps = Math.floor(totalBlocks / payloadLen) || 1;
-            var bitVotes = new Array(payloadLen).fill(0);
-
-            for (var rep = 0; rep < reps; rep++) {
-                for (var bit = 0; bit < payloadLen; bit++) {
-                    var idx = rep * payloadLen + bit;
-                    if (idx >= totalBlocks) break;
-                    var localSum = 0, localCount = 0;
-                    var bRow = Math.floor(idx / blocksX);
-                    var bCol = idx % blocksX;
-                    for (var dr = -1; dr <= 1; dr++) {
-                        for (var dc = -1; dc <= 1; dc++) {
-                            if (dr === 0 && dc === 0) continue;
-                            var nr = bRow + dr, nc = bCol + dc;
-                            if (nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX) {
-                                localSum += blockAvgs[nr * blocksX + nc];
-                                localCount++;
-                            }
-                        }
-                    }
-                    if (localCount === 0) continue;
-                    var localAvg = localSum / localCount;
-                    if (blockAvgs[idx] > localAvg) bitVotes[bit]++;
-                    else bitVotes[bit]--;
-                }
-            }
-
-            var bits = bitVotes.map(function(v) { return v > 0 ? 1 : 0; });
-            var magic = 0;
-            for (var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
-
-            if (magic !== STEGO_MAGIC) {
+            if (!result) {
                 resultEl.innerHTML = '<p style="color:#f1c40f;font-size:13px"><i class="fas fa-question-circle"></i> No watermark detected in this image</p>';
                 return;
             }
 
-            var userId = 0;
-            for (var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
-            userId = userId >>> 0;
+            var userId = result.userId;
 
             resultEl.innerHTML = '<div>' +
                 '<p style="color:#2ecc71;font-weight:700;margin-bottom:4px"><i class="fas fa-check-circle"></i> Watermark Found</p>' +
@@ -2241,7 +2186,7 @@
                     return;
                 }
                 var html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
-                html += '<thead><tr style="color:#8080A0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="padding:10px 8px">ID</th><th style="padding:10px 8px">Email</th><th style="padding:10px 8px">Details</th><th style="padding:10px 8px">Status</th><th style="padding:10px 8px">Watermark</th><th style="padding:10px 8px">Action Taken</th><th style="padding:10px 8px">Submitted</th><th style="padding:10px 8px">Actions</th></tr></thead><tbody>';
+                html += '<thead><tr style="color:#8080A0;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)"><th style="padding:10px 8px">ID</th><th style="padding:10px 8px">Reporter</th><th style="padding:10px 8px">Details</th><th style="padding:10px 8px">Status</th><th style="padding:10px 8px">Watermark User</th><th style="padding:10px 8px">Action Taken</th><th style="padding:10px 8px">Submitted</th><th style="padding:10px 8px">Actions</th></tr></thead><tbody>';
                 for (var r of requests) {
                     var statusBadge = '';
                     if (r.status === 'auto_resolved') statusBadge = '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Auto-Resolved</span>';
@@ -2249,20 +2194,32 @@
                     else if (r.status === 'manual_review') statusBadge = '<span style="color:#f1c40f"><i class="fas fa-eye"></i> Manual Review</span>';
                     else statusBadge = '<span style="color:#8080A0"><i class="fas fa-clock"></i> Pending</span>';
 
-                    var wmBadge = r.watermark_user_id
-                        ? '<span style="color:#E8A0B5;font-weight:600"><i class="fas fa-fingerprint"></i> User #' + r.watermark_user_id + '</span>'
-                        : '<span style="color:#8080A0">None</span>';
+                    // Watermark user info with name/email if available
+                    var wmBadge = '';
+                    if (r.watermark_user_id) {
+                        var userName = r.watermark_user_name || ('User #' + r.watermark_user_id);
+                        var bannedTag = r.watermark_user_banned ? ' <span style="color:#e74c3c;font-size:10px">(BANNED)</span>' : '';
+                        wmBadge = '<span style="color:#E8A0B5;font-weight:600"><i class="fas fa-fingerprint"></i> ' + escapeHtml(userName) + '</span>' + bannedTag;
+                        if (r.watermark_user_email) wmBadge += '<br><span style="color:#8080A0;font-size:11px">' + escapeHtml(r.watermark_user_email) + '</span>';
+                    } else {
+                        wmBadge = '<span style="color:#8080A0">None detected</span>';
+                    }
 
                     html += '<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">';
                     html += '<td style="padding:10px 8px;color:#fff">#' + r.id + '</td>';
                     html += '<td style="padding:10px 8px">' + escapeHtml(r.reporter_email || '—') + '</td>';
-                    html += '<td style="padding:10px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(r.details || '—') + '</td>';
+                    html += '<td style="padding:10px 8px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escapeHtml(r.details || '') + '">' + escapeHtml(r.details || '—') + '</td>';
                     html += '<td style="padding:10px 8px">' + statusBadge + '</td>';
                     html += '<td style="padding:10px 8px">' + wmBadge + '</td>';
                     html += '<td style="padding:10px 8px">' + escapeHtml(r.auto_action_taken || '—') + '</td>';
                     html += '<td style="padding:10px 8px">' + timeAgo(r.created_at) + '</td>';
                     html += '<td style="padding:10px 8px;white-space:nowrap">';
                     if (r.status !== 'resolved' && r.status !== 'auto_resolved') {
+                        // Show action buttons based on watermark status
+                        if (r.watermark_user_id && !r.watermark_user_banned) {
+                            html += '<button class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;margin-bottom:4px" onclick="removalBanAndRemove(' + r.id + ',\'' + escapeHtml(r.watermark_user_name || 'User #' + r.watermark_user_id) + '\')" title="Ban user & hide all their posts"><i class="fas fa-ban"></i> Ban & Remove</button> ';
+                            html += '<button class="btn btn-sm" style="background:#f39c12;color:#fff;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;margin-bottom:4px" onclick="removalHidePosts(' + r.id + ')" title="Hide posts only (no ban)"><i class="fas fa-eye-slash"></i> Hide Posts</button> ';
+                        }
                         html += '<button class="btn btn-approve btn-sm" onclick="resolveRemovalRequest(' + r.id + ')" title="Mark Resolved"><i class="fas fa-check"></i></button> ';
                     }
                     html += '</td></tr>';
@@ -2284,6 +2241,40 @@
                 var data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 showToast('Request marked as resolved');
+                loadRemovalRequests();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function removalBanAndRemove(id, userName) {
+            if (!confirm('Ban "' + userName + '" and hide ALL their posts? This action is permanent.')) return;
+            try {
+                var res = await fetch(API_BASE + '/admin/removal-requests', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id: id, action: 'ban_and_remove' })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('User banned and all posts hidden');
+                loadRemovalRequests();
+            } catch (err) {
+                showToast(err.message, true);
+            }
+        }
+
+        async function removalHidePosts(id) {
+            if (!confirm('Hide all posts from the watermarked user? (User will NOT be banned)')) return;
+            try {
+                var res = await fetch(API_BASE + '/admin/removal-requests', {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify({ id: id, action: 'remove_posts' })
+                });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                showToast('All posts hidden for watermarked user');
                 loadRemovalRequests();
             } catch (err) {
                 showToast(err.message, true);

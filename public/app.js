@@ -2257,12 +2257,72 @@
 
     // ==================== STEGANOGRAPHIC WATERMARK ====================
     // Embeds viewer's user ID into image pixels using block-based luminance modulation.
-    // 40-bit payload: 8-bit magic header (10101010) + 32-bit user ID.
-    // Each 32x32 block shifts green channel +3 (bit=1) or -3 (bit=0).
-    // Payload tiles across all blocks for redundancy; decoder uses majority voting.
+    // QIM (Quantization Index Modulation) watermark — robust to screenshots & JPEG
+    // 40-bit payload: 8-bit magic (0xAA) + 32-bit user ID
+    // Encodes into 32×32 blocks by quantizing block luminance averages
+    // All channels (R+G+B) modified equally for 3× signal strength
+    // Tolerates noise up to ±step/4 = ±7.5 per block average
 
-    var STEGO_BLOCK = 32;
-    var STEGO_MAGIC = 0xAA; // 10101010
+    var WM_BLOCK = 32;
+    var WM_MAGIC = 0xAA;
+    var WM_STEP = 30; // QIM quantization step — higher = more robust, slightly more visible
+
+    function wmBuildPayload(userId) {
+        var uid = (userId >>> 0) & 0xFFFFFFFF;
+        var bits = [];
+        for (var i = 7; i >= 0; i--) bits.push((WM_MAGIC >> i) & 1);
+        for (var i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
+        return bits;
+    }
+
+    function wmApply(px, w, h, userId) {
+        var bits = wmBuildPayload(userId);
+        var blocksX = Math.floor(w / WM_BLOCK);
+        var blocksY = Math.floor(h / WM_BLOCK);
+        var totalBlocks = blocksX * blocksY;
+        if (totalBlocks === 0) return;
+
+        for (var b = 0; b < totalBlocks; b++) {
+            var bit = bits[b % bits.length];
+            var bx = (b % blocksX) * WM_BLOCK;
+            var by = Math.floor(b / blocksX) * WM_BLOCK;
+
+            // Compute block average luminance (mean of R,G,B)
+            var sum = 0, count = 0;
+            for (var py = by; py < by + WM_BLOCK && py < h; py++) {
+                for (var px2 = bx; px2 < bx + WM_BLOCK && px2 < w; px2++) {
+                    var idx = (py * w + px2) * 4;
+                    sum += px[idx] + px[idx + 1] + px[idx + 2];
+                    count++;
+                }
+            }
+            var avg = sum / (count * 3);
+
+            // QIM: quantize avg to encode the bit
+            var target;
+            if (bit === 0) {
+                target = Math.round(avg / WM_STEP) * WM_STEP;
+            } else {
+                target = Math.round((avg - WM_STEP / 2) / WM_STEP) * WM_STEP + WM_STEP / 2;
+            }
+            var delta = Math.round(target - avg);
+            if (delta > WM_STEP / 2) delta = WM_STEP / 2;
+            if (delta < -WM_STEP / 2) delta = -WM_STEP / 2;
+
+            // Apply delta to all channels equally
+            for (var py = by; py < by + WM_BLOCK && py < h; py++) {
+                for (var px2 = bx; px2 < bx + WM_BLOCK && px2 < w; px2++) {
+                    var idx = (py * w + px2) * 4;
+                    var r = px[idx] + delta;
+                    var g = px[idx + 1] + delta;
+                    var bl = px[idx + 2] + delta;
+                    px[idx] = r < 0 ? 0 : r > 255 ? 255 : r;
+                    px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+                    px[idx + 2] = bl < 0 ? 0 : bl > 255 ? 255 : bl;
+                }
+            }
+        }
+    }
 
     function stegoEmbed(dataUrl, userId, callback) {
         var img = new Image();
@@ -2274,34 +2334,7 @@
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
             var imageData = ctx.getImageData(0, 0, w, h);
-            var px = imageData.data;
-
-            // Build 40-bit payload: 8 magic + 32 userId
-            var uid = (userId >>> 0) & 0xFFFFFFFF;
-            var bits = [];
-            var i;
-            for (i = 7; i >= 0; i--) bits.push((STEGO_MAGIC >> i) & 1);
-            for (i = 31; i >= 0; i--) bits.push((uid >> i) & 1);
-
-            var blocksX = Math.floor(w / STEGO_BLOCK);
-            var blocksY = Math.floor(h / STEGO_BLOCK);
-            var totalBlocks = blocksX * blocksY;
-            if (totalBlocks === 0) { callback(dataUrl); return; }
-
-            for (var b = 0; b < totalBlocks; b++) {
-                var bit = bits[b % bits.length];
-                var bx = (b % blocksX) * STEGO_BLOCK;
-                var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                var delta = bit ? 8 : -8;
-                for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
-                    for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
-                        var idx = (py * w + px2) * 4;
-                        var g = px[idx + 1] + delta;
-                        px[idx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-                    }
-                }
-            }
-
+            wmApply(imageData.data, w, h, userId);
             ctx.putImageData(imageData, 0, 0);
             callback(canvas.toDataURL('image/jpeg', 0.95));
         };
@@ -2311,6 +2344,7 @@
     window.stegoEmbed = stegoEmbed;
 
     // IntersectionObserver: lazy-process photo post canvases when they enter viewport
+    // Embeds QIM watermark at exact CSS×DPR resolution so canvas buffer = screenshot pixels
     function initStegoObserver() {
         if (!window.IntersectionObserver) return;
         var observer = new IntersectionObserver(function(entries) {
@@ -2326,55 +2360,44 @@
                 var u = getUser();
                 var uid = u ? parseInt(u.id) || 0 : 0;
 
-                // Embed watermark at DISPLAY resolution so screenshots capture aligned blocks
                 var imgEl = new Image();
                 imgEl.crossOrigin = 'anonymous';
                 imgEl.onload = function() {
                     var canvas = el;
                     var dpr = window.devicePixelRatio || 1;
-                    var rect = canvas.getBoundingClientRect();
-                    // Use display size × devicePixelRatio for crisp rendering
-                    var displayW = Math.round(rect.width * dpr) || imgEl.width;
-                    var displayH = Math.round(rect.height * dpr) || imgEl.height;
-                    // Maintain aspect ratio
-                    var imgRatio = imgEl.width / imgEl.height;
-                    var dispRatio = displayW / displayH;
-                    var drawW, drawH;
-                    if (imgRatio > dispRatio) {
-                        drawW = displayW; drawH = Math.round(displayW / imgRatio);
-                    } else {
-                        drawH = displayH; drawW = Math.round(displayH * imgRatio);
+
+                    // Calculate CSS display dimensions from container + image aspect ratio
+                    var container = canvas.parentElement;
+                    var containerW = (container ? container.clientWidth : 0) || 500;
+                    var maxCssH = 300; // matches the max-height:300px CSS on stego canvases
+                    var imgRatio = imgEl.naturalWidth / imgEl.naturalHeight;
+
+                    var cssW = containerW;
+                    var cssH = Math.round(containerW / imgRatio);
+                    if (cssH > maxCssH) {
+                        cssH = maxCssH;
+                        cssW = Math.round(maxCssH * imgRatio);
+                        if (cssW > containerW) cssW = containerW;
                     }
-                    canvas.width = drawW;
-                    canvas.height = drawH;
+
+                    // Set CSS display size explicitly — prevents browser scaling mismatch
+                    canvas.style.width = cssW + 'px';
+                    canvas.style.height = cssH + 'px';
+                    canvas.style.maxHeight = 'none';
+                    canvas.style.maxWidth = '100%';
+
+                    // Set canvas buffer to CSS × DPR = exact screenshot pixel resolution
+                    var bufW = Math.round(cssW * dpr);
+                    var bufH = Math.round(cssH * dpr);
+                    canvas.width = bufW;
+                    canvas.height = bufH;
+
                     var ctx = canvas.getContext('2d');
-                    ctx.drawImage(imgEl, 0, 0, drawW, drawH);
+                    ctx.drawImage(imgEl, 0, 0, bufW, bufH);
 
-                    // Apply watermark directly at display resolution
-                    var imageData = ctx.getImageData(0, 0, drawW, drawH);
-                    var px = imageData.data;
-                    var bits = [];
-                    var mi;
-                    for (mi = 7; mi >= 0; mi--) bits.push((STEGO_MAGIC >> mi) & 1);
-                    for (mi = 31; mi >= 0; mi--) bits.push(((uid >>> 0) >> mi) & 1);
-
-                    var blocksX = Math.floor(drawW / STEGO_BLOCK);
-                    var blocksY = Math.floor(drawH / STEGO_BLOCK);
-                    var totalBlocks = blocksX * blocksY;
-
-                    for (var b = 0; b < totalBlocks; b++) {
-                        var bit = bits[b % bits.length];
-                        var bx = (b % blocksX) * STEGO_BLOCK;
-                        var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                        var delta = bit ? 8 : -8;
-                        for (var py = by; py < by + STEGO_BLOCK && py < drawH; py++) {
-                            for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < drawW; px2++) {
-                                var pidx = (py * drawW + px2) * 4;
-                                var g = px[pidx + 1] + delta;
-                                px[pidx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
-                            }
-                        }
-                    }
+                    // Apply QIM watermark at buffer resolution (= screenshot resolution)
+                    var imageData = ctx.getImageData(0, 0, bufW, bufH);
+                    wmApply(imageData.data, bufW, bufH, uid);
                     ctx.putImageData(imageData, 0, 0);
                     canvas.style.opacity = '1';
                 };

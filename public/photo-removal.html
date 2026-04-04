@@ -194,8 +194,9 @@
 
 <script>
 (function(){
-  var STEGO_BLOCK = 32;
-  var STEGO_MAGIC = 0xAA;
+  // QIM watermark decoder — matches the QIM encoder in app.js
+  var WM_MAGIC = 0xAA;
+  var WM_STEP = 30; // must match encoder
 
   var dropZone = document.getElementById('removal-drop-zone');
   var fileInput = document.getElementById('removal-file-input');
@@ -233,9 +234,11 @@
     resultDiv.style.display = 'block';
   }
 
-  // Decode luminance watermark — tries multiple block sizes to handle screenshots
-  // at different display scales (photos display at CSS width, not native resolution)
-  function decodeLuminanceWatermark(file){
+  // QIM decoder — tries multiple block sizes to handle different DPR values
+  // On 1× displays: blocks are 32px in screenshot
+  // On 2× displays: blocks are 64px in screenshot
+  // On 3× displays: blocks are 96px in screenshot
+  function decodeQIMWatermark(file){
     return new Promise(function(resolve){
       var reader = new FileReader();
       reader.onload = function(){
@@ -250,14 +253,13 @@
             var px = imageData.data;
             var w = img.width, h = img.height;
 
-            // Try block sizes near 32 (embed is at display resolution, so 32 should match)
-            // Also try scaled variants in case of retina/zoom differences
-            var blockSizes = [16, 20, 24, 26, 28, 30, 31, 32, 33, 34, 36, 40, 48, 64];
+            // Try block sizes for common DPR values (1×, 1.5×, 2×, 3×)
+            // and nearby sizes for slight rounding differences
+            var blockSizes = [30, 31, 32, 33, 34, 46, 47, 48, 49, 50, 62, 63, 64, 65, 66, 94, 95, 96, 97, 98];
             var bestResult = null;
 
             for(var si = 0; si < blockSizes.length; si++){
-              var blockSize = blockSizes[si];
-              var result = tryDecodeAtBlockSize(px, w, h, blockSize);
+              var result = tryQIMDecode(px, w, h, blockSizes[si], WM_STEP);
               if(result && (!bestResult || result.confidence > bestResult.confidence)){
                 bestResult = result;
               }
@@ -274,99 +276,74 @@
     });
   }
 
-  function tryDecodeAtBlockSize(px, w, h, blockSize){
+  function tryQIMDecode(px, w, h, blockSize, step){
     var blocksX = Math.floor(w / blockSize);
     var blocksY = Math.floor(h / blockSize);
     var totalBlocks = blocksX * blocksY;
     if(totalBlocks < 40) return null;
 
-    // Compute average green per block
-    var blockAvgs = [];
+    // Decode raw bits from each block using QIM
+    var rawBits = [];
     for(var b = 0; b < totalBlocks; b++){
       var bx = (b % blocksX) * blockSize;
       var by = Math.floor(b / blocksX) * blockSize;
+
       var sum = 0, count = 0;
       for(var py = by; py < by + blockSize && py < h; py++){
         for(var px2 = bx; px2 < bx + blockSize && px2 < w; px2++){
-          sum += px[(py * w + px2) * 4 + 1]; count++;
+          var idx = (py * w + px2) * 4;
+          sum += px[idx] + px[idx + 1] + px[idx + 2];
+          count++;
         }
       }
-      blockAvgs.push(sum / count);
+      var avg = sum / (count * 3);
+
+      // QIM decode: check which quantization grid the average falls on
+      var remainder = ((avg % step) + step) % step;
+      rawBits.push((remainder > step / 4 && remainder < 3 * step / 4) ? 1 : 0);
     }
 
+    // Majority vote across payload repetitions
     var payloadLen = 40;
-    var reps = Math.max(1, Math.floor(totalBlocks / payloadLen));
+    var reps = Math.floor(totalBlocks / payloadLen);
+    if(reps === 0) reps = 1;
 
-    // Method 1: Per-bit average across repetitions vs global median
-    var bitAvgs = new Array(payloadLen).fill(0);
-    var bitCounts = new Array(payloadLen).fill(0);
-    for(var b = 0; b < totalBlocks; b++){
-      var pos = b % payloadLen;
-      bitAvgs[pos] += blockAvgs[b];
-      bitCounts[pos]++;
-    }
+    var votedBits = [];
     for(var i = 0; i < payloadLen; i++){
-      if(bitCounts[i] > 0) bitAvgs[i] /= bitCounts[i];
-    }
-    // Global average of all block averages
-    var globalSum = 0;
-    for(var i = 0; i < totalBlocks; i++) globalSum += blockAvgs[i];
-    var globalAvg = globalSum / totalBlocks;
-
-    // Bits above global avg → 1, below → 0
-    var bits1 = bitAvgs.map(function(v){ return v > globalAvg ? 1 : 0; });
-    var magic1 = 0;
-    for(var i = 0; i < 8; i++) magic1 = (magic1 << 1) | bits1[i];
-
-    // Method 2: Neighbor-relative comparison with majority voting
-    var bitVotes = new Array(payloadLen).fill(0);
-    for(var rep = 0; rep < reps; rep++){
-      for(var bit = 0; bit < payloadLen; bit++){
-        var idx = rep * payloadLen + bit;
+      var ones = 0, total = 0;
+      for(var r = 0; r < reps; r++){
+        var idx = r * payloadLen + i;
         if(idx >= totalBlocks) break;
-        var localSum = 0, localCount = 0;
-        var bRow = Math.floor(idx / blocksX), bCol = idx % blocksX;
-        for(var dr = -1; dr <= 1; dr++){
-          for(var dc = -1; dc <= 1; dc++){
-            if(dr === 0 && dc === 0) continue;
-            var nr = bRow + dr, nc = bCol + dc;
-            if(nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX){
-              localSum += blockAvgs[nr * blocksX + nc]; localCount++;
-            }
-          }
-        }
-        if(localCount === 0) continue;
-        if(blockAvgs[idx] > localSum / localCount) bitVotes[bit]++;
-        else bitVotes[bit]--;
+        if(rawBits[idx] === 1) ones++;
+        total++;
       }
-    }
-    var bits2 = bitVotes.map(function(v){ return v > 0 ? 1 : 0; });
-    var magic2 = 0;
-    for(var i = 0; i < 8; i++) magic2 = (magic2 << 1) | bits2[i];
-
-    // Pick whichever method got the magic header right
-    var bits, magic;
-    if(magic1 === STEGO_MAGIC){
-      bits = bits1; magic = magic1;
-    } else if(magic2 === STEGO_MAGIC){
-      bits = bits2; magic = magic2;
-    } else {
-      return null;
+      votedBits.push(ones > total / 2 ? 1 : 0);
     }
 
+    // Check magic header (0xAA = 10101010)
+    var magic = 0;
+    for(var i = 0; i < 8; i++) magic = (magic << 1) | votedBits[i];
+    if(magic !== WM_MAGIC) return null;
+
+    // Extract user ID (bits 8-39)
     var userId = 0;
-    for(var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+    for(var i = 8; i < 40; i++) userId = (userId << 1) | votedBits[i];
     userId = userId >>> 0;
     if(userId === 0) return null;
 
-    // Confidence from deviation strength
-    var deviations = [];
-    for(var i = 0; i < payloadLen; i++){
-      deviations.push(Math.abs(bitAvgs[i] - globalAvg));
+    // Confidence: what % of raw magic bits match across all repetitions
+    var matchCount = 0, totalChecks = 0;
+    var expectedMagic = [];
+    for(var i = 7; i >= 0; i--) expectedMagic.push((WM_MAGIC >> i) & 1);
+    for(var r = 0; r < reps; r++){
+      for(var i = 0; i < 8; i++){
+        var idx = r * payloadLen + i;
+        if(idx >= totalBlocks) break;
+        totalChecks++;
+        if(rawBits[idx] === expectedMagic[i]) matchCount++;
+      }
     }
-    deviations.sort(function(a,b){ return a - b; });
-    var medianDev = deviations[Math.floor(deviations.length / 2)];
-    var confidence = Math.min(100, Math.round(medianDev * 20));
+    var confidence = totalChecks > 0 ? Math.round((matchCount / totalChecks) * 100) : 0;
 
     return { userId: userId, confidence: confidence, blockSize: blockSize };
   }
@@ -378,8 +355,8 @@
     resultDiv.style.display = 'none';
 
     try {
-      // Step 1: Decode client-side luminance watermark
-      var wmResult = await decodeLuminanceWatermark(selectedFile);
+      // Step 1: Decode QIM watermark from screenshot
+      var wmResult = await decodeQIMWatermark(selectedFile);
 
       // Step 2: Read file as base64
       submitBtn.textContent = 'Submitting...';

@@ -307,16 +307,22 @@
             var chunksContainer = document.getElementById('chunks-container');
 
             if (!chunks || chunks.length === 0) {
-                chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio clips yet. First 30-second clip will appear shortly.</p>';
+                chunksContainer.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:16px">No audio yet. First 30-second clip will appear shortly.</p>';
                 return;
             }
+
+            // Each chunk is a COMPLETE recording from the start up to that point
+            // (blob accumulation approach — each upload contains all previous audio)
+            // So the LATEST chunk = the full recording
+            var latestChunk = chunks[chunks.length - 1];
+            var totalDuration = chunks.length * 30;
 
             // Safari/iOS warning
             if (!canPlayWebm) {
                 chunksContainer.innerHTML =
                     '<div style="background:rgba(241,196,15,0.1);border:1px solid rgba(241,196,15,0.2);border-radius:10px;padding:16px;margin-bottom:12px;text-align:center">' +
                         '<p style="color:#f1c40f;font-weight:600;font-size:13px;margin:0 0 6px">Your browser does not support WebM audio</p>' +
-                        '<p style="color:#8080A0;font-size:12px;margin:0">Use Chrome or Firefox to play audio, or tap Download below to save the files.</p>' +
+                        '<p style="color:#8080A0;font-size:12px;margin:0">Use Chrome or Firefox to play audio, or tap Download below to save the file.</p>' +
                     '</div>';
             } else {
                 chunksContainer.innerHTML = '';
@@ -328,16 +334,12 @@
             }
             blobUrls = [];
 
-            // Create blob URLs for each chunk (more reliable than data URIs)
-            var chunkBlobUrls = [];
-            for (var c = 0; c < chunks.length; c++) {
-                var blob = base64ToBlob(chunks[c].audioData);
-                var blobUrl = URL.createObjectURL(blob);
-                chunkBlobUrls.push(blobUrl);
-                blobUrls.push(blobUrl);
-            }
+            // Create blob URL for the latest (complete) recording
+            var fullBlob = base64ToBlob(latestChunk.audioData);
+            var fullBlobUrl = URL.createObjectURL(fullBlob);
+            blobUrls.push(fullBlobUrl);
 
-            // Combined sequential player
+            // Main player
             var combinedPlayer = document.getElementById('combined-player');
             combinedPlayer.style.display = 'block';
             var playAllBtn = document.getElementById('play-all-btn');
@@ -346,82 +348,75 @@
             var playerTimer = document.getElementById('player-timer');
             var playerBar = document.getElementById('player-bar');
 
-            playerProgress.textContent = '0 / ' + chunks.length + ' clip(s)';
-
-            function playChunk(idx) {
-                if (idx >= chunkBlobUrls.length) {
-                    isPlaying = false;
-                    playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
-                    playerLabel.textContent = 'Recording Complete';
-                    playerBar.style.width = '100%';
-                    return;
-                }
-                currentChunkIdx = idx;
-                playerProgress.textContent = (idx + 1) + ' / ' + chunkBlobUrls.length + ' clip(s)';
-                playerBar.style.width = ((idx / chunkBlobUrls.length) * 100) + '%';
-
-                currentAudio = new Audio(chunkBlobUrls[idx]);
-                currentAudio.onerror = function() {
-                    console.error('Audio chunk ' + idx + ' failed to decode');
-                    playerLabel.textContent = 'Chunk ' + (idx + 1) + ' failed — skipping...';
-                    setTimeout(function() { playChunk(idx + 1); }, 500);
-                };
-                currentAudio.play().catch(function(err) {
-                    console.error('Audio play failed:', err);
-                    playerLabel.textContent = 'Playback error — trying next chunk...';
-                    setTimeout(function() { playChunk(idx + 1); }, 500);
-                });
-                currentAudio.ontimeupdate = function() {
-                    var m = Math.floor(currentAudio.currentTime / 60);
-                    var sec = Math.floor(currentAudio.currentTime % 60);
-                    playerTimer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-                };
-                currentAudio.onended = function() {
-                    playChunk(idx + 1);
-                };
-            }
+            var fileSizeKB = Math.round(fullBlob.size / 1024);
+            playerProgress.textContent = '~' + totalDuration + 's captured (' + fileSizeKB + ' KB)';
 
             playAllBtn.onclick = function() {
-                if (!canPlayWebm) { alert('Your browser does not support WebM audio. Please use Chrome or Firefox, or download the files.'); return; }
+                if (!canPlayWebm) { alert('Your browser does not support WebM audio. Please use Chrome or Firefox, or download the file.'); return; }
                 if (isPlaying) {
                     isPlaying = false;
                     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
                     playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
                     playerLabel.textContent = 'Play Full Recording';
+                    playerBar.style.width = '0%';
                 } else {
                     isPlaying = true;
                     playAllBtn.innerHTML = '<i class="fas fa-pause" style="color:#fff;font-size:14px"></i>';
                     playerLabel.textContent = 'Playing...';
-                    playChunk(0);
+
+                    currentAudio = new Audio(fullBlobUrl);
+                    currentAudio.onerror = function() {
+                        console.error('Audio failed to decode');
+                        playerLabel.textContent = 'Playback error';
+                        isPlaying = false;
+                        playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                    };
+                    currentAudio.play().catch(function(err) {
+                        console.error('Audio play failed:', err);
+                        playerLabel.textContent = 'Playback error';
+                        isPlaying = false;
+                        playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                    });
+                    currentAudio.ontimeupdate = function() {
+                        var m = Math.floor(currentAudio.currentTime / 60);
+                        var sec = Math.floor(currentAudio.currentTime % 60);
+                        playerTimer.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+                        if (currentAudio.duration && isFinite(currentAudio.duration)) {
+                            playerBar.style.width = ((currentAudio.currentTime / currentAudio.duration) * 100) + '%';
+                        }
+                    };
+                    currentAudio.onended = function() {
+                        isPlaying = false;
+                        playAllBtn.innerHTML = '<i class="fas fa-play" style="color:#fff;font-size:14px;margin-left:2px"></i>';
+                        playerLabel.textContent = 'Recording Complete';
+                        playerBar.style.width = '100%';
+                    };
                 }
             };
 
-            // Individual chunk players using blob URLs
+            // Show native audio control for the full recording
             if (canPlayWebm) {
-                var chunksHtml = '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Audio Clips (' + chunks.length + ' × 30s):</div>';
-                for (var i = 0; i < chunks.length; i++) {
-                    chunksHtml += '<div class="chunk-player">' +
-                        '<span>#' + (i + 1) + '</span>' +
-                        '<audio controls preload="none" src="' + chunkBlobUrls[i] + '"></audio>' +
-                        '<span>' + new Date(chunks[i].createdAt).toLocaleTimeString() + '</span>' +
+                chunksContainer.innerHTML +=
+                    '<div style="margin-top:8px;font-size:12px;color:#8080A0;margin-bottom:8px">Full Recording (~' + totalDuration + 's):</div>' +
+                    '<div class="chunk-player">' +
+                        '<audio controls preload="metadata" src="' + fullBlobUrl + '" style="width:100%"></audio>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#606080;margin-top:4px;text-align:center">' +
+                        'Last updated: ' + new Date(latestChunk.createdAt).toLocaleTimeString() +
+                        ' &bull; ' + chunks.length + ' update(s) received' +
                     '</div>';
-                }
-                chunksContainer.innerHTML += chunksHtml;
             }
 
-            // Download button — always works regardless of browser
+            // Download button — downloads the full recording
             var dlBtn = document.getElementById('download-all');
             dlBtn.style.display = 'block';
             dlBtn.onclick = function() {
-                for (var d = 0; d < chunks.length; d++) {
-                    var dlBlob = base64ToBlob(chunks[d].audioData);
-                    var dlUrl = URL.createObjectURL(dlBlob);
-                    var a = document.createElement('a');
-                    a.href = dlUrl;
-                    a.download = 'safetea-recording-clip-' + (d + 1) + '.webm';
-                    a.click();
-                    URL.revokeObjectURL(dlUrl);
-                }
+                var dlUrl = URL.createObjectURL(fullBlob);
+                var a = document.createElement('a');
+                a.href = dlUrl;
+                a.download = 'safetea-recording-full.webm';
+                a.click();
+                URL.revokeObjectURL(dlUrl);
             };
 
             loadedChunkCount = chunks.length;

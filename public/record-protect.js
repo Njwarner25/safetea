@@ -1615,34 +1615,32 @@
             shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
         }
 
-        // Start MediaRecorder — stop/restart every 30s so each clip is a complete playable WebM file
+        // Start MediaRecorder with 30s timeslice — browser handles timing natively
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
         var recorderOptions = { mimeType: mimeType };
         try { recorderOptions.audioBitsPerSecond = 128000; } catch (e) {}
-        state.audioStream = stream; // keep reference for restart cycle
+        state.audioStream = stream;
+        state.allRecordedBlobs = []; // accumulate ALL blobs for complete file
 
-        state.createRecorder = function() {
-            var recorder = new MediaRecorder(state.audioStream, recorderOptions);
-            var chunks = [];
+        state.mediaRecorder = new MediaRecorder(stream, recorderOptions);
 
-            recorder.ondataavailable = function(e) {
-                if (e.data && e.data.size > 0) chunks.push(e.data);
-            };
-
-            recorder.onstop = async function() {
-                if (chunks.length === 0) return;
-                // Combine all data into one complete WebM blob (has proper header)
-                var completeBlob = new Blob(chunks, { type: mimeType });
+        state.mediaRecorder.ondataavailable = async function(e) {
+            if (e.data && e.data.size > 0) {
+                state.allRecordedBlobs.push(e.data);
                 var segNum = state.chunkNumber++;
                 var statusEl = document.getElementById('rp-chunk-status');
 
-                // Save to IndexedDB FIRST (never lose data)
+                // Build a COMPLETE playable WebM from ALL blobs so far
+                // (first blob has the WebM header, subsequent are continuation data)
+                var completeBlob = new Blob(state.allRecordedBlobs, { type: mimeType });
+                var totalSecs = state.allRecordedBlobs.length * 30;
+
+                // Save complete recording to IndexedDB (overwrites previous)
                 try {
                     if (state.recordingDB) {
                         await saveSegment(state.recordingDB, state.sessionKey, segNum, completeBlob, state.lastLat, state.lastLng);
-                        if (statusEl) statusEl.textContent = '30s audio clip #' + (segNum + 1) + ' captured (' + Math.round(completeBlob.size / 1024) + ' KB)';
+                        if (statusEl) statusEl.textContent = totalSecs + 's of audio captured (' + Math.round(completeBlob.size / 1024) + ' KB)';
                         updateIntegrityIndicator('yellow');
-                        // Trigger immediate upload
                         uploadLoop();
                     }
                 } catch (dbErr) {
@@ -1650,25 +1648,14 @@
                     if (statusEl) statusEl.textContent = 'Local save failed for clip ' + (segNum + 1);
                     updateIntegrityIndicator('red');
                 }
-            };
-
-            recorder.start(); // no timeslice — stop() will produce a complete file
-            return recorder;
+            }
         };
 
-        state.mediaRecorder = state.createRecorder();
+        state.mediaRecorder.onstop = function() {
+            // Don't kill the stream here — stopRecording handles that
+        };
 
-        // Every 30 seconds: stop current recorder (triggers onstop → saves complete clip), start new one
-        state.recorderCycleInterval = setInterval(function() {
-            if (!state.recording) return;
-            if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
-                state.mediaRecorder.stop(); // produces a complete playable WebM
-                // Start a new recorder immediately on the same stream
-                if (state.audioStream && state.audioStream.active) {
-                    state.mediaRecorder = state.createRecorder();
-                }
-            }
-        }, 30000);
+        state.mediaRecorder.start(30000); // fires ondataavailable every 30 seconds
 
         // Start upload manager (separate from recording)
         startUploadManager();
@@ -1777,14 +1764,13 @@
         if (!state.recording) return;
         state.recording = false;
 
-        // Stop the 30-second cycle interval
-        if (state.recorderCycleInterval) { clearInterval(state.recorderCycleInterval); state.recorderCycleInterval = null; }
-
-        // Stop current MediaRecorder — this triggers onstop which saves the final partial clip
+        // Flush any remaining buffered audio, then stop
         if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+            try { state.mediaRecorder.requestData(); } catch (e) {}
+            await new Promise(function(r) { setTimeout(r, 300); });
             state.mediaRecorder.stop();
         }
-        // Wait for onstop handler to finish saving the final clip
+        // Wait for ondataavailable to fire with final data
         await new Promise(function(r) { setTimeout(r, 500); });
 
         // Stop the audio stream

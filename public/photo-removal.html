@@ -194,6 +194,9 @@
 
 <script>
 (function(){
+  var STEGO_BLOCK = 32;
+  var STEGO_MAGIC = 0xAA;
+
   var dropZone = document.getElementById('removal-drop-zone');
   var fileInput = document.getElementById('removal-file-input');
   var fileName = document.getElementById('removal-file-name');
@@ -224,32 +227,118 @@
     resultDiv.style.display = 'none';
   }
 
-  function readFileAsDataURL(file){
-    return new Promise(function(resolve, reject){
-      var reader = new FileReader();
-      reader.onload = function(){ resolve(reader.result); };
-      reader.onerror = function(){ reject(new Error('Could not read file')); };
-      reader.readAsDataURL(file);
-    });
-  }
-
   function showResult(msg, type){
     resultDiv.textContent = msg;
     resultDiv.className = 'removal-result ' + type;
     resultDiv.style.display = 'block';
   }
 
+  // Decode the client-side luminance watermark (same algo as admin decoder)
+  function decodeLuminanceWatermark(file){
+    return new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          try {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var imageData = ctx.getImageData(0, 0, img.width, img.height);
+            var px = imageData.data;
+            var w = img.width, h = img.height;
+            var blocksX = Math.floor(w / STEGO_BLOCK);
+            var blocksY = Math.floor(h / STEGO_BLOCK);
+            var totalBlocks = blocksX * blocksY;
+            if(totalBlocks < 40){ resolve(null); return; }
+
+            var blockAvgs = [];
+            for(var b = 0; b < totalBlocks; b++){
+              var bx = (b % blocksX) * STEGO_BLOCK;
+              var by = Math.floor(b / blocksX) * STEGO_BLOCK;
+              var sum = 0, count = 0;
+              for(var py = by; py < by + STEGO_BLOCK && py < h; py++){
+                for(var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++){
+                  sum += px[(py * w + px2) * 4 + 1]; count++;
+                }
+              }
+              blockAvgs.push(sum / count);
+            }
+
+            var payloadLen = 40;
+            var reps = Math.max(1, Math.floor(totalBlocks / payloadLen));
+            var bitVotes = new Array(payloadLen).fill(0);
+            for(var rep = 0; rep < reps; rep++){
+              for(var bit = 0; bit < payloadLen; bit++){
+                var idx = rep * payloadLen + bit;
+                if(idx >= totalBlocks) break;
+                var localSum = 0, localCount = 0;
+                var bRow = Math.floor(idx / blocksX), bCol = idx % blocksX;
+                for(var dr = -1; dr <= 1; dr++){
+                  for(var dc = -1; dc <= 1; dc++){
+                    if(dr === 0 && dc === 0) continue;
+                    var nr = bRow + dr, nc = bCol + dc;
+                    if(nr >= 0 && nr < blocksY && nc >= 0 && nc < blocksX){
+                      localSum += blockAvgs[nr * blocksX + nc]; localCount++;
+                    }
+                  }
+                }
+                if(localCount === 0) continue;
+                var localAvg = localSum / localCount;
+                if(blockAvgs[idx] > localAvg) bitVotes[bit]++;
+                else bitVotes[bit]--;
+              }
+            }
+
+            var bits = bitVotes.map(function(v){ return v > 0 ? 1 : 0; });
+            var magic = 0;
+            for(var i = 0; i < 8; i++) magic = (magic << 1) | bits[i];
+            if(magic !== STEGO_MAGIC){ resolve(null); return; }
+
+            var userId = 0;
+            for(var i = 8; i < 40; i++) userId = (userId << 1) | bits[i];
+            userId = userId >>> 0;
+
+            var totalVoteStrength = 0;
+            for(var i = 0; i < payloadLen; i++) totalVoteStrength += Math.abs(bitVotes[i]);
+            var confidence = Math.min(100, Math.round((totalVoteStrength / payloadLen / Math.max(reps, 1)) * 100));
+
+            resolve({ userId: userId, confidence: confidence });
+          } catch(e){ resolve(null); }
+        };
+        img.onerror = function(){ resolve(null); };
+        img.src = reader.result;
+      };
+      reader.onerror = function(){ resolve(null); };
+      reader.readAsDataURL(file);
+    });
+  }
+
   submitBtn.addEventListener('click', async function(){
     if(!selectedFile) return;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing image...';
+    submitBtn.textContent = 'Scanning watermark...';
     resultDiv.style.display = 'none';
 
     try {
-      var base64 = await readFileAsDataURL(selectedFile);
+      // Step 1: Decode client-side luminance watermark
+      var wmResult = await decodeLuminanceWatermark(selectedFile);
 
+      // Step 2: Read file as base64
       submitBtn.textContent = 'Submitting...';
+      var base64 = await new Promise(function(resolve, reject){
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result); };
+        reader.onerror = function(){ reject(new Error('Could not read file')); };
+        reader.readAsDataURL(selectedFile);
+      });
+
       var payload = { image: base64 };
+      if(wmResult && wmResult.userId){
+        payload.decoded_viewer_id = wmResult.userId;
+        payload.decode_confidence = wmResult.confidence;
+      }
       var email = document.getElementById('removal-email').value.trim();
       var details = document.getElementById('removal-details').value.trim();
       if(email) payload.email = email;
@@ -257,7 +346,7 @@
 
       var jsonBody = JSON.stringify(payload);
       if(jsonBody.length > 4 * 1024 * 1024){
-        showResult('Image is still too large after compression. Please try a smaller photo.', 'error');
+        showResult('Image file is too large. Please try a smaller photo or a screenshot.', 'error');
         submitBtn.textContent = 'Submit Removal Request';
         submitBtn.disabled = false;
         return;

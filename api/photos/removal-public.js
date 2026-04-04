@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
   try {
     const body = await parseBody(req);
 
-    const { image, email, details } = body;
+    const { image, email, details, decoded_viewer_id, decode_confidence } = body;
 
     if (!image) {
       return res.status(400).json({ error: 'image (base64) is required' });
@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
     const imageBuffer = validated.buffer;
     const imageHash = crypto.createHash('sha256').update(imageBuffer).digest('hex').substring(0, 64);
 
-    // Extract watermark
+    // Extract watermark — try server-side LSB first, fall back to client-decoded luminance
     let watermarkVerified = false;
     let watermarkUserId = null;
     try {
@@ -64,7 +64,20 @@ module.exports = async function handler(req, res) {
       watermarkVerified = watermarkResult.found && watermarkResult.verified;
       watermarkUserId = watermarkVerified ? watermarkResult.userId : null;
     } catch (e) {
-      console.error('Watermark extraction error (non-fatal):', e.message);
+      console.error('LSB watermark extraction error (non-fatal):', e.message);
+    }
+
+    // Fall back to client-side luminance watermark if LSB not found
+    if (!watermarkVerified && decoded_viewer_id && parseInt(decoded_viewer_id) > 0) {
+      const confidence = parseInt(decode_confidence) || 0;
+      if (confidence >= 30) {
+        // Verify the user exists before trusting client-decoded ID
+        const decodedUser = await getOne('SELECT id FROM users WHERE id = $1', [parseInt(decoded_viewer_id)]);
+        if (decodedUser) {
+          watermarkVerified = true;
+          watermarkUserId = String(decodedUser.id);
+        }
+      }
     }
 
     let autoActionTaken = null;

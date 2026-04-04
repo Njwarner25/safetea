@@ -2292,7 +2292,7 @@
                 var bit = bits[b % bits.length];
                 var bx = (b % blocksX) * STEGO_BLOCK;
                 var by = Math.floor(b / blocksX) * STEGO_BLOCK;
-                var delta = bit ? 5 : -5;
+                var delta = bit ? 8 : -8;
                 for (var py = by; py < by + STEGO_BLOCK && py < h; py++) {
                     for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < w; px2++) {
                         var idx = (py * w + px2) * 4;
@@ -2326,18 +2326,60 @@
                 var u = getUser();
                 var uid = u ? parseInt(u.id) || 0 : 0;
 
-                stegoEmbed(src, uid, function(encoded) {
-                    var imgEl = new Image();
-                    imgEl.onload = function() {
-                        var canvas = el;
-                        canvas.width = imgEl.width;
-                        canvas.height = imgEl.height;
-                        var ctx = canvas.getContext('2d');
-                        ctx.drawImage(imgEl, 0, 0);
-                        canvas.style.opacity = '1';
-                    };
-                    imgEl.src = encoded;
-                });
+                // Embed watermark at DISPLAY resolution so screenshots capture aligned blocks
+                var imgEl = new Image();
+                imgEl.crossOrigin = 'anonymous';
+                imgEl.onload = function() {
+                    var canvas = el;
+                    var dpr = window.devicePixelRatio || 1;
+                    var rect = canvas.getBoundingClientRect();
+                    // Use display size × devicePixelRatio for crisp rendering
+                    var displayW = Math.round(rect.width * dpr) || imgEl.width;
+                    var displayH = Math.round(rect.height * dpr) || imgEl.height;
+                    // Maintain aspect ratio
+                    var imgRatio = imgEl.width / imgEl.height;
+                    var dispRatio = displayW / displayH;
+                    var drawW, drawH;
+                    if (imgRatio > dispRatio) {
+                        drawW = displayW; drawH = Math.round(displayW / imgRatio);
+                    } else {
+                        drawH = displayH; drawW = Math.round(displayH * imgRatio);
+                    }
+                    canvas.width = drawW;
+                    canvas.height = drawH;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(imgEl, 0, 0, drawW, drawH);
+
+                    // Apply watermark directly at display resolution
+                    var imageData = ctx.getImageData(0, 0, drawW, drawH);
+                    var px = imageData.data;
+                    var bits = [];
+                    var mi;
+                    for (mi = 7; mi >= 0; mi--) bits.push((STEGO_MAGIC >> mi) & 1);
+                    for (mi = 31; mi >= 0; mi--) bits.push(((uid >>> 0) >> mi) & 1);
+
+                    var blocksX = Math.floor(drawW / STEGO_BLOCK);
+                    var blocksY = Math.floor(drawH / STEGO_BLOCK);
+                    var totalBlocks = blocksX * blocksY;
+
+                    for (var b = 0; b < totalBlocks; b++) {
+                        var bit = bits[b % bits.length];
+                        var bx = (b % blocksX) * STEGO_BLOCK;
+                        var by = Math.floor(b / blocksX) * STEGO_BLOCK;
+                        var delta = bit ? 8 : -8;
+                        for (var py = by; py < by + STEGO_BLOCK && py < drawH; py++) {
+                            for (var px2 = bx; px2 < bx + STEGO_BLOCK && px2 < drawW; px2++) {
+                                var pidx = (py * drawW + px2) * 4;
+                                var g = px[pidx + 1] + delta;
+                                px[pidx + 1] = g < 0 ? 0 : g > 255 ? 255 : g;
+                            }
+                        }
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    canvas.style.opacity = '1';
+                };
+                imgEl.onerror = function() { el.style.opacity = '1'; };
+                imgEl.src = src;
             });
         }, { rootMargin: '200px' });
         window._stegoObserver = observer;

@@ -48,26 +48,31 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Test creating a checkout session (don't actually save it)
+      // List ALL active recurring prices to find the right ones
       try {
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: [{ price: priceIds.plus_monthly, quantity: 1 }],
-          mode: 'subscription',
-          success_url: 'https://www.getsafetea.app/dashboard.html?upgrade=success',
-          cancel_url: 'https://www.getsafetea.app/dashboard.html',
-        });
-        results.session_test = {
-          success: true,
-          session_id: session.id,
-          url_prefix: session.url ? session.url.substring(0, 60) + '...' : null,
-        };
-      } catch (sessErr) {
-        results.session_test = {
-          success: false,
-          error: sessErr.message,
-          type: sessErr.type,
-        };
+        const prices = await stripe.prices.list({ active: true, type: 'recurring', limit: 20 });
+        results.all_active_prices = prices.data.map(p => ({
+          id: p.id,
+          amount: '$' + (p.unit_amount / 100).toFixed(2),
+          currency: p.currency,
+          interval: p.recurring ? p.recurring.interval : null,
+          product: p.product,
+          nickname: p.nickname || null,
+        }));
+      } catch (e) {
+        results.all_active_prices = { error: e.message };
+      }
+
+      // List ALL products to find active ones
+      try {
+        const products = await stripe.products.list({ limit: 20 });
+        results.all_products = products.data.map(p => ({
+          id: p.id,
+          name: p.name,
+          active: p.active,
+        }));
+      } catch (e) {
+        results.all_products = { error: e.message };
       }
     } catch (e) {
       results.stripe_test = { success: false, error: e.message };

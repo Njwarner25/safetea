@@ -58,6 +58,7 @@
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
         { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },
         { "source": "/api/subscribe", "destination": "/api/subscribe" },
+        { "source": "/api/stripe-test", "destination": "/api/stripe-test" },
         { "source": "/api/webhook-stripe", "destination": "/api/webhook-stripe" },
         { "source": "/api/webhooks/stripe", "destination": "/api/webhooks/stripe" },
         { "source": "/api/referral/track", "destination": "/api/referral/track" },

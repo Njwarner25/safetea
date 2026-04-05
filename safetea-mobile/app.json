@@ -66,6 +66,15 @@
           "icon": "./assets/icon.png",
           "color": "#E8A0B5"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35
+          }
+        }
       ]
     ],
     "experiments": {

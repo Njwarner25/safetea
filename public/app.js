@@ -1389,10 +1389,10 @@
     };
 
     // ============ UPGRADE / PREMIUM ============
-    // Stripe price IDs (hardcoded — matches Stripe dashboard)
+    // Stripe price IDs — SafeTea Pro product (prod_UBvD5hxoMcGdsB)
     var PRICE_IDS = {
-        monthly: 'price_1TDXLUFaKA9n89CXkfEotpfL',
-        yearly: 'price_1TEdLTFaKA9n89CX1xY0PG9H'
+        monthly: 'price_1TIe1vFaKA9n89CXWIoIq0Mf',  // $7.99/mo
+        yearly: 'price_1TEdJfFaKA9n89CXZebr3UxW'     // $66.99/yr
     };
     window._upgradeInterval = 'monthly';
 

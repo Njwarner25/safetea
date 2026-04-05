@@ -54,14 +54,16 @@ module.exports = async function handler(req, res) {
 
   // Validate price ID against known prices (all map to 'plus' tier)
   const validPrices = {
-    // SafeTea+ Monthly
-    'price_1TDXLUFaKA9n89CXkfEotpfL': { tier: 'plus', plan: 'plus_monthly' },
-    // SafeTea+ Yearly
-    'price_1TEdLTFaKA9n89CX1xY0PG9H': { tier: 'plus', plan: 'plus_yearly' },
-    // Legacy Pro Monthly (now maps to SafeTea+)
-    'price_1TDXN5FaKA9n89CXeDxnAJMh': { tier: 'plus', plan: 'plus_monthly' },
-    // Legacy Pro Yearly (now maps to SafeTea+)
+    // SafeTea+ Monthly — $7.99 (prod_UBvD5hxoMcGdsB)
+    'price_1TIe1vFaKA9n89CXWIoIq0Mf': { tier: 'plus', plan: 'plus_monthly' },
+    // SafeTea+ Yearly — $66.99 (prod_UBvD5hxoMcGdsB)
     'price_1TEdJfFaKA9n89CXZebr3UxW': { tier: 'plus', plan: 'plus_yearly' },
+    // Legacy prices (old product, kept for existing subscribers)
+    'price_1TDXLUFaKA9n89CXkfEotpfL': { tier: 'plus', plan: 'plus_monthly' },
+    'price_1TEdLTFaKA9n89CX1xY0PG9H': { tier: 'plus', plan: 'plus_yearly' },
+    'price_1TDXN5FaKA9n89CXeDxnAJMh': { tier: 'plus', plan: 'plus_monthly' },
+    'price_1TI3jSFaKA9n89CX4nfuSNgy': { tier: 'plus', plan: 'plus_monthly' },
+    'price_1TI3jXFaKA9n89CX5viy9YKq': { tier: 'plus', plan: 'plus_yearly' },
   };
 
   if (!validPrices[priceId]) {

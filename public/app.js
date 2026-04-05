@@ -1389,15 +1389,20 @@
     };
 
     // ============ UPGRADE / PREMIUM ============
-    window._upgradeInterval = 'monthly'; // default billing interval (on window so inline onclick can access)
+    // Stripe price IDs (hardcoded — matches Stripe dashboard)
+    var PRICE_IDS = {
+        monthly: 'price_1TDXLUFaKA9n89CXkfEotpfL',
+        yearly: 'price_1TEdLTFaKA9n89CX1xY0PG9H'
+    };
+    window._upgradeInterval = 'monthly';
 
     window.showUpgradePrompt = function() {
-        // Remove existing modal if open
         var existing = document.getElementById('upgrade-modal');
         if (existing) existing.remove();
 
         var user = getUser();
         var currentTier = (user && user.subscription_tier || 'free').toLowerCase();
+        var plusActive = currentTier === 'plus' || currentTier === 'pro' || currentTier === 'premium';
 
         var modal = document.createElement('div');
         modal.id = 'upgrade-modal';
@@ -1407,7 +1412,6 @@
         var isYearly = window._upgradeInterval === 'yearly';
         var plusPrice = isYearly ? '$66.99' : '$7.99';
         var plusPer = isYearly ? '/yr' : '/mo';
-        var saveBadge = isYearly ? ' <span style="color:#2ecc71;font-size:11px;font-weight:600">Save 30%</span>' : '';
 
         var html = '<div style="background:#1A1A2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:32px 24px">';
         html += '<div style="text-align:center;margin-bottom:20px">';
@@ -1421,17 +1425,20 @@
         html += '<div style="display:flex;justify-content:center;margin-bottom:20px">';
         html += '<div style="display:inline-flex;background:#22223A;border-radius:10px;padding:3px;border:1px solid rgba(255,255,255,0.06)">';
         html += '<button onclick="window._upgradeInterval=\'monthly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + moStyle + '">Monthly</button>';
-        html += '<button onclick="window._upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly' + (isYearly ? '' : ' <span style="color:#2ecc71;font-size:10px">Save 30%</span>') + '</button>';
+        html += '<button onclick="window._upgradeInterval=\'yearly\';showUpgradePrompt()" style="padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;' + yrStyle + '">Yearly <span style="color:' + (isYearly ? '#1A1A2E' : '#2ecc71') + ';font-size:10px">Save 30%</span></button>';
         html += '</div></div>';
 
-        // SafeTea+ card (single paid tier)
-        var plusActive = currentTier === 'plus' || currentTier === 'pro' || currentTier === 'premium';
-        html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:20px;margin-bottom:16px">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-        html += '<div><h3 style="color:#fff;font-size:16px;margin:0">SafeTea+ <span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px">BEST VALUE</span></h3></div>';
-        html += '<div style="color:#fff;font-size:22px;font-weight:800">' + plusPrice + '<span style="font-size:13px;font-weight:400;color:#8080A0">' + plusPer + '</span>' + saveBadge + '</div>';
-        html += '</div>';
-        html += '<div style="color:#A0A0C0;font-size:13px;line-height:1.8">';
+        // SafeTea+ card
+        html += '<div style="background:#22223A;border:' + (plusActive ? '2px solid #E8A0B5' : '1px solid rgba(255,255,255,0.06)') + ';border-radius:12px;padding:24px 20px;margin-bottom:16px;text-align:center">';
+        html += '<h3 style="color:#fff;font-size:18px;margin:0 0 4px 0">SafeTea+</h3>';
+        if (isYearly) {
+            html += '<div style="margin:8px 0"><span style="background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;font-size:11px;padding:4px 12px;border-radius:10px;font-weight:700;letter-spacing:0.5px">BEST VALUE — SAVE 30%</span></div>';
+        }
+        html += '<div style="color:#fff;font-size:32px;font-weight:800;margin:12px 0 4px 0">' + plusPrice + '<span style="font-size:15px;font-weight:400;color:#8080A0">' + plusPer + '</span></div>';
+        if (isYearly) {
+            html += '<div style="color:#8080A0;font-size:12px;margin-bottom:8px">That\'s just $5.58/mo — billed annually</div>';
+        }
+        html += '<div style="text-align:left;color:#A0A0C0;font-size:13px;line-height:1.8;margin-top:16px">';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Know who you\'re meeting — background & identity checks</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SOS tools — Fake Call, Record & Alert, one-tap 911</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In with live GPS tracking for contacts</div>';
@@ -1441,13 +1448,12 @@
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Priority support from the SafeTea team</div>';
         html += '</div>';
         if (plusActive) {
-            html += '<div style="margin-top:14px;text-align:center;padding:10px;background:rgba(232,160,181,0.1);border-radius:8px;color:#E8A0B5;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
+            html += '<div style="margin-top:16px;padding:10px;background:rgba(232,160,181,0.1);border-radius:8px;color:#E8A0B5;font-weight:600;font-size:13px"><i class="fas fa-check-circle"></i> Current Plan</div>';
         } else {
-            html += '<button onclick="startCheckout(\'plus\')" style="width:100%;margin-top:14px;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Subscribe to SafeTea+ — ' + plusPrice + plusPer + '</button>';
+            html += '<button onclick="startCheckout()" style="width:100%;margin-top:16px;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Subscribe to SafeTea+ — ' + plusPrice + plusPer + '</button>';
         }
         html += '</div>';
 
-        // Close button
         html += '<button onclick="document.getElementById(\'upgrade-modal\').remove()" style="width:100%;padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#8080A0;font-size:13px;cursor:pointer;font-family:inherit">Maybe Later</button>';
         html += '</div>';
 
@@ -1455,47 +1461,39 @@
         document.body.appendChild(modal);
     };
 
-    window.startCheckout = function(plan) {
+    window.startCheckout = function() {
         var interval = window._upgradeInterval || 'monthly';
-        console.log('[Stripe] Starting checkout — plan:', plan, 'interval:', interval);
+        var priceId = PRICE_IDS[interval];
+        console.log('[Stripe] Starting checkout — interval:', interval, 'priceId:', priceId);
 
-        // Find the button that was clicked and show loading state
         var modal = document.getElementById('upgrade-modal');
-        if (modal) {
-            var buttons = modal.querySelectorAll('button');
-            buttons.forEach(function(b) { b.disabled = true; b.style.opacity = '0.6'; });
-        }
+        var subBtn = modal ? modal.querySelector('button[onclick*="startCheckout"]') : null;
+        if (subBtn) { subBtn.disabled = true; subBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting to Stripe...'; }
 
-        fetch('/api/subscriptions/checkout', {
+        fetch('/api/subscribe', {
             method: 'POST',
             headers: authHeaders(),
-            body: JSON.stringify({ plan: plan, interval: interval })
+            body: JSON.stringify({ priceId: priceId })
         })
         .then(function(r) {
             console.log('[Stripe] Response status:', r.status);
             return r.json();
         })
         .then(function(data) {
-            console.log('[Stripe] Response data:', data);
+            console.log('[Stripe] Response:', data);
             if (data.url) {
                 window.location.href = data.url;
             } else {
                 var errMsg = data.error || data.details || 'Failed to start checkout';
-                console.error('[Stripe] No checkout URL returned:', errMsg);
+                console.error('[Stripe] Error:', errMsg);
                 if (typeof showToast === 'function') showToast(errMsg);
-                if (modal) {
-                    var buttons = modal.querySelectorAll('button');
-                    buttons.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
-                }
+                if (subBtn) { subBtn.disabled = false; subBtn.innerHTML = 'Subscribe to SafeTea+'; }
             }
         })
         .catch(function(err) {
-            console.error('[Stripe] Checkout fetch error:', err);
+            console.error('[Stripe] Network error:', err);
             if (typeof showToast === 'function') showToast('Network error — please try again');
-            if (modal) {
-                var buttons = modal.querySelectorAll('button');
-                buttons.forEach(function(b) { b.disabled = false; b.style.opacity = '1'; });
-            }
+            if (subBtn) { subBtn.disabled = false; subBtn.innerHTML = 'Subscribe to SafeTea+'; }
         });
     };
 

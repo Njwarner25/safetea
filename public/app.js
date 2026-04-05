@@ -2287,9 +2287,9 @@
         var text = 'ST:' + userId;
         // Scale font by DPR so text appears consistent size regardless of screen density
         var dpr = window.devicePixelRatio || 1;
-        var fontSize = Math.round(32 * dpr);
-        var spacingY = Math.round(64 * dpr);
-        var spacingX = Math.round(200 * dpr);
+        var fontSize = Math.round(48 * dpr);
+        var spacingY = Math.round(80 * dpr);
+        var spacingX = Math.round(240 * dpr);
 
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
@@ -2298,14 +2298,14 @@
         pCtx.textBaseline = 'top';
         pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
         pCtx.rotate(-0.06);
-        var margin = Math.round(80 * dpr);
+        var margin = Math.round(100 * dpr);
         for (var y = -margin; y < h + margin; y += spacingY) {
             for (var x = -margin; x < w + margin; x += spacingX) {
                 pCtx.fillText(text, x, y);
             }
         }
         ctx.save();
-        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.20;
+        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.30;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
         if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr);
@@ -2428,15 +2428,11 @@
             console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH);
         };
         imgEl.onerror = function(e) {
-            console.error('[SafeTea WM] Image FAILED — postId:', postId, 'src starts:', src.substring(0, 50));
-            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
-            if (spinner) spinner.innerHTML = '<span style="color:#e74c3c;font-size:11px"><i class="fas fa-times-circle"></i> Load failed</span>';
-            // Fallback: show as regular <img>
-            var fallback = document.createElement('img');
-            fallback.src = src;
-            fallback.style.cssText = 'width:100%;max-height:300px;object-fit:cover;border-radius:10px;display:block';
-            if (el.parentElement) el.parentElement.insertBefore(fallback, el);
+            console.warn('[SafeTea WM] Image load failed — postId:', postId, '(corrupted data, hiding)');
+            // Hide the entire image container — don't show broken image
             el.style.display = 'none';
+            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+            if (spinner) spinner.style.display = 'none';
         };
         imgEl.src = src;
     }

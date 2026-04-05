@@ -66,11 +66,16 @@ module.exports = async function handler(req, res) {
 
     content.push({
       type: 'text',
-      text: 'You are analyzing images for hidden watermark text. ' +
-        'Image 1 is a THRESHOLDED binary version — white text patterns on black background. Look for repeating text that reads "ST:" followed by a number (like "ST:2" or "ST:9"). The text is tiled diagonally across the entire image in a repeating grid pattern. Each instance shows the same "ST:NUMBER" text. ' +
-        (softImage ? 'Image 2 is a softer contrast-amplified version showing the same watermark with more gradation. ' : '') +
-        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' is the original photo — look for faint translucent text like "SafeTea #" followed by a number. ' : '') +
-        'Focus on reading the "ST:" text in the first image. The characters S, T, colon, and digits should be visible as a repeating pattern. Report what you find. Respond in this exact JSON format: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
+      text: 'OCR TASK: Read the repeating text in these processed watermark images.\n\n' +
+        'Image 1 (binary, upscaled 2x): White text on black background. The text is in bold monospace font, tiled diagonally. ' +
+        'Each tile contains EXACTLY the same short string in the format "ST:" followed by a small number (1-999). For example: "ST:2" or "ST:14" or "ST:307". ' +
+        'The letters "S" and "T" are uppercase, followed by a colon ":", followed by one or more digits. ' +
+        'Look at ANY clear instance of the repeating text and read it character by character.\n\n' +
+        (softImage ? 'Image 2 (amplified grayscale): Same watermark with more detail — use this to confirm your reading.\n\n' : '') +
+        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' (original photo): May contain a faint translucent watermark reading "SafeTea #" followed by a number.\n\n' : '') +
+        'IMPORTANT: Focus on Image 1. Find the clearest instance of the repeating text and read it exactly. ' +
+        'The format is always ST:NUMBER (e.g. ST:2, ST:15, ST:100).\n\n' +
+        'Respond ONLY with this JSON: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
     });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -82,7 +87,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
+        max_tokens: 500,
         messages: [{ role: 'user', content }]
       })
     });

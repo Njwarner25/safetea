@@ -1767,21 +1767,21 @@
         // Text overlay encoder for self-test (mirrors app.js wmApplyText)
         function wmApplyTextAdmin(ctx, w, h, userId) {
             var text = 'ST:' + userId;
-            // For self-test: use fixed 32px since test canvas is at 1:1 (no DPR scaling)
+            // For self-test: use fixed 48px since test canvas is at 1:1 (no DPR scaling)
             var pat = document.createElement('canvas');
             pat.width = w; pat.height = h;
             var pCtx = pat.getContext('2d');
-            pCtx.font = 'bold 32px monospace';
+            pCtx.font = 'bold 48px monospace';
             pCtx.textBaseline = 'top';
             pCtx.fillStyle = '#ffffff';
             pCtx.rotate(-0.06);
-            for (var y = -80; y < h + 80; y += 64) {
-                for (var x = -80; x < w + 80; x += 200) {
+            for (var y = -100; y < h + 100; y += 80) {
+                for (var x = -100; x < w + 100; x += 240) {
                     pCtx.fillText(text, x, y);
                 }
             }
             ctx.save();
-            ctx.globalAlpha = 0.20;
+            ctx.globalAlpha = 0.30;
             ctx.drawImage(pat, 0, 0);
             ctx.restore();
         }
@@ -2044,24 +2044,32 @@
             var ctx = canvas.getContext('2d');
 
             // Multi-pass processing to make watermark text clearly readable for AI:
-            // 1. High-pass with large blur (removes photo texture, keeps text pattern)
-            var ampData = amplifyWatermark(ctx, w, h, 40, 50);
+            // 1. High-pass with large blur and high gain (removes photo, keeps watermark)
+            var ampData = amplifyWatermark(ctx, w, h, 80, 60);
             var ampPixels = ampData.data;
 
-            // 2. Threshold to binary (pure black/white) — eliminates noise, text pops
+            // 2. Threshold to binary — use aggressive low threshold to capture faint text
             var threshCanvas = document.createElement('canvas');
             threshCanvas.width = w; threshCanvas.height = h;
             var threshOut = new Uint8ClampedArray(w * h * 4);
             for (var i = 0; i < w * h; i++) {
                 var idx = i * 4;
-                var bright = ampPixels[idx] > 140 ? 255 : 0;
+                var bright = ampPixels[idx] > 110 ? 255 : 0;
                 threshOut[idx] = bright; threshOut[idx+1] = bright; threshOut[idx+2] = bright; threshOut[idx+3] = 255;
             }
             threshCanvas.getContext('2d').putImageData(new ImageData(threshOut, w, h), 0, 0);
-            var threshImage = threshCanvas.toDataURL('image/png');
 
-            // 3. Also do a softer amplification for context
-            var softAmp = amplifyWatermark(ctx, w, h, 60, 35);
+            // 2b. Scale up the thresholded image 2x for better AI OCR
+            var upW = w * 2, upH = h * 2;
+            var upCanvas = document.createElement('canvas');
+            upCanvas.width = upW; upCanvas.height = upH;
+            var upCtx = upCanvas.getContext('2d');
+            upCtx.imageSmoothingEnabled = false;
+            upCtx.drawImage(threshCanvas, 0, 0, upW, upH);
+            var threshImage = upCanvas.toDataURL('image/png');
+
+            // 3. Medium amplification with softer blur for context
+            var softAmp = amplifyWatermark(ctx, w, h, 100, 40);
             var softCanvas = document.createElement('canvas');
             softCanvas.width = w; softCanvas.height = h;
             softCanvas.getContext('2d').putImageData(softAmp, 0, 0);

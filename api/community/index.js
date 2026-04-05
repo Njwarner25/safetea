@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
   const limit = Math.min(parseInt(req.query.limit) || 20, 50);
 
   try {
-    let where = "p.feed = 'community'";
+    let where = "p.feed = 'community' AND (p.hidden IS NOT TRUE)";
     const params = [];
     let paramIdx = 0;
 
@@ -66,7 +66,8 @@ module.exports = async function handler(req, res) {
          LEFT JOIN users u ON u.id = p.user_id
          WHERE ${where}
          ORDER BY
-           COALESCE(p.bump_count, 0) * 2
+           CASE WHEN COALESCE(u.subscription_tier, 'free') IN ('plus', 'pro', 'premium') THEN 10 ELSE 0 END
+           + COALESCE(p.bump_count, 0) * 2
            + (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id)
            + (SELECT COUNT(*) FROM replies r2 WHERE r2.post_id = p.id)
            - COALESCE(p.dislike_count, 0) DESC,
@@ -78,7 +79,7 @@ module.exports = async function handler(req, res) {
       // Fallback if new tables/columns don't exist yet
       console.warn('[Community] Full query failed, using fallback:', queryErr.message);
       const fbParams = [];
-      let fbWhere = "p.feed = 'community'";
+      let fbWhere = "p.feed = 'community' AND (p.hidden IS NOT TRUE)";
       let fbIdx = 0;
       if (city) { fbIdx++; fbWhere += ` AND p.city ILIKE $${fbIdx}`; fbParams.push('%' + city + '%'); }
       if (category) { fbIdx++; fbWhere += ` AND p.category = $${fbIdx}`; fbParams.push(category); }

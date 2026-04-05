@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
                   ${userBumpedSelect}
            FROM posts p
            LEFT JOIN users u ON u.id = p.user_id
-           WHERE p.feed = $1${categoryFilter}
+           WHERE p.feed = $1 AND (p.hidden IS NOT TRUE)${categoryFilter}
            ORDER BY
              COALESCE(p.bump_count, 0) * 2
              + (SELECT COUNT(*) FROM post_likes pl3 WHERE pl3.post_id = p.id)
@@ -96,7 +96,7 @@ module.exports = async function handler(req, res) {
                   false AS user_bumped
            FROM posts p
            LEFT JOIN users u ON u.id = p.user_id
-           WHERE p.feed = $1${fbCatFilter}
+           WHERE p.feed = $1 AND (p.hidden IS NOT TRUE)${fbCatFilter}
            ORDER BY p.created_at DESC
            LIMIT $2`,
           fbParams

@@ -1,7 +1,7 @@
 import { View, Text, TextInput, Pressable, StyleSheet, Modal, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
-import { useFakeCallStore, VOICE_PERSONAS, VoicePersona } from '../store/fakeCallStore';
+import { useFakeCallStore, VOICE_PERSONAS, VoicePersona, CallStyle } from '../store/fakeCallStore';
 
 interface FakeCallSettingsSheetProps {
   visible: boolean;
@@ -14,6 +14,7 @@ export default function FakeCallSettingsSheet({ visible, onClose }: FakeCallSett
   const [persona, setPersona] = useState<VoicePersona>(store.voicePersona);
   const [delay, setDelay] = useState(store.delaySeconds.toString());
   const [context, setContext] = useState(store.scriptContext);
+  const [style, setStyle] = useState<CallStyle>(store.callStyle);
 
   const handleSave = () => {
     store.setCallerName(name.trim() || 'Mom');
@@ -21,6 +22,7 @@ export default function FakeCallSettingsSheet({ visible, onClose }: FakeCallSett
     const parsedDelay = parseInt(delay, 10);
     store.setDelaySeconds(isNaN(parsedDelay) ? 15 : Math.max(5, Math.min(60, parsedDelay)));
     store.setScriptContext(context);
+    store.setCallStyle(style);
     onClose();
   };
 
@@ -54,6 +56,22 @@ export default function FakeCallSettingsSheet({ visible, onClose }: FakeCallSett
               </Pressable>
             ))}
           </ScrollView>
+
+          <Text style={styles.label}>Phone Style</Text>
+          <View style={styles.osRow}>
+            <Pressable
+              style={[styles.osChip, style === 'ios' && styles.osChipActive]}
+              onPress={() => setStyle('ios')}
+            >
+              <Text style={[styles.osLabel, style === 'ios' && styles.osLabelActive]}>iPhone</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.osChip, style === 'android' && styles.osChipActive]}
+              onPress={() => setStyle('android')}
+            >
+              <Text style={[styles.osLabel, style === 'android' && styles.osLabelActive]}>Android</Text>
+            </Pressable>
+          </View>
 
           <Text style={styles.label}>Delay (seconds)</Text>
           <TextInput
@@ -205,5 +223,31 @@ const styles = StyleSheet.create({
   personaDesc: {
     fontSize: FontSize.xs,
     color: Colors.textMuted,
+  },
+  osRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  osChip: {
+    flex: 1,
+    backgroundColor: Colors.surfaceLight,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  osChipActive: {
+    borderColor: Colors.coral,
+    backgroundColor: Colors.coralMuted,
+  },
+  osLabel: {
+    fontSize: FontSize.md,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  osLabelActive: {
+    color: Colors.coral,
   },
 });

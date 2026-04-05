@@ -1716,7 +1716,7 @@
         }
 
         // ===== WATERMARK DECODER (Contrast Amplification — matches text overlay encoder in app.js) =====
-        // The encoder tiles "ST:{userId}" text at 20% white opacity across images.
+        // The encoder tiles "ST:{userId}" white text with dark outline at 35% opacity across images.
         // To decode: apply high-pass filter (subtract blur) + amplify residual → text becomes readable.
 
         function boxBlurGray(gray, w, h, r) {
@@ -1773,15 +1773,19 @@
             var pCtx = pat.getContext('2d');
             pCtx.font = 'bold 48px monospace';
             pCtx.textBaseline = 'top';
-            pCtx.fillStyle = '#ffffff';
             pCtx.rotate(-0.06);
             for (var y = -100; y < h + 100; y += 80) {
                 for (var x = -100; x < w + 100; x += 240) {
+                    // Dark outline for contrast on light backgrounds
+                    pCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                    pCtx.lineWidth = 2;
+                    pCtx.strokeText(text, x, y);
+                    pCtx.fillStyle = '#ffffff';
                     pCtx.fillText(text, x, y);
                 }
             }
             ctx.save();
-            ctx.globalAlpha = 0.30;
+            ctx.globalAlpha = 0.35;
             ctx.drawImage(pat, 0, 0);
             ctx.restore();
         }
@@ -1914,6 +1918,20 @@
             }, 50);
         }
 
+        // Clean up temporary canvases and decode state to prevent memory leaks
+        function wmCleanup() {
+            // Clear the amplified view container (holds temp canvas elements)
+            var ac = document.getElementById('wm-amp-container');
+            if (ac) ac.innerHTML = '';
+            // Clear decode state references to ImageData / context
+            if (window._wmDecodeState) {
+                window._wmDecodeState = null;
+            }
+            // Clear the result area
+            var resultEl = document.getElementById('wm-result');
+            if (resultEl) resultEl.innerHTML = '';
+        }
+
         function handleWmDrop(event) {
             var file = event.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) handleWmFile(file);
@@ -1921,17 +1939,41 @@
 
         function handleWmFile(file) {
             if (!file) return;
+            // Size validation: max 10MB file, reject non-images
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('Image too large (max 10 MB)', true);
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                showToast('Please upload an image file', true);
+                return;
+            }
             var reader = new FileReader();
             reader.onload = function(e) {
                 var img = new Image();
                 img.onload = function() {
+                    // Dimension validation: max ~16 MP (4096x4096)
+                    var maxDim = 4096;
+                    var iw = img.width, ih = img.height;
+                    if (iw * ih > 16777216) {
+                        // Scale down to fit within 16 MP
+                        var scale = Math.sqrt(16777216 / (iw * ih));
+                        iw = Math.round(iw * scale);
+                        ih = Math.round(ih * scale);
+                        console.warn('[WM Decoder] Image scaled from ' + img.width + 'x' + img.height + ' to ' + iw + 'x' + ih);
+                    }
+                    // Clean up previous decode state
+                    wmCleanup();
                     var canvas = document.getElementById('wm-canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    canvas.width = iw;
+                    canvas.height = ih;
                     var ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0, 0, iw, ih);
                     document.getElementById('wm-preview').style.display = 'block';
-                    decodeWatermark(ctx, img.width, img.height);
+                    decodeWatermark(ctx, iw, ih);
+                };
+                img.onerror = function() {
+                    showToast('Failed to load image — file may be corrupted', true);
                 };
                 img.src = e.target.result;
             };
@@ -1949,12 +1991,18 @@
 
                 // Also generate a direct contrast stretch (backup method)
                 var srcData = ctx.getImageData(0, 0, w, h);
+                // Compute mean luminance for adaptive centering (fixes dark-mode screenshots)
+                var meanLum = 0;
+                for (var i = 0; i < w * h; i++) {
+                    var idx = i * 4;
+                    meanLum += 0.299 * srcData.data[idx] + 0.587 * srcData.data[idx+1] + 0.114 * srcData.data[idx+2];
+                }
+                meanLum /= (w * h);
                 var directOut = new Uint8ClampedArray(w * h * 4);
                 for (var i = 0; i < w * h; i++) {
                     var idx = i * 4;
                     var lum = 0.299 * srcData.data[idx] + 0.587 * srcData.data[idx+1] + 0.114 * srcData.data[idx+2];
-                    // Extreme contrast: stretch narrow range around the local value
-                    var v = Math.round((lum - 120) * 15 + 128);
+                    var v = Math.round((lum - meanLum) * 15 + 128);
                     if (v < 0) v = 0; if (v > 255) v = 255;
                     directOut[idx] = v; directOut[idx+1] = v; directOut[idx+2] = v; directOut[idx+3] = 255;
                 }
@@ -2045,38 +2093,75 @@
 
             // Multi-pass processing to make watermark text clearly readable for AI:
             // 1. High-pass with large blur and high gain (removes photo, keeps watermark)
-            var ampData = amplifyWatermark(ctx, w, h, 80, 60);
+            var aiGain = parseInt((document.getElementById('wm-gain-slider') || {}).value) || 80;
+            if (aiGain < 40) aiGain = 40; // Floor for AI readability
+            var ampData = amplifyWatermark(ctx, w, h, aiGain, 60);
             var ampPixels = ampData.data;
 
-            // 2. Threshold to binary — use aggressive low threshold to capture faint text
-            var threshCanvas = document.createElement('canvas');
-            threshCanvas.width = w; threshCanvas.height = h;
-            var threshOut = new Uint8ClampedArray(w * h * 4);
-            for (var i = 0; i < w * h; i++) {
-                var idx = i * 4;
-                var bright = ampPixels[idx] > 110 ? 255 : 0;
-                threshOut[idx] = bright; threshOut[idx+1] = bright; threshOut[idx+2] = bright; threshOut[idx+3] = 255;
-            }
-            threshCanvas.getContext('2d').putImageData(new ImageData(threshOut, w, h), 0, 0);
-
-            // 2b. Scale up the thresholded image 2x for better AI OCR
+            // 2. Upscale the grayscale amplified image 2x WITH smoothing (before threshold)
+            //    This gives smoother character edges vs. nearest-neighbor on binary
             var upW = w * 2, upH = h * 2;
+            var ampCanvas = document.createElement('canvas');
+            ampCanvas.width = w; ampCanvas.height = h;
+            ampCanvas.getContext('2d').putImageData(ampData, 0, 0);
             var upCanvas = document.createElement('canvas');
             upCanvas.width = upW; upCanvas.height = upH;
             var upCtx = upCanvas.getContext('2d');
-            upCtx.imageSmoothingEnabled = false;
-            upCtx.drawImage(threshCanvas, 0, 0, upW, upH);
-            var threshImage = upCanvas.toDataURL('image/png');
+            upCtx.imageSmoothingEnabled = true;
+            upCtx.imageSmoothingQuality = 'high';
+            upCtx.drawImage(ampCanvas, 0, 0, upW, upH);
+            var upData = upCtx.getImageData(0, 0, upW, upH).data;
 
-            // 3. Medium amplification with softer blur for context
+            // 3. Otsu's threshold on upscaled amplified image
+            var histogram = new Array(256).fill(0);
+            for (var i = 0; i < upW * upH; i++) histogram[upData[i * 4]]++;
+            var total = upW * upH;
+            var sumAll = 0; for (var t = 0; t < 256; t++) sumAll += t * histogram[t];
+            var sumB = 0, wB = 0, maxVar = 0, otsuThresh = 135;
+            for (var t = 0; t < 256; t++) {
+                wB += histogram[t]; if (wB === 0) continue;
+                var wF = total - wB; if (wF === 0) break;
+                sumB += t * histogram[t];
+                var mB = sumB / wB, mF = (sumAll - sumB) / wF;
+                var between = wB * wF * (mB - mF) * (mB - mF);
+                if (between > maxVar) { maxVar = between; otsuThresh = t; }
+            }
+            // Clamp threshold to reasonable range (avoid extreme values from uniform images)
+            if (otsuThresh < 120) otsuThresh = 120;
+            if (otsuThresh > 180) otsuThresh = 180;
+
+            var threshCanvas = document.createElement('canvas');
+            threshCanvas.width = upW; threshCanvas.height = upH;
+            var threshOut = new Uint8ClampedArray(upW * upH * 4);
+            for (var i = 0; i < upW * upH; i++) {
+                var idx = i * 4;
+                var bright = upData[idx] > otsuThresh ? 255 : 0;
+                threshOut[idx] = bright; threshOut[idx+1] = bright; threshOut[idx+2] = bright; threshOut[idx+3] = 255;
+            }
+            threshCanvas.getContext('2d').putImageData(new ImageData(threshOut, upW, upH), 0, 0);
+            var threshImage = threshCanvas.toDataURL('image/png');
+
+            // 4. Medium amplification with softer blur for context (sent at original size)
             var softAmp = amplifyWatermark(ctx, w, h, 100, 40);
             var softCanvas = document.createElement('canvas');
             softCanvas.width = w; softCanvas.height = h;
             softCanvas.getContext('2d').putImageData(softAmp, 0, 0);
             var softImage = softCanvas.toDataURL('image/png');
 
-            // Send both processed versions + raw image
-            var rawImage = canvas.toDataURL('image/jpeg', 0.95);
+            // 5. Raw image at reduced resolution (context only, saves bandwidth)
+            var rawCanvas = document.createElement('canvas');
+            var rawScale = Math.min(1, 800 / Math.max(w, h));
+            rawCanvas.width = Math.round(w * rawScale);
+            rawCanvas.height = Math.round(h * rawScale);
+            rawCanvas.getContext('2d').drawImage(canvas, 0, 0, rawCanvas.width, rawCanvas.height);
+            var rawImage = rawCanvas.toDataURL('image/jpeg', 0.7);
+
+            // Free temp canvases — data URLs already extracted
+            ampCanvas.width = 0; ampCanvas.height = 0;
+            upCanvas.width = 0; upCanvas.height = 0;
+            threshCanvas.width = 0; threshCanvas.height = 0;
+            softCanvas.width = 0; softCanvas.height = 0;
+            rawCanvas.width = 0; rawCanvas.height = 0;
 
             fetch(API_BASE + '/admin/scan-watermark', {
                 method: 'POST',
@@ -2100,12 +2185,15 @@
                     if (data.viewer.found && data.viewer.user) {
                         var u = data.viewer.user;
                         html += '<p style="color:#fff;font-size:13px">' + escapeHtml(u.custom_display_name || u.display_name || 'Unknown') + ' — ' + escapeHtml(u.email || '') + '</p>';
-                        html += '<p style="color:#8080A0;font-size:11px">City: ' + escapeHtml(u.city || 'N/A') + ' | Tier: ' + (u.tier || 'free') + ' | Trust: ' + (u.trust_score || 'N/A') + '</p>';
-                        html += '<div style="display:flex;gap:8px;margin-top:8px">';
+                        html += '<p style="color:#8080A0;font-size:11px">City: ' + escapeHtml(u.city || 'N/A') + ' | Tier: ' + (u.subscription_tier || 'free') + ' | Trust: ' + (u.trust_score || 'N/A') + '</p>';
+                        html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
                         html += '<button class="btn btn-sm btn-ghost" onclick="applyAIDecision(0,\'warn\',' + u.id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>';
                         html += '<button class="btn btn-sm btn-flag" onclick="quickBan(' + u.id + ',7)"><i class="fas fa-clock"></i> Suspend</button>';
                         html += '<button class="btn btn-sm btn-danger" onclick="quickBan(' + u.id + ',0)"><i class="fas fa-ban"></i> Ban</button>';
+                        html += '<button class="btn btn-sm btn-primary" onclick="wmCreateLeakReport(' + u.id + ',\'' + escapeHtml(data.viewer.watermark) + '\',\'' + escapeHtml(data.aiResponse && data.aiResponse.confidence || 'unknown') + '\')"><i class="fas fa-file-alt"></i> Leak Report</button>';
                         html += '</div>';
+                    } else if (data.viewer.dbError) {
+                        html += '<p style="color:#e74c3c;font-size:12px"><i class="fas fa-exclamation-triangle"></i> DB lookup failed for User #' + data.viewer.userId + ': ' + escapeHtml(data.viewer.dbError) + '</p>';
                     } else {
                         html += '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + data.viewer.userId + ' not found in database</p>';
                     }
@@ -2118,6 +2206,8 @@
                     if (data.uploader.found && data.uploader.user) {
                         var up = data.uploader.user;
                         html += '<p style="color:#fff;font-size:13px">' + escapeHtml(up.custom_display_name || up.display_name || 'Unknown') + ' — ' + escapeHtml(up.email || '') + '</p>';
+                    } else if (data.uploader.dbError) {
+                        html += '<p style="color:#e74c3c;font-size:12px"><i class="fas fa-exclamation-triangle"></i> DB lookup failed for User #' + data.uploader.userId + ': ' + escapeHtml(data.uploader.dbError) + '</p>';
                     } else {
                         html += '<p style="color:#f1c40f;font-size:12px"><i class="fas fa-exclamation-triangle"></i> User #' + data.uploader.userId + ' not found</p>';
                     }
@@ -2147,16 +2237,20 @@
             var userId = document.getElementById('wm-userid-input').value;
             if (!userId) { showToast('Enter a user ID', true); return; }
             userId = parseInt(userId);
+            if (isNaN(userId) || userId < 1) { showToast('Enter a valid user ID number', true); return; }
             var card = document.getElementById('wm-user-card');
             card.innerHTML = '<p style="color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i> Looking up user #' + userId + '...</p>';
 
-            fetch(API_BASE + '/admin/users?search=' + userId, { headers: authHeaders() })
-                .then(function(r) { return r.json(); })
+            fetch(API_BASE + '/admin/users?q=' + userId, { headers: authHeaders() })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('API returned ' + r.status);
+                    return r.json();
+                })
                 .then(function(data) {
                     var users = data.users || data;
                     var found = null;
                     if (Array.isArray(users)) {
-                        found = users.find(function(u) { return u.id === userId || String(u.id) === String(userId); });
+                        found = users.find(function(u) { return u.id === userId || parseInt(u.id) === userId || String(u.id) === String(userId); });
                     }
                     if (found) {
                         card.innerHTML = '<div style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:16px;text-align:left">' +
@@ -2169,7 +2263,7 @@
                             '</div>' +
                             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
                                 '<div><span style="color:#8080A0">City:</span> <span style="color:#ccc">' + escapeHtml(found.city || 'N/A') + '</span></div>' +
-                                '<div><span style="color:#8080A0">Tier:</span> <span style="color:#ccc">' + escapeHtml(found.tier || 'free') + '</span></div>' +
+                                '<div><span style="color:#8080A0">Tier:</span> <span style="color:#ccc">' + escapeHtml(found.subscription_tier || 'free') + '</span></div>' +
                                 '<div><span style="color:#8080A0">Trust:</span> <span style="color:#ccc">' + (found.trust_score || 'N/A') + '</span></div>' +
                                 '<div><span style="color:#8080A0">Warnings:</span> <span style="color:#ccc">' + (found.warning_count || 0) + '</span></div>' +
                             '</div>' +
@@ -2208,6 +2302,38 @@
             } catch (err) {
                 showToast('Failed: ' + err.message, true);
             }
+        }
+
+        function wmCreateLeakReport(userId, watermark, confidence) {
+            var timestamp = new Date().toISOString();
+            var canvas = document.getElementById('wm-canvas');
+            var thumbUrl = '';
+            if (canvas && canvas.width > 0) {
+                // Small thumbnail of the scanned image for evidence
+                var tc = document.createElement('canvas');
+                var scale = Math.min(1, 400 / Math.max(canvas.width, canvas.height));
+                tc.width = Math.round(canvas.width * scale);
+                tc.height = Math.round(canvas.height * scale);
+                tc.getContext('2d').drawImage(canvas, 0, 0, tc.width, tc.height);
+                thumbUrl = tc.toDataURL('image/jpeg', 0.6);
+                tc.width = 0; tc.height = 0;
+            }
+            var report = {
+                type: 'watermark_leak',
+                userId: userId,
+                watermark: watermark,
+                confidence: confidence,
+                timestamp: timestamp,
+                imageThumbnail: thumbUrl
+            };
+            // Download as JSON evidence file
+            var blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'leak-report-user' + userId + '-' + timestamp.replace(/[:.]/g, '-') + '.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Leak report downloaded for user #' + userId);
         }
 
         // ===== AI ASSISTANT =====

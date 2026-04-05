@@ -1481,21 +1481,13 @@
         })
         .then(function(data) {
             console.log('[Stripe] Response:', data);
-            if (data.sessionId && typeof Stripe !== 'undefined') {
-                // Use Stripe.js redirectToCheckout (most reliable method)
-                console.log('[Stripe] Using Stripe.js redirectToCheckout — sessionId:', data.sessionId);
-                var stripe = Stripe('pk_live_51T3YOSFaKA9n89CXU7oTIn9qxtNt4Nyy6vo3Z4sO831XRSDlbdJIbM1Dj5SJ4ZgXthS23EKjQunElWQLny4tml5e00e8Z24wjm');
-                stripe.redirectToCheckout({ sessionId: data.sessionId }).then(function(result) {
-                    if (result.error) {
-                        console.error('[Stripe] redirectToCheckout error:', result.error.message);
-                        if (typeof showToast === 'function') showToast(result.error.message);
-                        if (subBtn) { subBtn.disabled = false; subBtn.innerHTML = 'Subscribe to SafeTea+'; }
-                    }
-                });
-            } else if (data.url) {
-                // Fallback: direct redirect
-                console.log('[Stripe] Falling back to window.location.href:', data.url);
+            if (data.url) {
+                // Direct redirect to Stripe Checkout (most reliable — no CSP issues)
+                console.log('[Stripe] Redirecting to:', data.url);
                 window.location.href = data.url;
+            } else if (data.sessionId) {
+                // Fallback: construct checkout URL from session ID
+                window.location.href = 'https://checkout.stripe.com/c/pay/' + data.sessionId;
             } else {
                 var errMsg = data.error || data.details || 'Failed to start checkout';
                 console.error('[Stripe] Error:', errMsg);
@@ -2307,16 +2299,22 @@
         var pCtx = pat.getContext('2d');
         pCtx.font = 'bold ' + fontSize + 'px monospace';
         pCtx.textBaseline = 'top';
-        pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
         pCtx.rotate(-0.06);
         var margin = Math.round(100 * dpr);
+        // Draw dark outline first (readable on light backgrounds), then white fill (readable on dark)
         for (var y = -margin; y < h + margin; y += spacingY) {
             for (var x = -margin; x < w + margin; x += spacingX) {
+                if (!WM_DEBUG) {
+                    pCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                    pCtx.lineWidth = Math.round(2 * dpr);
+                    pCtx.strokeText(text, x, y);
+                }
+                pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
                 pCtx.fillText(text, x, y);
             }
         }
         ctx.save();
-        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.30;
+        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.35;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
         if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr);
@@ -2369,13 +2367,27 @@
             return;
         }
 
-        // Skip invalid/corrupted image data
-        if (src.length < 200 && src.startsWith('data:')) {
-            console.warn('[SafeTea WM] Skipping too-short base64 image — postId:', postId, 'length:', src.length);
-            el.dataset.stegoProcessed = '1';
-            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
-            if (spinner) spinner.innerHTML = '<span style="color:#8080A0;font-size:11px">No image</span>';
-            return;
+        // Validate base64 image data before attempting to render
+        if (src.startsWith('data:')) {
+            var base64Part = src.split(',')[1] || '';
+            var invalid = false;
+            var reason = '';
+            if (!base64Part || base64Part.length < 1000) {
+                invalid = true;
+                reason = 'too short (' + base64Part.length + ' chars)';
+            } else if (base64Part.startsWith('/9j/4AA') && base64Part.charAt(7) !== 'Q') {
+                // Corrupted JPEG header — valid JPEGs start with /9j/4AAQ
+                invalid = true;
+                reason = 'corrupted JPEG header';
+            }
+            if (invalid) {
+                console.warn('[SafeTea WM] Skipping invalid base64 image — postId:', postId, 'reason:', reason);
+                el.dataset.stegoProcessed = '1';
+                el.style.display = 'none';
+                var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+                if (spinner) spinner.innerHTML = '<span style="color:#8080A0;font-size:11px"><i class="fas fa-image" style="margin-right:4px"></i>Photo unavailable</span>';
+                return;
+            }
         }
 
         el.dataset.stegoProcessed = '1';
@@ -2439,10 +2451,23 @@
             console.log('[SafeTea WM] Watermark applied — uid:', uid, 'canvas:', bufW + 'x' + bufH);
         };
         imgEl.onerror = function(e) {
-            console.warn('[SafeTea WM] Image load failed — postId:', postId, '(corrupted data, hiding)');
-            // Hide the entire image container — don't show broken image
-            el.style.display = 'none';
-            var spinner = el.parentElement ? el.parentElement.querySelector('.stego-spinner') : null;
+            console.warn('[SafeTea WM] Canvas image load failed — postId:', postId, 'trying <img> fallback');
+            // Fallback: replace canvas with a regular <img> tag so photo is still visible
+            var parent = el.parentElement;
+            if (parent && src) {
+                var fallbackImg = document.createElement('img');
+                fallbackImg.src = src;
+                fallbackImg.style.cssText = 'max-width:100%;max-height:300px;border-radius:10px;display:block;object-fit:cover';
+                fallbackImg.onerror = function() {
+                    // Truly broken image — hide it
+                    if (parent) parent.style.display = 'none';
+                };
+                el.style.display = 'none';
+                parent.insertBefore(fallbackImg, el);
+            } else {
+                el.style.display = 'none';
+            }
+            var spinner = parent ? parent.querySelector('.stego-spinner') : null;
             if (spinner) spinner.style.display = 'none';
         };
         imgEl.src = src;

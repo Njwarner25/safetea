@@ -2,7 +2,7 @@
   "expo": {
     "name": "SafeTea",
     "slug": "safetea",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -30,7 +30,7 @@
         "backgroundColor": "#1A1A2E"
       },
       "package": "app.getsafetea.mobile",
-      "versionCode": 1
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png",

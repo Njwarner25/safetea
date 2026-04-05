@@ -3790,6 +3790,10 @@
     </script>
 
     <script>
+    /* Ensure watermark image map exists BEFORE app.js loads (fixes race condition) */
+    if (!window._wmImageMap) window._wmImageMap = {};
+    if (!window.wmRegisterImage) window.wmRegisterImage = function(postId, imageUrl) { window._wmImageMap[postId] = imageUrl; };
+
     /* ========== COMMUNITY TAB (Matching Nate's Mockups) ========== */
     var communityState = {
         cities: [],
@@ -4079,7 +4083,31 @@
                 feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
                 startPhotoTimerUpdates();
                 // Activate steganographic watermarks on photo post canvases
-                if (typeof observeStegoCanvases === 'function') observeStegoCanvases(feed);
+                if (typeof observeStegoCanvases === 'function') {
+                    observeStegoCanvases(feed);
+                }
+                // Fallback: if any canvas is still invisible after 3s (app.js race or watermark failure),
+                // replace it with a plain <img> so photos are always visible
+                setTimeout(function() {
+                    var canvases = feed.querySelectorAll('canvas[data-wm-postid]');
+                    for (var i = 0; i < canvases.length; i++) {
+                        var c = canvases[i];
+                        if (c.style.opacity === '0' || getComputedStyle(c).opacity === '0') {
+                            var pid = c.dataset.wmPostid;
+                            var imgSrc = (typeof window._wmImageMap !== 'undefined' && window._wmImageMap[pid]) ? window._wmImageMap[pid] : null;
+                            if (imgSrc) {
+                                var fallback = document.createElement('img');
+                                fallback.src = imgSrc;
+                                fallback.style.cssText = 'max-width:100%;max-height:300px;border-radius:10px;display:block;object-fit:cover';
+                                c.style.display = 'none';
+                                c.parentElement.insertBefore(fallback, c);
+                                var sp = c.parentElement.querySelector('.stego-spinner');
+                                if (sp) sp.style.display = 'none';
+                                console.log('[Photo Fallback] Showing img for post', pid);
+                            }
+                        }
+                    }
+                }, 3000);
             })
             .catch(function(err) {
                 feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">Failed to load posts. Try again.</div>';
@@ -4122,6 +4150,7 @@
         var userDisliked = post.user_disliked === true || post.user_disliked === 't';
         var userBumped = post.user_bumped === true || post.user_bumped === 't';
         var trendingBadge = bumpCount >= 5 ? ' <span style="font-size:10px;color:#f39c12;font-weight:600">TRENDING</span>' : '';
+        var boostedBadge = (post.author_tier === 'plus' || post.author_tier === 'pro' || post.author_tier === 'premium') ? ' <span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;color:#9b59b6;font-weight:600;background:rgba(155,89,182,0.12);padding:1px 6px;border-radius:8px;margin-left:4px"><i class="fas fa-bolt" style="font-size:8px"></i> BOOSTED</span>' : '';
         var deprioritized = dislikeCount >= 5 && dislikeCount > likeCount * 2;
         // Check if current user owns this post
         var currentUser = null;
@@ -4132,7 +4161,7 @@
             '<div class="community-post-header">' +
                 '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
                 '<div class="community-post-meta">' +
-                    '<span class="community-post-author">' + escapeHtml(authorName) + (typeof getPlusBadgeHtml === 'function' ? getPlusBadgeHtml(post.author_tier) : '') + trendingBadge + '</span>' +
+                    '<span class="community-post-author">' + escapeHtml(authorName) + (typeof getPlusBadgeHtml === 'function' ? getPlusBadgeHtml(post.author_tier) : '') + boostedBadge + trendingBadge + '</span>' +
                     '<div class="community-post-time">' + timeAgo + cityTag + neighborhood + '</div>' +
                 '</div>' +
                 '<div style="position:relative" id="cmenu-anchor-' + post.id + '">' +

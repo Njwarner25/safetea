@@ -66,16 +66,23 @@ module.exports = async function handler(req, res) {
 
     content.push({
       type: 'text',
-      text: 'OCR TASK: Read the repeating text in these processed watermark images.\n\n' +
-        'Image 1 (binary, upscaled 2x): White text on black background. The text is in bold monospace font, tiled diagonally. ' +
-        'Each tile contains EXACTLY the same short string in the format "ST:" followed by a small number (1-999). For example: "ST:2" or "ST:14" or "ST:307". ' +
-        'The letters "S" and "T" are uppercase, followed by a colon ":", followed by one or more digits. ' +
-        'Look at ANY clear instance of the repeating text and read it character by character.\n\n' +
-        (softImage ? 'Image 2 (amplified grayscale): Same watermark with more detail — use this to confirm your reading.\n\n' : '') +
-        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' (original photo): May contain a faint translucent watermark reading "SafeTea #" followed by a number.\n\n' : '') +
-        'IMPORTANT: Focus on Image 1. Find the clearest instance of the repeating text and read it exactly. ' +
-        'The format is always ST:NUMBER (e.g. ST:2, ST:15, ST:100).\n\n' +
-        'Respond ONLY with this JSON: {"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}'
+      text: 'You are analyzing a screenshot from the SafeTea app for invisible watermarks.\n\n' +
+        'The watermark is semi-transparent white text with a subtle dark outline, tiled diagonally across photos. ' +
+        'The format is "ST:" followed by a number (the viewer user ID), and also "SafeTea #" followed by a number (the uploader ID).\n\n' +
+        'Image 1 (binary/thresholded): White text on black background, upscaled 2x. The text is in bold monospace font. ' +
+        'Each tile contains EXACTLY the same short string: "ST:" followed by a small number (1-999). ' +
+        'For example: "ST:2" or "ST:14" or "ST:307".\n\n' +
+        (softImage ? 'Image 2 (amplified grayscale): Same watermark with more gradation — use to confirm your reading.\n\n' : '') +
+        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' (original photo): Look for a faint "SafeTea #" followed by a number.\n\n' : '') +
+        'DETECTION TIPS:\n' +
+        '1. Look at areas with uniform color (sky, walls, solid clothing) where text is most visible\n' +
+        '2. Look for repeating diagonal patterns of characters\n' +
+        '3. The text repeats many times — look for ANY instance you can partially read\n' +
+        '4. Even if you can only read part of the number, report what you see\n' +
+        '5. Focus on Image 1 first (binary) — find the clearest text instance\n\n' +
+        'Respond ONLY with this JSON (no markdown):\n' +
+        '{"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}\n\n' +
+        'If you can see ANY repeating pattern that looks like text, even partially readable, set viewer_watermark to your best reading with low confidence.'
     });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -138,21 +145,30 @@ module.exports = async function handler(req, res) {
     let viewerUser = null;
     let uploaderUser = null;
 
+    let viewerDbError = null;
+    let uploaderDbError = null;
+
     if (viewerId) {
       try {
         viewerUser = await getOne(
-          'SELECT id, email, display_name, custom_display_name, city, tier, trust_score, warning_count, role FROM users WHERE id = $1',
+          'SELECT id, email, display_name, custom_display_name, city, subscription_tier, trust_score, role FROM users WHERE id = $1',
           [viewerId]
         );
-      } catch (e) {}
+      } catch (e) {
+        console.error('Viewer user lookup failed:', e.message);
+        viewerDbError = e.message;
+      }
     }
     if (uploaderId) {
       try {
         uploaderUser = await getOne(
-          'SELECT id, email, display_name, custom_display_name, city, tier, trust_score, warning_count, role FROM users WHERE id = $1',
+          'SELECT id, email, display_name, custom_display_name, city, subscription_tier, trust_score, role FROM users WHERE id = $1',
           [uploaderId]
         );
-      } catch (e) {}
+      } catch (e) {
+        console.error('Uploader user lookup failed:', e.message);
+        uploaderDbError = e.message;
+      }
     }
 
     return res.status(200).json({
@@ -163,6 +179,7 @@ module.exports = async function handler(req, res) {
         user: viewerUser || null,
         watermark: 'ST:' + viewerId,
         type: 'viewer (who screenshotted/leaked)',
+        dbError: viewerDbError || undefined,
       } : null,
       uploader: uploaderId ? {
         userId: uploaderId,
@@ -170,6 +187,7 @@ module.exports = async function handler(req, res) {
         user: uploaderUser || null,
         watermark: 'SafeTea #' + uploaderId,
         type: 'uploader (who posted the photo)',
+        dbError: uploaderDbError || undefined,
       } : null,
       aiResponse: parsed || aiText,
       raw: aiText,

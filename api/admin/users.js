@@ -21,7 +21,12 @@ module.exports = async function handler(req, res) {
     const params = [];
     let paramIdx = 0;
 
-    if (q.length >= 2) {
+    if (q.length >= 1 && /^\d+$/.test(q)) {
+      // Numeric query — direct ID lookup (supports single-digit IDs for watermark decoder)
+      paramIdx++;
+      where += ` AND id = $${paramIdx}`;
+      params.push(parseInt(q));
+    } else if (q.length >= 2) {
       paramIdx++;
       where += ` AND (LOWER(display_name) LIKE $${paramIdx} OR LOWER(custom_display_name) LIKE $${paramIdx} OR LOWER(email) LIKE $${paramIdx} OR LOWER(phone) LIKE $${paramIdx} OR CAST(id AS TEXT) = $${paramIdx + 1})`;
       params.push('%' + q.toLowerCase() + '%', q);

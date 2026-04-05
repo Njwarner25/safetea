@@ -9,9 +9,18 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   if (user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
 
-  if (req.method !== 'PATCH') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'PATCH' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { id } = req.query;
+  // Extract post ID from query params (Vercel dynamic route) or URL path as fallback
+  let id = req.query.id;
+  if (!id) {
+    const pathMatch = (req.url || '').match(/\/posts\/(\d+)\/moderate/);
+    if (pathMatch) id = pathMatch[1];
+  }
+  if (!id) {
+    return res.status(400).json({ error: 'Missing post ID', debug: { query: req.query, url: req.url } });
+  }
+
   const body = await parseBody(req);
   const { action } = body;
 

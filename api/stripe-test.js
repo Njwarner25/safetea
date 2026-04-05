@@ -26,24 +26,47 @@ module.exports = async function handler(req, res) {
     try {
       const stripe = require('stripe')(stripeKey);
 
-      // Test: retrieve the monthly price to see if it exists
+      // Test both prices
+      for (const [key, pid] of Object.entries(priceIds)) {
+        try {
+          const price = await stripe.prices.retrieve(pid);
+          results['price_' + key] = {
+            success: true,
+            price_id: price.id,
+            active: price.active,
+            currency: price.currency,
+            unit_amount: price.unit_amount,
+            unit_amount_dollars: '$' + (price.unit_amount / 100).toFixed(2),
+            product: price.product,
+            interval: price.recurring ? price.recurring.interval : null,
+          };
+        } catch (priceErr) {
+          results['price_' + key] = {
+            success: false,
+            error: priceErr.message,
+          };
+        }
+      }
+
+      // Test creating a checkout session (don't actually save it)
       try {
-        const price = await stripe.prices.retrieve(priceIds.plus_monthly);
-        results.stripe_test = {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [{ price: priceIds.plus_monthly, quantity: 1 }],
+          mode: 'subscription',
+          success_url: 'https://www.getsafetea.app/dashboard.html?upgrade=success',
+          cancel_url: 'https://www.getsafetea.app/dashboard.html',
+        });
+        results.session_test = {
           success: true,
-          price_id: price.id,
-          active: price.active,
-          currency: price.currency,
-          unit_amount: price.unit_amount,
-          product: price.product,
-          recurring: price.recurring,
+          session_id: session.id,
+          url_prefix: session.url ? session.url.substring(0, 60) + '...' : null,
         };
-      } catch (priceErr) {
-        results.stripe_test = {
+      } catch (sessErr) {
+        results.session_test = {
           success: false,
-          error: priceErr.message,
-          type: priceErr.type,
-          code: priceErr.code,
+          error: sessErr.message,
+          type: sessErr.type,
         };
       }
     } catch (e) {

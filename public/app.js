@@ -1481,7 +1481,20 @@
         })
         .then(function(data) {
             console.log('[Stripe] Response:', data);
-            if (data.url) {
+            if (data.sessionId && typeof Stripe !== 'undefined') {
+                // Use Stripe.js redirectToCheckout (most reliable method)
+                console.log('[Stripe] Using Stripe.js redirectToCheckout — sessionId:', data.sessionId);
+                var stripe = Stripe('pk_live_51T3YOSFaKA9n89CXU7oTIn9qxtNt4Nyy6vo3Z4sO831XRSDlbdJIbM1Dj5SJ4ZgXthS23EKjQunElWQLny4tml5e00e8Z24wjm');
+                stripe.redirectToCheckout({ sessionId: data.sessionId }).then(function(result) {
+                    if (result.error) {
+                        console.error('[Stripe] redirectToCheckout error:', result.error.message);
+                        if (typeof showToast === 'function') showToast(result.error.message);
+                        if (subBtn) { subBtn.disabled = false; subBtn.innerHTML = 'Subscribe to SafeTea+'; }
+                    }
+                });
+            } else if (data.url) {
+                // Fallback: direct redirect
+                console.log('[Stripe] Falling back to window.location.href:', data.url);
                 window.location.href = data.url;
             } else {
                 var errMsg = data.error || data.details || 'Failed to start checkout';

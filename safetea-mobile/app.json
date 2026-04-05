@@ -32,7 +32,7 @@
         "backgroundColor": "#1A1A2E"
       },
       "package": "app.getsafetea.mobile",
-      "versionCode": 21
+      "versionCode": 22
     },
     "web": {
       "favicon": "./assets/favicon.png",

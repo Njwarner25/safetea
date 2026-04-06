@@ -39,25 +39,46 @@ async function callClaudeVision(systemPrompt, contentBlocks, maxTokens) {
 // ─── Layer 1: AI Generation Detection ───────────────────────────
 
 async function checkAIGenerated(base64, mediaType) {
-  const system = `You are an AI-generated image detection specialist for a women's safety app. Analyze the provided photo and determine if it appears to be AI-generated or a real photograph.
+  const system = `You are an AI-generated image and photo manipulation detection specialist for a women's safety app. Analyze the provided photo and determine if it is AI-generated, heavily filtered, or digitally altered.
 
+=== AI GENERATION DETECTION ===
 CHECK FOR THESE AI GENERATION ARTIFACTS:
-- Unnatural facial symmetry
+- Unnatural facial symmetry (real faces are always slightly asymmetric)
 - Background warping, impossible architecture, or inconsistent perspective
-- Hair anomalies (merged strands, floating hair, inconsistent edges)
-- Ear shape anomalies (asymmetric, melted, or missing details)
-- Skin that looks too smooth, waxy, or has repeating micro-patterns
+- Hair anomalies (merged strands, floating hair, inconsistent edges, hair that fades into background)
+- Ear shape anomalies (asymmetric, melted, missing details, different shapes left vs right)
+- Skin that looks too smooth, waxy, plastic-like, or has repeating micro-patterns
 - Eye reflections that don't match each other or the environment
-- Teeth or mouth abnormalities (merged teeth, unnatural gum line)
+- Teeth or mouth abnormalities (merged teeth, unnatural gum line, too-perfect teeth)
 - Jewelry or accessories that warp, merge, or defy physics
 - Hands with wrong number of fingers, merged digits, or impossible proportions
-- Garbled or nonsensical text in background
-- Overall "uncanny valley" quality
+- Garbled or nonsensical text in background (signs, labels, clothing text)
+- Overall "uncanny valley" quality — looks almost real but something feels off
+- Inconsistent lighting direction across the face or body
+- Perfectly smooth clothing without natural wrinkles or folds
 
-Also check for:
-- StyleGAN artifacts (common in face generators)
-- Diffusion model artifacts (common in Midjourney, DALL-E, Stable Diffusion)
-- FaceApp or filter artifacts (face-altering apps, not fully AI-generated but heavily modified)
+CHECK FOR THESE AI MODELS SPECIFICALLY:
+- StyleGAN / ThisPersonDoesNotExist artifacts (common: background blobs, asymmetric earrings, smeared backgrounds at edges)
+- Midjourney artifacts (overly artistic quality, hyper-detailed skin, painterly look, unusual compositional perfection)
+- DALL-E / Stable Diffusion artifacts (text distortion, floating objects, impossible hand poses)
+- Face swap / deepfake artifacts (mismatched skin tone at face boundary, blurry face edge blending, inconsistent lighting between face and neck)
+
+=== FILTER & ALTERATION DETECTION ===
+CHECK FOR PHOTO MANIPULATION:
+- Beauty filters: skin smoothing that erases pores and texture, enlarged eyes, slimmed nose or jaw, plumped lips
+- Snapchat/Instagram/TikTok filters: dog ears, flower crowns, sparkles, but also subtle beauty filters that reshape the face
+- FaceApp: age-change artifacts, gender-swap artifacts, heavy facial restructuring
+- Facetune/Photoshop: body reshaping (look for warped backgrounds near body), skin retouching, teeth whitening
+- Liquify tool: curved or warped lines in background near body (door frames, tiles, furniture edges bending)
+- Color grading that obscures natural skin tone or hides details
+- Heavy HDR or contrast that masks imperfections unnaturally
+- Blurred or smudged areas that hide something specific
+
+=== SEVERITY LEVELS ===
+- "none": Unedited or only basic adjustments (brightness, crop, normal camera filters)
+- "light": Minor beauty filter or standard social media filter — person likely looks similar in real life
+- "moderate": Noticeable face reshaping, heavy skin smoothing, or body slimming — person may look different in real life
+- "heavy": Major face/body alteration, face swap, or AI-generated — person may look very different or not exist at all
 
 RESPOND WITH JSON ONLY:
 {
@@ -65,7 +86,9 @@ RESPOND WITH JSON ONLY:
   "confidence": 0.0-1.0,
   "artifactsFound": ["list of specific artifacts detected"],
   "filterDetected": true/false,
-  "filterType": "none|faceapp|snapchat|instagram|heavy_editing",
+  "filterType": "none|beauty_filter|faceapp|snapchat|instagram|facetune|face_swap|heavy_editing",
+  "filterSeverity": "none|light|moderate|heavy",
+  "alterationsFound": ["specific alterations detected, e.g. 'jaw slimming', 'skin smoothing', 'background warping near waist'"],
   "summary": "One sentence summary for the user"
 }`;
 
@@ -237,8 +260,19 @@ async function runPhotoVerification(images) {
         results.recommendations.push('One or more photos may be AI-generated. Exercise extreme caution.');
       }
       if (aiCheck.filterDetected && aiCheck.filterType !== 'none') {
-        if (results.overallRisk === 'low') results.overallRisk = 'moderate';
-        results.recommendations.push('Heavy photo filtering detected. The person may look different in real life.');
+        var severity = aiCheck.filterSeverity || 'moderate';
+        if (severity === 'heavy') {
+          results.overallRisk = 'high';
+          results.recommendations.push('Heavy photo manipulation detected. This person may look very different in real life. Request a video call before meeting.');
+        } else if (severity === 'moderate') {
+          if (results.overallRisk === 'low') results.overallRisk = 'moderate';
+          results.recommendations.push('Noticeable photo filtering detected (face reshaping or skin smoothing). The person may look different in real life.');
+        } else if (severity === 'light') {
+          results.recommendations.push('Minor beauty filter detected. This is common and the person likely looks similar in real life.');
+        }
+      }
+      if (aiCheck.alterationsFound && aiCheck.alterationsFound.length > 0) {
+        if (results.overallRisk === 'low' && aiCheck.alterationsFound.length >= 3) results.overallRisk = 'moderate';
       }
     } catch (e) {
       console.error('[PhotoVerify] AI gen check failed for photo ' + i + ':', e.message);
@@ -456,4 +490,11 @@ module.exports = async function handler(req, res) {
       layers: results.layers,
       recommendations: results.recommendations,
       checksUsed: currentCount + 1,
-      checksRemaining: Math.max(0, tot
+      checksRemaining: Math.max(0, totalLimit - (currentCount + 1)),
+      checksLimit: totalLimit
+    });
+  } catch (err) {
+    console.error('[PhotoVerify] Verification failed:', err);
+    return res.status(500).json({ error: 'Analysis failed: ' + (err.message || 'Unknown error') });
+  }
+};

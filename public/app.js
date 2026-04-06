@@ -711,10 +711,23 @@
                 html += '<span>' + aiIcon + '</span>';
                 html += '<div><span style="color:' + aiColor + ';font-weight:600;font-size:13px">' + escapeHtmlSafe(ai.summary || 'Analysis complete') + '</span>';
                 if (ai.confidence) html += '<span style="color:#555;font-size:11px;margin-left:6px">(' + Math.round(ai.confidence * 100) + '% confidence)</span>';
+                if (ai.filterSeverity && ai.filterSeverity !== 'none') {
+                    var sevColors = { light: '#3498db', moderate: '#f1c40f', heavy: '#e74c3c' };
+                    var sevLabels = { light: 'Light Filter', moderate: 'Moderate Editing', heavy: 'Heavy Manipulation' };
+                    html += '<div style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:' + (sevColors[ai.filterSeverity] || '#8080A0') + '20;color:' + (sevColors[ai.filterSeverity] || '#8080A0') + '">' + (sevLabels[ai.filterSeverity] || ai.filterSeverity) + (ai.filterType && ai.filterType !== 'none' ? ' (' + ai.filterType.replace(/_/g, ' ') + ')' : '') + '</div>';
+                }
                 if (ai.artifactsFound && ai.artifactsFound.length > 0) {
                     html += '<div style="margin-top:4px">';
                     ai.artifactsFound.forEach(function(art) {
                         html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(art) + '</div>';
+                    });
+                    html += '</div>';
+                }
+                if (ai.alterationsFound && ai.alterationsFound.length > 0) {
+                    html += '<div style="margin-top:4px">';
+                    html += '<div style="color:#f1c40f;font-size:11px;font-weight:600;margin-bottom:2px">Alterations Detected:</div>';
+                    ai.alterationsFound.forEach(function(alt) {
+                        html += '<div style="color:#8080A0;font-size:12px">• ' + escapeHtmlSafe(alt) + '</div>';
                     });
                     html += '</div>';
                 }

@@ -1,24 +1,34 @@
 const { run, getOne } = require('../_utils/db');
 const { stripe, WEBHOOK_SECRET } = require('../_utils/stripe');
 
-module.exports.config = { api: { bodyParser: false } };
-
-function getRawBody(req) {
-    return new Promise(function(resolve, reject) {
-        var chunks = [];
-        req.on('data', function(chunk) { chunks.push(chunk); });
-        req.on('end', function() { resolve(Buffer.concat(chunks)); });
-        req.on('error', reject);
-    });
-}
-
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const rawBody = await getRawBody(req);
+        // Get raw body — try stream first, fall back to req.body if Vercel already parsed it
+        let rawBody;
+        const chunks = [];
+        await new Promise(function(resolve, reject) {
+            req.on('data', function(chunk) { chunks.push(chunk); });
+            req.on('end', resolve);
+            req.on('error', reject);
+            // Safety timeout in case stream is already consumed
+            setTimeout(resolve, 2000);
+        });
+        if (chunks.length > 0) {
+            rawBody = Buffer.concat(chunks);
+        } else if (req.body) {
+            // Vercel already parsed the body — reconstruct raw string
+            rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+        }
+
+        if (!rawBody || rawBody.length === 0) {
+            console.error('Webhook: empty body received');
+            return res.status(400).json({ error: 'Empty request body' });
+        }
+
         const sig = req.headers['stripe-signature'];
 
         var event;
@@ -54,7 +64,6 @@ module.exports = async function handler(req, res) {
                 }
 
                 if (userId && plan) {
-                    // All paid plans map to 'plus' (legacy 'pro' consolidated into SafeTea+)
                     const tier = 'plus';
                     await run(
                         'UPDATE users SET subscription_tier = $1, stripe_subscription_id = $2, stripe_customer_id = $3 WHERE id = $4',
@@ -67,7 +76,6 @@ module.exports = async function handler(req, res) {
             case 'customer.subscription.deleted': {
                 const sub = event.data.object;
                 const subId = sub.id;
-                // Find user by subscription ID and downgrade
                 const user = await getOne('SELECT id FROM users WHERE stripe_subscription_id = $1', [subId]);
                 if (user) {
                     await run(
@@ -98,4 +106,7 @@ module.exports = async function handler(req, res) {
         console.error('Webhook error:', error);
         return res.status(500).json({ error: 'Webhook handler failed' });
     }
-};
+}
+
+module.exports = handler;
+module.exports.config = { api: { bodyParser: false } };

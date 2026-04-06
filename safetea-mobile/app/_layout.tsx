@@ -107,6 +107,15 @@ export default function RootLayout() {
             headerTintColor: Colors.textPrimary,
           }}
         />
+        <Stack.Screen
+          name="safelink"
+          options={{
+            headerShown: true,
+            headerTitle: 'SafeLink',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
       </Stack>
     </>
   );

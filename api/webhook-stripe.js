@@ -1,6 +1,6 @@
 const { run, getOne } = require('./_utils/db');
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   // No CORS needed for webhooks — Stripe calls this directly
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,18 +16,31 @@ module.exports = async function handler(req, res) {
   try {
     const stripe = require('stripe')(stripeKey);
 
+    // Get raw body — try stream first, fall back to req.body if Vercel already parsed it
+    let rawBody;
+    const chunks = [];
+    await new Promise(function(resolve, reject) {
+      req.on('data', function(chunk) { chunks.push(chunk); });
+      req.on('end', resolve);
+      req.on('error', reject);
+      setTimeout(resolve, 2000);
+    });
+    if (chunks.length > 0) {
+      rawBody = Buffer.concat(chunks).toString('utf8');
+    } else if (req.body) {
+      rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    }
+
+    if (!rawBody || rawBody.length === 0) {
+      console.error('Webhook: empty body received');
+      return res.status(400).json({ error: 'Empty request body' });
+    }
+
     let event;
 
     // Verify webhook signature if secret is set
     if (webhookSecret) {
       const sig = req.headers['stripe-signature'];
-      // Read raw body for signature verification
-      const chunks = [];
-      for await (const chunk of req) {
-        chunks.push(chunk);
-      }
-      const rawBody = Buffer.concat(chunks).toString('utf8');
-
       try {
         event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       } catch (err) {
@@ -36,11 +49,6 @@ module.exports = async function handler(req, res) {
       }
     } else {
       // No webhook secret — parse body directly (dev mode)
-      const chunks = [];
-      for await (const chunk of req) {
-        chunks.push(chunk);
-      }
-      const rawBody = Buffer.concat(chunks).toString('utf8');
       event = JSON.parse(rawBody);
     }
 
@@ -134,4 +142,7 @@ module.exports = async function handler(req, res) {
     console.error('Webhook error:', err);
     return res.status(500).json({ error: 'Webhook handler failed' });
   }
-};
+}
+
+module.exports = handler;
+module.exports.config = { api: { bodyParser: false } };

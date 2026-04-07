@@ -12,18 +12,19 @@
       "resizeMode": "contain",
       "backgroundColor": "#1A1A2E"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "app.getsafetea.mobile",
-      "buildNumber": "1",
+      "buildNumber": "5",
+      "entitlements": {
+        "aps-environment": "production"
+      },
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "SafeTea uses your location to share your GPS coordinates with trusted contacts during an SOS alert.",
         "NSMicrophoneUsageDescription": "SafeTea uses the microphone for audio features.",
         "NSCameraUsageDescription": "SafeTea uses the camera for identity verification selfies.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {

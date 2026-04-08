@@ -144,61 +144,115 @@ jobs:
             || { echo "::error::Decoded APP_STORE_CONNECT_API_KEY_CONTENT is not a valid PEM private key"; exit 1; }
           echo "App Store Connect API key installed"
 
-      - name: Patch App target for Distribution signing
+      - name: Build Fastlane API key JSON
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          API_KEY_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: |
+          # Fastlane uses a JSON file with key_id, issuer_id, and the PEM
+          # contents of the .p8 (with literal newlines escaped). The .p8 is
+          # already decoded into $RUNNER_TEMP/AuthKey.p8 from the earlier
+          # "Install App Store Connect API key" step.
+          KEY_PEM=$(cat "$RUNNER_TEMP/AuthKey.p8")
+          jq -n \
+            --arg key_id    "$API_KEY_ID" \
+            --arg issuer_id "$API_ISSUER_ID" \
+            --arg key       "$KEY_PEM" \
+            '{key_id: $key_id, issuer_id: $issuer_id, key: $key, in_house: false, is_key_content_base64: false}' \
+            > "$RUNNER_TEMP/api_key.json"
+          chmod 600 "$RUNNER_TEMP/api_key.json"
+          jq -e 'has("key_id") and has("issuer_id") and has("key")' "$RUNNER_TEMP/api_key.json" > /dev/null
+          echo "Fastlane API key JSON ready at \$RUNNER_TEMP/api_key.json"
+
+      - name: Setup CI keychain (Fastlane setup_ci)
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        shell: bash
+        run: |
+          # Creates a fresh temporary keychain, unlocks it, and makes it the
+          # default — required so cert / sigh can install certificates and
+          # profiles without password prompts.
+          fastlane run setup_ci force:true
+
+      - name: Create Apple Distribution certificate (Fastlane cert)
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          API_KEY_PATH: ${{ runner.temp }}/api_key.json
+        run: |
+          mkdir -p "$RUNNER_TEMP/cert"
+          # cert downloads the team's Apple Distribution cert from the API,
+          # creating a new one if none exists, and installs the .p12 into the
+          # default keychain (the temp one created by setup_ci above).
+          fastlane run cert \
+            api_key_path:"$API_KEY_PATH" \
+            development:false \
+            generate_apple_certs:true \
+            output_path:"$RUNNER_TEMP/cert"
+
+      - name: Create App Store provisioning profile (Fastlane sigh)
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        id: sigh
+        shell: bash
+        env:
+          API_KEY_PATH: ${{ runner.temp }}/api_key.json
+          TEAM_ID:      ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          # sigh creates the App Store distribution profile for the bundle ID
+          # via the App Store Connect API, registering the App ID first if it
+          # doesn't exist. Downloads the .mobileprovision and auto-installs
+          # it into ~/Library/MobileDevice/Provisioning Profiles/.
+          fastlane run get_provisioning_profile \
+            api_key_path:"$API_KEY_PATH" \
+            app_identifier:"app.getsafetea.mobile" \
+            team_id:"$TEAM_ID" \
+            development:false \
+            force:true \
+            output_path:"$RUNNER_TEMP" \
+            filename:"AppStore_safetea.mobileprovision"
+          PROFILE_PATH="$RUNNER_TEMP/AppStore_safetea.mobileprovision"
+          # Extract profile Name + UUID for the project.pbxproj patch
+          PROFILE_PLIST=$(security cms -D -i "$PROFILE_PATH")
+          PROFILE_NAME=$(echo "$PROFILE_PLIST" | /usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin)
+          PROFILE_UUID=$(echo "$PROFILE_PLIST" | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+          echo "profile_name=$PROFILE_NAME" >> "$GITHUB_OUTPUT"
+          echo "profile_uuid=$PROFILE_UUID" >> "$GITHUB_OUTPUT"
+          echo "Provisioning profile: $PROFILE_NAME (UUID: $PROFILE_UUID)"
+
+      - name: Patch App target with manual signing + downloaded profile
         if: steps.ios_secrets.outputs.has_signing == 'true'
         working-directory: safetea-capacitor/ios/App
         shell: bash
         env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TEAM_ID:      ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ steps.sigh.outputs.profile_name }}
         run: |
-          # Capacitor's generated Xcode project sets CODE_SIGN_IDENTITY =
-          # "iPhone Developer" for Release config and CODE_SIGN_STYLE =
-          # Automatic with no team. On CI, -allowProvisioningUpdates tries to
-          # create a Development profile first (fails: no registered devices),
-          # and passing CODE_SIGN_IDENTITY=Apple\ Distribution on the xcodebuild
-          # command line propagates to all Pod targets and breaks them.
-          #
-          # Fix: surgically patch ONLY the App target's Release config in
-          # App.xcodeproj/project.pbxproj via the xcodeproj Ruby gem. Pod
-          # targets keep their default automatic dev signing (which is fine
-          # since pods aren't directly signed for distribution — the archive
-          # re-signs the embedded frameworks via the host app's identity).
+          # Now that the cert + profile exist locally, surgically patch only
+          # the App target's Release config in App.xcodeproj/project.pbxproj
+          # to use Manual signing with the exact profile we just downloaded.
+          # Pod targets remain on automatic dev signing (untouched).
           gem install --no-document xcodeproj
           ruby <<'RUBY'
           require 'xcodeproj'
-          project_path = 'App.xcodeproj'
-          project = Xcodeproj::Project.open(project_path)
+          project = Xcodeproj::Project.open('App.xcodeproj')
           app_target = project.targets.find { |t| t.name == 'App' } \
-            or raise "App target not found in #{project_path}"
-          team_id = ENV.fetch('TEAM_ID')
+            or raise "App target not found"
+          team_id      = ENV.fetch('TEAM_ID')
+          profile_name = ENV.fetch('PROFILE_NAME')
           app_target.build_configurations.each do |config|
             next unless config.name == 'Release'
-            # Strategy: switch to Manual signing for the App target ONLY,
-            # explicitly set Apple Distribution as the identity, and let
-            # -allowProvisioningUpdates download / create the App Store
-            # provisioning profile via the App Store Connect API key.
-            #
-            # Why Manual instead of Automatic? Capacitor's default scheme
-            # confuses xcodebuild's automatic signing into picking iOS App
-            # Development profile type for archive actions, even though
-            # Apple's docs say archive should use Distribution. Manual
-            # signing removes the ambiguity — we tell xcodebuild exactly
-            # what identity to use.
-            config.build_settings['CODE_SIGN_STYLE']                   = 'Manual'
-            config.build_settings['CODE_SIGN_IDENTITY']                = 'Apple Distribution'
-            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
-            config.build_settings['DEVELOPMENT_TEAM']                  = team_id
-            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]']   = team_id
-            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']         = 'app.getsafetea.mobile'
-            # Leave PROVISIONING_PROFILE_SPECIFIER blank — xcodebuild will
-            # populate it via -allowProvisioningUpdates after creating /
-            # downloading the profile.
-            config.build_settings.delete('PROVISIONING_PROFILE')
-            config.build_settings.delete('PROVISIONING_PROFILE[sdk=iphoneos*]')
-            config.build_settings['PROVISIONING_PROFILE_SPECIFIER']    = ''
-            puts "Patched App target Release config: Manual signing, Apple Distribution"
+            config.build_settings['CODE_SIGN_STYLE']                       = 'Manual'
+            config.build_settings['CODE_SIGN_IDENTITY']                    = 'Apple Distribution'
+            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]']     = 'Apple Distribution'
+            config.build_settings['DEVELOPMENT_TEAM']                      = team_id
+            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]']       = team_id
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']             = 'app.getsafetea.mobile'
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER']        = profile_name
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]'] = profile_name
+            puts "Patched App target Release: Manual / Apple Distribution / #{profile_name}"
           end
-          # Pin TargetAttributes ProvisioningStyle = Manual for App target
           attrs = project.root_object.attributes['TargetAttributes'] ||= {}
           (attrs[app_target.uuid] ||= {})['ProvisioningStyle'] = 'Manual'
           project.save
@@ -208,26 +262,18 @@ jobs:
         if: steps.ios_secrets.outputs.has_signing == 'true'
         working-directory: safetea-capacitor/ios/App
         shell: bash
-        env:
-          API_KEY_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -o pipefail
-          # Signing settings for the App target come from the project.pbxproj
-          # patch in the previous step. Do NOT pass CODE_SIGN_IDENTITY on the
-          # command line — that would override Pod targets too and fail with
-          # "conflicting provisioning settings" on every CapacitorXxx pod.
+          # Manual signing with the locally-installed profile and cert from
+          # the previous Fastlane steps. No -allowProvisioningUpdates needed
+          # because nothing needs to be created — the profile is already on
+          # disk and the cert is already in the keychain.
           xcodebuild \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
-            -authenticationKeyID "$API_KEY_ID" \
-            -authenticationKeyIssuerID "$API_ISSUER_ID" \
             archive
 
       - name: Export .ipa
@@ -235,25 +281,29 @@ jobs:
         working-directory: safetea-capacitor/ios/App
         shell: bash
         env:
-          API_KEY_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
+          TEAM_ID:      ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ steps.sigh.outputs.profile_name }}
         run: |
-          # Inject teamID into ExportOptions.plist (runtime-supplied)
+          # Build ExportOptions.plist at runtime with team ID and the
+          # downloaded provisioning profile name. Manual signing on export.
           EXPORT_OPTS="$RUNNER_TEMP/ExportOptions.plist"
           cp ../../ExportOptions.plist "$EXPORT_OPTS"
-          /usr/libexec/PlistBuddy -c "Delete :teamID" "$EXPORT_OPTS" 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" "$EXPORT_OPTS"
+          PB="/usr/libexec/PlistBuddy"
+          $PB -c "Delete :teamID" "$EXPORT_OPTS" 2>/dev/null || true
+          $PB -c "Add :teamID string $TEAM_ID" "$EXPORT_OPTS"
+          $PB -c "Delete :signingStyle" "$EXPORT_OPTS" 2>/dev/null || true
+          $PB -c "Add :signingStyle string manual" "$EXPORT_OPTS"
+          $PB -c "Delete :signingCertificate" "$EXPORT_OPTS" 2>/dev/null || true
+          $PB -c "Add :signingCertificate string Apple Distribution" "$EXPORT_OPTS"
+          $PB -c "Delete :provisioningProfiles" "$EXPORT_OPTS" 2>/dev/null || true
+          $PB -c "Add :provisioningProfiles dict" "$EXPORT_OPTS"
+          $PB -c "Add :provisioningProfiles:app.getsafetea.mobile string $PROFILE_NAME" "$EXPORT_OPTS"
 
           xcodebuild \
             -exportArchive \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
-            -exportOptionsPlist "$EXPORT_OPTS" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
-            -authenticationKeyID "$API_KEY_ID" \
-            -authenticationKeyIssuerID "$API_ISSUER_ID"
+            -exportOptionsPlist "$EXPORT_OPTS"
 
           ls -la "$RUNNER_TEMP/export"
 

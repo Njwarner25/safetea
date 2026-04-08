@@ -193,6 +193,68 @@ jobs:
           echo "keychain_password=$KEYCHAIN_PASSWORD" >> "$GITHUB_OUTPUT"
           echo "Keychain created at $KEYCHAIN_PATH"
 
+      - name: Revoke orphaned Distribution certs (Spaceship)
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          API_KEY_PATH: ${{ runner.temp }}/api_key.json
+        run: |
+          # Apple caps Distribution certificates at 2 per team. Previous
+          # failed CI runs created CA2N692KAD + TVKYJHJFK8 whose private keys
+          # were thrown away with the runner — they're orphaned in Apple's
+          # account and block any new cert creation with "reached the maximum
+          # number of available Distribution certificates".
+          #
+          # The Apple Developer portal UI hides these "Apple Distribution"
+          # type certs (only "Apple Development" shows under All Types), so
+          # we have to nuke them via the App Store Connect API.
+          #
+          # Spaceship is bundled with fastlane — we use it directly to list
+          # and revoke any DISTRIBUTION certs whose private key is not on
+          # this fresh runner (i.e. all of them).
+          ruby <<'RUBY'
+          require 'spaceship'
+
+          api_key = JSON.parse(File.read(ENV.fetch('API_KEY_PATH')))
+          token = Spaceship::ConnectAPI::Token.create(
+            key_id:    api_key.fetch('key_id'),
+            issuer_id: api_key.fetch('issuer_id'),
+            key:       api_key.fetch('key')
+          )
+          Spaceship::ConnectAPI.token = token
+
+          puts "Listing all certificates in the team..."
+          certs = Spaceship::ConnectAPI::Certificate.all
+          puts "Found #{certs.size} total certificate(s)"
+
+          dist_types = %w[
+            DISTRIBUTION
+            IOS_DISTRIBUTION
+            MAC_APP_DISTRIBUTION
+            DEVELOPER_ID_APPLICATION
+          ]
+          dist_certs = certs.select { |c| dist_types.include?(c.certificate_type) }
+          puts "Distribution-type certificates: #{dist_certs.size}"
+
+          dist_certs.each do |c|
+            puts "  - id=#{c.id} type=#{c.certificate_type} name=#{c.name} expires=#{c.expiration_date}"
+          end
+
+          if dist_certs.empty?
+            puts "Nothing to revoke."
+          else
+            puts "Revoking all distribution-type certs (none have local private keys on this runner)"
+            dist_certs.each do |c|
+              begin
+                c.delete!
+                puts "  REVOKED #{c.id} (#{c.name})"
+              rescue => e
+                puts "  WARN failed to revoke #{c.id}: #{e.class}: #{e.message}"
+              end
+            end
+          end
+          RUBY
+
       - name: Create Apple Distribution certificate (Fastlane cert)
         id: cert
         if: steps.ios_secrets.outputs.has_signing == 'true'
@@ -207,16 +269,9 @@ jobs:
           FASTLANE_HIDE_TIMESTAMP: 'false'
         run: |
           mkdir -p "$RUNNER_TEMP/cert"
-          # IMPORTANT: only ONE invocation of cert. Previously we had a debug
-          # `get_certificates` probe step before this — but `get_certificates`
-          # IS `cert` under the hood, so it created CA2N692KAD, then `cert
-          # force:true` created a SECOND cert TVKYJHJFK8. With two valid
-          # Apple Distribution certs in the keychain, sigh would pick one and
-          # xcodebuild would pick the other → "Provisioning profile doesn't
-          # include signing certificate" error.
-          #
-          # Now: single `cert` call (no force) creates exactly one cert. The
-          # cert ID is captured into the step output so we can pin it later.
+          # Single `cert` invocation (no force, no probe). With the orphaned
+          # certs revoked in the previous step, Apple's slot count is back
+          # to zero and this creates exactly one new cert.
           fastlane run cert \
             api_key_path:"$API_KEY_PATH" \
             development:false \

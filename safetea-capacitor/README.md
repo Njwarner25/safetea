@@ -23,7 +23,7 @@ This directory is the **iOS + Android native shell** for SafeTea. It does **not*
 
 ### Android (any OS)
 - **Android Studio Ladybug** or newer
-- **JDK 17** — `brew install openjdk@17` on Mac
+- **JDK 21** — `brew install openjdk@21` on Mac (Capacitor 7.6+ requires it)
 - Google Play Console account ($25 one-time — still pending registration)
 
 ---

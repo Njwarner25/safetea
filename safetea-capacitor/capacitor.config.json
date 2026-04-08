@@ -1,0 +1,46 @@
+{
+  "appId": "app.getsafetea",
+  "appName": "SafeTea",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://getsafetea.app",
+    "cleartext": false,
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "allowNavigation": [
+      "getsafetea.app",
+      "*.getsafetea.app",
+      "*.vercel.app",
+      "*.railway.app",
+      "verify.didit.me",
+      "*.didit.me"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false,
+    "scrollEnabled": true
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#ffffff",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "backgroundColor": "#ffffff"
+    }
+  }
+}

@@ -154,11 +154,17 @@ jobs:
           TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -o pipefail
+          # Note: Capacitor's generated Xcode project defaults to iOS App
+          # Development signing in the archive config. Without forcing
+          # "Apple Distribution" below, xcodebuild tries to create a
+          # Development profile first, which requires a registered device
+          # and fails on CI runners. Forcing the identity skips that path
+          # and goes straight to requesting a Distribution profile via
+          # -allowProvisioningUpdates.
           xcodebuild \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -sdk iphoneos \
             -destination "generic/platform=iOS" \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -allowProvisioningUpdates \
@@ -167,6 +173,7 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea.mobile \
             archive
 

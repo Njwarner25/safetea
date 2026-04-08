@@ -171,29 +171,49 @@ jobs:
           jq -e 'has("key_id") and has("issuer_id") and has("key")' "$RUNNER_TEMP/api_key.json" > /dev/null
           echo "Fastlane API key JSON ready at \$RUNNER_TEMP/api_key.json"
 
-      - name: Setup CI keychain (Fastlane setup_ci)
+      - name: Create + unlock CI keychain
         if: steps.ios_secrets.outputs.has_signing == 'true'
+        id: keychain
         shell: bash
         run: |
-          # Creates a fresh temporary keychain, unlocks it, and makes it the
-          # default — required so cert / sigh can install certificates and
-          # profiles without password prompts.
-          fastlane run setup_ci force:true
+          # Explicitly create a temporary keychain — fastlane setup_ci
+          # sometimes leaves the default at login.keychain-db on macos-15
+          # runners, which fails to install certs without sudo.
+          KEYCHAIN_NAME="safetea-ci.keychain-db"
+          KEYCHAIN_PATH="$RUNNER_TEMP/$KEYCHAIN_NAME"
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 24)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain  -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Add to search list and make default so codesign / xcodebuild
+          # find certs installed into it.
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN_PATH"
+          echo "keychain_path=$KEYCHAIN_PATH"         >> "$GITHUB_OUTPUT"
+          echo "keychain_password=$KEYCHAIN_PASSWORD" >> "$GITHUB_OUTPUT"
+          echo "Keychain created at $KEYCHAIN_PATH"
 
       - name: Create Apple Distribution certificate (Fastlane cert)
         if: steps.ios_secrets.outputs.has_signing == 'true'
         shell: bash
         env:
-          API_KEY_PATH: ${{ runner.temp }}/api_key.json
+          API_KEY_PATH:      ${{ runner.temp }}/api_key.json
+          KEYCHAIN_PATH:     ${{ steps.keychain.outputs.keychain_path }}
+          KEYCHAIN_PASSWORD: ${{ steps.keychain.outputs.keychain_password }}
         run: |
           mkdir -p "$RUNNER_TEMP/cert"
-          # cert downloads the team's Apple Distribution cert from the API,
-          # creating a new one if none exists, and installs the .p12 into the
-          # default keychain (the temp one created by setup_ci above).
+          # cert: download or create the Apple Distribution cert via API key.
+          # force:true → create a new cert even if the team already has one
+          # (the existing cert's private key is on whatever Mac created it,
+          # not on this CI runner, so we can't use it). Installs .p12 into
+          # the explicit temp keychain.
           fastlane run cert \
             api_key_path:"$API_KEY_PATH" \
             development:false \
             generate_apple_certs:true \
+            force:true \
+            keychain_path:"$KEYCHAIN_PATH" \
+            keychain_password:"$KEYCHAIN_PASSWORD" \
             output_path:"$RUNNER_TEMP/cert"
 
       - name: Create App Store provisioning profile (Fastlane sigh)

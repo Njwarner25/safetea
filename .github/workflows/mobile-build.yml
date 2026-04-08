@@ -1,0 +1,423 @@
+name: Mobile Build (iOS + Android)
+
+# Builds the SafeTea Capacitor 7 shell for iOS and Android.
+# - iOS job runs on GitHub's macos-15 runner with Xcode 26 (ITMS-90725 compliant).
+# - Android job runs on ubuntu-latest with JDK 17 + Android SDK 35.
+# - If all signing secrets are present, builds are signed and uploaded to
+#   TestFlight / Play Console Internal Testing.
+# - If signing secrets are missing, jobs still run and upload unsigned build
+#   artifacts to the workflow so you can download and inspect them.
+#
+# Triggers:
+#   - push to mobile-capacitor or main (always builds, uploads only on main)
+#   - manual dispatch from Actions tab (opt-in upload via input)
+#
+# Secrets required for upload — see .github/workflows/SECRETS.md
+#
+# The One Rule: this workflow NEVER modifies capacitor.config.json, www/, or
+# anything in public/. It only generates native projects (ios/, android/) in
+# the runner, wires signing, and uploads. The app always loads
+# https://getsafetea.app so mobile = web, permanently.
+
+on:
+  push:
+    branches: [main, mobile-capacitor]
+    paths:
+      - 'safetea-capacitor/**'
+      - '.github/workflows/mobile-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'safetea-capacitor/**'
+      - '.github/workflows/mobile-build.yml'
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload signed builds to TestFlight / Play Console'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+concurrency:
+  group: mobile-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  ios:
+    name: iOS (TestFlight)
+    runs-on: macos-15
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: safetea-capacitor
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION_NAME=$(cat VERSION | tr -d '[:space:]')
+          BUILD_NUMBER=$((1000 + ${{ github.run_number }}))
+          echo "name=$VERSION_NAME"   >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "iOS build will be $VERSION_NAME ($BUILD_NUMBER)"
+
+      - name: Select Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Verify Xcode version
+        shell: bash
+        run: |
+          xcodebuild -version
+          XCV=$(xcodebuild -version | head -1 | awk '{print $2}')
+          MAJOR=${XCV%%.*}
+          if [[ "$MAJOR" -lt 26 ]]; then
+            echo "::warning::Xcode $XCV is older than 26.x — ITMS-90725 requires Xcode 26 for submissions after 2026-04-28"
+          else
+            echo "Xcode $XCV — ITMS-90725 compliant"
+          fi
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: safetea-capacitor/package-lock.json
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Add iOS platform
+        run: |
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Set iOS metadata (Info.plist + version)
+        shell: bash
+        run: |
+          chmod +x scripts/set-ios-metadata.sh
+          ./scripts/set-ios-metadata.sh \
+            "${{ steps.version.outputs.name }}" \
+            "${{ steps.version.outputs.build }}"
+
+      - name: Check iOS signing secrets
+        id: ios_secrets
+        shell: bash
+        env:
+          API_KEY_ID:    ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          API_KEY:       ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ -n "$API_KEY_ID" && -n "$API_ISSUER_ID" && -n "$API_KEY" && -n "$TEAM_ID" ]]; then
+            echo "has_signing=true"  >> "$GITHUB_OUTPUT"
+            echo "iOS signing secrets: present — will sign and archive"
+          else
+            echo "has_signing=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::iOS signing secrets missing — unsigned build only (no TestFlight upload). See .github/workflows/SECRETS.md"
+          fi
+
+      - name: Install App Store Connect API key
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_KEY:    ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s\n' "$API_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          printf '%s\n' "$API_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8 "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Archive signed build
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        working-directory: safetea-capacitor/ios/App
+        shell: bash
+        env:
+          API_KEY_ID:    ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea \
+            archive
+
+      - name: Export .ipa
+        if: steps.ios_secrets.outputs.has_signing == 'true'
+        working-directory: safetea-capacitor/ios/App
+        shell: bash
+        env:
+          API_KEY_ID:    ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          TEAM_ID:       ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Inject teamID into ExportOptions.plist (runtime-supplied)
+          EXPORT_OPTS="$RUNNER_TEMP/ExportOptions.plist"
+          cp ../../ExportOptions.plist "$EXPORT_OPTS"
+          /usr/libexec/PlistBuddy -c "Delete :teamID" "$EXPORT_OPTS" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" "$EXPORT_OPTS"
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$EXPORT_OPTS" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+          ls -la "$RUNNER_TEMP/export"
+
+      - name: Unsigned build attempt (no secrets)
+        if: steps.ios_secrets.outputs.has_signing == 'false'
+        working-directory: safetea-capacitor/ios/App
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY= \
+            PROVISIONING_PROFILE_SPECIFIER= \
+            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea \
+            archive
+          echo "::notice::Unsigned archive produced — add signing secrets to upload to TestFlight"
+
+      - name: Upload iOS build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safetea-ios-${{ steps.version.outputs.build }}
+          path: |
+            ${{ runner.temp }}/export/*.ipa
+            ${{ runner.temp }}/App.xcarchive
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload to TestFlight
+        if: >-
+          steps.ios_secrets.outputs.has_signing == 'true' &&
+          (
+            (github.event_name == 'workflow_dispatch' && inputs.upload == 'true') ||
+            github.ref == 'refs/heads/main'
+          )
+        shell: bash
+        env:
+          API_KEY_ID:    ${{ secrets.APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          IPA=$(ls "$RUNNER_TEMP/export/"*.ipa 2>/dev/null | head -1)
+          if [[ -z "$IPA" ]]; then
+            echo "::error::No .ipa found in $RUNNER_TEMP/export/"
+            exit 1
+          fi
+          echo "Uploading $IPA to TestFlight…"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA" \
+            --apiKey "$API_KEY_ID" \
+            --apiIssuer "$API_ISSUER_ID"
+          echo "✅ Uploaded to App Store Connect — processing begins (usually 5–30 min until TestFlight shows the build)"
+
+  # ---------------------------------------------------------------------------
+  android:
+    name: Android (Play Console)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: safetea-capacitor
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION_NAME=$(cat VERSION | tr -d '[:space:]')
+          # EAS builds ended at versionCode 22 — start Capacitor at 1001 to stay monotonically ahead
+          VERSION_CODE=$((1000 + ${{ github.run_number }}))
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Android build will be $VERSION_NAME ($VERSION_CODE)"
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: safetea-capacitor/package-lock.json
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Add Android platform
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Set Android version (build.gradle)
+        shell: bash
+        run: |
+          chmod +x scripts/set-android-version.sh
+          ./scripts/set-android-version.sh \
+            "${{ steps.version.outputs.name }}" \
+            "${{ steps.version.outputs.code }}"
+
+      - name: Check Android signing secrets
+        id: android_secrets
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PW:  ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS:    ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PW:       ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$KEYSTORE_B64" && -n "$KEYSTORE_PW" && -n "$KEY_ALIAS" && -n "$KEY_PW" ]]; then
+            echo "has_signing=true"  >> "$GITHUB_OUTPUT"
+            echo "Android signing secrets: present — will sign release .aab"
+          else
+            echo "has_signing=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Android signing secrets missing — will produce unsigned debug .apk only (cannot upload to Play Console). See .github/workflows/SECRETS.md"
+          fi
+
+      - name: Check Play Console secrets
+        id: play_secrets
+        shell: bash
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [[ -n "$PLAY_JSON" ]]; then
+            echo "has_play=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_play=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Decode keystore
+        if: steps.android_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p android/app
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/app/upload-keystore.jks
+          if [[ ! -s android/app/upload-keystore.jks ]]; then
+            echo "::error::Keystore decode produced empty file — check ANDROID_KEYSTORE_BASE64 secret encoding"
+            exit 1
+          fi
+          echo "Keystore decoded ($(wc -c < android/app/upload-keystore.jks) bytes)"
+
+      - name: Write keystore.properties
+        if: steps.android_secrets.outputs.has_signing == 'true'
+        shell: bash
+        env:
+          KEYSTORE_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS:   ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PW:      ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cat > android/keystore.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$KEYSTORE_PW
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PW
+          EOF
+          # Do not print the file contents — they contain the password
+
+      - name: Inject signing config into build.gradle
+        if: steps.android_secrets.outputs.has_signing == 'true'
+        shell: bash
+        run: |
+          chmod +x scripts/inject-android-signing.sh
+          ./scripts/inject-android-signing.sh
+
+      - name: Build signed release .aab
+        if: steps.android_secrets.outputs.has_signing == 'true'
+        working-directory: safetea-capacitor/android
+        shell: bash
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon --stacktrace
+          echo "--- Build outputs ---"
+          find app/build/outputs/bundle/release -type f -name "*.aab" -exec ls -la {} \;
+
+      - name: Build unsigned debug .apk (no secrets)
+        if: steps.android_secrets.outputs.has_signing == 'false'
+        working-directory: safetea-capacitor/android
+        shell: bash
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          echo "::notice::Unsigned debug APK produced — add signing secrets to build a Play-submittable .aab"
+          find app/build/outputs/apk/debug -type f -name "*.apk" -exec ls -la {} \;
+
+      - name: Upload Android build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safetea-android-${{ steps.version.outputs.code }}
+          path: |
+            safetea-capacitor/android/app/build/outputs/bundle/release/*.aab
+            safetea-capacitor/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload to Play Console Internal Testing
+        if: >-
+          steps.android_secrets.outputs.has_signing == 'true' &&
+          steps.play_secrets.outputs.has_play == 'true' &&
+          (
+            (github.event_name == 'workflow_dispatch' && inputs.upload == 'true') ||
+            github.ref == 'refs/heads/main'
+          )
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.getsafetea
+          releaseFiles: safetea-capacitor/android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: draft
+          inAppUpdatePriority: 2
+          whatsNewDirectory: safetea-capacitor/fastlane/metadata/android

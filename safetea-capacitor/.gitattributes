@@ -1,0 +1,8 @@
+# Force Unix line endings on shell scripts and YAML so CI on macOS/Linux runners
+# never chokes on CRLF introduced by Windows checkouts.
+*.sh           text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+scripts/*      text eol=lf
+ExportOptions.plist text eol=lf
+VERSION        text eol=lf

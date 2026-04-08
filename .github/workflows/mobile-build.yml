@@ -173,28 +173,34 @@ jobs:
           team_id = ENV.fetch('TEAM_ID')
           app_target.build_configurations.each do |config|
             next unless config.name == 'Release'
-            # Strategy: keep Automatic signing, set DEVELOPMENT_TEAM and
-            # bundle ID, but DELETE every CODE_SIGN_IDENTITY / profile hint
-            # that Capacitor's template injects ("iPhone Developer"). With
-            # no identity hint and Automatic signing, xcodebuild's archive
-            # action will pick "Apple Distribution" automatically, and
-            # -allowProvisioningUpdates will create the matching App Store
+            # Strategy: switch to Manual signing for the App target ONLY,
+            # explicitly set Apple Distribution as the identity, and let
+            # -allowProvisioningUpdates download / create the App Store
             # provisioning profile via the App Store Connect API key.
-            config.build_settings['CODE_SIGN_STYLE']                = 'Automatic'
-            config.build_settings['DEVELOPMENT_TEAM']               = team_id
-            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]'] = team_id
-            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']      = 'app.getsafetea.mobile'
-            config.build_settings.delete('CODE_SIGN_IDENTITY')
-            config.build_settings.delete('CODE_SIGN_IDENTITY[sdk=iphoneos*]')
+            #
+            # Why Manual instead of Automatic? Capacitor's default scheme
+            # confuses xcodebuild's automatic signing into picking iOS App
+            # Development profile type for archive actions, even though
+            # Apple's docs say archive should use Distribution. Manual
+            # signing removes the ambiguity — we tell xcodebuild exactly
+            # what identity to use.
+            config.build_settings['CODE_SIGN_STYLE']                   = 'Manual'
+            config.build_settings['CODE_SIGN_IDENTITY']                = 'Apple Distribution'
+            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+            config.build_settings['DEVELOPMENT_TEAM']                  = team_id
+            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]']   = team_id
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']         = 'app.getsafetea.mobile'
+            # Leave PROVISIONING_PROFILE_SPECIFIER blank — xcodebuild will
+            # populate it via -allowProvisioningUpdates after creating /
+            # downloading the profile.
             config.build_settings.delete('PROVISIONING_PROFILE')
             config.build_settings.delete('PROVISIONING_PROFILE[sdk=iphoneos*]')
-            config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')
-            config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]')
-            puts "Patched App target Release config (signing hints deleted, automatic + team set)"
+            config.build_settings['PROVISIONING_PROFILE_SPECIFIER']    = ''
+            puts "Patched App target Release config: Manual signing, Apple Distribution"
           end
-          # Also ensure TargetAttributes ProvisioningStyle is Automatic for App target
+          # Pin TargetAttributes ProvisioningStyle = Manual for App target
           attrs = project.root_object.attributes['TargetAttributes'] ||= {}
-          (attrs[app_target.uuid] ||= {})['ProvisioningStyle'] = 'Automatic'
+          (attrs[app_target.uuid] ||= {})['ProvisioningStyle'] = 'Manual'
           project.save
           RUBY
 

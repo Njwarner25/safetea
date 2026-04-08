@@ -194,46 +194,57 @@ jobs:
           echo "Keychain created at $KEYCHAIN_PATH"
 
       - name: Create Apple Distribution certificate (Fastlane cert)
+        id: cert
         if: steps.ios_secrets.outputs.has_signing == 'true'
         shell: bash
         env:
           API_KEY_PATH:      ${{ runner.temp }}/api_key.json
           KEYCHAIN_PATH:     ${{ steps.keychain.outputs.keychain_path }}
           KEYCHAIN_PASSWORD: ${{ steps.keychain.outputs.keychain_password }}
-          # Verbose mode so we see the underlying Apple API error instead of
-          # fastlane's misleading "limit reached" wrapper (issue #19349).
           FASTLANE_DISABLE_COLORS: '1'
           FASTLANE_HIDE_CHANGELOG: '1'
           FASTLANE_HIDE_GITHUB_ISSUES: '1'
           FASTLANE_HIDE_TIMESTAMP: 'false'
         run: |
           mkdir -p "$RUNNER_TEMP/cert"
-          # First print what the API key actually has access to (for debug)
-          echo "::group::Available Distribution certificates from API key"
-          set +e
-          fastlane run get_certificates \
-            api_key_path:"$API_KEY_PATH" \
-            development:false \
-            keychain_path:"$KEYCHAIN_PATH" \
-            keychain_password:"$KEYCHAIN_PASSWORD" \
-            output_path:"$RUNNER_TEMP/cert" \
-            verbose:true
-          GET_RC=$?
-          set -e
-          echo "get_certificates exit=$GET_RC"
-          echo "::endgroup::"
-
-          # Then attempt cert with verbose output
-          echo "::group::Fastlane cert (verbose)"
-          fastlane --verbose run cert \
+          # IMPORTANT: only ONE invocation of cert. Previously we had a debug
+          # `get_certificates` probe step before this — but `get_certificates`
+          # IS `cert` under the hood, so it created CA2N692KAD, then `cert
+          # force:true` created a SECOND cert TVKYJHJFK8. With two valid
+          # Apple Distribution certs in the keychain, sigh would pick one and
+          # xcodebuild would pick the other → "Provisioning profile doesn't
+          # include signing certificate" error.
+          #
+          # Now: single `cert` call (no force) creates exactly one cert. The
+          # cert ID is captured into the step output so we can pin it later.
+          fastlane run cert \
             api_key_path:"$API_KEY_PATH" \
             development:false \
             generate_apple_certs:true \
-            force:true \
             keychain_path:"$KEYCHAIN_PATH" \
             keychain_password:"$KEYCHAIN_PASSWORD" \
-            output_path:"$RUNNER_TEMP/cert"
-          echo "::endgroup::"
+            output_path:"$RUNNER_TEMP/cert" 2>&1 | tee "$RUNNER_TEMP/cert/cert.log"
+
+          CERT_ID=$(grep -E "Successfully installed certificate|Use signing certificate" "$RUNNER_TEMP/cert/cert.log" \
+                     | head -1 \
+                     | grep -oE "[A-Z0-9]{10}" \
+                     | head -1)
+          if [[ -z "$CERT_ID" ]]; then
+            echo "::error::Could not parse new certificate ID from cert step output"
+            exit 1
+          fi
+          echo "cert_id=$CERT_ID" >> "$GITHUB_OUTPUT"
+          echo "Distribution cert ID: $CERT_ID"
+
+          # Verify exactly ONE Apple Distribution identity is in the keychain
+          IDENT_COUNT=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+                        | grep -c "Apple Distribution" || true)
+          echo "Apple Distribution identities in keychain: $IDENT_COUNT"
+          if [[ "$IDENT_COUNT" -ne 1 ]]; then
+            echo "::error::Expected exactly 1 Apple Distribution identity, got $IDENT_COUNT"
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+            exit 1
+          fi
 
       - name: Create App Store provisioning profile (Fastlane sigh)
         if: steps.ios_secrets.outputs.has_signing == 'true'
@@ -242,18 +253,22 @@ jobs:
         env:
           API_KEY_PATH: ${{ runner.temp }}/api_key.json
           TEAM_ID:      ${{ secrets.APPLE_TEAM_ID }}
+          CERT_ID:      ${{ steps.cert.outputs.cert_id }}
         run: |
           set -o pipefail
           # sigh creates the App Store distribution profile for the bundle ID
-          # via the App Store Connect API, registering the App ID first if it
-          # doesn't exist. Downloads the .mobileprovision and auto-installs
-          # it into ~/Library/MobileDevice/Provisioning Profiles/.
+          # via the App Store Connect API. force:true creates a brand-new
+          # profile (instead of reusing one of the 18+ legacy profiles in
+          # the account, none of which have a local matching cert).
+          # cert_id pins the profile to the cert we just created in the
+          # previous step so xcodebuild Archive can't pick a mismatched cert.
           fastlane run get_provisioning_profile \
             api_key_path:"$API_KEY_PATH" \
             app_identifier:"app.getsafetea.mobile" \
             team_id:"$TEAM_ID" \
             development:false \
             force:true \
+            cert_id:"$CERT_ID" \
             output_path:"$RUNNER_TEMP" \
             filename:"AppStore_safetea.mobileprovision"
           PROFILE_PATH="$RUNNER_TEMP/AppStore_safetea.mobileprovision"

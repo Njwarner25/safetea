@@ -200,14 +200,32 @@ jobs:
           API_KEY_PATH:      ${{ runner.temp }}/api_key.json
           KEYCHAIN_PATH:     ${{ steps.keychain.outputs.keychain_path }}
           KEYCHAIN_PASSWORD: ${{ steps.keychain.outputs.keychain_password }}
+          # Verbose mode so we see the underlying Apple API error instead of
+          # fastlane's misleading "limit reached" wrapper (issue #19349).
+          FASTLANE_DISABLE_COLORS: '1'
+          FASTLANE_HIDE_CHANGELOG: '1'
+          FASTLANE_HIDE_GITHUB_ISSUES: '1'
+          FASTLANE_HIDE_TIMESTAMP: 'false'
         run: |
           mkdir -p "$RUNNER_TEMP/cert"
-          # cert: download or create the Apple Distribution cert via API key.
-          # force:true → create a new cert even if the team already has one
-          # (the existing cert's private key is on whatever Mac created it,
-          # not on this CI runner, so we can't use it). Installs .p12 into
-          # the explicit temp keychain.
-          fastlane run cert \
+          # First print what the API key actually has access to (for debug)
+          echo "::group::Available Distribution certificates from API key"
+          set +e
+          fastlane run get_certificates \
+            api_key_path:"$API_KEY_PATH" \
+            development:false \
+            keychain_path:"$KEYCHAIN_PATH" \
+            keychain_password:"$KEYCHAIN_PASSWORD" \
+            output_path:"$RUNNER_TEMP/cert" \
+            verbose:true
+          GET_RC=$?
+          set -e
+          echo "get_certificates exit=$GET_RC"
+          echo "::endgroup::"
+
+          # Then attempt cert with verbose output
+          echo "::group::Fastlane cert (verbose)"
+          fastlane --verbose run cert \
             api_key_path:"$API_KEY_PATH" \
             development:false \
             generate_apple_certs:true \
@@ -215,6 +233,7 @@ jobs:
             keychain_path:"$KEYCHAIN_PATH" \
             keychain_password:"$KEYCHAIN_PASSWORD" \
             output_path:"$RUNNER_TEMP/cert"
+          echo "::endgroup::"
 
       - name: Create App Store provisioning profile (Fastlane sigh)
         if: steps.ios_secrets.outputs.has_signing == 'true'

@@ -173,15 +173,28 @@ jobs:
           team_id = ENV.fetch('TEAM_ID')
           app_target.build_configurations.each do |config|
             next unless config.name == 'Release'
-            config.build_settings['CODE_SIGN_STYLE']                    = 'Automatic'
-            config.build_settings['CODE_SIGN_IDENTITY']                 = 'Apple Distribution'
-            config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]']  = 'Apple Distribution'
-            config.build_settings['DEVELOPMENT_TEAM']                   = team_id
-            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]']    = team_id
-            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']          = 'app.getsafetea.mobile'
-            config.build_settings['PROVISIONING_PROFILE_SPECIFIER']     = ''
-            puts "Patched App target Release config"
+            # Strategy: keep Automatic signing, set DEVELOPMENT_TEAM and
+            # bundle ID, but DELETE every CODE_SIGN_IDENTITY / profile hint
+            # that Capacitor's template injects ("iPhone Developer"). With
+            # no identity hint and Automatic signing, xcodebuild's archive
+            # action will pick "Apple Distribution" automatically, and
+            # -allowProvisioningUpdates will create the matching App Store
+            # provisioning profile via the App Store Connect API key.
+            config.build_settings['CODE_SIGN_STYLE']                = 'Automatic'
+            config.build_settings['DEVELOPMENT_TEAM']               = team_id
+            config.build_settings['DEVELOPMENT_TEAM[sdk=iphoneos*]'] = team_id
+            config.build_settings['PRODUCT_BUNDLE_IDENTIFIER']      = 'app.getsafetea.mobile'
+            config.build_settings.delete('CODE_SIGN_IDENTITY')
+            config.build_settings.delete('CODE_SIGN_IDENTITY[sdk=iphoneos*]')
+            config.build_settings.delete('PROVISIONING_PROFILE')
+            config.build_settings.delete('PROVISIONING_PROFILE[sdk=iphoneos*]')
+            config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER')
+            config.build_settings.delete('PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]')
+            puts "Patched App target Release config (signing hints deleted, automatic + team set)"
           end
+          # Also ensure TargetAttributes ProvisioningStyle is Automatic for App target
+          attrs = project.root_object.attributes['TargetAttributes'] ||= {}
+          (attrs[app_target.uuid] ||= {})['ProvisioningStyle'] = 'Automatic'
           project.save
           RUBY
 

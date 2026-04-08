@@ -26,7 +26,11 @@
         trackingUrl: null,
         contactsNotified: 0,
         watchId: null,
-        timerInterval: null
+        timerInterval: null,
+        isPublic: false,
+        category: null,
+        currentTab: 'discover',
+        discoverPollInterval: null
     };
 
     // ---- Toast ----
@@ -83,6 +87,29 @@
 
                 document.getElementById('main-content').style.display = 'block';
 
+                // Wire category chip selection
+                var chips = document.querySelectorAll('#category-chips .cat-chip');
+                chips.forEach(function(chip) {
+                    chip.addEventListener('click', function() {
+                        chips.forEach(function(c) { c.classList.remove('active'); });
+                        if (state.category === chip.dataset.cat) {
+                            state.category = null;
+                        } else {
+                            chip.classList.add('active');
+                            state.category = chip.dataset.cat;
+                        }
+                    });
+                });
+
+                // Initial loads for connect features
+                loadDiscover();
+                loadConnections();
+                // Refresh every 20s
+                state.discoverPollInterval = setInterval(function() {
+                    loadDiscover();
+                    loadConnections();
+                }, 20000);
+
                 // Restore active session if exists
                 var stored = localStorage.getItem(ACTIVE_KEY);
                 if (stored) {
@@ -106,11 +133,270 @@
             });
     }
 
+    // ---- Public toggle ----
+    window.togglePublicMode = function() {
+        var toggle = document.getElementById('public-toggle');
+        var fields = document.getElementById('broadcast-fields');
+        var warning = document.getElementById('verify-warning');
+
+        var isVerified = state.user && (state.user.identity_verified === true || (state.user.trust_score || 0) >= 60);
+
+        if (toggle.checked && !isVerified) {
+            toggle.checked = false;
+            fields.classList.remove('visible');
+            warning.style.display = 'block';
+            return;
+        }
+
+        warning.style.display = 'none';
+        if (toggle.checked) {
+            fields.classList.add('visible');
+        } else {
+            fields.classList.remove('visible');
+        }
+    };
+
+    // ---- Tabs ----
+    window.switchTab = function(tab) {
+        state.currentTab = tab;
+        var btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+        var contents = document.querySelectorAll('.tab-content');
+        contents.forEach(function(c) { c.classList.remove('active'); });
+        var active = document.getElementById('tab-' + tab);
+        if (active) active.classList.add('active');
+    };
+
+    // ---- Discover ----
+    function loadDiscover() {
+        authedFetch('/api/safelink/discover')
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                var list = document.getElementById('discover-list');
+                if (!res.ok) {
+                    if (res.data && res.data.code === 'verification_required') {
+                        list.innerHTML = '<div class="empty-state"><i class="fas fa-shield-alt"></i>Identity verification required to discover broadcasts.<br><a href="/verify.html" style="color:#E8A0B5">Verify now</a></div>';
+                    } else {
+                        list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i>Could not load broadcasts</div>';
+                    }
+                    return;
+                }
+                renderDiscover(res.data.broadcasts || []);
+            })
+            .catch(function() {});
+    }
+
+    function renderDiscover(broadcasts) {
+        var list = document.getElementById('discover-list');
+        if (!broadcasts.length) {
+            list.innerHTML = '<div class="empty-state"><i class="fas fa-compass"></i>No public SafeLinks right now.<br>Be the first — toggle "Make this public" above.</div>';
+            return;
+        }
+        list.innerHTML = broadcasts.map(function(b) {
+            var initials = (b.hostName || 'S').split(' ').map(function(p){ return p.charAt(0); }).join('').slice(0,2).toUpperCase();
+            var avatar = b.hostAvatar
+                ? '<img src="' + escapeAttr(b.hostAvatar) + '" alt="">'
+                : initials;
+            var when = relTime(b.createdAt);
+            var verified = b.hostVerified ? '<span class="bi-verify"><i class="fas fa-shield-check"></i> Verified</span>' : '';
+            var catBadge = b.category ? '<span class="bi-cat">' + escapeHtml(b.category) + '</span>' : '';
+            var msg = escapeHtml(b.broadcastMessage || b.label || 'SafeLink active');
+
+            var btnHtml;
+            if (b.myRequestStatus === 'accepted') {
+                btnHtml = '<button class="bi-btn accepted" disabled><i class="fas fa-check"></i> Connected</button>';
+            } else if (b.myRequestStatus === 'pending') {
+                btnHtml = '<button class="bi-btn pending" disabled><i class="fas fa-clock"></i> Request sent</button>';
+            } else if (b.myRequestStatus === 'declined') {
+                btnHtml = '<button class="bi-btn declined" disabled><i class="fas fa-times"></i> Declined</button>';
+            } else {
+                btnHtml = '<button class="bi-btn" onclick="requestConnect(\'' + escapeAttr(b.sessionKey) + '\')"><i class="fas fa-link"></i> Connect</button>';
+            }
+
+            return '' +
+                '<div class="broadcast-item">' +
+                    '<div class="bi-header">' +
+                        '<div class="bi-avatar">' + avatar + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div class="bi-name-row"><span class="bi-name">' + escapeHtml(b.hostName) + '</span>' + verified + '</div>' +
+                            '<div class="bi-when">' + when + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    catBadge +
+                    '<div class="bi-msg">' + msg + '</div>' +
+                    '<div class="bi-actions">' + btnHtml + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    window.requestConnect = function(sessionKey) {
+        authedFetch('/api/safelink/connect', {
+            method: 'POST',
+            body: { sessionKey: sessionKey }
+        })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    showToast(res.data.error || 'Could not send request', 'error');
+                    return;
+                }
+                showToast('Connection request sent. Waiting for approval.', 'success');
+                loadDiscover();
+                loadConnections();
+            })
+            .catch(function() { showToast('Could not send request', 'error'); });
+    };
+
+    // ---- Connections (incoming requests + accepted) ----
+    function loadConnections() {
+        authedFetch('/api/safelink/connections')
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                if (!res.ok) return;
+                renderRequests(res.data.incoming || []);
+                renderConnected(res.data.outgoing || [], res.data.incoming || []);
+            })
+            .catch(function() {});
+    }
+
+    function renderRequests(incoming) {
+        var listEl = document.getElementById('requests-list');
+        var pending = incoming.filter(function(r) { return r.status === 'pending'; });
+        var badge = document.getElementById('req-badge');
+        if (pending.length > 0) {
+            badge.textContent = '(' + pending.length + ')';
+            badge.style.color = '#E8A0B5';
+        } else {
+            badge.textContent = '';
+        }
+
+        if (!pending.length) {
+            listEl.innerHTML = '<div class="empty-state"><i class="fas fa-bell"></i>No incoming requests</div>';
+            return;
+        }
+        listEl.innerHTML = pending.map(function(r) {
+            var initials = (r.requester.name || 'S').split(' ').map(function(p){ return p.charAt(0); }).join('').slice(0,2).toUpperCase();
+            var avatar = r.requester.avatar
+                ? '<img src="' + escapeAttr(r.requester.avatar) + '" alt="">'
+                : initials;
+            var verified = r.requester.verified ? '<span class="bi-verify"><i class="fas fa-shield-check"></i> Verified</span>' : '';
+            var msgLine = r.message ? '<div class="bi-msg">"' + escapeHtml(r.message) + '"</div>' : '';
+            return '' +
+                '<div class="req-item">' +
+                    '<div class="bi-header">' +
+                        '<div class="bi-avatar">' + avatar + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div class="bi-name-row"><span class="bi-name">' + escapeHtml(r.requester.name) + '</span>' + verified + '</div>' +
+                            '<div class="bi-when">' + relTime(r.createdAt) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    msgLine +
+                    '<div class="req-actions">' +
+                        '<button class="req-accept" onclick="respondRequest(' + r.id + ', \'accept\')"><i class="fas fa-check"></i> Accept</button>' +
+                        '<button class="req-decline" onclick="respondRequest(' + r.id + ', \'decline\')"><i class="fas fa-times"></i> Decline</button>' +
+                    '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function renderConnected(outgoing, incoming) {
+        var listEl = document.getElementById('connected-list');
+        var acceptedOut = outgoing.filter(function(r) { return r.status === 'accepted' && r.sessionStatus === 'active'; });
+        var acceptedIn = incoming.filter(function(r) { return r.status === 'accepted'; });
+
+        if (!acceptedOut.length && !acceptedIn.length) {
+            listEl.innerHTML = '<div class="empty-state"><i class="fas fa-link"></i>No active connections</div>';
+            return;
+        }
+
+        var html = '';
+        acceptedOut.forEach(function(r) {
+            var initials = (r.host.name || 'S').split(' ').map(function(p){ return p.charAt(0); }).join('').slice(0,2).toUpperCase();
+            var avatar = r.host.avatar ? '<img src="' + escapeAttr(r.host.avatar) + '" alt="">' : initials;
+            var locBtn = r.hostLocation
+                ? '<a class="bi-btn" target="_blank" href="https://www.google.com/maps?q=' + r.hostLocation.latitude + ',' + r.hostLocation.longitude + '"><i class="fas fa-map-marker-alt"></i> View location</a>'
+                : '<button class="bi-btn" disabled>Waiting for location...</button>';
+            var trackBtn = '<a class="bi-btn" target="_blank" href="/safelink-track?key=' + escapeAttr(r.sessionKey) + '"><i class="fas fa-map"></i> Open tracker</a>';
+            html += '' +
+                '<div class="broadcast-item">' +
+                    '<div class="bi-header">' +
+                        '<div class="bi-avatar">' + avatar + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div class="bi-name-row"><span class="bi-name">' + escapeHtml(r.host.name) + '</span><span class="bi-verify"><i class="fas fa-shield-check"></i> Verified</span></div>' +
+                            '<div class="bi-when">Connected with you</div>' +
+                        '</div>' +
+                    '</div>' +
+                    (r.broadcastMessage ? '<div class="bi-msg">' + escapeHtml(r.broadcastMessage) + '</div>' : '') +
+                    '<div class="bi-actions">' + locBtn + trackBtn + '</div>' +
+                '</div>';
+        });
+        acceptedIn.forEach(function(r) {
+            var initials = (r.requester.name || 'S').split(' ').map(function(p){ return p.charAt(0); }).join('').slice(0,2).toUpperCase();
+            var avatar = r.requester.avatar ? '<img src="' + escapeAttr(r.requester.avatar) + '" alt="">' : initials;
+            html += '' +
+                '<div class="broadcast-item">' +
+                    '<div class="bi-header">' +
+                        '<div class="bi-avatar">' + avatar + '</div>' +
+                        '<div style="flex:1;min-width:0">' +
+                            '<div class="bi-name-row"><span class="bi-name">' + escapeHtml(r.requester.name) + '</span><span class="bi-verify"><i class="fas fa-shield-check"></i> Verified</span></div>' +
+                            '<div class="bi-when">Connected to your SafeLink</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        });
+        listEl.innerHTML = html;
+    }
+
+    window.respondRequest = function(requestId, action) {
+        authedFetch('/api/safelink/respond', {
+            method: 'POST',
+            body: { requestId: requestId, action: action }
+        })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    showToast(res.data.error || 'Failed', 'error');
+                    return;
+                }
+                showToast('Request ' + action + 'ed', 'success');
+                loadConnections();
+                loadDiscover();
+            })
+            .catch(function() { showToast('Failed', 'error'); });
+    };
+
+    // ---- Helpers ----
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(c) {
+            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+        });
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+    function relTime(iso) {
+        if (!iso) return '';
+        var d = new Date(iso);
+        var s = Math.floor((Date.now() - d.getTime()) / 1000);
+        if (s < 60) return 'just now';
+        if (s < 3600) return Math.floor(s/60) + 'm ago';
+        if (s < 86400) return Math.floor(s/3600) + 'h ago';
+        return Math.floor(s/86400) + 'd ago';
+    }
+
     // ---- Activate ----
     window.activateSafeLink = function() {
         var btn = document.getElementById('activate-btn');
         var labelInput = document.getElementById('label-input');
         var label = labelInput.value.trim();
+        var publicToggle = document.getElementById('public-toggle');
+        var broadcastInput = document.getElementById('broadcast-msg');
+        var isPublic = publicToggle && publicToggle.checked;
+        var broadcastMessage = broadcastInput ? broadcastInput.value.trim() : '';
+
+        if (isPublic && !broadcastMessage) {
+            showToast('Add a short broadcast message so others know your situation.', 'error');
+            return;
+        }
 
         if (!navigator.geolocation) {
             showToast('Your browser does not support location sharing.', 'error');
@@ -126,7 +412,14 @@
 
             authedFetch('/api/safelink/start', {
                 method: 'POST',
-                body: { latitude: lat, longitude: lng, label: label }
+                body: {
+                    latitude: lat,
+                    longitude: lng,
+                    label: label,
+                    isPublic: isPublic,
+                    broadcastMessage: isPublic ? broadcastMessage : null,
+                    category: isPublic ? state.category : null
+                }
             })
                 .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
                 .then(function(res) {
@@ -142,6 +435,7 @@
                     state.startedAt = Date.now();
                     state.trackingUrl = res.data.shareData && res.data.shareData.trackingUrl;
                     state.contactsNotified = res.data.contactsNotified || 0;
+                    state.isPublic = !!res.data.isPublic;
 
                     localStorage.setItem(ACTIVE_KEY, JSON.stringify({
                         sessionKey: state.sessionKey,

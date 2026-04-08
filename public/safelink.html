@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLink — SafeTea</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; padding: 24px 20px 60px; }
+        .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+        .back-link i { font-size: 12px; }
+        .header { text-align: center; margin: 8px 0 22px; }
+        .header-icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(232,160,181,0.12); border-radius: 18px; margin-bottom: 12px; }
+        .header-icon i { font-size: 26px; color: #E8A0B5; }
+        .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+        .header p { color: #8080A0; font-size: 14px; }
+
+        /* Situational message banner */
+        .message-banner { background: rgba(232,160,181,0.08); border: 1px solid rgba(232,160,181,0.22); border-radius: 18px; padding: 22px 20px; margin-bottom: 20px; text-align: center; }
+        .message-banner i { font-size: 22px; color: #E8A0B5; margin-bottom: 10px; }
+        .message-situation { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .message-reassurance { font-size: 14px; color: #E8A0B5; font-weight: 600; }
+
+        /* Cards */
+        .card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px; }
+        .card-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .card-desc { font-size: 13px; color: #B0B0C8; line-height: 1.6; margin-bottom: 18px; }
+
+        /* Active session */
+        .active-card { background: #1A1A2E; border: 2px solid #2ecc71; border-radius: 16px; padding: 24px 20px; margin-bottom: 16px; text-align: center; }
+        .active-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .active-label { font-size: 11px; font-weight: 700; color: #2ecc71; letter-spacing: 1.2px; text-transform: uppercase; }
+        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #2ecc71; animation: livePulse 1.4s infinite; }
+        @keyframes livePulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
+        .timer { font-size: 38px; font-weight: 300; color: #fff; font-variant-numeric: tabular-nums; margin-bottom: 6px; }
+        .timer-label { font-size: 12px; color: #8080A0; margin-bottom: 16px; }
+        .status-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+        .chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.12); color: #2ecc71; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+        .chip i { font-size: 11px; }
+        .chip.warn { background: rgba(241,196,15,0.12); color: #f1c40f; }
+        .end-btn { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 12px 28px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .end-btn:hover { background: rgba(231,76,60,0.08); }
+
+        /* Activate */
+        .activate-btn { width: 100%; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; border: none; padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 20px rgba(232,160,181,0.25); transition: transform 0.15s, box-shadow 0.15s; }
+        .activate-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,160,181,0.35); }
+        .activate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .label-input { width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 16px; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; margin-bottom: 12px; }
+        .label-input:focus { border-color: rgba(232,160,181,0.4); }
+
+        /* Steps */
+        .steps-section { margin-bottom: 16px; }
+        .step { display: flex; gap: 14px; margin-bottom: 14px; }
+        .step-num { min-width: 32px; height: 32px; background: rgba(232,160,181,0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #E8A0B5; font-weight: 700; font-size: 14px; }
+        .step-content h4 { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+        .step-content p { font-size: 13px; color: #8080A0; line-height: 1.5; }
+
+        /* Footer privacy */
+        .footer-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; text-align: center; margin-top: 4px; }
+        .footer-card i { font-size: 12px; color: #8080A0; margin-bottom: 6px; }
+        .footer-card p { font-size: 11px; color: #8080A0; line-height: 1.6; }
+
+        /* Tracking link */
+        .tracking-block { background: #141428; border: 1px solid rgba(232,160,181,0.18); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: left; }
+        .tracking-label { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+        .tracking-url { font-size: 12px; color: #E8A0B5; word-break: break-all; line-height: 1.5; margin-bottom: 10px; font-family: monospace; }
+        .copy-btn { background: rgba(232,160,181,0.12); border: 1px solid rgba(232,160,181,0.25); color: #E8A0B5; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .copy-btn.copied { background: rgba(46,204,113,0.12); border-color: rgba(46,204,113,0.3); color: #2ecc71; }
+
+        /* Tier gate */
+        .gate-card { background: #1A1A2E; border: 1px solid rgba(232,160,181,0.18); border-radius: 18px; padding: 36px 24px; text-align: center; margin: 24px 0; }
+        .gate-icon { font-size: 44px; color: #E8A0B5; margin-bottom: 14px; }
+        .gate-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .gate-desc { font-size: 14px; color: #B0B0C8; line-height: 1.6; margin-bottom: 22px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #22223A; color: #fff; padding: 14px 22px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); font-size: 13px; opacity: 0; transition: all 0.3s; z-index: 200; max-width: 90%; text-align: center; }
+        .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { border-color: rgba(231,76,60,0.4); }
+        .toast.success { border-color: rgba(46,204,113,0.4); }
+
+        .loading { text-align: center; padding: 60px 20px; color: #8080A0; }
+        .loading i { font-size: 28px; color: #E8A0B5; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav">
+            <a href="/dashboard.html" class="back-link"><i class="fas fa-arrow-left"></i> Dashboard</a>
+        </div>
+
+        <div class="header">
+            <div class="header-icon"><i class="fas fa-link"></i></div>
+            <h1>SafeLink</h1>
+            <p>Share your live location with people you trust.</p>
+        </div>
+
+        <div id="loading-state" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p style="margin-top:14px">Loading...</p>
+        </div>
+
+        <!-- Tier gate (free users) -->
+        <div id="gate-card" class="gate-card" style="display:none">
+            <div class="gate-icon"><i class="fas fa-link"></i></div>
+            <h2 class="gate-title">SafeLink is a SafeTea+ Feature</h2>
+            <p class="gate-desc">Share a live safety link with trusted contacts when you're out. Upgrade to SafeTea+ to unlock.</p>
+            <button onclick="window.location.href='/dashboard.html'" class="activate-btn" style="max-width:280px;margin:0 auto"><i class="fas fa-shield-heart"></i> Upgrade to SafeTea+</button>
+        </div>
+
+        <!-- Main content (plus users) -->
+        <div id="main-content" style="display:none">
+            <!-- Situational message banner -->
+            <div class="message-banner">
+                <i class="fas fa-shield-alt"></i>
+                <div class="message-situation" id="msg-situation"></div>
+                <div class="message-reassurance" id="msg-reassurance"></div>
+            </div>
+
+            <!-- Active session card -->
+            <div id="active-card" class="active-card" style="display:none">
+                <div class="active-header">
+                    <span class="active-label">SafeLink Active</span>
+                    <span class="live-dot"></span>
+                </div>
+                <div class="timer" id="active-timer">0:00</div>
+                <div class="timer-label">Sharing live location</div>
+
+                <div class="status-row">
+                    <div class="chip" id="chip-location"><i class="fas fa-map-marker-alt"></i> Location On</div>
+                    <div class="chip" id="chip-contacts"><i class="fas fa-users"></i> 0 Contacts Notified</div>
+                </div>
+
+                <div class="tracking-block">
+                    <div class="tracking-label">Live tracking link</div>
+                    <div class="tracking-url" id="active-tracking-url"></div>
+                    <button class="copy-btn" id="copy-link-btn" onclick="copyTrackingLink()">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+
+                <button class="end-btn" onclick="endSafeLink()">End SafeLink</button>
+            </div>
+
+            <!-- Start card -->
+            <div id="start-card" class="card">
+                <div class="card-title">Start a SafeLink</div>
+                <p class="card-desc">One tap shares your live location with your trusted contacts. They'll get a tracking link via SMS and can follow your journey until you end the session.</p>
+
+                <input id="label-input" class="label-input" type="text" placeholder="Where are you going? (optional)" maxlength="120">
+
+                <button id="activate-btn" class="activate-btn" onclick="activateSafeLink()">
+                    <i class="fas fa-link"></i> Activate SafeLink
+                </button>
+            </div>
+
+            <!-- How it works -->
+            <div class="card steps-section">
+                <div class="card-title">How SafeLink Works</div>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h4>Activate</h4>
+                        <p>Tap to start sharing your live location.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h4>Stay Connected</h4>
+                        <p>Your trusted contacts receive a link to follow your journey in real time.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h4>Arrive Safely</h4>
+                        <p>End the session when you're safe. Your contacts are notified automatically.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy footer -->
+            <div class="footer-card">
+                <i class="fas fa-lock"></i>
+                <p>Your location is only shared while SafeLink is active and only with contacts you choose. We never store or sell your location data.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="safelink.js"></script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeTea — SafeLink Live Tracking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; padding: 24px 20px 60px; }
+        .header { text-align: center; margin-bottom: 22px; padding-top: 12px; }
+        .header i { font-size: 28px; color: #E8A0B5; }
+        .header h1 { font-size: 20px; font-weight: 600; margin-top: 8px; }
+        .header p { color: #8080A0; font-size: 12px; margin-top: 4px; }
+
+        .status-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+        .status-active { background: rgba(46,204,113,0.15); color: #2ecc71; }
+        .status-active .pulse { width: 8px; height: 8px; background: #2ecc71; border-radius: 50%; animation: badgePulse 1.4s infinite; }
+        .status-ended { background: rgba(155,155,155,0.15); color: #B0B0C8; }
+        @keyframes badgePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.9); } }
+
+        .info-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .info-row:last-child { border-bottom: none; }
+        .info-icon { width: 32px; height: 32px; background: rgba(232,160,181,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .info-icon i { font-size: 13px; color: #E8A0B5; }
+        .info-label { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 14px; color: #fff; margin-top: 2px; }
+
+        #map-container { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; margin-bottom: 12px; height: 320px; }
+        .last-updated { text-align: center; font-size: 11px; color: #555; margin-bottom: 18px; }
+
+        .timer-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 16px; }
+        .timer-card .label { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .timer-card .value { font-size: 30px; font-weight: 300; color: #2ecc71; font-variant-numeric: tabular-nums; }
+
+        .action-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+        .action-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-911 { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; }
+        .btn-maps { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; }
+
+        .safe-banner { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.25); border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 16px; display: none; }
+        .safe-banner i { font-size: 32px; color: #2ecc71; margin-bottom: 8px; }
+        .safe-banner h3 { color: #2ecc71; font-size: 18px; margin-bottom: 6px; }
+        .safe-banner p { color: #B0B0C8; font-size: 13px; }
+
+        .info-card { background: rgba(232,160,181,0.06); border: 1px solid rgba(232,160,181,0.18); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .info-card h3 { color: #E8A0B5; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .info-card p { color: #B0B0C8; font-size: 12px; line-height: 1.6; }
+
+        .loading { text-align: center; padding: 80px 20px; }
+        .loading i { font-size: 32px; color: #E8A0B5; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg { text-align: center; padding: 80px 20px; color: #8080A0; }
+        .error-msg i { font-size: 36px; color: #e74c3c; margin-bottom: 14px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-link"></i>
+            <h1>SafeLink Live Tracking</h1>
+            <p>Real-time location of someone you care about</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p style="margin-top:14px;color:#8080A0">Loading SafeLink session...</p>
+        </div>
+
+        <div id="content" style="display:none">
+            <div id="safe-banner" class="safe-banner">
+                <i class="fas fa-check-circle"></i>
+                <h3>Arrived Safely</h3>
+                <p>This SafeLink session has ended. The person you're following is safe.</p>
+            </div>
+
+            <div class="status-card">
+                <div id="status-badge" class="status-badge status-active">
+                    <span class="pulse"></span>
+                    <span id="status-text">Sharing Live Location</span>
+                </div>
+                <div id="session-info"></div>
+            </div>
+
+            <div id="map-container"></div>
+            <div id="last-updated" class="last-updated"></div>
+
+            <div id="elapsed-card" class="timer-card">
+                <div class="label">Session Duration</div>
+                <div class="value" id="elapsed-value">0:00</div>
+            </div>
+
+            <div class="action-btns">
+                <a id="btn-maps" href="#" target="_blank" class="action-btn btn-maps"><i class="fas fa-map-marker-alt"></i> Open in Maps</a>
+                <a href="tel:911" class="action-btn btn-911"><i class="fas fa-exclamation-triangle"></i> Call 911</a>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Why am I seeing this?</h3>
+                <p>Someone you know used <strong>SafeTea SafeLink</strong> to share their live location with you because they wanted you to know they're safe. You'll see updates here until they end the session.</p>
+                <p style="margin-top:8px"><strong>If you're worried:</strong> Try calling them. If you can't reach them and you're concerned for their safety, call 911 and share this link with the operator.</p>
+            </div>
+        </div>
+
+        <div id="error" class="error-msg" style="display:none">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>SafeLink session not found or link has expired.</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var key = params.get('key');
+        var map = null;
+        var marker = null;
+        var trailLine = null;
+        var pollTimeout = null;
+        var elapsedInterval = null;
+        var sessionStartTime = null;
+
+        if (!key) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            return;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function initMap(lat, lng) {
+            if (map) { map.remove(); }
+            map = L.map('map-container').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup('<b>Current location</b>').openPopup();
+        }
+
+        function updateMap(lat, lng, trail) {
+            if (!map) { initMap(lat, lng); }
+            else {
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+            }
+
+            // Draw trail polyline if we have multiple points
+            if (trail && trail.length > 1) {
+                var latlngs = trail.map(function(t) { return [parseFloat(t.latitude), parseFloat(t.longitude)]; });
+                if (trailLine) { map.removeLayer(trailLine); }
+                trailLine = L.polyline(latlngs, { color: '#E8A0B5', weight: 4, opacity: 0.7 }).addTo(map);
+            }
+        }
+
+        function startElapsedTimer(createdAt) {
+            sessionStartTime = new Date(createdAt).getTime();
+            var valEl = document.getElementById('elapsed-value');
+            if (elapsedInterval) clearInterval(elapsedInterval);
+            var tick = function() {
+                var elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                var h = Math.floor(elapsed / 3600);
+                var m = Math.floor((elapsed % 3600) / 60);
+                var s = elapsed % 60;
+                var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+                if (valEl) valEl.textContent = h > 0 ? (h + ':' + pad(m) + ':' + pad(s)) : (m + ':' + pad(s));
+            };
+            tick();
+            elapsedInterval = setInterval(tick, 1000);
+        }
+
+        function freezeElapsedTimer(createdAt, stoppedAt) {
+            if (elapsedInterval) { clearInterval(elapsedInterval); elapsedInterval = null; }
+            if (!createdAt || !stoppedAt) return;
+            var elapsed = Math.floor((new Date(stoppedAt).getTime() - new Date(createdAt).getTime()) / 1000);
+            var h = Math.floor(elapsed / 3600);
+            var m = Math.floor((elapsed % 3600) / 60);
+            var s = elapsed % 60;
+            var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+            var valEl = document.getElementById('elapsed-value');
+            if (valEl) {
+                valEl.textContent = h > 0 ? (h + ':' + pad(m) + ':' + pad(s)) : (m + ':' + pad(s));
+                valEl.style.color = '#B0B0C8';
+            }
+        }
+
+        function render(s, trail) {
+            var badge = document.getElementById('status-badge');
+            var statusText = document.getElementById('status-text');
+            var safeBanner = document.getElementById('safe-banner');
+
+            if (s.status === 'ended') {
+                badge.className = 'status-badge status-ended';
+                badge.innerHTML = '<i class="fas fa-check"></i> <span id="status-text">Ended — Arrived Safely</span>';
+                safeBanner.style.display = 'block';
+                freezeElapsedTimer(s.createdAt, s.stoppedAt);
+            } else {
+                badge.className = 'status-badge status-active';
+                badge.innerHTML = '<span class="pulse"></span> <span id="status-text">Sharing Live Location</span>';
+                safeBanner.style.display = 'none';
+                if (!elapsedInterval) startElapsedTimer(s.createdAt);
+            }
+
+            var infoHtml = '';
+            infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-user"></i></div><div><div class="info-label">Following</div><div class="info-value">' + escapeHtml(s.userName) + '</div></div></div>';
+            if (s.label) {
+                infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-route"></i></div><div><div class="info-label">Heading To</div><div class="info-value">' + escapeHtml(s.label) + '</div></div></div>';
+            }
+            infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-clock"></i></div><div><div class="info-label">Started</div><div class="info-value">' + new Date(s.createdAt).toLocaleString() + '</div></div></div>';
+            if (s.stoppedAt) {
+                infoHtml += '<div class="info-row"><div class="info-icon"><i class="fas fa-flag-checkered"></i></div><div><div class="info-label">Ended</div><div class="info-value">' + new Date(s.stoppedAt).toLocaleString() + '</div></div></div>';
+            }
+            document.getElementById('session-info').innerHTML = infoHtml;
+
+            if (s.latitude && s.longitude) {
+                var lat = parseFloat(s.latitude);
+                var lng = parseFloat(s.longitude);
+                updateMap(lat, lng, trail);
+                var btnMaps = document.getElementById('btn-maps');
+                if (btnMaps) btnMaps.href = 'https://maps.google.com/?q=' + lat + ',' + lng;
+            }
+
+            document.getElementById('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+        }
+
+        function loadSession() {
+            fetch('/api/safelink/session?key=' + encodeURIComponent(key))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    document.getElementById('loading').style.display = 'none';
+                    if (!data.success) {
+                        document.getElementById('error').style.display = 'block';
+                        return;
+                    }
+                    document.getElementById('content').style.display = 'block';
+                    render(data.session, data.trail || []);
+
+                    // Re-poll every 15 seconds while active
+                    if (data.session.status === 'active') {
+                        if (pollTimeout) clearTimeout(pollTimeout);
+                        pollTimeout = setTimeout(loadSession, 15000);
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                });
+        }
+
+        loadSession();
+    })();
+    </script>
+</body>
+</html>

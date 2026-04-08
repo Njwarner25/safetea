@@ -57,11 +57,11 @@ $PB -c "Delete :NSAppTransportSecurity" "$PLIST" 2>/dev/null || true
 $PB -c "Set :CFBundleShortVersionString $VERSION_NAME" "$PLIST"
 $PB -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST"
 
-# Bundle ID sanity check — must match app.getsafetea
+# Bundle ID sanity check — must match app.getsafetea.mobile
 BUNDLE_ID=$($PB -c "Print :CFBundleIdentifier" "$PLIST")
-if [[ "$BUNDLE_ID" != "app.getsafetea" ]]; then
-  echo "WARN: Info.plist CFBundleIdentifier is '$BUNDLE_ID', forcing to 'app.getsafetea'"
-  $PB -c "Set :CFBundleIdentifier app.getsafetea" "$PLIST"
+if [[ "$BUNDLE_ID" != "app.getsafetea.mobile" ]]; then
+  echo "WARN: Info.plist CFBundleIdentifier is '$BUNDLE_ID', forcing to 'app.getsafetea.mobile'"
+  $PB -c "Set :CFBundleIdentifier app.getsafetea.mobile" "$PLIST"
 fi
 
 # Display name
@@ -70,5 +70,5 @@ $PB -c "Set :CFBundleDisplayName SafeTea" "$PLIST" 2>/dev/null || \
 
 echo "iOS metadata set:"
 echo "  Version: $VERSION_NAME ($BUILD_NUMBER)"
-echo "  Bundle:  app.getsafetea"
+echo "  Bundle:  app.getsafetea.mobile"
 echo "  Plist:   $PLIST"

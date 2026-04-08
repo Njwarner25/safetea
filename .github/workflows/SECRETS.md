@@ -93,7 +93,7 @@ Paste the base64 blob (one giant line, no whitespace) as the secret value.
 
 **CRITICAL:** Save the original `safetea-upload.jks` somewhere safe forever
 (1Password attachment is ideal). If you lose it, you cannot publish updates
-to the Play Store under the same `app.getsafetea` package — Google will
+to the Play Store under the same `app.getsafetea.mobile` package — Google will
 require a new package name and a new app listing. **Do not commit it to git.**
 
 ### 7. `ANDROID_KEYSTORE_PASSWORD`
@@ -128,7 +128,7 @@ manually.
    New Key → JSON** → download the `.json` file
 6. Back in Play Console **API access** page → click **Grant access** next
    to the new service account
-   - **App permissions:** add SafeTea (`app.getsafetea`)
+   - **App permissions:** add SafeTea (`app.getsafetea.mobile`)
    - **Account permissions:** check **Release apps to testing tracks**,
      **Release to production**, **Manage testing tracks**
 7. Open the downloaded JSON file in any text editor

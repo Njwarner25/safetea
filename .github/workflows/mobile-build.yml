@@ -166,7 +166,7 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_STYLE=Automatic \
-            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea \
+            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea.mobile \
             archive
 
       - name: Export .ipa
@@ -214,7 +214,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY= \
             PROVISIONING_PROFILE_SPECIFIER= \
-            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea \
+            PRODUCT_BUNDLE_IDENTIFIER=app.getsafetea.mobile \
             archive
           echo "::notice::Unsigned archive produced — add signing secrets to upload to TestFlight"
 
@@ -420,7 +420,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: app.getsafetea
+          packageName: app.getsafetea.mobile
           releaseFiles: safetea-capacitor/android/app/build/outputs/bundle/release/app-release.aab
           track: internal
           status: draft

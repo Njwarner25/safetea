@@ -19,7 +19,7 @@ This directory is the **iOS + Android native shell** for SafeTea. It does **not*
 - **Xcode 26** or later (App Store)
 - **CocoaPods** — `sudo gem install cocoapods`
 - **Node 20+** — `brew install node`
-- Apple Developer account (Nate has this) with bundle ID `app.getsafetea` provisioned
+- Apple Developer account (Nate has this) with bundle ID `app.getsafetea.mobile` provisioned
 
 ### Android (any OS)
 - **Android Studio Ladybug** or newer
@@ -56,7 +56,7 @@ npx cap open ios
 In Xcode:
 1. Select the **App** target → **Signing & Capabilities**
 2. Set **Team** to Nate's Apple Developer team
-3. Confirm **Bundle Identifier** = `app.getsafetea`
+3. Confirm **Bundle Identifier** = `app.getsafetea.mobile`
 4. Add capabilities: **Push Notifications**, **Background Modes** (check "Remote notifications")
 5. Open `ios/App/App/Info.plist` and confirm/add:
    - `NSCameraUsageDescription` — "SafeTea uses the camera for identity verification and photo uploads."

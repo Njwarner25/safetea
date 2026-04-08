@@ -78,8 +78,13 @@ jobs:
       - name: Verify Xcode version
         shell: bash
         run: |
-          xcodebuild -version
-          XCV=$(xcodebuild -version | head -1 | awk '{print $2}')
+          # Don't pipe xcodebuild stdout to head — xcodebuild is a Cocoa app
+          # and raises NSFileHandleOperationException ("Broken pipe") when
+          # head closes the pipe early, which crashes the process and trips
+          # set -o pipefail. Capture all output first, then parse.
+          XCOUT=$(xcodebuild -version)
+          echo "$XCOUT"
+          XCV=$(printf '%s\n' "$XCOUT" | awk 'NR==1 {print $2}')
           MAJOR=${XCV%%.*}
           if [[ "$MAJOR" -lt 26 ]]; then
             echo "::warning::Xcode $XCV is older than 26.x — ITMS-90725 requires Xcode 26 for submissions after 2026-04-28"

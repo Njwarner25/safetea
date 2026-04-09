@@ -3,24 +3,139 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1A1A2E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SafeTea" />
   <title>SafeTea</title>
   <meta http-equiv="refresh" content="0; url=https://getsafetea.app/" />
   <link rel="canonical" href="https://getsafetea.app/" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <style>
-    html,body{margin:0;height:100%;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;color:#333}
-    .wrap{text-align:center}
-    img{max-width:70vw;height:auto}
-    p{margin-top:24px;font-size:14px;color:#888}
+    :root {
+      --bg: #1A1A2E;
+      --bg-2: #22223A;
+      --accent: #E8A0B5;
+      --text: #F5F5FA;
+      --muted: rgba(245,245,250,0.55);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    body {
+      background: radial-gradient(ellipse at center, var(--bg-2) 0%, var(--bg) 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.6s ease-out;
+    }
+    .logo-frame {
+      width: 128px;
+      height: 128px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(232,160,181,0.14), rgba(232,160,181,0.04));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 12px 40px rgba(232,160,181,0.18),
+        0 0 0 1px rgba(232,160,181,0.18) inset;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    .logo-frame img {
+      width: 96px;
+      height: 96px;
+      display: block;
+      filter: drop-shadow(0 4px 14px rgba(232,160,181,0.35));
+    }
+    .brand {
+      margin-top: 28px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand .accent { color: var(--accent); }
+    .tagline {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .dots {
+      margin-top: 36px;
+      display: flex;
+      gap: 8px;
+    }
+    .dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.35;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.15s; }
+    .dots span:nth-child(3) { animation-delay: 0.3s; }
+    .footer {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom) + 24px);
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(245,245,250,0.3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);    box-shadow: 0 12px 40px rgba(232,160,181,0.18), 0 0 0 1px rgba(232,160,181,0.18) inset; }
+      50%      { transform: scale(1.04); box-shadow: 0 14px 48px rgba(232,160,181,0.32), 0 0 0 1px rgba(232,160,181,0.30) inset; }
+    }
+    @keyframes bounce {
+      0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
+      40%           { opacity: 1;    transform: translateY(-4px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .logo-frame, .dots span, .wrap { animation: none !important; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <img src="logo.png" alt="SafeTea" onerror="this.style.display='none'"/>
-    <p>Loading…</p>
+    <div class="logo-frame">
+      <img src="icon-512.png" alt="SafeTea" onerror="this.style.display='none'" />
+    </div>
+    <div class="brand">Safe<span class="accent">Tea</span></div>
+    <div class="tagline">Date Smarter. Stay Safer.</div>
+    <div class="dots" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
   </div>
+  <div class="footer">Loading your safe space</div>
   <script>
     // Fallback if meta refresh is blocked by WKWebView
-    window.location.replace("https://getsafetea.app/");
+    setTimeout(function () {
+      window.location.replace("https://getsafetea.app/");
+    }, 50);
   </script>
 </body>
 </html>

@@ -11,6 +11,11 @@ dist/
 *.apk
 *.aab
 
+# Generated assets / staging files (re-derived from public/icon.png)
+.source-icon-1024.png
+icons/
+www/manifest.json
+
 # Keystores — NEVER commit
 *.keystore
 *.jks

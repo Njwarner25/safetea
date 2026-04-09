@@ -107,6 +107,15 @@ jobs:
           npx cap add ios
           npx cap sync ios
 
+      - name: Generate native iOS icons + splash from clean source
+        run: |
+          npx capacitor-assets generate \
+            --ios \
+            --iconBackgroundColor '#F4D9E1' \
+            --iconBackgroundColorDark '#1A1A2E' \
+            --splashBackgroundColor '#1A1A2E' \
+            --splashBackgroundColorDark '#1A1A2E'
+
       - name: Set iOS metadata (Info.plist + version)
         shell: bash
         run: |
@@ -528,6 +537,15 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+
+      - name: Generate native Android icons + splash from clean source
+        run: |
+          npx capacitor-assets generate \
+            --android \
+            --iconBackgroundColor '#F4D9E1' \
+            --iconBackgroundColorDark '#1A1A2E' \
+            --splashBackgroundColor '#1A1A2E' \
+            --splashBackgroundColorDark '#1A1A2E'
 
       - name: Set Android version (build.gradle)
         shell: bash

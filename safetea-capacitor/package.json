@@ -7,7 +7,8 @@
     "sync": "cap sync",
     "ios": "cap open ios",
     "android": "cap open android",
-    "assets": "capacitor-assets generate --iconBackgroundColor '#ffffff' --splashBackgroundColor '#ffffff'",
+    "assets:source": "node generate-native-assets.js",
+    "assets": "node generate-native-assets.js && capacitor-assets generate --iconBackgroundColor '#F4D9E1' --iconBackgroundColorDark '#1A1A2E' --splashBackgroundColor '#1A1A2E' --splashBackgroundColorDark '#1A1A2E'",
     "build:ios": "cap sync ios && cap open ios",
     "build:android": "cap sync android && cap open android"
   },
@@ -24,7 +25,8 @@
     "@capacitor/push-notifications": "^7.0.0",
     "@capacitor/share": "^7.0.0",
     "@capacitor/splash-screen": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0"
+    "@capacitor/status-bar": "^7.0.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5"

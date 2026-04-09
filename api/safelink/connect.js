@@ -12,11 +12,13 @@ module.exports = async function handler(req, res) {
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const isVerified = user.identity_verified === true || (typeof user.trust_score === 'number' && user.trust_score >= 60);
-  if (!isVerified) {
+  const trustScore = typeof user.trust_score === 'number' ? user.trust_score : 0;
+  if (trustScore < 100) {
     return res.status(403).json({
-      error: 'Identity verification required to connect with other users',
-      code: 'verification_required',
+      error: 'Connecting with other users requires a perfect trust score (100/100). Complete every verification step in your profile to unlock.',
+      code: 'trust_score_required',
+      required: 100,
+      current: trustScore,
     });
   }
 

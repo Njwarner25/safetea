@@ -139,16 +139,20 @@
         var fields = document.getElementById('broadcast-fields');
         var warning = document.getElementById('verify-warning');
 
-        var isVerified = state.user && (state.user.identity_verified === true || (state.user.trust_score || 0) >= 60);
+        var trustScore = (state.user && typeof state.user.trust_score === 'number') ? state.user.trust_score : 0;
+        var isVerified = trustScore >= 100;
 
         if (toggle.checked && !isVerified) {
             toggle.checked = false;
             fields.classList.remove('visible');
-            warning.style.display = 'block';
+            if (warning) {
+                warning.innerHTML = '<i class="fas fa-shield-alt"></i>Public broadcasts require a perfect trust score (100/100). You\'re at <strong>' + trustScore + '/100</strong>. <a href="/verify.html" style="color:#f1c40f;text-decoration:underline">Complete verification</a>';
+                warning.style.display = 'block';
+            }
             return;
         }
 
-        warning.style.display = 'none';
+        if (warning) warning.style.display = 'none';
         if (toggle.checked) {
             fields.classList.add('visible');
         } else {
@@ -174,8 +178,9 @@
             .then(function(res) {
                 var list = document.getElementById('discover-list');
                 if (!res.ok) {
-                    if (res.data && res.data.code === 'verification_required') {
-                        list.innerHTML = '<div class="empty-state"><i class="fas fa-shield-alt"></i>Identity verification required to discover broadcasts.<br><a href="/verify.html" style="color:#E8A0B5">Verify now</a></div>';
+                    if (res.data && res.data.code === 'trust_score_required') {
+                        var cur = (res.data.current != null) ? res.data.current : 0;
+                        list.innerHTML = '<div class="empty-state"><i class="fas fa-shield-alt"></i>Browsing SafeLinks requires a perfect trust score (100/100).<br>You\'re at <strong>' + cur + '/100</strong>.<br><a href="/verify.html" style="color:#E8A0B5">Complete verification</a></div>';
                     } else {
                         list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i>Could not load broadcasts</div>';
                     }

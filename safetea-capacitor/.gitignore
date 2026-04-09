@@ -11,8 +11,11 @@ dist/
 *.apk
 *.aab
 
-# Generated assets / staging files (re-derived from public/icon.png)
+# Generated assets / staging files (re-derived from brand logo source)
 .source-icon-1024.png
+.source-brand-logo.png
+.cup-rough.png
+.staging-web-icons/
 icons/
 www/manifest.json
 

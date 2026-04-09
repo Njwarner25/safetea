@@ -53,6 +53,14 @@ set_string NSFaceIDUsageDescription \
 # Disable arbitrary loads — we only talk to getsafetea.app over HTTPS.
 $PB -c "Delete :NSAppTransportSecurity" "$PLIST" 2>/dev/null || true
 
+# Export compliance — declare we only use standard system HTTPS, which is
+# exempt from US export regulations (qualifies under 5D002 b.1 / Note 4).
+# Setting this to false in Info.plist removes the "Missing Compliance"
+# prompt on every TestFlight upload and lets builds go straight to testers.
+# Reference: https://developer.apple.com/documentation/security/complying_with_encryption_export_regulations
+$PB -c "Delete :ITSAppUsesNonExemptEncryption" "$PLIST" 2>/dev/null || true
+$PB -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+
 # Version + build
 $PB -c "Set :CFBundleShortVersionString $VERSION_NAME" "$PLIST"
 $PB -c "Set :CFBundleVersion $BUILD_NUMBER" "$PLIST"

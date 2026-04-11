@@ -1,5 +1,9 @@
 const { run, getOne } = require('./_utils/db');
 
+// CRITICAL: Disable Vercel's default JSON body parser so we get the raw body
+// for Stripe signature verification. Without this, req stream is already consumed.
+module.exports.config = { api: { bodyParser: false } };
+
 module.exports = async function handler(req, res) {
   // No CORS needed for webhooks — Stripe calls this directly
   if (req.method !== 'POST') {
@@ -8,6 +12,8 @@ module.exports = async function handler(req, res) {
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  console.log('STRIPE_WEBHOOK_SECRET set:', !!webhookSecret);
 
   if (!stripeKey) {
     return res.status(500).json({ error: 'Stripe not configured' });
@@ -132,6 +138,6 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ received: true });
   } catch (err) {
     console.error('Webhook error:', err);
-    return res.status(500).json({ error: 'Webhook handler failed' });
+    return res.status(400).send('Webhook error: ' + err.message);
   }
 };

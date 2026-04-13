@@ -25,7 +25,8 @@
         { "path": "/api/cron/weekly-report", "schedule": "0 8 * * 1" },
         { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" },
         { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" },
-        { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" }
+        { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" },
+        { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -181,6 +182,7 @@
         { "source": "/api/cron/recalc-trust-scores", "destination": "/api/cron/recalc-trust-scores" },
         { "source": "/api/cron/run-ai-tasks", "destination": "/api/cron/run-ai-tasks" },
         { "source": "/api/cron/expire-photo-posts", "destination": "/api/cron/expire-photo-posts" },
+        { "source": "/api/cron/seed-daily", "destination": "/api/cron/seed-daily" },
         { "source": "/api/admin/ai-tasks", "destination": "/api/admin/ai-tasks" },
         { "source": "/api/admin/removal-requests", "destination": "/api/admin/removal-requests" },
         { "source": "/api/migrate-ai-tasks", "destination": "/api/migrate-ai-tasks" },

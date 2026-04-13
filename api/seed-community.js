@@ -176,10 +176,11 @@ module.exports = async function handler(req, res) {
         const minutesOffset = Math.floor(Math.random() * 60);
         const postDate = new Date(now - (daysAgo * 86400000) + (hoursOffset * 3600000) + (minutesOffset * 60000));
 
+        const postTitle = post.body.length > 60 ? post.body.substring(0, 57) + '...' : post.body;
         const newPost = await getOne(
-          `INSERT INTO posts (user_id, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, $4, 'community', $5) RETURNING id`,
-          [userId, post.body, post.category, cityName, postDate.toISOString()]
+          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', $6) RETURNING id`,
+          [userId, postTitle, post.body, post.category, cityName, postDate.toISOString()]
         );
         postIds.push({ id: newPost.id, category: post.category });
         results.posts_created++;

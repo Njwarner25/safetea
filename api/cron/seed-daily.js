@@ -158,11 +158,14 @@ module.exports = async function handler(req, res) {
         );
         if (dupe) continue;
 
+        // Generate a short title from the body
+        const title = body.length > 60 ? body.substring(0, 57) + '...' : body;
+
         // Insert post
         await run(
-          `INSERT INTO posts (user_id, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, $4, 'community', NOW())`,
-          [account.id, body, category, cityName]
+          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', NOW())`,
+          [account.id, title, body, category, cityName]
         );
 
         results.posts.push({ city: cityName, account: account.display_name, category, source, preview: body.substring(0, 60) });

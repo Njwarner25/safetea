@@ -847,6 +847,38 @@
         pvRenderGrid();
     };
 
+    // ============ BUY MORE PHOTO SCANS ============
+    window.openBuyScansModal = function() {
+        var modal = document.getElementById('pv-buy-modal');
+        if (modal) { modal.style.display = 'flex'; }
+    };
+    window.closeBuyScansModal = function() {
+        var modal = document.getElementById('pv-buy-modal');
+        if (modal) { modal.style.display = 'none'; }
+        var err = document.getElementById('pv-buy-error');
+        if (err) err.style.display = 'none';
+    };
+    window.purchaseScans = function(packageType) {
+        var err = document.getElementById('pv-buy-error');
+        if (err) err.style.display = 'none';
+        fetch('/api/photos/purchase-check', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+            body: JSON.stringify({ package: packageType })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                if (err) { err.textContent = data.error || 'Something went wrong'; err.style.display = 'block'; }
+            }
+        })
+        .catch(function() {
+            if (err) { err.textContent = 'Network error — please try again'; err.style.display = 'block'; }
+        });
+    };
+
     // ============ DATE CHECK-OUT / CHECK-IN ============
     var activeDateData = null;
     var activeDateTimer = null;
@@ -2823,53 +2855,6 @@
         if (sub === 'roomview') loadRoomView();
     };
 
-    // ==================== COMMUNITY MENTIONS ====================
-    window.loadCommunityMentions = function() {
-        var name = document.getElementById('bg-name') ? document.getElementById('bg-name').value.trim() : '';
-        var container = document.getElementById('community-mentions-results');
-        if (!name || !container) {
-            showToast('Enter a name in the Background Check form first.', true);
-            return;
-        }
-
-        container.innerHTML = '<div style="text-align:center;padding:16px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Searching community posts...</div>';
-
-        apiFetch('/posts?feed=community&limit=50').then(function(posts) {
-            if (!posts || posts.length === 0) {
-                container.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No community posts to search.</p>';
-                return;
-            }
-
-            var searchTerms = name.toLowerCase().split(/\s+/);
-            var matches = posts.filter(function(p) {
-                var content = ((p.body || '') + ' ' + (p.title || '')).toLowerCase();
-                return searchTerms.some(function(term) { return term.length >= 2 && content.indexOf(term) !== -1; });
-            });
-
-            if (matches.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:16px"><i class="fas fa-check-circle" style="color:#2ecc71;font-size:28px;display:block;margin-bottom:8px"></i><p style="color:#8080A0;font-size:13px">No community posts mention "' + escapeHtmlSafe(name) + '".</p></div>';
-                return;
-            }
-
-            container.innerHTML = '<p style="color:#E8A0B5;font-size:13px;font-weight:600;margin-bottom:12px">' + matches.length + ' post(s) mention "' + escapeHtmlSafe(name) + '"</p>' +
-                matches.slice(0, 10).map(function(p) {
-                    var highlighted = escapeHtmlSafe(p.body || '');
-                    searchTerms.forEach(function(term) {
-                        if (term.length >= 2) {
-                            var regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-                            highlighted = highlighted.replace(regex, '<span style="background:rgba(231,76,60,0.2);color:#e74c3c;padding:1px 3px;border-radius:3px;font-weight:600">$1</span>');
-                        }
-                    });
-                    return '<div style="background:#1A1A2E;border-radius:10px;padding:14px;margin-bottom:8px">' +
-                        '<div style="font-size:12px;color:#666;margin-bottom:6px">' + getTimeAgoFromDate(p.created_at) + (p.city ? ' &bull; ' + escapeHtmlSafe(p.city) : '') + '</div>' +
-                        '<div style="font-size:13px;color:#ccc;line-height:1.5">' + highlighted + '</div>' +
-                    '</div>';
-                }).join('');
-        }).catch(function() {
-            container.innerHTML = '<p style="color:#e74c3c;font-size:13px">Failed to search community posts.</p>';
-        });
-    };
-
     // ==================== TEA TALK (Community Posts) ====================
     function hubFormatBody(text) {
         if (!text) return '';
@@ -3448,7 +3433,6 @@
         { fact: 'Safety planning is the single most effective tool for reducing harm. SafeTea\'s Date Check-In is your digital safety plan.', source: 'SafeTea' },
         { fact: 'You are never responsible for someone else\'s abusive behavior — no matter what they tell you.', source: 'National Domestic Violence Hotline' },
         { fact: 'Communities that talk openly about dating violence see 40% higher reporting rates and faster interventions.', source: 'Journal of Community Psychology' },
-        { fact: 'Background checks can reveal undisclosed criminal history — 1 in 8 online daters has a prior record.', source: 'Journal of Forensic Sciences' },
         { fact: 'Women who use safety apps report feeling 60% more confident going on dates.', source: 'Dating Safety Alliance Survey' }
     ];
 

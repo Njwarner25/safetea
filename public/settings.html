@@ -2,7 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- Mobile / PWA / native shell branding -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <meta name="application-name" content="SafeTea">
+  <meta name="format-detection" content="telephone=no">
   <title>Settings - SafeTea</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -425,6 +437,162 @@
       padding: 24px 0 16px;
     }
 
+    /* ===== LINKING PREFERENCES ===== */
+    .linking-card {
+      padding: 18px;
+    }
+    .linking-card .lp-intro {
+      font-size: 13px;
+      color: #8080A0;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .linking-card .lp-private {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(155,89,182,0.12);
+      color: #c8a4d8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .linking-card .lp-private i { font-size: 10px; }
+    .lp-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .lp-chip {
+      padding: 9px 14px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s;
+      font-family: inherit;
+    }
+    .lp-chip:hover {
+      border-color: rgba(232,160,181,0.4);
+      color: #fff;
+    }
+    .lp-chip.selected {
+      background: rgba(232,160,181,0.18);
+      border-color: #E8A0B5;
+      color: #E8A0B5;
+    }
+    .lp-chip.selected::before {
+      content: '\2713  ';
+      font-weight: 700;
+    }
+    .lp-save-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .lp-save-btn:hover {
+      box-shadow: 0 4px 15px rgba(232,160,181,0.3);
+      transform: translateY(-1px);
+    }
+    .lp-save-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .lp-locked {
+      padding: 22px 18px;
+      text-align: center;
+    }
+    .lp-locked .lp-lock-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(232,160,181,0.12);
+      color: #E8A0B5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .lp-locked h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .lp-locked p {
+      font-size: 13px;
+      color: #8080A0;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .lp-gate-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0 16px;
+      text-align: left;
+    }
+    .lp-gate-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .lp-gate-item .lp-status {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .lp-gate-item.ok .lp-status {
+      background: rgba(46,204,113,0.16);
+      color: #2ecc71;
+    }
+    .lp-gate-item.missing .lp-status {
+      background: rgba(231,76,60,0.16);
+      color: #e74c3c;
+    }
+    .lp-gate-item .lp-gate-text { flex: 1; }
+    .lp-gate-item a {
+      color: #E8A0B5;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .lp-disclaimer {
+      font-size: 11px;
+      color: #555;
+      line-height: 1.5;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
     /* ===== SPINNER ===== */
     .spinner {
       display: inline-block;
@@ -439,6 +607,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+    <link rel="stylesheet" href="/mobile-viewport-lock.css">
 </head>
 <body>
 
@@ -543,6 +712,45 @@
             </div>
           </div>
           <div class="toggle on" id="toggle-safety"><div class="knob"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINKING PREFERENCES (verified + SafeTea+ only) -->
+    <div class="settings-section">
+      <div class="section-label">Linking Preferences</div>
+      <div class="settings-group" id="linking-pref-group">
+        <!-- Locked state -->
+        <div class="lp-locked" id="lp-locked-state" style="display:none;">
+          <div class="lp-lock-icon"><i class="fas fa-lock"></i></div>
+          <h4>Who you're open to linking with</h4>
+          <p>Tell SafeTea who you'd prefer to connect with. This stays 100% private &mdash; only visible to you.</p>
+          <div class="lp-gate-list">
+            <div class="lp-gate-item" id="lp-gate-verified">
+              <span class="lp-status"><i class="fas fa-times"></i></span>
+              <span class="lp-gate-text">100% identity verified</span>
+              <a href="/verify.html">Verify &rsaquo;</a>
+            </div>
+            <div class="lp-gate-item" id="lp-gate-paid">
+              <span class="lp-status"><i class="fas fa-times"></i></span>
+              <span class="lp-gate-text">SafeTea+ membership</span>
+              <a href="/dashboard.html#upgrade">Upgrade &rsaquo;</a>
+            </div>
+          </div>
+          <p style="font-size:11px;color:#555;margin-bottom:0;">Both required to unlock.</p>
+        </div>
+
+        <!-- Unlocked state -->
+        <div class="linking-card" id="lp-unlocked-state" style="display:none;">
+          <div class="lp-private"><i class="fas fa-eye-slash"></i> Private &mdash; only you can see this</div>
+          <div class="lp-intro">Choose who you're open to linking with on SafeTea. Select all that apply.</div>
+          <div class="lp-chips" id="lp-chips">
+            <!-- chips injected by JS -->
+          </div>
+          <button class="lp-save-btn" id="lp-save-btn" onclick="saveLinkingPreferences()">Save Preferences</button>
+          <div class="lp-disclaimer">
+            SafeTea will never display this on your profile, in search results, or to other users. You can change or clear it anytime.
+          </div>
         </div>
       </div>
     </div>
@@ -901,6 +1109,116 @@
       window.location.href = '/login.html';
     }
 
+    // ===== LINKING PREFERENCES =====
+    const LP_OPTIONS = [
+      { value: 'female',       label: 'Female' },
+      { value: 'male',         label: 'Male' },
+      { value: 'trans_woman',  label: 'Trans Woman' },
+      { value: 'trans_man',    label: 'Trans Man' },
+      { value: 'non_binary',   label: 'Non-Binary' },
+      { value: 'genderfluid',  label: 'Genderfluid' },
+      { value: 'agender',      label: 'Agender' },
+      { value: 'other',        label: 'Other' }
+    ];
+    let lpSelected = new Set();
+
+    async function loadLinkingPreferences() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch(API_BASE + '/users/linking-preferences', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 403 && data.gate) {
+          showLPLocked(data.gate);
+          return;
+        }
+        if (!res.ok) {
+          // Treat any other error as locked-by-default (safer)
+          showLPLocked({ verified: false, paid: false, allowed: false });
+          return;
+        }
+        showLPUnlocked(Array.isArray(data.preferences) ? data.preferences : []);
+      } catch (err) {
+        console.error('loadLinkingPreferences failed', err);
+        showLPLocked({ verified: false, paid: false, allowed: false });
+      }
+    }
+
+    function showLPLocked(gate) {
+      document.getElementById('lp-locked-state').style.display = 'block';
+      document.getElementById('lp-unlocked-state').style.display = 'none';
+      const setStatus = (id, ok) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.toggle('ok', !!ok);
+        el.classList.toggle('missing', !ok);
+        const icon = el.querySelector('.lp-status i');
+        if (icon) icon.className = ok ? 'fas fa-check' : 'fas fa-times';
+        const link = el.querySelector('a');
+        if (link) link.style.display = ok ? 'none' : 'inline';
+      };
+      setStatus('lp-gate-verified', !!gate.verified);
+      setStatus('lp-gate-paid', !!gate.paid);
+    }
+
+    function showLPUnlocked(currentPrefs) {
+      document.getElementById('lp-locked-state').style.display = 'none';
+      document.getElementById('lp-unlocked-state').style.display = 'block';
+      lpSelected = new Set(currentPrefs);
+      renderLPChips();
+    }
+
+    function renderLPChips() {
+      const wrap = document.getElementById('lp-chips');
+      wrap.innerHTML = '';
+      LP_OPTIONS.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lp-chip' + (lpSelected.has(opt.value) ? ' selected' : '');
+        btn.textContent = opt.label;
+        btn.onclick = () => toggleLPChip(opt.value, btn);
+        wrap.appendChild(btn);
+      });
+    }
+
+    function toggleLPChip(value, btn) {
+      if (lpSelected.has(value)) {
+        lpSelected.delete(value);
+        btn.classList.remove('selected');
+      } else {
+        lpSelected.add(value);
+        btn.classList.add('selected');
+      }
+    }
+
+    async function saveLinkingPreferences() {
+      const btn = document.getElementById('lp-save-btn');
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Saving...';
+      try {
+        const res = await fetch(API_BASE + '/users/linking-preferences', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          body: JSON.stringify({ preferences: Array.from(lpSelected) })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to save');
+        showToast('Preferences saved');
+      } catch (err) {
+        showToast(err.message || 'Save failed', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
+
     // ===== INIT =====
     function init() {
       const token = getToken();
@@ -909,6 +1227,7 @@
         return;
       }
       populateSettings();
+      loadLinkingPreferences();
     }
 
     init();

@@ -1,0 +1,89 @@
+/* ==========================================================================
+   SafeTea — Mobile Viewport Lock
+   --------------------------------------------------------------------------
+   Shared stylesheet loaded on every public page. Prevents the "drifting
+   canvas" effect where the app scrolls past its intended bounds on iOS /
+   Android WebViews (Capacitor shell) and small desktop windows.
+
+   Goals:
+     - No horizontal scroll, ever.
+     - No iOS rubber-band / overscroll glow.
+     - No accidental pinch-zoom in the mobile shell.
+     - Media and embeds never punch through their containers.
+     - Leaves intentional vertical scrolling of the page body intact.
+
+   Load order: include AFTER the page's own <style> / main CSS so these
+   rules win on cascade (they are deliberately broad).
+   ========================================================================== */
+
+html,
+body {
+  max-width: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overscroll-behavior-x: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Disable the WebKit text size adjustment that silently enlarges text
+     after an orientation change and then leaves the layout wider than the
+     viewport. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Defensive box-sizing so padding never pushes children past 100% width. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Media and embeds can never exceed their container. This is the single
+   biggest source of horizontal overflow on hand-authored pages. */
+img,
+video,
+canvas,
+iframe,
+svg,
+object,
+embed {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tables and <pre> blocks are the other common offenders. Allow them to
+   scroll internally instead of bursting the page width. */
+pre,
+code,
+table {
+  max-width: 100%;
+  overflow-x: auto;
+  word-wrap: break-word;
+}
+
+/* Long unbroken strings (URLs, hashes) should wrap rather than stretch. */
+p,
+li,
+a,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Respect the device safe area on notched iPhones when the page uses
+   viewport-fit=cover. Pages that need custom safe-area handling can
+   override this on their own root wrapper. */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}

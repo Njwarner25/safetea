@@ -847,6 +847,38 @@
         pvRenderGrid();
     };
 
+    // ============ BUY MORE PHOTO SCANS ============
+    window.openBuyScansModal = function() {
+        var modal = document.getElementById('pv-buy-modal');
+        if (modal) { modal.style.display = 'flex'; }
+    };
+    window.closeBuyScansModal = function() {
+        var modal = document.getElementById('pv-buy-modal');
+        if (modal) { modal.style.display = 'none'; }
+        var err = document.getElementById('pv-buy-error');
+        if (err) err.style.display = 'none';
+    };
+    window.purchaseScans = function(packageType) {
+        var err = document.getElementById('pv-buy-error');
+        if (err) err.style.display = 'none';
+        fetch('/api/photos/purchase-check', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+            body: JSON.stringify({ package: packageType })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                if (err) { err.textContent = data.error || 'Something went wrong'; err.style.display = 'block'; }
+            }
+        })
+        .catch(function() {
+            if (err) { err.textContent = 'Network error — please try again'; err.style.display = 'block'; }
+        });
+    };
+
     // ============ DATE CHECK-OUT / CHECK-IN ============
     var activeDateData = null;
     var activeDateTimer = null;

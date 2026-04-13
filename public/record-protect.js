@@ -1221,7 +1221,7 @@
                     sessionKey: segment.sessionKey,
                     chunkNumber: segment.segmentNumber,
                     audioData: base64,
-                    durationMs: 30000,
+                    durationMs: 10000,
                     latitude: segment.lat,
                     longitude: segment.lng
                 }),
@@ -1299,7 +1299,7 @@
     function startUploadManager() {
         if (uploadManagerInterval) return;
         uploadLoop(); // run immediately
-        uploadManagerInterval = setInterval(uploadLoop, 15000);
+        uploadManagerInterval = setInterval(uploadLoop, 10000); // match 10s chunk interval
     }
 
     function stopUploadManager() {
@@ -1434,7 +1434,7 @@
                     '<span id="rp-integrity-label" style="color:#555;font-size:10px">Recording + uploading</span>' +
                 '</div>' +
                 '<p id="rp-sms-status" style="color:#888;font-size:12px;margin-bottom:6px"></p>' +
-                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Recording 30s audio clips...</p>' +
+                '<p id="rp-chunk-status" style="color:#555;font-size:11px;margin-bottom:12px">Recording 10s audio chunks...</p>' +
                 '<p id="rp-gps-status" style="color:#555;font-size:11px;margin-bottom:24px"></p>' +
                 '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
                     '<button id="rp-reshare-btn" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:12px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif"><i class="fas fa-share-alt"></i> Re-share</button>' +
@@ -1615,12 +1615,12 @@
             shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
         }
 
-        // Start MediaRecorder with 30s timeslice — browser handles timing natively
+        // Start MediaRecorder with 10s timeslice for near-realtime capture
         var mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
         var recorderOptions = { mimeType: mimeType };
-        try { recorderOptions.audioBitsPerSecond = 128000; } catch (e) {}
+        try { recorderOptions.audioBitsPerSecond = 64000; } catch (e) {} // 64kbps keeps chunks small
         state.audioStream = stream;
-        state.allRecordedBlobs = []; // accumulate ALL blobs for complete file
+        state.allRecordedBlobs = []; // accumulate ALL blobs for local complete file
 
         state.mediaRecorder = new MediaRecorder(stream, recorderOptions);
 
@@ -1629,23 +1629,20 @@
                 state.allRecordedBlobs.push(e.data);
                 var segNum = state.chunkNumber++;
                 var statusEl = document.getElementById('rp-chunk-status');
+                var totalSecs = state.allRecordedBlobs.length * 10;
 
-                // Build a COMPLETE playable WebM from ALL blobs so far
-                // (first blob has the WebM header, subsequent are continuation data)
-                var completeBlob = new Blob(state.allRecordedBlobs, { type: mimeType });
-                var totalSecs = state.allRecordedBlobs.length * 30;
-
-                // Save complete recording to IndexedDB (overwrites previous)
+                // Save ONLY this individual chunk to IndexedDB for upload
+                // (server reconstructs full audio by concatenating chunks in order)
                 try {
                     if (state.recordingDB) {
-                        await saveSegment(state.recordingDB, state.sessionKey, segNum, completeBlob, state.lastLat, state.lastLng);
-                        if (statusEl) statusEl.textContent = totalSecs + 's of audio captured (' + Math.round(completeBlob.size / 1024) + ' KB)';
+                        await saveSegment(state.recordingDB, state.sessionKey, segNum, e.data, state.lastLat, state.lastLng);
+                        if (statusEl) statusEl.textContent = totalSecs + 's captured (' + state.allRecordedBlobs.length + ' chunks, ' + Math.round(state.allRecordedBlobs.reduce(function(sum, b) { return sum + b.size; }, 0) / 1024) + ' KB)';
                         updateIntegrityIndicator('yellow');
                         uploadLoop();
                     }
                 } catch (dbErr) {
-                    console.error('[Record] Failed to save clip to IndexedDB:', dbErr);
-                    if (statusEl) statusEl.textContent = 'Local save failed for clip ' + (segNum + 1);
+                    console.error('[Record] Failed to save chunk to IndexedDB:', dbErr);
+                    if (statusEl) statusEl.textContent = 'Local save failed for chunk ' + (segNum + 1);
                     updateIntegrityIndicator('red');
                 }
             }
@@ -1655,7 +1652,7 @@
             // Don't kill the stream here — stopRecording handles that
         };
 
-        state.mediaRecorder.start(30000); // fires ondataavailable every 30 seconds
+        state.mediaRecorder.start(10000); // fires ondataavailable every 10 seconds
 
         // Start upload manager (separate from recording)
         startUploadManager();

@@ -33,6 +33,8 @@ module.exports = async function handler(req, res) {
          s.broadcast_message,
          s.category,
          s.created_at,
+         s.latitude,
+         s.longitude,
          u.display_name,
          u.custom_display_name,
          u.avatar_url,
@@ -67,6 +69,9 @@ module.exports = async function handler(req, res) {
       createdAt: r.created_at,
       acceptedCount: parseInt(r.accepted_count || 0, 10),
       myRequestStatus: r.my_request_status || null,
+      // Approximate location (~1km precision) for community map — not exact
+      approxLat: r.latitude ? Math.round(r.latitude * 100) / 100 : null,
+      approxLng: r.longitude ? Math.round(r.longitude * 100) / 100 : null,
     }));
 
     return res.status(200).json({ broadcasts });

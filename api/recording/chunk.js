@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
     await run(
       `INSERT INTO recording_chunks (session_key, chunk_number, audio_data, duration_ms)
        VALUES ($1, $2, $3, $4)`,
-      [sessionKey, chunkNumber, audioData, durationMs || 30000]
+      [sessionKey, chunkNumber, audioData, durationMs || 10000]
     );
 
     // Update GPS if provided

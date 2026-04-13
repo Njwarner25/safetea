@@ -101,6 +101,10 @@
                     });
                 });
 
+                // Init community map + restore nearby alerts toggle
+                initMap();
+                restoreNearbyToggle();
+
                 // Initial loads for connect features
                 loadDiscover();
                 loadConnections();
@@ -192,6 +196,10 @@
     }
 
     function renderDiscover(broadcasts) {
+        // Update community map + nearby alerts
+        updateMap(broadcasts);
+        checkNearbyBroadcasts(broadcasts);
+
         var list = document.getElementById('discover-list');
         if (!broadcasts.length) {
             list.innerHTML = '<div class="empty-state"><i class="fas fa-compass"></i>No public SafeLinks right now.<br>Be the first — toggle "Make this public" above.</div>';
@@ -613,6 +621,131 @@
         ta.select();
         try { document.execCommand('copy'); } catch (e) {}
         document.body.removeChild(ta);
+    }
+
+    // ---- Community Map ----
+    var slMap = null;
+    var slMapMarkers = [];
+    var slUserLat = null;
+    var slUserLng = null;
+    var slPrevBroadcastKeys = [];
+
+    function initMap() {
+        var mapEl = document.getElementById('sl-map');
+        if (!mapEl || slMap) return;
+        slMap = L.map(mapEl, { zoomControl: false, attributionControl: false }).setView([41.88, -87.63], 11);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 16
+        }).addTo(slMap);
+        // Get user location to center map
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                slUserLat = pos.coords.latitude;
+                slUserLng = pos.coords.longitude;
+                slMap.setView([slUserLat, slUserLng], 13);
+            }, function() {}, { enableHighAccuracy: false, timeout: 5000 });
+        }
+    }
+
+    var categoryIcons = {
+        train: 'fa-train', bus: 'fa-bus', walking: 'fa-walking',
+        rideshare: 'fa-car', parking: 'fa-parking', 'late-night': 'fa-moon', gym: 'fa-dumbbell'
+    };
+
+    function updateMap(broadcasts) {
+        if (!slMap) return;
+        // Clear old markers
+        slMapMarkers.forEach(function(m) { slMap.removeLayer(m); });
+        slMapMarkers = [];
+        var hasPin = false;
+        broadcasts.forEach(function(b) {
+            if (b.approxLat && b.approxLng) {
+                hasPin = true;
+                var iconClass = categoryIcons[b.category] || 'fa-link';
+                var pin = L.divIcon({
+                    className: '',
+                    html: '<div style="background:#E8A0B5;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(232,160,181,0.5)"><i class="fas ' + iconClass + '" style="color:#fff;font-size:12px"></i></div>',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+                var marker = L.marker([b.approxLat, b.approxLng], { icon: pin }).addTo(slMap);
+                marker.bindPopup('<div style="font-size:12px;min-width:120px"><strong>' + escapeHtml(b.hostName) + '</strong><br>' + escapeHtml(b.broadcastMessage || b.label || 'SafeLink active') + (b.category ? '<br><span style="color:#888">' + escapeHtml(b.category) + '</span>' : '') + '</div>');
+                slMapMarkers.push(marker);
+            }
+        });
+        if (hasPin && slMapMarkers.length > 0) {
+            var group = L.featureGroup(slMapMarkers);
+            slMap.fitBounds(group.getBounds().pad(0.3));
+        }
+    }
+
+    // ---- Nearby Alerts ----
+    var NEARBY_KEY = 'safetea_nearby_alerts';
+
+    window.toggleNearbyAlerts = function(on) {
+        var knob = document.getElementById('sl-nearby-knob');
+        var track = knob ? knob.previousElementSibling : null;
+        if (on) {
+            localStorage.setItem(NEARBY_KEY, '1');
+            if (knob) { knob.style.left = '20px'; }
+            if (track) { track.style.background = '#E8A0B5'; }
+            // Request GPS + notification permission
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    slUserLat = pos.coords.latitude;
+                    slUserLng = pos.coords.longitude;
+                }, function() {});
+            }
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            showToast('Nearby alerts on — you\'ll be notified when someone activates a SafeLink within 1 mile.', 'success');
+        } else {
+            localStorage.removeItem(NEARBY_KEY);
+            if (knob) { knob.style.left = '2px'; }
+            if (track) { track.style.background = '#333'; }
+        }
+    };
+
+    function restoreNearbyToggle() {
+        var cb = document.getElementById('sl-nearby-check');
+        if (cb && localStorage.getItem(NEARBY_KEY) === '1') {
+            cb.checked = true;
+            var knob = document.getElementById('sl-nearby-knob');
+            var track = knob ? knob.previousElementSibling : null;
+            if (knob) knob.style.left = '20px';
+            if (track) track.style.background = '#E8A0B5';
+        }
+    }
+
+    function checkNearbyBroadcasts(broadcasts) {
+        if (localStorage.getItem(NEARBY_KEY) !== '1') return;
+        if (!slUserLat || !slUserLng) return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        broadcasts.forEach(function(b) {
+            if (!b.approxLat || !b.approxLng) return;
+            if (slPrevBroadcastKeys.indexOf(b.sessionKey) !== -1) return; // already notified
+            var dist = haversine(slUserLat, slUserLng, b.approxLat, b.approxLng);
+            if (dist <= 1.0) { // within 1 mile
+                new Notification('SafeLink Nearby', {
+                    body: b.hostName + ' activated a SafeLink (' + (b.category || 'active') + ') — ' + dist.toFixed(1) + ' mi away',
+                    icon: '/icon-192.png',
+                    tag: 'sl-nearby-' + b.sessionKey
+                });
+            }
+        });
+        slPrevBroadcastKeys = broadcasts.map(function(b) { return b.sessionKey; });
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+        var R = 3959; // miles
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     // Boot

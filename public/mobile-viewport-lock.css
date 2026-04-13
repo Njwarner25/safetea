@@ -21,16 +21,9 @@ body {
   max-width: 100%;
   width: 100%;
   overflow-x: hidden;
-  /* Keep the page anchored; prevents iOS from treating the document as a
-     free-floating layer during momentum scroll. */
-  position: relative;
 }
 
 body {
-  /* Kill the iOS rubber-band bounce at the top/bottom of the document and
-     stop scroll chaining from nested scrollers into the page. */
-  overscroll-behavior: none;
-  overscroll-behavior-y: none;
   overscroll-behavior-x: none;
   -webkit-tap-highlight-color: transparent;
   /* Disable the WebKit text size adjustment that silently enlarges text

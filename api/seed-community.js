@@ -25,9 +25,21 @@ module.exports = async function handler(req, res) {
     // ─── CLEAN UP OLD SEED DATA ───
     const oldAccounts = await getMany("SELECT id FROM users WHERE email LIKE '%@seed.safetea.local'");
     for (const acct of oldAccounts) {
-      await run('DELETE FROM post_likes WHERE user_id = $1', [acct.id]);
-      await run('DELETE FROM replies WHERE user_id = $1', [acct.id]);
-      await run('DELETE FROM posts WHERE user_id = $1', [acct.id]);
+      // Clean up all FK references before deleting user
+      await run('DELETE FROM post_likes WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_dislikes WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_bumps WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_reports WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM replies WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM trust_events WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM moderation_logs WHERE target_id = $1::text', [acct.id]).catch(function() {});
+      await run('DELETE FROM messages WHERE sender_id = $1 OR recipient_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM name_watch_matches WHERE watched_name_id IN (SELECT id FROM watched_names WHERE user_id = $1)', [acct.id]).catch(function() {});
+      await run('DELETE FROM watched_names WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM connected_accounts WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM room_memberships WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM room_posts WHERE author_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM posts WHERE user_id = $1', [acct.id]).catch(function() {});
       await run('DELETE FROM users WHERE id = $1', [acct.id]);
       results.accounts_deleted++;
     }

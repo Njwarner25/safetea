@@ -1,0 +1,5 @@
+- Private Sorority Rooms now accessible from the Community tab
+- Improved crime data coverage for 9 cities
+- Fixed content clipping on mobile devices
+- iPad layout and responsiveness improvements
+- Enhanced safety disclaimers and content moderation

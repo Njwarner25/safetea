@@ -72,9 +72,13 @@ if [[ "$BUNDLE_ID" != "app.getsafetea.mobile" ]]; then
   $PB -c "Set :CFBundleIdentifier app.getsafetea.mobile" "$PLIST"
 fi
 
-# Display name
+# Display name — keep short for home screen, full name in App Store metadata
 $PB -c "Set :CFBundleDisplayName SafeTea" "$PLIST" 2>/dev/null || \
   $PB -c "Add :CFBundleDisplayName string SafeTea" "$PLIST"
+
+# CFBundleName — the formal app name shown in Settings and system prompts
+$PB -c "Delete :CFBundleName" "$PLIST" 2>/dev/null || true
+$PB -c "Add :CFBundleName string SafeTea" "$PLIST"
 
 echo "iOS metadata set:"
 echo "  Version: $VERSION_NAME ($BUILD_NUMBER)"

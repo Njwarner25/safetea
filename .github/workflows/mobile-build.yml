@@ -124,6 +124,12 @@ jobs:
             "${{ steps.version.outputs.name }}" \
             "${{ steps.version.outputs.build }}"
 
+      - name: Install Privacy Manifest (PrivacyInfo.xcprivacy)
+        shell: bash
+        run: |
+          cp PrivacyInfo.xcprivacy ios/App/App/PrivacyInfo.xcprivacy
+          echo "Privacy manifest installed at ios/App/App/PrivacyInfo.xcprivacy"
+
       - name: Check iOS signing secrets
         id: ios_secrets
         shell: bash

@@ -1,15 +1,29 @@
 const { fetchAllCities } = require('../../services/crimeDataFetcher');
+const { authenticate } = require('../_utils/auth');
+const { getOne } = require('../_utils/db');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Optional: verify cron secret to prevent public triggering
+  // Allow: Vercel cron secret OR authenticated admin user
   const cronSecret = req.headers['authorization'];
-  if (process.env.CRON_SECRET && cronSecret !== `Bearer ${process.env.CRON_SECRET}`) {
-    // Allow in dev or if no secret is set
-    if (process.env.CRON_SECRET) {
-      return res.status(401).json({ error: 'Unauthorized' });
+  let authorized = false;
+
+  if (process.env.CRON_SECRET && cronSecret === `Bearer ${process.env.CRON_SECRET}`) {
+    authorized = true;
+  } else if (!process.env.CRON_SECRET) {
+    authorized = true;
+  } else {
+    // Fall back to admin auth
+    const user = await authenticate(req);
+    if (user) {
+      const row = await getOne('SELECT role FROM users WHERE id = $1', [user.id]);
+      if (row && row.role === 'admin') authorized = true;
     }
+  }
+
+  if (!authorized) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {

@@ -2182,8 +2182,11 @@
             <!-- My Rooms Row (horizontal scroll) -->
             <div id="community-rooms-row" style="display:none;margin:0 16px 16px;overflow:visible">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-                    <h3 style="font-size:15px;font-weight:700;color:#5f4b57;display:flex;align-items:center;gap:8px"><i class="fas fa-door-open" style="color:#9b59b6;font-size:14px"></i> My Rooms</h3>
-                    <div style="display:flex;gap:8px">
+                    <div>
+                        <h3 style="font-size:15px;font-weight:700;color:#5f4b57;display:flex;align-items:center;gap:8px"><i class="fas fa-lock" style="color:#9b59b6;font-size:14px"></i> Private Sorority Rooms</h3>
+                        <p style="font-size:12px;color:#999;margin-top:2px">Invite-only spaces for your chapter sisters</p>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-shrink:0">
                         <button onclick="showJoinRoomModal()" style="font-size:12px;color:#9b59b6;background:none;border:1px solid rgba(155,89,182,0.3);border-radius:16px;padding:5px 12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500"><i class="fas fa-key" style="font-size:10px"></i> Join</button>
                         <button onclick="showCreateRoomModal()" style="font-size:12px;color:#fff;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;border-radius:16px;padding:5px 12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600"><i class="fas fa-plus" style="font-size:10px"></i> Create</button>
                     </div>
@@ -2606,20 +2609,6 @@
                         <div style="flex:1">
                             <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Area Alerts</h4>
                             <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Nearby safety incidents from public crime data. Know before you go.</p>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
-                    </div>
-                </div>
-
-                <!-- ====== COMMUNITY (Sorority Rooms) ====== -->
-                <div style="margin-bottom:20px">
-                    <h3 class="home-section-title" style="color:#fff;font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px"><i class="fas fa-users" style="color:#9b59b6;font-size:13px"></i> Community</h3>
-
-                    <div onclick="switchHubTab('sororityrooms')" class="home-tool-card" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(155,89,182,0.1),rgba(155,89,182,0.04));border:1px solid rgba(155,89,182,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(155,89,182,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(155,89,182,0.2)'">
-                        <div style="min-width:44px;height:44px;background:rgba(155,89,182,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-door-open" style="font-size:20px;color:#9b59b6"></i></div>
-                        <div style="flex:1">
-                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Sorority Rooms</h4>
-                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Private spaces for your chapter. Share tea, hype good guys, and stay connected.</p>
                         </div>
                         <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </div>

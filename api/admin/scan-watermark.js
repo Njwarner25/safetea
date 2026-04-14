@@ -66,23 +66,27 @@ module.exports = async function handler(req, res) {
 
     content.push({
       type: 'text',
-      text: 'You are analyzing a screenshot from the SafeTea app for invisible watermarks.\n\n' +
-        'The watermark is semi-transparent white text with a subtle dark outline, tiled diagonally across photos. ' +
-        'The format is "ST:" followed by a number (the viewer user ID), and also "SafeTea #" followed by a number (the uploader ID).\n\n' +
-        'Image 1 (binary/thresholded): White text on black background, upscaled 2x. The text is in bold monospace font. ' +
-        'Each tile contains EXACTLY the same short string: "ST:" followed by a small number (1-999). ' +
-        'For example: "ST:2" or "ST:14" or "ST:307".\n\n' +
-        (softImage ? 'Image 2 (amplified grayscale): Same watermark with more gradation — use to confirm your reading.\n\n' : '') +
-        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' (original photo): Look for a faint "SafeTea #" followed by a number.\n\n' : '') +
-        'DETECTION TIPS:\n' +
-        '1. Look at areas with uniform color (sky, walls, solid clothing) where text is most visible\n' +
-        '2. Look for repeating diagonal patterns of characters\n' +
-        '3. The text repeats many times — look for ANY instance you can partially read\n' +
-        '4. Even if you can only read part of the number, report what you see\n' +
-        '5. Focus on Image 1 first (binary) — find the clearest text instance\n\n' +
+      text: 'You are analyzing a screenshot from the SafeTea app to identify WHO took the screenshot (the leaker).\n\n' +
+        'SafeTea embeds the VIEWER\'s user ID into every photo using 3 layers of invisible watermarks:\n\n' +
+        'LAYER 1 — EDGE STRIP (check first, most reliable): A semi-transparent dark strip along the BOTTOM EDGE of the photo ' +
+        'containing repeated white monospace text "ST:" followed by a number. This is the viewer user ID. ' +
+        'Example: "ST:2" or "ST:42" or "ST:307". The strip spans the full width.\n\n' +
+        'LAYER 2 — CORNER MARKERS (check second): Small "ST:NUMBER" text in all 4 corners of the image.\n\n' +
+        'LAYER 3 — TILED DIAGONAL (check third): The same "ST:NUMBER" text is tiled diagonally across the entire image at very low opacity.\n\n' +
+        'UPLOAD WATERMARK: The uploader\'s ID appears as "SafeTea #NUMBER" tiled diagonally (separate from the ST: viewer watermark).\n\n' +
+        'Image 1 (binary/thresholded): High-contrast black/white — watermark text appears as white on black. ' +
+        'CHECK THE BOTTOM EDGE FIRST for the strip watermark. Then check corners. Then look for tiled patterns.\n\n' +
+        (softImage ? 'Image 2 (amplified grayscale): Same watermark with more gradation — use to confirm.\n\n' : '') +
+        (rawImage ? 'Image ' + (softImage ? '3' : '2') + ' (original photo): Look for the faint bottom strip and "SafeTea #" text.\n\n' : '') +
+        'PRIORITY ORDER:\n' +
+        '1. Bottom edge strip — look for repeated "ST:NUMBER" text along the bottom\n' +
+        '2. Corner text — check all 4 corners for "ST:NUMBER"\n' +
+        '3. Tiled diagonal — look for repeating patterns in uniform color areas\n' +
+        '4. Upload watermark — look for "SafeTea #NUMBER" anywhere\n\n' +
+        'The ST:NUMBER identifies the VIEWER (the person who took the screenshot). This is the most important piece of information.\n\n' +
         'Respond ONLY with this JSON (no markdown):\n' +
-        '{"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see"}\n\n' +
-        'If you can see ANY repeating pattern that looks like text, even partially readable, set viewer_watermark to your best reading with low confidence.'
+        '{"viewer_watermark": "ST:NUMBER or null", "upload_watermark": "SafeTea #NUMBER or null", "confidence": "high/medium/low", "notes": "what you see and where"}\n\n' +
+        'Report ANY text you can read, even partially. A partial read with low confidence is better than null.'
     });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {

@@ -347,8 +347,13 @@
             }
             blobUrls = [];
 
-            // Create blob URL for the latest (complete) recording
-            var fullBlob = base64ToBlob(latestChunk.audioData);
+            // Concatenate ALL chunks into a single playable WebM blob
+            // (chunk 0 has the WebM header, subsequent chunks are continuations)
+            var allBlobs = [];
+            for (var c = 0; c < chunks.length; c++) {
+                allBlobs.push(base64ToBlob(chunks[c].audioData));
+            }
+            var fullBlob = new Blob(allBlobs, { type: 'audio/webm;codecs=opus' });
             var fullBlobUrl = URL.createObjectURL(fullBlob);
             blobUrls.push(fullBlobUrl);
 

@@ -21,7 +21,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; }
-        .topnav { background: rgba(34,34,58,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .topnav { background: rgba(34,34,58,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; }
         .topnav-left { display: flex; align-items: center; gap: 24px; }
         .topnav-logo { text-decoration: none; display: flex; align-items: center; }
         .topnav-logo img { height: 36px; width: auto; }
@@ -147,6 +147,17 @@
         .profile-avatar-large { width: 80px; height: 80px; border-radius: 50%; background: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #fff; margin: 0 auto 16px; }
         .profile-name { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
         .profile-email { font-size: 14px; color: #8080A0; margin-bottom: 8px; }
+        .sc-msg { display: flex; }
+        .sc-msg-bot { justify-content: flex-start; }
+        .sc-msg-user { justify-content: flex-end; }
+        .sc-msg-bubble { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.5; word-wrap: break-word; }
+        .sc-bot { background: rgba(232,160,181,0.12); color: #F0D0E0; border-bottom-left-radius: 4px; }
+        .sc-user { background: rgba(255,255,255,0.1); color: #fff; border-bottom-right-radius: 4px; }
+        .sc-typing { display: flex; gap: 4px; align-items: center; padding: 10px 18px; }
+        .sc-typing span { width: 6px; height: 6px; background: #E8A0B5; border-radius: 50%; animation: scTyping 1.2s ease-in-out infinite; }
+        .sc-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .sc-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes scTyping { 0%,80%,100% { opacity:0.3; transform:scale(0.8); } 40% { opacity:1; transform:scale(1); } }
         .profile-role { display: inline-flex; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: rgba(232,160,181,0.15); color: #E8A0B5; }
         .profile-form { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
         .profile-form h3 { font-size: 16px; color: #fff; margin-bottom: 20px; }
@@ -285,6 +296,8 @@
         .nw-actions-row { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 16px; }
         .btn-nw-action { background: none; border: 1px solid rgba(255,255,255,0.1); color: #8080A0; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 6px; }
         .btn-nw-action:hover { color: #E8A0B5; border-color: #E8A0B5; }
+        .hub-sub { padding-bottom: 160px; }
+        #community-rooms-cards::-webkit-scrollbar { display: none; }
         /* ========== Community Tab Styles (Matches Nate's Mockups) ========== */
         .community-section { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 140px; }
         /* Community Top Bar */
@@ -394,6 +407,37 @@
             .mobile-tab-bar a i { font-size: 18px; }
             .mobile-tab-bar a.active { color: #E8A0B5; }
         }
+
+        /* iPad responsive fixes */
+        @media (min-width: 769px) and (max-width: 1199px) {
+          .sidebar-right { display: none; }
+          .main-content { max-width: 100%; padding: 24px 32px; }
+        }
+
+        /* Prevent horizontal scroll globally */
+        html, body { overflow-x: hidden; max-width: 100vw; }
+
+        /* Safe area support */
+        body {
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* iPad nav visibility */
+        @media (min-width: 769px) {
+          .topnav-nav { display: flex !important; }
+        }
+
+        /* Fix fixed-width containers */
+        .community-quickpost,
+        .community-section,
+        .search-section,
+        .alerts-section,
+        .nw-section,
+        .profile-section {
+          max-width: min(720px, 100%);
+        }
+
         /* Date Check-In/Check-Out Styles */
         .datecheck-section { max-width: 700px; margin: 0 auto; padding: 24px; }
         .datecheck-header { text-align: center; margin-bottom: 24px; }
@@ -2054,8 +2098,16 @@
         }
 
     </style>
-    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+    // Only load Stripe on non-iOS platforms
+    if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && /iPhone|iPad/.test(navigator.userAgent))) {
+      var s = document.createElement('script');
+      s.src = 'https://js.stripe.com/v3/';
+      document.head.appendChild(s);
+    }
+    </script>
     <link rel="stylesheet" href="/mobile-viewport-lock.css">
+    <link rel="stylesheet" href="/ipad-responsive.css">
 </head>
 <body>
     <nav class="topnav">
@@ -2127,12 +2179,74 @@
                 <button onclick="openCityPicker()" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #f3c7d7;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:500;color:#5f4b57;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='#fdf1f6'" onmouseout="this.style.background='#fff'"><i class="fas fa-city" style="color:#d96a8a;font-size:12px"></i> Change City</button>
             </div>
 
+            <!-- My Rooms Row (horizontal scroll) -->
+            <div id="community-rooms-row" style="display:none;margin:0 16px 16px;overflow:visible">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                    <h3 style="font-size:15px;font-weight:700;color:#5f4b57;display:flex;align-items:center;gap:8px"><i class="fas fa-door-open" style="color:#9b59b6;font-size:14px"></i> My Rooms</h3>
+                    <div style="display:flex;gap:8px">
+                        <button onclick="showJoinRoomModal()" style="font-size:12px;color:#9b59b6;background:none;border:1px solid rgba(155,89,182,0.3);border-radius:16px;padding:5px 12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500"><i class="fas fa-key" style="font-size:10px"></i> Join</button>
+                        <button onclick="showCreateRoomModal()" style="font-size:12px;color:#fff;background:linear-gradient(135deg,#9b59b6,#8e44ad);border:none;border-radius:16px;padding:5px 12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600"><i class="fas fa-plus" style="font-size:10px"></i> Create</button>
+                    </div>
+                </div>
+                <div id="community-rooms-cards" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+            </div>
+
+            <!-- Room Header (shown when viewing a room in Community tab) -->
+            <div id="community-room-header" style="display:none;margin:0 16px 12px">
+                <div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(155,89,182,0.2);border-radius:14px;padding:14px 16px">
+                    <button onclick="exitCommunityRoom()" style="background:none;border:none;color:#9b59b6;font-size:16px;cursor:pointer;padding:4px"><i class="fas fa-arrow-left"></i></button>
+                    <div id="cr-logo" style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,#9b59b6,#8e44ad);flex-shrink:0"></div>
+                    <div style="flex:1;min-width:0">
+                        <div id="cr-name" style="font-weight:700;font-size:15px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                        <div id="cr-meta" style="font-size:12px;color:#999"></div>
+                    </div>
+                    <button onclick="toggleCommunityRoomInfo()" style="background:rgba(155,89,182,0.1);border:none;color:#9b59b6;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:14px"><i class="fas fa-info-circle"></i></button>
+                    <button onclick="copyCommunityRoomCode()" style="background:rgba(155,89,182,0.1);border:none;color:#9b59b6;width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:14px" title="Copy invite code"><i class="fas fa-link"></i></button>
+                </div>
+                <!-- Room Info Panel (expandable) -->
+                <div id="cr-info-panel" style="display:none;background:#fff;border:1px solid rgba(155,89,182,0.15);border-radius:14px;padding:16px;margin-top:8px">
+                    <div id="cr-description" style="font-size:13px;color:#666;line-height:1.6;margin-bottom:12px"></div>
+                    <div id="cr-members-list" style="margin-bottom:12px"></div>
+                    <div id="cr-admin-panel" style="display:none;margin-bottom:12px"></div>
+                    <button onclick="leaveRoom();exitCommunityRoom()" style="width:100%;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sign-out-alt"></i> Leave Room</button>
+                </div>
+            </div>
+
+            <!-- Room Feed Type Tabs (shown when viewing a room) -->
+            <div id="community-room-tabs" style="display:none;margin:0 16px 12px;display:none">
+                <div style="display:flex;gap:8px">
+                    <button id="cr-tab-tea" onclick="switchCommunityRoomFeed('tea_talk')" style="flex:1;background:#9b59b6;color:#fff;border:none;padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-comments"></i> Community Safety</button>
+                    <button id="cr-tab-good" onclick="switchCommunityRoomFeed('good_guys')" style="flex:1;background:#f5f0f8;color:#9b59b6;border:1px solid rgba(155,89,182,0.2);padding:9px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-thumbs-up"></i> Good Guys</button>
+                </div>
+            </div>
+
+            <!-- Room Post Box (shown when viewing a room) -->
+            <div id="community-room-postbox" style="display:none;margin:0 16px 12px">
+                <div style="background:#fff;border:1px solid rgba(155,89,182,0.15);border-radius:14px;padding:14px">
+                    <textarea id="cr-post-text" placeholder="Share with your sisters..." rows="2" style="width:100%;background:#f9f5fc;border:1px solid rgba(155,89,182,0.15);border-radius:10px;padding:12px;color:#333;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='#9b59b6'" onblur="this.style.borderColor='rgba(155,89,182,0.15)'"></textarea>
+                    <div id="cr-post-photo-preview" style="display:none;margin-top:8px;position:relative;display:inline-block">
+                        <img id="cr-post-photo-img" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid #eee">
+                        <button onclick="crRemovePostPhoto()" style="position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.6);border-radius:50%;border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                        <button onclick="document.getElementById('cr-photo-input').click()" style="background:none;border:1px solid rgba(155,89,182,0.25);color:#9b59b6;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-camera"></i> Photo</button>
+                        <input type="file" id="cr-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="crHandlePostPhoto(this)">
+                        <button onclick="submitCommunityRoomPost()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Feed Sort Toggle -->
             <div id="feed-sort-toggle" style="display:none;margin:0 auto 12px;max-width:720px;padding:0 16px">
                 <div style="display:inline-flex;background:rgba(255,255,255,0.08);border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)">
                     <button id="sort-hot-btn" onclick="setFeedSort('hot')" style="padding:6px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-radius:20px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;font-family:'Inter',sans-serif;transition:all 0.2s"><i class="fas fa-fire"></i> Hot</button>
                     <button id="sort-recent-btn" onclick="setFeedSort('recent')" style="padding:6px 16px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-radius:20px;background:transparent;color:#999;font-family:'Inter',sans-serif;transition:all 0.2s"><i class="fas fa-clock"></i> Recent</button>
                 </div>
+            </div>
+
+            <div id="community-disclaimer" style="background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.12);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:11px;color:#8080A0;line-height:1.5">
+              <i class="fas fa-info-circle" style="color:#E8A0B5;margin-right:6px"></i>
+              This platform is designed for personal safety awareness. All user-submitted content is moderated and should not be considered factual claims about any individual.
             </div>
 
             <!-- Posts Feed -->
@@ -2215,7 +2329,7 @@
             </div>
             <div class="post-modal-actions">
                 <select class="post-modal-cat" id="community-post-cat">
-                    <option value="tea-talk">&#9749; Tea Talk</option>
+                    <option value="tea-talk">&#128172; Community Safety</option>
                     <option value="good-guys">&#10004; Good Guys</option>
                 </select>
                 <div style="display:flex;gap:8px">
@@ -2384,6 +2498,7 @@
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-camera"></i> Photo Verification</button>
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-shield-alt"></i> Safety Resources</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
+                <button class="hub-tab" data-hubsub="alerts" onclick="switchHubTab('alerts')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-map-marker-alt"></i> Area Alerts</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-heart"></i> Good Guys</button>
             </div>
 
@@ -2481,6 +2596,18 @@
                     <div style="display:flex;gap:8px">
                         <button onclick="viewSafeTeaReport()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-file-alt"></i> View Details</button>
                         <button onclick="shareDateLink()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-alt"></i> Share Live Link</button>
+                    </div>
+                </div>
+
+                <!-- ====== AREA ALERTS CARD ====== -->
+                <div onclick="switchHubTab('alerts')" style="background:linear-gradient(135deg,rgba(241,196,15,0.08),rgba(241,196,15,0.02));border:1px solid rgba(241,196,15,0.2);border-radius:14px;padding:18px 20px;margin-bottom:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(241,196,15,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(241,196,15,0.2)'">
+                    <div style="display:flex;align-items:center;gap:16px">
+                        <div style="min-width:48px;height:48px;background:rgba(241,196,15,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="font-size:22px;color:#f1c40f"></i></div>
+                        <div style="flex:1">
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Area Alerts</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Nearby safety incidents from public crime data. Know before you go.</p>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </div>
                 </div>
 
@@ -2739,7 +2866,7 @@
                             </div>
 
                             <p id="pv-buy-error" style="color:#FF6B6B;font-size:12px;text-align:center;margin:12px 0 0 0;display:none"></p>
-                            <p style="color:#555;font-size:11px;text-align:center;margin:16px 0 0 0"><i class="fas fa-lock" style="margin-right:4px"></i> Secure checkout via Stripe</p>
+                            <p id="stripe-checkout-text" style="color:#555;font-size:11px;text-align:center;margin:16px 0 0 0"><i class="fas fa-lock" style="margin-right:4px"></i> Secure checkout via Stripe</p>
                         </div>
                     </div>
 
@@ -2801,6 +2928,81 @@
             <!-- Tea Talk removed from Home — lives exclusively in SafeTea Hub -->
 
             <!-- Good Guy referral removed from Home — lives exclusively in SafeTea Hub -->
+
+            <!-- HUB: AREA ALERTS -->
+            <div id="hub-alerts" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
+
+                <div style="margin-bottom:20px">
+                    <h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px"><i class="fas fa-map-marker-alt" style="color:#f1c40f"></i> Area Alerts</h3>
+                    <p style="color:#8080A0;font-size:13px;line-height:1.5">Nearby safety incidents pulled from public crime data. Enable location to see alerts near you.</p>
+                </div>
+
+                <!-- Location prompt -->
+                <div id="area-alerts-prompt" style="background:#22223A;border-radius:14px;padding:24px;text-align:center;margin-bottom:20px">
+                    <div style="width:56px;height:56px;background:rgba(241,196,15,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-location-crosshairs" style="font-size:24px;color:#f1c40f"></i></div>
+                    <p style="color:#C8C8E0;font-size:14px;margin-bottom:16px">Enable location access to see safety incidents near you.</p>
+                    <button onclick="detectLocationAndFetch()" style="background:linear-gradient(135deg,#f1c40f,#f39c12);color:#1A1A2E;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-location-arrow"></i> Enable Location</button>
+                </div>
+
+                <!-- Loading -->
+                <div id="area-alerts-loading" style="display:none;text-align:center;padding:40px 0">
+                    <div style="width:40px;height:40px;border:3px solid rgba(232,160,181,0.2);border-top-color:#E8A0B5;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px"></div>
+                    <p style="color:#8080A0;font-size:13px">Scanning your area...</p>
+                </div>
+
+                <!-- Filters -->
+                <div id="area-alerts-filters" style="display:none;background:#22223A;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <label style="color:#8080A0;font-size:12px;font-weight:500">Radius:</label>
+                        <select id="alert-radius" onchange="refreshAreaAlerts()" style="background:#141428;color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;font-size:13px;font-family:'Inter',sans-serif">
+                            <option value="0.25">0.25 mi</option>
+                            <option value="0.5" selected>0.5 mi</option>
+                            <option value="1">1 mi</option>
+                            <option value="2">2 mi</option>
+                            <option value="5">5 mi</option>
+                        </select>
+                        <label style="color:#8080A0;font-size:12px;font-weight:500">Time:</label>
+                        <select id="alert-days" onchange="refreshAreaAlerts()" style="background:#141428;color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;font-size:13px;font-family:'Inter',sans-serif">
+                            <option value="7">7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                        <button onclick="refreshAreaAlerts()" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;margin-left:auto"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div id="area-alerts-summary" style="display:none"></div>
+
+                <!-- Alert list -->
+                <div id="area-alerts-list" style="display:none"></div>
+
+                <!-- Empty state -->
+                <div id="area-alerts-empty" style="display:none;background:#22223A;border-radius:14px;padding:32px;text-align:center">
+                    <div style="width:56px;height:56px;background:rgba(46,204,113,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-check-circle" style="font-size:24px;color:#2ecc71"></i></div>
+                    <p style="color:#2ecc71;font-size:15px;font-weight:600;margin-bottom:6px">All Clear</p>
+                    <p style="color:#8080A0;font-size:13px">No safety incidents reported near your location in this time period.</p>
+                </div>
+
+                <!-- Watch Zones section -->
+                <div style="margin-top:24px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <h4 style="color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-map-pin" style="color:#E8A0B5;font-size:14px"></i> Watch Zones</h4>
+                        <button onclick="addWatchZone()" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-plus"></i> Add Zone</button>
+                    </div>
+                    <div id="watch-zones-list" style="color:#8080A0;font-size:13px">
+                        <p>No watch zones set. Tap "Add Zone" to monitor an area.</p>
+                    </div>
+                </div>
+
+                <!-- Disclaimer -->
+                <div style="margin-top:20px;background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.1);border-radius:10px;padding:12px 16px">
+                    <p style="color:#8080A0;font-size:11px;line-height:1.5;margin:0"><i class="fas fa-info-circle" style="color:#f1c40f;margin-right:4px"></i> Data sourced from public municipal crime databases. SafeTea is not a law enforcement tool. Always use your best judgment and take personal safety precautions.</p>
+                </div>
+            </div>
 
             <!-- HUB: INVITE & EARN (Growth Referral) -->
             <div id="hub-growreferral" class="hub-sub" style="display:none">
@@ -3006,7 +3208,7 @@
 
                 <!-- Feed Type Tabs -->
                 <div style="display:flex;gap:8px;margin-bottom:16px">
-                    <button id="rv-tab-tea" onclick="switchRoomFeedTab('tea_talk')" style="flex:1;background:#9b59b6;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-mug-hot"></i> Tea Talk</button>
+                    <button id="rv-tab-tea" onclick="switchRoomFeedTab('tea_talk')" style="flex:1;background:#9b59b6;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-comments"></i> Community Safety</button>
                     <button id="rv-tab-good" onclick="switchRoomFeedTab('good_guys')" style="flex:1;background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-thumbs-up"></i> Good Guys</button>
                 </div>
 
@@ -3226,13 +3428,13 @@
                 <h3><i class="fas fa-palette" style="color:#E8A0B5"></i> Your Avatar</h3>
                 <div class="avatar-preview-row">
                     <div class="avatar-preview-large" id="avatar-preview">?</div>
-                    <div class="avatar-preview-name" id="avatar-preview-name">Anonymous</div>
+                    <div class="avatar-preview-name" id="avatar-preview-name">Private User</div>
                 </div>
                 <div class="avatar-options">
                     <label class="avatar-option">
                         <input type="radio" name="avatar-type" value="initial" checked onchange="onAvatarTypeChange(this.value)">
                         <div class="avatar-option-content">
-                            <strong>Keep Anonymous</strong>
+                            <strong>Keep Private</strong>
                             <span>Initial + color (default)</span>
                         </div>
                     </label>
@@ -3250,7 +3452,7 @@
                         <input type="radio" name="avatar-type" value="generated" onchange="onAvatarTypeChange(this.value)">
                         <div class="avatar-option-content">
                             <strong>Generate Random Name</strong>
-                            <span>Fun, anonymous pseudonym</span>
+                            <span>Fun, private pseudonym</span>
                         </div>
                     </label>
                     <div id="generated-name-input" class="avatar-sub-option" style="display:none">
@@ -3380,6 +3582,30 @@
             <div style="margin-top:20px;padding:14px 18px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:12px;display:flex;align-items:center;gap:12px">
                 <i class="fas fa-shield-alt" style="color:#2ecc71;font-size:18px;flex-shrink:0"></i>
                 <div style="font-size:13px;color:#8080A0;line-height:1.5">Your data is encrypted and never shared. <a href="/privacy" target="_blank" style="color:#E8A0B5;text-decoration:none">Privacy Policy</a></div>
+            </div>
+
+            <!-- Live Support Chat -->
+            <div class="profile-form" id="support-chat-section" style="margin-top:24px">
+                <h3 onclick="toggleSupportChat()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+                    <span><i class="fas fa-comments" style="color:#E8A0B5"></i> Chat with Support</span>
+                    <span style="display:flex;align-items:center;gap:8px">
+                        <span style="width:8px;height:8px;background:#2ecc71;border-radius:50%;display:inline-block;animation:sosPulse 2s ease-in-out infinite"></span>
+                        <span style="font-size:12px;color:#2ecc71;font-weight:400">Online</span>
+                        <i id="chat-chevron" class="fas fa-chevron-down" style="font-size:12px;color:#8080A0;transition:transform 0.2s"></i>
+                    </span>
+                </h3>
+                <p style="color:#8080A0;font-size:13px;margin:6px 0 0">Quick questions about features? Ask our AI assistant.</p>
+                <div id="support-chat-container" style="display:none;margin-top:14px">
+                    <div id="support-chat-messages" style="height:280px;overflow-y:auto;background:#141428;border:1px solid rgba(255,255,255,0.06);border-radius:10px 10px 0 0;padding:14px;display:flex;flex-direction:column;gap:10px">
+                        <div class="sc-msg sc-msg-bot">
+                            <div class="sc-msg-bubble sc-bot">Hi! I'm SafeTea's support assistant. Ask me anything about using the app — features, safety tools, your account, or subscriptions.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;background:#141428;border:1px solid rgba(255,255,255,0.06);border-top:none;border-radius:0 0 10px 10px;padding:8px">
+                        <input type="text" id="support-chat-input" placeholder="Type your question..." maxlength="500" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-size:14px;font-family:'Inter',sans-serif;outline:none" onkeydown="if(event.key==='Enter')sendSupportChat()" onfocus="this.style.borderColor='#E8A0B5'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                        <button onclick="sendSupportChat()" id="support-chat-send" style="margin-left:8px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;width:40px;height:40px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
             </div>
 
             <div class="profile-form" style="margin-top:24px">
@@ -3572,6 +3798,10 @@
             // Small delay to let the tab become visible (so container widths are correct)
             setTimeout(function() { observeStegoCanvases(); }, 50);
         }
+        // Refresh rooms row when switching to community tab
+        if (tab === 'community' && typeof loadCommunityRooms === 'function') {
+            loadCommunityRooms();
+        }
     }
 
     // ============ HUB SUB-TAB SWITCHING ============
@@ -3673,7 +3903,7 @@
                         if (listEl) {
                             var html = '';
                             data.referrals.forEach(function(r) {
-                                var name = r.display_name || 'Anonymous';
+                                var name = r.display_name || 'Community Member';
                                 var initial = name.charAt(0).toUpperCase();
                                 var color = r.avatar_color || '#E8A0B5';
                                 html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
@@ -4168,7 +4398,7 @@
         var colors = ['#E8A0B5','#9b59b6','#3498db','#2ecc71','#e67e22','#1abc9c','#e74c3c','#f39c12'];
         var colorIndex = (post.user_id || 0) % colors.length;
         var avatarColor = post.avatar_color || colors[colorIndex];
-        var authorName = post.author_name || post.display_name || post.username || 'Anonymous';
+        var authorName = post.author_name || post.display_name || post.username || 'Community Member';
         var initial = authorName.charAt(0).toUpperCase();
         var timeAgo = getTimeAgo(post.created_at);
         var neighborhood = post.neighborhood ? ' &middot; ' + escapeHtml(post.neighborhood) : '';
@@ -4328,7 +4558,7 @@
             var replies = (data && data.replies) ? data.replies : [];
             var html = '';
             replies.forEach(function(r) {
-                var rName = r.display_name || 'Anonymous';
+                var rName = r.display_name || 'Community Member';
                 html += '<div style="display:flex;gap:8px;margin-bottom:8px;padding:6px 0">' +
                     '<div style="width:24px;height:24px;border-radius:50%;background:#E8A0B5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + rName[0].toUpperCase() + '</div>' +
                     '<div style="flex:1"><span style="font-size:12px;font-weight:600">' + escapeHtml(rName) + '</span> <span style="color:#999;font-size:10px">' + getTimeAgo(r.created_at) + '</span>' +
@@ -4659,6 +4889,456 @@
     // Load cities on page load
     loadCities();
 
+    // ============ COMMUNITY ROOM MODE ============
+    // Adds sorority rooms as a switchable feed inside the Community tab
+
+    communityState.viewingRoom = null;       // null = city mode, roomId = room mode
+    communityState.viewingRoomData = null;
+    communityState.roomFeedType = 'tea_talk';
+
+    var crPostPhotoData = null;
+
+    // Load user's rooms and render horizontal cards in community tab
+    function loadCommunityRooms() {
+        var token = localStorage.getItem('safetea_token');
+        if (!token) return;
+        fetch('/api/rooms/my-rooms', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var row = document.getElementById('community-rooms-row');
+                var cards = document.getElementById('community-rooms-cards');
+                if (!row || !cards) return;
+                if (!data || !data.rooms || data.rooms.length === 0) {
+                    row.style.display = 'none';
+                    return;
+                }
+                row.style.display = 'block';
+                cards.innerHTML = data.rooms.map(function(room) {
+                    var c1 = room.color_primary || '#9b59b6';
+                    var c2 = room.color_secondary || '#8e44ad';
+                    var memberText = room.member_count + (room.member_count == 1 ? ' member' : ' members');
+                    return '<div onclick="enterCommunityRoom(' + room.id + ')" style="min-width:130px;max-width:160px;background:#fff;border:1px solid rgba(155,89,182,0.18);border-radius:14px;padding:14px;cursor:pointer;flex-shrink:0;transition:all 0.2s" onmouseover="this.style.borderColor=\'rgba(155,89,182,0.5)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.borderColor=\'rgba(155,89,182,0.18)\';this.style.transform=\'none\'">' +
+                        '<div style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;background:linear-gradient(135deg,' + c1 + ',' + c2 + ');margin-bottom:8px">' + escapeHtml(room.greek_letters || '') + '</div>' +
+                        '<div style="font-weight:600;font-size:13px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(room.name) + '</div>' +
+                        '<div style="font-size:11px;color:#999;margin-top:2px">' + memberText + '</div>' +
+                    '</div>';
+                }).join('');
+            })
+            .catch(function() {});
+    }
+
+    // Enter room mode in Community tab
+    window.enterCommunityRoom = function(roomId) {
+        communityState.viewingRoom = roomId;
+        communityState.roomFeedType = 'tea_talk';
+
+        // Hide city elements, show room elements
+        var cityLabel = document.querySelector('.community-city-label');
+        var title = document.getElementById('community-title');
+        var searchBar = document.querySelector('.community-search-bar');
+        var quickActions = document.querySelector('.community-quick-actions');
+        var roomsRow = document.getElementById('community-rooms-row');
+        var sortToggle = document.getElementById('feed-sort-toggle');
+        var disclaimer = document.getElementById('community-disclaimer');
+        var quickpost = document.getElementById('community-quickpost');
+
+        if (cityLabel) cityLabel.style.display = 'none';
+        if (title) title.style.display = 'none';
+        if (searchBar) searchBar.style.display = 'none';
+        if (quickActions) quickActions.style.display = 'none';
+        if (roomsRow) roomsRow.style.display = 'none';
+        if (sortToggle) sortToggle.style.display = 'none';
+        if (disclaimer) disclaimer.style.display = 'none';
+        if (quickpost) quickpost.style.display = 'none';
+
+        document.getElementById('community-room-header').style.display = 'block';
+        document.getElementById('community-room-tabs').style.display = 'block';
+        document.getElementById('community-room-postbox').style.display = 'block';
+
+        // Show loading in feed
+        var feed = document.getElementById('community-feed');
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#9b59b6;"></i></div>';
+
+        // Load room details
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/details?id=' + roomId, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data || !data.room) { showToast('Room not found', true); exitCommunityRoom(); return; }
+                communityState.viewingRoomData = data;
+                var room = data.room;
+
+                // Populate header
+                document.getElementById('cr-logo').textContent = room.greek_letters || '';
+                document.getElementById('cr-logo').style.background = 'linear-gradient(135deg,' + (room.color_primary || '#9b59b6') + ',' + (room.color_secondary || '#8e44ad') + ')';
+                document.getElementById('cr-name').textContent = room.name;
+                document.getElementById('cr-meta').textContent = (data.memberCount || 0) + ' members' + (room.chapter ? ' \u00B7 ' + room.chapter : '');
+
+                // Info panel
+                document.getElementById('cr-description').textContent = room.description || 'No description set.';
+
+                // Members
+                var membersHtml = '<div style="font-size:12px;font-weight:600;color:#666;margin-bottom:6px"><i class="fas fa-users" style="color:#9b59b6;margin-right:4px"></i> Members (' + data.members.length + ')</div>';
+                data.members.slice(0, 10).forEach(function(m) {
+                    var badge = m.role === 'admin' ? ' <i class="fas fa-crown" style="color:#f39c12;font-size:9px"></i>' : m.role === 'co_admin' ? ' <i class="fas fa-star" style="color:#9b59b6;font-size:9px"></i>' : '';
+                    membersHtml += '<div style="display:inline-flex;align-items:center;gap:4px;background:#f5f0f8;border-radius:12px;padding:3px 10px;margin:2px;font-size:12px;color:#555">' + escapeHtml(m.display_name || 'Member') + badge + '</div>';
+                });
+                if (data.members.length > 10) membersHtml += '<span style="font-size:12px;color:#999;margin-left:4px">+' + (data.members.length - 10) + ' more</span>';
+                document.getElementById('cr-members-list').innerHTML = membersHtml;
+
+                // Admin panel
+                var adminPanel = document.getElementById('cr-admin-panel');
+                if (data.myRole === 'admin' || data.myRole === 'co_admin') {
+                    var pendingHtml = '';
+                    if (data.pending && data.pending.length > 0) {
+                        pendingHtml = '<div style="font-size:12px;font-weight:600;color:#f39c12;margin-bottom:6px"><i class="fas fa-clock"></i> ' + data.pending.length + ' pending</div>';
+                        data.pending.forEach(function(m) {
+                            pendingHtml += '<div style="display:flex;align-items:center;gap:8px;background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.15);border-radius:8px;padding:8px 10px;margin-bottom:6px">' +
+                                '<span style="flex:1;font-size:13px;color:#555">' + escapeHtml(m.display_name || 'User') + '</span>' +
+                                '<button onclick="roomMemberAction(' + m.membership_id + ',\'approve\');setTimeout(function(){enterCommunityRoom(' + roomId + ')},500)" style="background:#2ecc71;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Approve</button>' +
+                                '<button onclick="roomMemberAction(' + m.membership_id + ',\'deny\');setTimeout(function(){enterCommunityRoom(' + roomId + ')},500)" style="background:none;border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">Deny</button>' +
+                            '</div>';
+                        });
+                    }
+                    adminPanel.style.display = 'block';
+                    adminPanel.innerHTML = pendingHtml + '<button onclick="showRoomSettingsModal()" style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.2);color:#9b59b6;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:\'Inter\',sans-serif;font-weight:500"><i class="fas fa-cog"></i> Settings</button>';
+                } else {
+                    adminPanel.style.display = 'none';
+                }
+
+                // Load feed
+                loadCommunityRoomFeed();
+            })
+            .catch(function(err) {
+                console.error('Room load error:', err);
+                feed.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">Failed to load room.</div>';
+            });
+
+        window.scrollTo(0, 0);
+    };
+
+    // Exit room mode — return to city feed
+    window.exitCommunityRoom = function() {
+        communityState.viewingRoom = null;
+        communityState.viewingRoomData = null;
+        crPostPhotoData = null;
+
+        // Hide room elements, restore city elements
+        document.getElementById('community-room-header').style.display = 'none';
+        document.getElementById('community-room-tabs').style.display = 'none';
+        document.getElementById('community-room-postbox').style.display = 'none';
+        var crInfoPanel = document.getElementById('cr-info-panel');
+        if (crInfoPanel) crInfoPanel.style.display = 'none';
+
+        var cityLabel = document.querySelector('.community-city-label');
+        var title = document.getElementById('community-title');
+        var searchBar = document.querySelector('.community-search-bar');
+        var quickActions = document.querySelector('.community-quick-actions');
+        var disclaimer = document.getElementById('community-disclaimer');
+
+        if (cityLabel) cityLabel.style.display = '';
+        if (title) title.style.display = '';
+        if (searchBar) searchBar.style.display = '';
+        if (quickActions) quickActions.style.display = 'flex';
+        if (disclaimer) disclaimer.style.display = '';
+
+        // Restore rooms row + quickpost
+        loadCommunityRooms();
+        var quickpost = document.getElementById('community-quickpost');
+        if (quickpost && communityState.selectedCity) quickpost.style.display = 'flex';
+
+        // Restore city feed
+        if (communityState.selectedCity) {
+            loadCommunityFeed();
+            var sortToggle = document.getElementById('feed-sort-toggle');
+            if (sortToggle) sortToggle.style.display = 'block';
+        } else {
+            var feed = document.getElementById('community-feed');
+            feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-map-marker-alt" style="font-size:28px;color:#E8A0B5;display:block;margin-bottom:12px;"></i>Select a city to see posts</div>';
+        }
+
+        window.scrollTo(0, 0);
+    };
+
+    // Toggle room info panel
+    window.toggleCommunityRoomInfo = function() {
+        var panel = document.getElementById('cr-info-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    };
+
+    // Copy invite code
+    window.copyCommunityRoomCode = function() {
+        var data = communityState.viewingRoomData;
+        if (data && data.room && data.room.invite_code) {
+            navigator.clipboard.writeText(data.room.invite_code).then(function() { showToast('Invite code copied!'); });
+        }
+    };
+
+    // Switch room feed tab (tea_talk / good_guys)
+    window.switchCommunityRoomFeed = function(type) {
+        communityState.roomFeedType = type;
+        var teaBtn = document.getElementById('cr-tab-tea');
+        var goodBtn = document.getElementById('cr-tab-good');
+        if (type === 'tea_talk') {
+            teaBtn.style.background = '#9b59b6'; teaBtn.style.color = '#fff'; teaBtn.style.border = 'none';
+            goodBtn.style.background = '#f5f0f8'; goodBtn.style.color = '#9b59b6'; goodBtn.style.border = '1px solid rgba(155,89,182,0.2)';
+        } else {
+            goodBtn.style.background = '#2ecc71'; goodBtn.style.color = '#fff'; goodBtn.style.border = 'none';
+            teaBtn.style.background = '#f5f0f8'; teaBtn.style.color = '#9b59b6'; teaBtn.style.border = '1px solid rgba(155,89,182,0.2)';
+        }
+        loadCommunityRoomFeed();
+    };
+
+    // Load room feed posts — render with community light theme styling
+    function loadCommunityRoomFeed() {
+        var roomId = communityState.viewingRoom;
+        if (!roomId) return;
+        var feed = document.getElementById('community-feed');
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#9b59b6;"></i></div>';
+
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/feed?roomId=' + roomId + '&type=' + communityState.roomFeedType + '&limit=20', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data || !data.posts || data.posts.length === 0) {
+                var icon = communityState.roomFeedType === 'tea_talk' ? 'fa-comments' : 'fa-thumbs-up';
+                var msg = communityState.roomFeedType === 'tea_talk' ? 'No posts yet. Be the first to share!' : 'No good guys posted yet.';
+                feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas ' + icon + '" style="font-size:28px;color:#9b59b6;display:block;margin-bottom:12px"></i>' + msg + '</div>';
+                return;
+            }
+            var roomData = communityState.viewingRoomData;
+            var myRole = roomData ? roomData.myRole : 'member';
+            feed.innerHTML = data.posts.map(function(p) { return renderCommunityRoomPost(p, myRole); }).join('');
+            if (typeof observeStegoCanvases === 'function') observeStegoCanvases(feed);
+        })
+        .catch(function() {
+            feed.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;">Failed to load feed.</div>';
+        });
+    }
+
+    // Render a room post in community light theme style (matches renderCommunityPost)
+    function renderCommunityRoomPost(post, myRole) {
+        var colors = ['#E8A0B5','#9b59b6','#3498db','#2ecc71','#e67e22','#1abc9c','#e74c3c','#f39c12'];
+        var authorName = post.author_name || 'Community Member';
+        var initial = authorName.charAt(0).toUpperCase();
+        var avatarColor = colors[(post.author_id || 0) % colors.length];
+        var timeAgo = typeof getTimeAgoFromDate === 'function' ? getTimeAgoFromDate(post.created_at) : (typeof getTimeAgo === 'function' ? getTimeAgo(post.created_at) : '');
+
+        var pinnedHtml = post.pinned ? '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(241,196,15,0.12);color:#f39c12;margin-left:6px"><i class="fas fa-thumbtack"></i> Pinned</span>' : '';
+        var roleBadge = '';
+        if (post.author_role === 'admin') roleBadge = ' <i class="fas fa-crown" style="color:#f39c12;font-size:10px" title="Admin"></i>';
+        else if (post.author_role === 'co_admin') roleBadge = ' <i class="fas fa-star" style="color:#9b59b6;font-size:10px" title="Co-Admin"></i>';
+
+        var imageHtml = '';
+        if (post.image_data) {
+            var pid = post.id || ('crp-' + Math.random().toString(36).substr(2,6));
+            if (typeof wmRegisterImage === 'function') wmRegisterImage(pid, post.image_data);
+            imageHtml = '<div style="margin-bottom:8px;position:relative"><canvas data-wm-postid="' + pid + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#999;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>';
+        }
+
+        var likeCount = parseInt(post.like_count) || 0;
+        var dislikeCount = parseInt(post.dislike_count) || 0;
+        var replyCount = parseInt(post.reply_count) || 0;
+        var bumpCount = parseInt(post.bump_count) || 0;
+        var likeActive = post.user_reaction === 'like';
+        var dislikeActive = post.user_reaction === 'dislike';
+
+        var currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('safetea_user')); } catch(e) {}
+        var isAuthor = currentUser && String(post.author_id) === String(currentUser.id);
+        var isAdmin = myRole === 'admin' || myRole === 'co_admin';
+
+        // Admin/mod action buttons
+        var adminActions = '';
+        if (isAdmin) {
+            adminActions += '<button onclick="crPinPost(' + post.id + ',' + !post.pinned + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;color:' + (post.pinned ? '#f39c12' : '#bbb') + '" title="' + (post.pinned ? 'Unpin' : 'Pin') + '"><i class="fas fa-thumbtack"></i></button>';
+            adminActions += '<button onclick="crDeletePost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;color:#bbb" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#bbb\'" title="Delete"><i class="fas fa-trash-alt"></i></button>';
+        } else if (isAuthor) {
+            adminActions += '<button onclick="crDeletePost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:4px 8px;border-radius:6px;color:#bbb" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#bbb\'" title="Delete"><i class="fas fa-trash-alt"></i></button>';
+        }
+
+        return '<div class="community-post" id="crp-' + post.id + '">' +
+            '<div class="community-post-header">' +
+                '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
+                '<div class="community-post-meta">' +
+                    '<span class="community-post-author">' + escapeHtml(authorName) + roleBadge + pinnedHtml + '</span>' +
+                    '<div class="community-post-time">' + timeAgo + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="community-post-body">' + (typeof hubFormatBody === 'function' ? hubFormatBody(post.body) : escapeHtml(post.body || '')) + '</div>' +
+            imageHtml +
+            '<div class="community-post-actions">' +
+                '<button class="community-post-action" onclick="crReact(' + post.id + ',\'like\')" style="color:' + (likeActive ? '#E8A0B5' : '') + '"><i class="' + (likeActive ? 'fas' : 'far') + ' fa-thumbs-up"></i> ' + likeCount + '</button>' +
+                '<button class="community-post-action" onclick="crReact(' + post.id + ',\'dislike\')" style="color:' + (dislikeActive ? '#E8A0B5' : '') + '"><i class="' + (dislikeActive ? 'fas' : 'far') + ' fa-thumbs-down"></i> ' + dislikeCount + '</button>' +
+                '<button class="community-post-action" onclick="crShowReplies(' + post.id + ')"><i class="far fa-comment"></i> ' + replyCount + '</button>' +
+                '<button class="community-post-action" onclick="crBump(' + post.id + ')" style="color:' + (bumpCount > 0 ? '#f39c12' : '') + '"><i class="fas fa-arrow-up"></i> ' + bumpCount + '</button>' +
+                '<span style="margin-left:auto;display:flex;align-items:center;gap:2px">' +
+                    adminActions +
+                    '<button class="community-post-action" onclick="roomReportPost(' + post.id + ')" title="Report" style="color:#bbb" onmouseover="this.style.color=\'#e74c3c\'" onmouseout="this.style.color=\'#bbb\'"><i class="fas fa-flag"></i></button>' +
+                '</span>' +
+            '</div>' +
+            '<div id="crr-' + post.id + '" style="display:none;padding:12px 0 0;border-top:1px solid rgba(0,0,0,0.06);margin-top:12px"></div>' +
+        '</div>';
+    }
+
+    // Room post reactions
+    window.crReact = function(postId, reaction) {
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/like?postId=' + postId, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reaction: reaction })
+        }).then(function() { loadCommunityRoomFeed(); });
+    };
+
+    // Room post bump
+    window.crBump = function(postId) {
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/bump?postId=' + postId, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && data.success) { showToast('Post bumped!'); loadCommunityRoomFeed(); }
+        });
+    };
+
+    // Pin/unpin post (admin)
+    window.crPinPost = function(postId, shouldPin) {
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/pin', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: postId, pinned: shouldPin })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && !data.error) { showToast(shouldPin ? 'Post pinned!' : 'Post unpinned'); loadCommunityRoomFeed(); }
+            else showToast(data.error || 'Failed', true);
+        });
+    };
+
+    // Delete post
+    window.crDeletePost = function(postId) {
+        if (!confirm('Delete this post?')) return;
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/post?postId=' + postId, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && !data.error) { showToast('Post deleted'); loadCommunityRoomFeed(); }
+            else showToast(data.error || 'Failed', true);
+        });
+    };
+
+    // Show replies for room post in community tab
+    window.crShowReplies = function(postId) {
+        var container = document.getElementById('crr-' + postId);
+        if (!container) return;
+        if (container.style.display !== 'none') { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+        container.innerHTML = '<div style="text-align:center;color:#999;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div>';
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/replies?postId=' + postId, { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var replies = data && data.replies ? data.replies : [];
+                var html = replies.map(function(r) {
+                    return '<div style="display:flex;gap:8px;margin-bottom:8px;font-size:13px">' +
+                        '<div style="width:24px;height:24px;border-radius:50%;background:#9b59b6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + (r.author_name || 'M')[0].toUpperCase() + '</div>' +
+                        '<div><span style="font-weight:600;color:#333">' + escapeHtml(r.author_name || 'Member') + '</span> <span style="color:#666">' + escapeHtml(r.body || '') + '</span><div style="font-size:11px;color:#999;margin-top:2px">' + (typeof getTimeAgoFromDate === 'function' ? getTimeAgoFromDate(r.created_at) : '') + '</div></div>' +
+                    '</div>';
+                }).join('');
+                html += '<div style="display:flex;gap:8px;margin-top:8px"><input type="text" id="crr-input-' + postId + '" placeholder="Reply..." style="flex:1;padding:8px 12px;border:1px solid #eee;border-radius:20px;font-size:13px;font-family:\'Inter\',sans-serif;outline:none;color:#333" onfocus="this.style.borderColor=\'#9b59b6\'" onblur="this.style.borderColor=\'#eee\'"><button onclick="crSubmitReply(' + postId + ')" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Reply</button></div>';
+                container.innerHTML = html;
+            })
+            .catch(function() {
+                container.innerHTML = '<div style="color:#e74c3c;font-size:12px">Failed to load replies</div>';
+            });
+    };
+
+    // Submit reply to room post
+    window.crSubmitReply = function(postId) {
+        var input = document.getElementById('crr-input-' + postId);
+        if (!input || !input.value.trim()) return;
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/reply', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ postId: postId, body: input.value.trim() })
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && !data.error) {
+                crShowReplies(postId); // Refresh replies
+                loadCommunityRoomFeed(); // Update reply count
+            }
+        });
+    };
+
+    // Post photo handling for community room mode
+    window.crHandlePostPhoto = function(input) {
+        var file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Photo must be under 5MB', true); return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            if (typeof addWatermark === 'function') {
+                addWatermark(e.target.result, function(watermarked) {
+                    crPostPhotoData = watermarked;
+                    var preview = document.getElementById('cr-post-photo-preview');
+                    var img = document.getElementById('cr-post-photo-img');
+                    if (preview && img) { img.src = watermarked; preview.style.display = 'inline-block'; }
+                });
+            } else {
+                crPostPhotoData = e.target.result;
+                var preview = document.getElementById('cr-post-photo-preview');
+                var img = document.getElementById('cr-post-photo-img');
+                if (preview && img) { img.src = crPostPhotoData; preview.style.display = 'inline-block'; }
+            }
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    };
+
+    window.crRemovePostPhoto = function() {
+        crPostPhotoData = null;
+        var preview = document.getElementById('cr-post-photo-preview');
+        if (preview) preview.style.display = 'none';
+    };
+
+    // Submit post to room from Community tab
+    window.submitCommunityRoomPost = function() {
+        var textEl = document.getElementById('cr-post-text');
+        if (!textEl || !textEl.value.trim()) { showToast('Write something first', true); return; }
+
+        var postData = { roomId: communityState.viewingRoom, type: communityState.roomFeedType, text: textEl.value.trim() };
+        if (crPostPhotoData) postData.image = crPostPhotoData;
+
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/rooms/post', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify(postData)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.id) {
+                textEl.value = '';
+                crPostPhotoData = null;
+                var preview = document.getElementById('cr-post-photo-preview');
+                if (preview) preview.style.display = 'none';
+                loadCommunityRoomFeed();
+                showToast('Posted!');
+            } else if (data && data.error === 'trust_score_too_low') {
+                showToast('Trust score too low. Complete verification to post.', true);
+            } else if (data && data.error) {
+                showToast(data.message || data.error, true);
+            }
+        })
+        .catch(function() { showToast('Failed to post', true); });
+    };
+
+    // Load rooms on community tab init
+    loadCommunityRooms();
+
     // ============ NAME WATCH ALERTS ============
     var nwUnreadCount = 0;
 
@@ -4783,6 +5463,93 @@
     // Poll for Name Watch alerts on load and every 60 seconds
     loadNameWatchAlerts();
     setInterval(loadNameWatchAlerts, 60000);
+
+    // ============ SUPPORT CHAT ============
+    var _scHistory = [];
+    var _scOpen = false;
+
+    function toggleSupportChat() {
+        _scOpen = !_scOpen;
+        var container = document.getElementById('support-chat-container');
+        var chevron = document.getElementById('chat-chevron');
+        if (container) container.style.display = _scOpen ? 'block' : 'none';
+        if (chevron) chevron.style.transform = _scOpen ? 'rotate(180deg)' : 'rotate(0)';
+        if (_scOpen) {
+            var input = document.getElementById('support-chat-input');
+            if (input) setTimeout(function() { input.focus(); }, 100);
+        }
+    }
+
+    function sendSupportChat() {
+        var input = document.getElementById('support-chat-input');
+        var msgBox = document.getElementById('support-chat-messages');
+        var sendBtn = document.getElementById('support-chat-send');
+        if (!input || !msgBox) return;
+        var text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+
+        // Add user message
+        var userDiv = document.createElement('div');
+        userDiv.className = 'sc-msg sc-msg-user';
+        userDiv.innerHTML = '<div class="sc-msg-bubble sc-user">' + escapeHtml(text) + '</div>';
+        msgBox.appendChild(userDiv);
+
+        // Add typing indicator
+        var typingDiv = document.createElement('div');
+        typingDiv.className = 'sc-msg sc-msg-bot';
+        typingDiv.id = 'sc-typing';
+        typingDiv.innerHTML = '<div class="sc-msg-bubble sc-bot sc-typing"><span></span><span></span><span></span></div>';
+        msgBox.appendChild(typingDiv);
+        msgBox.scrollTop = msgBox.scrollHeight;
+
+        // Disable input
+        input.disabled = true;
+        if (sendBtn) sendBtn.disabled = true;
+
+        _scHistory.push({ role: 'user', content: text });
+
+        var token = localStorage.getItem('safetea_token');
+        fetch('/api/support/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ message: text, history: _scHistory.slice(-6) })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var typing = document.getElementById('sc-typing');
+            if (typing) typing.remove();
+
+            var reply = data.reply || data.error || 'Sorry, I couldn\'t process that. Try emailing support@getsafetea.app';
+            _scHistory.push({ role: 'assistant', content: reply });
+
+            var botDiv = document.createElement('div');
+            botDiv.className = 'sc-msg sc-msg-bot';
+            botDiv.innerHTML = '<div class="sc-msg-bubble sc-bot">' + escapeHtml(reply) + '</div>';
+            msgBox.appendChild(botDiv);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        })
+        .catch(function() {
+            var typing = document.getElementById('sc-typing');
+            if (typing) typing.remove();
+            var errDiv = document.createElement('div');
+            errDiv.className = 'sc-msg sc-msg-bot';
+            errDiv.innerHTML = '<div class="sc-msg-bubble sc-bot">Something went wrong. Please try again or email support@getsafetea.app</div>';
+            msgBox.appendChild(errDiv);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        })
+        .finally(function() {
+            input.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
+            input.focus();
+        });
+    }
+
+    function escapeHtml(str) {
+        var d = document.createElement('div');
+        d.appendChild(document.createTextNode(str));
+        return d.innerHTML;
+    }
 
     // ============ FEEDBACK ============
     function updateFeedbackCounter() {

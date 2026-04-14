@@ -73,6 +73,45 @@ module.exports = async function handler(req, res) {
        WHERE action = 'full_name_blocked' AND created_at > NOW() - INTERVAL '7 days'`
     ).catch(function() { return { count: 0 }; });
 
+    // Security metrics — watermark violations
+    const watermarkViolations = await getMany(
+      `SELECT target_id, details FROM moderation_logs
+       WHERE action = 'watermark_violation' AND created_at > NOW() - INTERVAL '7 days'`
+    ).catch(function() { return []; });
+
+    // Defamation removals
+    const defamationRemovals = await getOne(
+      `SELECT COUNT(*)::int as count FROM moderation_logs
+       WHERE action = 'defamation_removal' AND created_at > NOW() - INTERVAL '7 days'`
+    ).catch(function() { return { count: 0 }; });
+
+    // Suspicious accounts flagged
+    const suspiciousAccounts = await getOne(
+      `SELECT COUNT(*)::int as count FROM moderation_logs
+       WHERE action = 'suspicious_account' AND created_at > NOW() - INTERVAL '7 days'`
+    ).catch(function() { return { count: 0 }; });
+
+    // Trust score distribution
+    const trustScoreDist = await getMany(
+      `SELECT
+         CASE
+           WHEN trust_score >= 80 THEN 'high (80-100)'
+           WHEN trust_score >= 50 THEN 'medium (50-79)'
+           WHEN trust_score >= 30 THEN 'low (30-49)'
+           ELSE 'critical (<30)'
+         END as tier,
+         COUNT(*)::int as count
+       FROM users WHERE banned = false
+       GROUP BY tier`
+    ).catch(function() { return []; });
+
+    // Ban appeals received (emails are external, track via moderation_logs)
+    const banAppeals = await getOne(
+      `SELECT COUNT(*)::int as count FROM moderation_logs
+       WHERE action IN ('appeal_received', 'appeal_approved', 'appeal_denied')
+       AND created_at > NOW() - INTERVAL '7 days'`
+    ).catch(function() { return { count: 0 }; });
+
     const rawData = {
       violations: violations,
       moderation_actions: modActions,
@@ -83,7 +122,17 @@ module.exports = async function handler(req, res) {
       total_posts: totalPosts?.count || 0,
       hidden_posts: hiddenPosts?.count || 0,
       appeals: appeals,
-      name_blocks: nameBlocks?.count || 0
+      name_blocks: nameBlocks?.count || 0,
+      security: {
+        watermark_violations: watermarkViolations.length,
+        watermark_details: watermarkViolations.map(function(w) {
+          try { return JSON.parse(w.details); } catch(e) { return w.details; }
+        }),
+        defamation_removals: defamationRemovals?.count || 0,
+        suspicious_accounts_flagged: suspiciousAccounts?.count || 0,
+        trust_score_distribution: trustScoreDist,
+        ban_appeals: banAppeals?.count || 0
+      }
     };
 
     // Generate week label
@@ -105,7 +154,7 @@ module.exports = async function handler(req, res) {
           body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
             max_tokens: 1000,
-            system: `You are SafeTea's report writer. Write a concise weekly moderation report for the admin team. Use plain text with clear sections and bullet points. Include a brief summary at the top, then break down each category. Highlight any concerning trends. Keep the tone professional but friendly. Do not use markdown headers — use ALL CAPS for section titles.`,
+            system: `You are SafeTea's report writer. Write a concise weekly moderation & security report for the admin team. Use plain text with clear sections and bullet points. Include a brief summary at the top, then break down each category. Include a SECURITY section covering watermark violations, defamation removals, suspicious accounts, and trust score distribution. Highlight any concerning trends or patterns that need admin attention. Keep the tone professional but friendly. Do not use markdown headers — use ALL CAPS for section titles.`,
             messages: [{
               role: 'user',
               content: 'Generate a weekly moderation report for SafeTea for the week of ' + weekLabel + '. Here is the raw data:\n\n' + JSON.stringify(rawData, null, 2)
@@ -124,7 +173,7 @@ module.exports = async function handler(req, res) {
 
     // Fallback if AI failed
     if (!reportText) {
-      reportText = 'WEEKLY MODERATION REPORT\n' + weekLabel + '\n\n'
+      reportText = 'WEEKLY MODERATION & SECURITY REPORT\n' + weekLabel + '\n\n'
         + 'SUMMARY\n'
         + '- Total posts: ' + rawData.total_posts + '\n'
         + '- Hidden/removed posts: ' + rawData.hidden_posts + '\n'
@@ -133,7 +182,13 @@ module.exports = async function handler(req, res) {
         + '- Suspensions lifted: ' + rawData.lifted_suspensions + '\n'
         + '- Full name blocks: ' + rawData.name_blocks + '\n'
         + '- Photos uploaded: ' + (rawData.photos.active || 0) + ' active, ' + (rawData.photos.expired || 0) + ' expired\n'
-        + '- Appeals: ' + appeals.map(function(a) { return a.status + ': ' + a.count; }).join(', ') + '\n';
+        + '- Appeals: ' + appeals.map(function(a) { return a.status + ': ' + a.count; }).join(', ') + '\n\n'
+        + 'SECURITY\n'
+        + '- Watermark violations: ' + rawData.security.watermark_violations + '\n'
+        + '- Defamation removals: ' + rawData.security.defamation_removals + '\n'
+        + '- Suspicious accounts flagged: ' + rawData.security.suspicious_accounts_flagged + '\n'
+        + '- Ban appeals: ' + rawData.security.ban_appeals + '\n'
+        + '- Trust score distribution: ' + trustScoreDist.map(function(t) { return t.tier + ': ' + t.count; }).join(', ') + '\n';
     }
 
     // Save to database

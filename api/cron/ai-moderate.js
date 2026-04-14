@@ -6,7 +6,7 @@ const { getMany, getOne, run } = require('../_utils/db');
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-const SYSTEM_PROMPT = `You are SafeTea's AI auto-moderator for a women's dating safety platform. You are analyzing community posts that haven't been reviewed yet.
+const SYSTEM_PROMPT = `You are SafeTea's AI auto-moderator for a women's dating safety platform. You are analyzing community posts and chat messages that haven't been reviewed yet.
 
 Respond ONLY with valid JSON:
 {
@@ -14,28 +14,42 @@ Respond ONLY with valid JSON:
   "flags": ["list of concerns"],
   "recommendation": "approve" | "review" | "flag_removal",
   "reasoning": "brief explanation",
-  "action": null | "warn" | "remove" | "ban"
+  "violation_severity": null | "general" | "serious" | "severe",
+  "defamation_detected": false
 }
 
-Safety rules:
-1. NO harassment, threats, doxxing, or targeted abuse
-2. NO explicit sexual content or solicitation
-3. NO spam, scams, or commercial promotion
-4. NO false allegations without evidence
-5. NO hate speech or discriminatory content
-6. NO sharing personal info (phone numbers, addresses, full names of non-public figures)
+VIOLATION SEVERITY TIERS — You MUST classify every violation into one of these tiers:
+
+GENERAL violations (spam, minor rule breaks, borderline content):
+- Minor spam or self-promotion
+- Off-topic content
+- Mild rudeness or incivility
+- Borderline content that needs a warning
+
+SERIOUS violations (defamation, doxxing, harassment, PII sharing):
+- Defamation: specific false factual accusations about identifiable people (e.g. "he has a criminal record", "he gave me an STD") WITHOUT evidence
+- Doxxing: sharing personal info (phone numbers, addresses, full names, employers)
+- Targeted harassment or coordinated pile-on attacks
+- Hate speech or discriminatory content
+- Explicit sexual content or solicitation
+- Naming someone's employer/workplace with intent to cause professional harm
+Note: Opinions and subjective experiences ARE allowed ("I felt unsafe", "bad vibes", "he ghosted me"). Only flag specific false factual claims as defamation. Reference: AWDTSG case law — D'Ambrosio v. AWDTSG (N.D. Illinois 2024).
+Set "defamation_detected": true when defamatory content is found.
+
+SEVERE violations (immediate permanent ban):
+- Threats of violence or physical harm
+- CSAM or exploitation of minors
+- Malicious accounts: ban evasion, fake/bot accounts, impersonation
+- Coordinated inauthentic behavior
+- Inciting real-world violence or self-harm
+
+If the content has NO violation, set "violation_severity": null.
 
 Scoring:
 - 8-10: Genuine, helpful safety content → approve
 - 5-7: Likely genuine, minor concerns → approve or review
-- 3-4: Questionable content → review, consider warn
-- 1-2: Clear violation → remove or ban
-
-Auto-action rules:
-- action: "remove" for clear doxxing, threats, explicit content, spam (score 1-3)
-- action: "ban" for extreme harassment, threats of violence (score 1-2 + severe violation)
-- action: "warn" for minor rule violations
-- action: null for content that's fine or just needs human review`;
+- 3-4: Questionable content → general or serious violation
+- 1-2: Clear violation → serious or severe`;
 
 async function analyzeAndEnforce(post, source) {
   source = source || 'posts';
@@ -95,42 +109,131 @@ async function analyzeAndEnforce(post, source) {
       ]
     );
 
-    // Auto-enforce
-    if (result.action === 'remove') {
+    // ─── ESCALATION POLICY ───
+    // General:  1st=warning, 2nd=7d suspend, 3rd=30d suspend, 4th+=permanent ban
+    // Serious:  1st=14d suspend, 2nd=permanent ban
+    // Severe:   1st=immediate permanent ban
+    const severity = result.violation_severity;
+    if (!severity) {
+      // No violation — skip enforcement
+    } else {
+      const warningCount = (userInfo && userInfo.warning_count) || 0;
+      const contentType = source === 'room_posts' ? 'chat message' : 'post';
+
+      // Always remove the offending content
       if (source === 'room_posts') {
         await run('UPDATE room_posts SET deleted_by_ai = true, is_flagged = true WHERE id = $1', [post.id]);
       } else {
         await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
       }
-      await run(
-        `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
-        [post.user_id, `🤖 Your post was removed by SafeTea's AI safety system.\n\nReason: ${result.reasoning}\n\nContact support@getsafetea.app if you believe this was a mistake.`]
-      );
-      return { id: post.id, source, action: 'removed', score: result.credibility_score };
-    }
 
-    if (result.action === 'ban') {
-      if (source === 'room_posts') {
-        await run('UPDATE room_posts SET deleted_by_ai = true, is_flagged = true WHERE id = $1', [post.id]);
-      } else {
-        await run('UPDATE posts SET hidden = true, is_flagged = true WHERE id = $1', [post.id]);
+      // Log defamation removals specifically
+      if (result.defamation_detected) {
+        await run(
+          `INSERT INTO moderation_logs (admin_id, action, target_type, target_id, details, created_at)
+           VALUES (0, 'defamation_removal', $1, $2, $3, NOW())`,
+          [source === 'room_posts' ? 'room_post' : 'post', post.id, JSON.stringify({
+            reasoning: result.reasoning, flags: result.flags, score: result.credibility_score, auto: true
+          })]
+        );
       }
-      await run(
-        `UPDATE users SET banned = true, banned_at = NOW(), ban_reason = $1, ban_type = 'permanent' WHERE id = $2`,
-        [result.reasoning || 'AI-detected severe violation', post.user_id]
-      );
-      await run('UPDATE posts SET hidden = true WHERE user_id = $1', [post.user_id]);
-      await run('UPDATE room_posts SET deleted_by_ai = true WHERE author_id = $1', [post.user_id]);
-      return { id: post.id, source, action: 'banned', score: result.credibility_score };
-    }
 
-    if (result.action === 'warn') {
+      let escalationAction, suspendDays, inboxMsg;
+
+      if (severity === 'severe') {
+        // SEVERE — immediate permanent ban
+        escalationAction = 'permanent_ban';
+        suspendDays = null;
+      } else if (severity === 'serious') {
+        // SERIOUS — 1st=14d, 2nd+=permanent
+        if (warningCount === 0) {
+          escalationAction = 'suspend';
+          suspendDays = 14;
+        } else {
+          escalationAction = 'permanent_ban';
+          suspendDays = null;
+        }
+      } else {
+        // GENERAL — 1st=warning, 2nd=7d, 3rd=30d, 4th+=permanent
+        if (warningCount === 0) {
+          escalationAction = 'warning';
+        } else if (warningCount === 1) {
+          escalationAction = 'suspend';
+          suspendDays = 7;
+        } else if (warningCount === 2) {
+          escalationAction = 'suspend';
+          suspendDays = 30;
+        } else {
+          escalationAction = 'permanent_ban';
+          suspendDays = null;
+        }
+      }
+
+      // Increment warning count for all violations
       await run('UPDATE users SET warning_count = COALESCE(warning_count, 0) + 1, last_warned_at = NOW() WHERE id = $1', [post.user_id]);
-      await run(
-        `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
-        [post.user_id, `⚠️ AI Safety Alert: Your post was flagged.\n\nReason: ${result.reasoning}\n\nPlease follow community guidelines.`]
-      );
-      return { id: post.id, source, action: 'warned', score: result.credibility_score };
+
+      if (escalationAction === 'warning') {
+        inboxMsg = `⚠️ WARNING — Strike ${warningCount + 1}\n\n` +
+          `Your ${contentType} was removed for violating SafeTea community guidelines.\n\n` +
+          `Reason: ${result.reasoning}\n\n` +
+          `This is your first warning. Future violations will result in escalating suspensions:\n` +
+          `• 2nd strike: 7-day suspension\n` +
+          `• 3rd strike: 30-day suspension\n` +
+          `• 4th strike: permanent ban from community features\n\n` +
+          `You can still use all SafeTea safety tools. If you have questions, email support@getsafetea.app.\n\n— SafeTea Safety Team`;
+
+        await run(
+          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
+          [post.user_id, inboxMsg]
+        );
+
+        return { id: post.id, source, action: 'warned', score: result.credibility_score, severity, strike: warningCount + 1, defamation: !!result.defamation_detected };
+
+      } else if (escalationAction === 'suspend') {
+        await run(
+          `UPDATE users SET banned = true, banned_at = NOW(), ban_reason = $1, ban_type = 'temporary', ban_until = NOW() + INTERVAL '${suspendDays} days' WHERE id = $2`,
+          [result.reasoning || 'Community guideline violation', post.user_id]
+        );
+        await run('UPDATE posts SET hidden = true WHERE user_id = $1', [post.user_id]);
+
+        inboxMsg = `🚫 SUSPENDED — Strike ${warningCount + 1} (${suspendDays}-Day Suspension)\n\n` +
+          `Your ${contentType} was removed and your community access has been suspended for ${suspendDays} days.\n\n` +
+          `Reason: ${result.reasoning}\n\n` +
+          (result.defamation_detected ? `SafeTea does not allow unverified factual accusations about identifiable individuals. Opinions and personal experiences are welcome, but presenting unverified claims as fact is not permitted.\n\n` : '') +
+          `You can still use SafeTea's safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner) during your suspension.\n\n` +
+          `To appeal, email support@getsafetea.app with your account email and a detailed explanation.\n\n— SafeTea Safety Team`;
+
+        await run(
+          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
+          [post.user_id, inboxMsg]
+        );
+
+        return { id: post.id, source, action: 'suspended', score: result.credibility_score, severity, strike: warningCount + 1, days: suspendDays, defamation: !!result.defamation_detected };
+
+      } else {
+        // permanent_ban
+        await run(
+          `UPDATE users SET banned = true, banned_at = NOW(), ban_reason = $1, ban_type = 'permanent', ban_until = NULL WHERE id = $2`,
+          [result.reasoning || 'Severe community guideline violation', post.user_id]
+        );
+        await run('UPDATE posts SET hidden = true WHERE user_id = $1', [post.user_id]);
+        await run('UPDATE room_posts SET deleted_by_ai = true WHERE author_id = $1', [post.user_id]);
+
+        inboxMsg = `🚫 PERMANENTLY BANNED — Community Features Restricted\n\n` +
+          `Your account has been permanently banned from SafeTea community features (posts, chats, rooms).\n\n` +
+          `Reason: ${result.reasoning}\n` +
+          `Severity: ${severity.toUpperCase()} violation\n` +
+          `Strike: ${warningCount + 1}\n\n` +
+          `You can still use SafeTea's safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner).\n\n` +
+          `To appeal, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n— SafeTea Safety Team`;
+
+        await run(
+          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at) VALUES ($1, $1, $2, true, NOW())`,
+          [post.user_id, inboxMsg]
+        );
+
+        return { id: post.id, source, action: 'banned', score: result.credibility_score, severity, strike: warningCount + 1, defamation: !!result.defamation_detected };
+      }
     }
 
     // Flag low-scoring posts for admin review
@@ -178,11 +281,11 @@ module.exports = async function handler(req, res) {
        LIMIT 10`
     );
 
-    // Also scan unreviewed room posts
+    // Also scan unreviewed room posts (chats)
     const roomUnanalyzed = await getMany(
       `SELECT id, body, type AS category, NULL AS city, author_id AS user_id FROM room_posts
        WHERE ai_analyzed_at IS NULL AND deleted_by_admin = false AND deleted_by_ai = false
-       ORDER BY created_at DESC LIMIT 10`
+       ORDER BY created_at DESC LIMIT 30`
     );
 
     const allPosts = [...unanalyzed, ...reported];
@@ -209,15 +312,50 @@ module.exports = async function handler(req, res) {
       await new Promise(r => setTimeout(r, 200));
     }
 
-    const removed = results.filter(r => r.action === 'removed').length;
+    // Malicious account detection — check for suspicious new accounts
+    let suspiciousAccounts = 0;
+    try {
+      const newAccounts = await getMany(
+        `SELECT u.id, u.display_name, u.email, u.created_at, u.warning_count,
+                COUNT(p.id)::int as post_count,
+                COUNT(DISTINCT p.city)::int as city_count
+         FROM users u
+         LEFT JOIN posts p ON p.user_id = u.id AND p.created_at > NOW() - INTERVAL '24 hours'
+         WHERE u.created_at > NOW() - INTERVAL '48 hours'
+           AND u.banned = false
+         GROUP BY u.id
+         HAVING COUNT(p.id) > 5 OR COUNT(DISTINCT p.city) > 3`
+      ).catch(function() { return []; });
+
+      for (const acct of newAccounts) {
+        // Flag accounts that posted in many cities or posted excessively within 48 hours of creation
+        await run(
+          `INSERT INTO moderation_logs (admin_id, action, target_type, target_id, details, created_at)
+           VALUES (0, 'suspicious_account', 'user', $1, $2, NOW())`,
+          [acct.id, JSON.stringify({
+            reason: 'New account with suspicious activity pattern',
+            post_count_24h: acct.post_count,
+            cities_posted: acct.city_count,
+            created_at: acct.created_at,
+            auto: true
+          })]
+        );
+        suspiciousAccounts++;
+      }
+    } catch (e) {
+      console.error('[AI Moderate] Suspicious account scan error:', e.message);
+    }
+
     const banned = results.filter(r => r.action === 'banned').length;
+    const suspended = results.filter(r => r.action === 'suspended').length;
     const warned = results.filter(r => r.action === 'warned').length;
     const analyzed = results.filter(r => r.action === 'analyzed').length;
     const errors = results.filter(r => r.action === 'error').length;
+    const defamation = results.filter(r => r.defamation).length;
 
     return res.json({
-      message: `AI moderation complete: ${uniquePosts.length} posts processed`,
-      stats: { removed, banned, warned, analyzed, errors },
+      message: `AI moderation complete: ${uniquePosts.length + roomUnanalyzed.length} posts/chats processed`,
+      stats: { banned, suspended, warned, analyzed, errors, defamation_removed: defamation, suspicious_accounts: suspiciousAccounts },
       results
     });
   } catch (err) {

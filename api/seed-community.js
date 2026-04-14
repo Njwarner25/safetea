@@ -25,9 +25,21 @@ module.exports = async function handler(req, res) {
     // ─── CLEAN UP OLD SEED DATA ───
     const oldAccounts = await getMany("SELECT id FROM users WHERE email LIKE '%@seed.safetea.local'");
     for (const acct of oldAccounts) {
-      await run('DELETE FROM post_likes WHERE user_id = $1', [acct.id]);
-      await run('DELETE FROM replies WHERE user_id = $1', [acct.id]);
-      await run('DELETE FROM posts WHERE user_id = $1', [acct.id]);
+      // Clean up all FK references before deleting user
+      await run('DELETE FROM post_likes WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_dislikes WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_bumps WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM post_reports WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM replies WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM trust_events WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM moderation_logs WHERE target_id = $1::text', [acct.id]).catch(function() {});
+      await run('DELETE FROM messages WHERE sender_id = $1 OR recipient_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM name_watch_matches WHERE watched_name_id IN (SELECT id FROM watched_names WHERE user_id = $1)', [acct.id]).catch(function() {});
+      await run('DELETE FROM watched_names WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM connected_accounts WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM room_memberships WHERE user_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM room_posts WHERE author_id = $1', [acct.id]).catch(function() {});
+      await run('DELETE FROM posts WHERE user_id = $1', [acct.id]).catch(function() {});
       await run('DELETE FROM users WHERE id = $1', [acct.id]);
       results.accounts_deleted++;
     }
@@ -176,10 +188,11 @@ module.exports = async function handler(req, res) {
         const minutesOffset = Math.floor(Math.random() * 60);
         const postDate = new Date(now - (daysAgo * 86400000) + (hoursOffset * 3600000) + (minutesOffset * 60000));
 
+        const postTitle = post.body.length > 60 ? post.body.substring(0, 57) + '...' : post.body;
         const newPost = await getOne(
-          `INSERT INTO posts (user_id, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, $4, 'community', $5) RETURNING id`,
-          [userId, post.body, post.category, cityName, postDate.toISOString()]
+          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', $6) RETURNING id`,
+          [userId, postTitle, post.body, post.category, cityName, postDate.toISOString()]
         );
         postIds.push({ id: newPost.id, category: post.category });
         results.posts_created++;
@@ -217,16 +230,18 @@ module.exports = async function handler(req, res) {
               'INSERT INTO replies (post_id, user_id, body, content, created_at) VALUES ($1, $2, $3, $3, $4)',
               [postInfo.id, replyUserId, replyText, new Date(now - Math.floor(Math.random() * 5 * 86400000)).toISOString()]
             );
-            await run('UPDATE posts SET reply_count = reply_count + 1 WHERE id = $1', [postInfo.id]);
+            await run('UPDATE posts SET reply_count = COALESCE(reply_count, 0) + 1 WHERE id = $1', [postInfo.id]).catch(function() {});
             results.replies_created++;
           } catch(e) {}
         }
       }
 
-      // Update like counts on posts
+      // Update like counts on posts (like_count column may not exist — skip if so)
       for (const postInfo of postIds) {
-        const likeCount = await getOne('SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1', [postInfo.id]);
-        await run('UPDATE posts SET like_count = $1 WHERE id = $2', [parseInt(likeCount.count), postInfo.id]);
+        try {
+          const likeCount = await getOne('SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1', [postInfo.id]);
+          await run('UPDATE posts SET like_count = $1 WHERE id = $2', [parseInt(likeCount.count), postInfo.id]);
+        } catch(e) { /* like_count column may not exist */ }
       }
 
       // Update city post count

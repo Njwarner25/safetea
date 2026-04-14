@@ -33,7 +33,7 @@ async function authenticate(req) {
     if (!decoded) return null;
 
   const user = await getOne(
-        'SELECT id, email, display_name, role, city, bio, subscription_tier, avatar_type, avatar_color, avatar_initial, avatar_url, custom_display_name, created_at, trust_score, stripe_customer_id, stripe_subscription_id FROM users WHERE id = $1',
+        'SELECT id, email, display_name, role, city, bio, subscription_tier, avatar_type, avatar_color, avatar_initial, avatar_url, custom_display_name, created_at, trust_score, identity_verified, banned, ban_type, ban_until, warning_count, stripe_customer_id, stripe_subscription_id FROM users WHERE id = $1',
         [decoded.id]
       );
     return user;

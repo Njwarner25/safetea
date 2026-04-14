@@ -114,22 +114,8 @@
                     loadConnections();
                 }, 20000);
 
-                // Restore active session if exists
-                var stored = localStorage.getItem(ACTIVE_KEY);
-                if (stored) {
-                    try {
-                        var s = JSON.parse(stored);
-                        if (s && s.sessionKey && s.startedAt) {
-                            state.sessionKey = s.sessionKey;
-                            state.startedAt = new Date(s.startedAt).getTime();
-                            state.trackingUrl = s.trackingUrl;
-                            state.contactsNotified = s.contactsNotified || 0;
-                            showActiveCard();
-                            startGeolocation();
-                            startTimer();
-                        }
-                    } catch (e) { localStorage.removeItem(ACTIVE_KEY); }
-                }
+                // Restore active session — check backend first
+                restoreActiveSession();
             })
             .catch(function() {
                 document.getElementById('loading-state').style.display = 'none';
@@ -482,6 +468,62 @@
             }
         }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     };
+
+    // ---- Restore active session from backend ----
+    function restoreActiveSession() {
+        // First try localStorage for speed
+        var stored = localStorage.getItem(ACTIVE_KEY);
+        var localKey = null;
+        if (stored) {
+            try {
+                var s = JSON.parse(stored);
+                if (s && s.sessionKey) localKey = s.sessionKey;
+            } catch (e) { localStorage.removeItem(ACTIVE_KEY); }
+        }
+
+        // Always check backend for the authoritative active session
+        authedFetch('/api/safelink/active')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.session && data.session.sessionKey) {
+                    // Backend has an active session — use it
+                    state.sessionKey = data.session.sessionKey;
+                    state.startedAt = new Date(data.session.createdAt).getTime();
+                    state.trackingUrl = data.session.trackingUrl || null;
+                    state.contactsNotified = data.session.contactsNotified || 0;
+
+                    // Update localStorage with the real session
+                    localStorage.setItem(ACTIVE_KEY, JSON.stringify({
+                        sessionKey: state.sessionKey,
+                        startedAt: new Date(state.startedAt).toISOString(),
+                        trackingUrl: state.trackingUrl,
+                        contactsNotified: state.contactsNotified
+                    }));
+
+                    showActiveCard();
+                    startGeolocation();
+                    startTimer();
+                } else {
+                    // No active session on backend — clear stale localStorage
+                    localStorage.removeItem(ACTIVE_KEY);
+                }
+            })
+            .catch(function() {
+                // Backend unreachable — fall back to localStorage if available
+                if (localKey) {
+                    try {
+                        var s = JSON.parse(stored);
+                        state.sessionKey = s.sessionKey;
+                        state.startedAt = new Date(s.startedAt).getTime();
+                        state.trackingUrl = s.trackingUrl;
+                        state.contactsNotified = s.contactsNotified || 0;
+                        showActiveCard();
+                        startGeolocation();
+                        startTimer();
+                    } catch (e) { localStorage.removeItem(ACTIVE_KEY); }
+                }
+            });
+    }
 
     function showActiveCard() {
         document.getElementById('start-card').style.display = 'none';

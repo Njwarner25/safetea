@@ -63,6 +63,10 @@ function buildFlags(data: any): { redFlags: RedFlag[]; greenFlags: GreenFlag[]; 
 
 export default function ScreeningScreen() {
   const user = useAuthStore((s) => s.user);
+  const { history, currentScan, isScanning, startScan, completeScan, clearCurrentScan } = useScreeningStore();
+  const [profileName, setProfileName] = useState('');
+  const [platform, setPlatform] = useState('Tinder');
+  const [scanError, setScanError] = useState<string | null>(null);
 
   if (user?.tier === 'free') {
     return (
@@ -80,11 +84,6 @@ export default function ScreeningScreen() {
       </View>
     );
   }
-
-  const { history, currentScan, isScanning, startScan, completeScan, clearCurrentScan } = useScreeningStore();
-  const [profileName, setProfileName] = useState('');
-  const [platform, setPlatform] = useState('Tinder');
-  const [scanError, setScanError] = useState<string | null>(null);
 
   const handleScan = async () => {
     if (!profileName.trim()) return;

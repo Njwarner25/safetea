@@ -209,6 +209,7 @@
         { "source": "/api/rooms/report", "destination": "/api/rooms/report" },
         { "source": "/api/rooms/replies", "destination": "/api/rooms/replies" },
         { "source": "/api/rooms/leave", "destination": "/api/rooms/leave" },
+        { "source": "/api/rooms/delete", "destination": "/api/rooms/delete" },
         { "source": "/api/rooms/pin", "destination": "/api/rooms/pin" },
         { "source": "/join", "destination": "/join.html" },
         { "source": "/api/(.*)", "destination": "/api/$1" }

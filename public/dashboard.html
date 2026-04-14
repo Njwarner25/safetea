@@ -2212,6 +2212,7 @@
                     <div id="cr-members-list" style="margin-bottom:12px"></div>
                     <div id="cr-admin-panel" style="display:none;margin-bottom:12px"></div>
                     <button onclick="leaveRoom();exitCommunityRoom()" style="width:100%;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sign-out-alt"></i> Leave Room</button>
+                    <button onclick="deleteRoom()" id="cr-delete-btn" style="display:none;width:100%;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px"><i class="fas fa-trash-alt"></i> Delete Room Permanently</button>
                 </div>
             </div>
 
@@ -3193,6 +3194,7 @@
                         </div>
                     </div>
                     <button onclick="leaveRoom()" id="rv-leave-btn" style="width:100%;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;padding:12px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-sign-out-alt"></i> Leave Room</button>
+                    <button onclick="deleteRoom()" id="rv-delete-btn" style="display:none;width:100%;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px"><i class="fas fa-trash-alt"></i> Delete Room Permanently</button>
                 </div>
 
                 <!-- Feed Type Tabs -->
@@ -3228,8 +3230,12 @@
     <div id="modal-create-room" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
         <div style="background:#1A1A2E;border:1px solid rgba(155,89,182,0.2);border-radius:16px;padding:24px;max-width:440px;width:90%;max-height:85vh;overflow-y:auto;margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                <h3 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:8px"><i class="fas fa-plus-circle" style="color:#9b59b6"></i> Create Room</h3>
+                <h3 style="color:#fff;font-size:18px;display:flex;align-items:center;gap:8px"><i class="fas fa-plus-circle" style="color:#9b59b6"></i> Create Private Room</h3>
                 <button onclick="closeModal('modal-create-room')" style="background:none;border:none;color:#8080A0;font-size:18px;cursor:pointer">&times;</button>
+            </div>
+
+            <div style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.15);border-radius:10px;padding:14px;margin-bottom:16px">
+                <p style="color:#ccc;font-size:13px;line-height:1.6;margin:0"><i class="fas fa-lock" style="color:#9b59b6;margin-right:6px"></i> <strong style="color:#fff">Private sorority rooms</strong> are invite-only spaces for your chapter sisters. Share safety insights, recommend good guys, and stay connected — all within a trusted, private group. Only members with your invite code can join.</p>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:14px">
@@ -4993,6 +4999,13 @@
                     adminPanel.innerHTML = pendingHtml + '<button onclick="showRoomSettingsModal()" style="background:rgba(155,89,182,0.08);border:1px solid rgba(155,89,182,0.2);color:#9b59b6;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:\'Inter\',sans-serif;font-weight:500"><i class="fas fa-cog"></i> Settings</button>';
                 } else {
                     adminPanel.style.display = 'none';
+                }
+
+                // Show delete button only for room creator
+                var crDeleteBtn = document.getElementById('cr-delete-btn');
+                if (crDeleteBtn) {
+                    var meId = window.currentUser && window.currentUser.id;
+                    crDeleteBtn.style.display = (meId && String(room.created_by) === String(meId)) ? 'block' : 'none';
                 }
 
                 // Load feed

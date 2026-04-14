@@ -3634,6 +3634,13 @@
                 leaveBtn.style.display = 'block';
             }
 
+            // Show delete button only for room creator
+            var rvDeleteBtn = document.getElementById('rv-delete-btn');
+            if (rvDeleteBtn) {
+                var meId = window.currentUser && window.currentUser.id;
+                rvDeleteBtn.style.display = (meId && String(room.created_by) === String(meId)) ? 'block' : 'none';
+            }
+
             // Load feed
             switchRoomFeedTab(currentRoomFeedType);
         }).catch(function() {
@@ -4174,6 +4181,31 @@
             } else if (data && data.error) {
                 showToast(data.error, true);
             }
+        });
+    };
+
+    window.deleteRoom = function() {
+        var roomId = currentRoomId || (communityState && communityState.viewingRoom);
+        if (!roomId) return;
+        if (!confirm('Are you sure you want to permanently delete this room? All posts, members, and data will be removed. This cannot be undone.')) return;
+        apiFetch('/rooms/delete?roomId=' + roomId, { method: 'DELETE' }).then(function(data) {
+            if (data && data.success) {
+                showToast('Room deleted');
+                currentRoomId = null;
+                currentRoomData = null;
+                if (communityState && communityState.viewingRoom) {
+                    communityState.viewingRoom = null;
+                    communityState.viewingRoomData = null;
+                    if (typeof exitCommunityRoom === 'function') exitCommunityRoom();
+                    if (typeof loadCommunityRooms === 'function') loadCommunityRooms();
+                } else {
+                    switchHubTab('sororityrooms');
+                }
+            } else if (data && data.error) {
+                showToast(data.error, true);
+            }
+        }).catch(function() {
+            showToast('Failed to delete room', true);
         });
     };
 

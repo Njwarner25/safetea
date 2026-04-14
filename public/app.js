@@ -4123,8 +4123,9 @@
 
     // Room Settings
     window.showRoomSettingsModal = function() {
-        if (!currentRoomData || !currentRoomData.room) return;
-        var r = currentRoomData.room;
+        var data = currentRoomData || (window.communityState && window.communityState.viewingRoomData);
+        if (!data || !data.room) return;
+        var r = data.room;
         document.getElementById('rs-name').value = r.name || '';
         document.getElementById('rs-description').value = r.description || '';
         document.getElementById('rs-color1').value = r.color_primary || '#9b59b6';
@@ -4134,10 +4135,12 @@
     };
 
     window.submitRoomSettings = function() {
+        var roomId = currentRoomId || (window.communityState && window.communityState.viewingRoom);
+        if (!roomId) return;
         apiFetch('/rooms/settings', {
             method: 'PUT',
             body: JSON.stringify({
-                roomId: currentRoomId,
+                roomId: roomId,
                 name: document.getElementById('rs-name').value.trim(),
                 description: document.getElementById('rs-description').value.trim(),
                 colorPrimary: document.getElementById('rs-color1').value,
@@ -4147,7 +4150,11 @@
             if (data && data.id) {
                 closeModal('modal-room-settings');
                 showToast('Settings saved');
-                loadRoomView();
+                if (window.communityState && window.communityState.viewingRoom) {
+                    enterCommunityRoom(window.communityState.viewingRoom);
+                } else {
+                    loadRoomView();
+                }
             } else if (data && data.error) {
                 var e = document.getElementById('rs-error');
                 e.textContent = data.error;
@@ -4158,8 +4165,10 @@
 
     // Regenerate Code
     window.regenerateRoomCode = function() {
+        var roomId = currentRoomId || (window.communityState && window.communityState.viewingRoom);
+        if (!roomId) return;
         if (!confirm('This will invalidate the current invite code. Continue?')) return;
-        apiFetch('/rooms/regenerate-code?roomId=' + currentRoomId, { method: 'POST' }).then(function(data) {
+        apiFetch('/rooms/regenerate-code?roomId=' + roomId, { method: 'POST' }).then(function(data) {
             if (data && data.inviteCode) {
                 document.getElementById('rv-invite-code').value = data.inviteCode;
                 showToast('New code: ' + data.inviteCode);

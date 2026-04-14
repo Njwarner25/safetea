@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <title>Subscribe — SafeTea</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/ipad-responsive.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
+    .sub-nav { background: rgba(34,34,58,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 24px; height: 64px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 1000; }
+    .sub-nav a { color: #E8A0B5; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .sub-nav h1 { color: #fff; font-size: 18px; font-weight: 700; }
+    .sub-container { max-width: 480px; margin: 0 auto; padding: 40px 24px 80px; }
+    .sub-hero { text-align: center; margin-bottom: 32px; }
+    .sub-hero h2 { color: #fff; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .sub-hero p { color: #8080A0; font-size: 14px; }
+    .plan-card { background: #22223A; border: 2px solid rgba(232,160,181,0.2); border-radius: 16px; padding: 24px; margin-bottom: 16px; cursor: pointer; transition: all 0.2s; position: relative; }
+    .plan-card:hover, .plan-card.selected { border-color: #E8A0B5; }
+    .plan-card.selected::after { content: ''; position: absolute; top: 12px; right: 12px; width: 24px; height: 24px; background: #E8A0B5; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .plan-card.selected::before { content: '\2713'; position: absolute; top: 14px; right: 16px; color: #fff; font-size: 14px; font-weight: 700; z-index: 1; }
+    .plan-name { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .plan-price { color: #E8A0B5; font-size: 24px; font-weight: 800; }
+    .plan-price span { font-size: 14px; font-weight: 500; color: #8080A0; }
+    .plan-save { display: inline-block; background: linear-gradient(135deg, #E8A0B5, #9b59b6); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; margin-top: 6px; }
+    .sub-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 20px; transition: opacity 0.2s; }
+    .sub-btn:hover { opacity: 0.9; }
+    .sub-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .features-list { margin: 24px 0; }
+    .features-list li { display: flex; align-items: center; gap: 10px; color: #C8C8E0; font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .features-list li i { color: #2ecc71; font-size: 14px; min-width: 20px; }
+    .sub-footer { text-align: center; margin-top: 24px; font-size: 12px; color: #8080A0; line-height: 1.6; }
+    .sub-footer a { color: #E8A0B5; text-decoration: none; }
+    .sub-error { color: #e74c3c; background: rgba(231,76,60,0.1); padding: 12px; border-radius: 8px; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+    .sub-success { color: #2ecc71; background: rgba(46,204,113,0.1); padding: 12px; border-radius: 8px; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+    .restore-btn { background: none; border: 1px solid rgba(232,160,181,0.3); color: #E8A0B5; padding: 10px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 12px; width: 100%; }
+  </style>
+</head>
+<body>
+  <nav class="sub-nav">
+    <a href="/dashboard.html"><i class="fas fa-arrow-left"></i></a>
+    <h1>SafeTea+</h1>
+  </nav>
+
+  <div class="sub-container">
+    <div class="sub-hero">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <i class="fas fa-crown" style="font-size:32px;color:#fff"></i>
+      </div>
+      <h2>Upgrade to SafeTea+</h2>
+      <p>Unlock the full safety toolkit</p>
+    </div>
+
+    <ul class="features-list">
+      <li><i class="fas fa-check-circle"></i> Name Watch — alerts when someone is mentioned</li>
+      <li><i class="fas fa-check-circle"></i> Date Check-In with live location sharing</li>
+      <li><i class="fas fa-check-circle"></i> SOS Record & Protect emergency tools</li>
+      <li><i class="fas fa-check-circle"></i> Photo Verification scans</li>
+      <li><i class="fas fa-check-circle"></i> Direct messaging</li>
+      <li><i class="fas fa-check-circle"></i> Custom avatar upload</li>
+      <li><i class="fas fa-check-circle"></i> Priority support</li>
+    </ul>
+
+    <div class="plan-card selected" id="plan-monthly" onclick="selectPlan('monthly')">
+      <div class="plan-name">Monthly</div>
+      <div class="plan-price">$7.99 <span>/month</span></div>
+    </div>
+
+    <div class="plan-card" id="plan-annual" onclick="selectPlan('annual')">
+      <div class="plan-name">Annual</div>
+      <div class="plan-price">$66.99 <span>/year</span></div>
+      <div class="plan-save">Save 30%</div>
+    </div>
+
+    <button class="sub-btn" id="subscribe-btn" onclick="handleSubscribe()">
+      <i class="fas fa-lock" style="margin-right:8px"></i> Subscribe Now
+    </button>
+
+    <div id="restore-section" style="display:none">
+      <button class="restore-btn" onclick="handleRestore()">
+        <i class="fas fa-redo" style="margin-right:6px"></i> Restore Previous Purchase
+      </button>
+    </div>
+
+    <div class="sub-error" id="sub-error"></div>
+    <div class="sub-success" id="sub-success"></div>
+
+    <div class="sub-footer">
+      <p id="payment-info"></p>
+      <p style="margin-top:8px">
+        <a href="/terms.html">Terms of Service</a> · <a href="/privacy.html">Privacy Policy</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    var selectedPlan = 'monthly';
+    var TOKEN_KEY = 'safetea_token';
+    var isCapacitorNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    var isIOSNative = isCapacitorNative && /iPhone|iPad/.test(navigator.userAgent);
+
+    // Product IDs for App Store
+    var IAP_PRODUCTS = {
+      monthly: 'app.getsafetea.plus.monthly',
+      annual: 'app.getsafetea.plus.annual'
+    };
+
+    function init() {
+      var token = localStorage.getItem(TOKEN_KEY);
+      if (!token) { window.location.href = '/login'; return; }
+
+      if (isIOSNative) {
+        // iOS native — show Apple IAP info
+        document.getElementById('payment-info').innerHTML = 'Payment will be charged to your Apple ID account. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Manage subscriptions in your device Settings.';
+        document.getElementById('restore-section').style.display = 'block';
+        document.getElementById('subscribe-btn').innerHTML = '<i class="fas fa-apple-alt" style="margin-right:8px"></i> Subscribe with Apple';
+      } else {
+        // Web — Stripe checkout
+        document.getElementById('payment-info').innerHTML = '<i class="fas fa-lock" style="margin-right:4px"></i> Secure checkout powered by Stripe';
+      }
+    }
+
+    function selectPlan(plan) {
+      selectedPlan = plan;
+      document.getElementById('plan-monthly').classList.toggle('selected', plan === 'monthly');
+      document.getElementById('plan-annual').classList.toggle('selected', plan === 'annual');
+    }
+
+    function handleSubscribe() {
+      var btn = document.getElementById('subscribe-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+      hideMessages();
+
+      if (isIOSNative) {
+        handleIOSPurchase();
+      } else {
+        handleStripeCheckout();
+      }
+    }
+
+    function handleIOSPurchase() {
+      var productId = IAP_PRODUCTS[selectedPlan];
+
+      // Use Capacitor plugin bridge to trigger StoreKit purchase
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SafeTeaIAP) {
+        window.Capacitor.Plugins.SafeTeaIAP.purchase({ productId: productId })
+          .then(function(result) {
+            if (result && result.receipt) {
+              // Send receipt to backend for validation
+              return verifyReceipt(result.receipt);
+            } else {
+              throw new Error('Purchase was not completed');
+            }
+          })
+          .then(function() {
+            showSuccess('Welcome to SafeTea+! Your subscription is active.');
+            setTimeout(function() { window.location.href = '/dashboard.html'; }, 2000);
+          })
+          .catch(function(err) {
+            var msg = err.message || 'Purchase failed. Please try again.';
+            if (msg.includes('cancel')) msg = 'Purchase was cancelled.';
+            showError(msg);
+            resetButton();
+          });
+      } else {
+        showError('In-App Purchase is not available. Please update the app.');
+        resetButton();
+      }
+    }
+
+    function handleStripeCheckout() {
+      var token = localStorage.getItem(TOKEN_KEY);
+      var plan = selectedPlan === 'annual' ? 'annual' : 'monthly';
+
+      fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: plan })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+      })
+      .catch(function(err) {
+        showError(err.message || 'Checkout failed. Please try again.');
+        resetButton();
+      });
+    }
+
+    function handleRestore() {
+      if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.SafeTeaIAP) {
+        showError('Restore is only available in the iOS app.');
+        return;
+      }
+      hideMessages();
+      window.Capacitor.Plugins.SafeTeaIAP.restore()
+        .then(function(result) {
+          if (result && result.receipt) {
+            return verifyReceipt(result.receipt);
+          } else {
+            showError('No previous purchases found.');
+          }
+        })
+        .then(function(data) {
+          if (data && data.tier === 'plus') {
+            showSuccess('Purchase restored! Welcome back to SafeTea+.');
+            setTimeout(function() { window.location.href = '/dashboard.html'; }, 2000);
+          }
+        })
+        .catch(function(err) {
+          showError(err.message || 'Restore failed.');
+        });
+    }
+
+    function verifyReceipt(receipt) {
+      var token = localStorage.getItem(TOKEN_KEY);
+      return fetch('/api/iap/verify-receipt', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receipt: receipt, platform: 'ios' })
+      }).then(function(r) { return r.json(); });
+    }
+
+    function showError(msg) {
+      var el = document.getElementById('sub-error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function showSuccess(msg) {
+      var el = document.getElementById('sub-success');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideMessages() {
+      document.getElementById('sub-error').style.display = 'none';
+      document.getElementById('sub-success').style.display = 'none';
+    }
+    function resetButton() {
+      var btn = document.getElementById('subscribe-btn');
+      btn.disabled = false;
+      if (isIOSNative) {
+        btn.innerHTML = '<i class="fas fa-apple-alt" style="margin-right:8px"></i> Subscribe with Apple';
+      } else {
+        btn.innerHTML = '<i class="fas fa-lock" style="margin-right:8px"></i> Subscribe Now';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

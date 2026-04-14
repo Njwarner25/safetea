@@ -7,6 +7,11 @@
     var TOKEN_KEY = 'safetea_token';
     var USER_KEY = 'safetea_user';
 
+    // Platform detection for IAP
+    window.isCapacitorNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    window.isIOSNative = window.isCapacitorNative && /iPhone|iPad/.test(navigator.userAgent);
+    window.isAndroidNative = window.isCapacitorNative && /Android/.test(navigator.userAgent);
+
     function getToken() { return localStorage.getItem(TOKEN_KEY); }
     function getUser() { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; } }
     function authHeaders() { return { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' }; }
@@ -1442,6 +1447,12 @@
     window._upgradeInterval = 'monthly';
 
     window.showUpgradePrompt = function() {
+        // If on iOS native, redirect to subscribe page for Apple IAP
+        if (window.isIOSNative) {
+            window.location.href = '/subscribe.html';
+            return;
+        }
+
         var existing = document.getElementById('upgrade-modal');
         if (existing) existing.remove();
 
@@ -1507,6 +1518,12 @@
     };
 
     window.startCheckout = function() {
+        // If on iOS native, redirect to subscribe page for Apple IAP
+        if (window.isIOSNative) {
+            window.location.href = '/subscribe.html';
+            return;
+        }
+
         var interval = window._upgradeInterval || 'monthly';
         var priceId = PRICE_IDS[interval];
         console.log('[Stripe] Starting checkout — interval:', interval, 'priceId:', priceId);
@@ -2689,7 +2706,7 @@
             var showAll = replies.length <= 3;
             var visible = showAll ? replies : replies.slice(0, 3);
             visible.forEach(function(r) {
-                var rName = r.display_name || 'Anonymous';
+                var rName = r.display_name || 'Community Member';
                 html += '<div style="display:flex;gap:10px;margin-bottom:8px;padding:6px 0">' +
                     '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(rName) + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + rName[0].toUpperCase() + '</div>' +
                     '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(rName) + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span>' +
@@ -2700,7 +2717,7 @@
                 html += '<button onclick="showAllReplies(' + postId + ')" id="expand-replies-' + postId + '" style="background:none;border:none;color:#E8A0B5;font-size:12px;cursor:pointer;padding:4px 0;margin-bottom:8px">View all ' + replies.length + ' replies</button>';
                 html += '<div id="all-replies-' + postId + '" style="display:none">';
                 replies.slice(3).forEach(function(r) {
-                    var rName = r.display_name || 'Anonymous';
+                    var rName = r.display_name || 'Community Member';
                     html += '<div style="display:flex;gap:10px;margin-bottom:8px;padding:6px 0">' +
                         '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(rName) + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + rName[0].toUpperCase() + '</div>' +
                         '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(rName) + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span>' +
@@ -2911,7 +2928,7 @@
         if (sub === 'roomview') loadRoomView();
     };
 
-    // ==================== TEA TALK (Community Posts) ====================
+    // ==================== COMMUNITY SAFETY (Community Posts) ====================
     function hubFormatBody(text) {
         if (!text) return '';
         var escaped = escapeHtmlSafe(text);
@@ -2939,7 +2956,7 @@
     }
 
     function hubRenderPost(post) {
-        var authorName = post.author_name || 'Anonymous';
+        var authorName = post.author_name || 'Community Member';
         var initial = authorName[0].toUpperCase();
         var avatarColor = hubGetAvatarColor(authorName);
         var cityHtml = post.city ? ' <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,160,181,0.15);color:#E8A0B5;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:8px"><i class="fas fa-map-marker-alt"></i> ' + escapeHtmlSafe(post.city) + '</span>' : '';
@@ -3090,7 +3107,7 @@
     };
 
     function hubRenderReferral(post) {
-        var authorName = post.author_name || 'Anonymous';
+        var authorName = post.author_name || 'Community Member';
         var initial = authorName[0].toUpperCase();
         var avatarColor = hubGetAvatarColor(authorName);
         var personName = post.title || 'Unknown';
@@ -3359,7 +3376,7 @@
                 var rInitial = (r.display_name || 'U').charAt(0).toUpperCase();
                 return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)">'
                     + '<div style="width:32px;height:32px;border-radius:50%;background:rgba(232,160,181,0.15);color:#E8A0B5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">' + rInitial + '</div>'
-                    + '<div style="flex:1"><div style="font-size:13px;color:#fff">' + (r.display_name || 'Anonymous') + '</div>'
+                    + '<div style="flex:1"><div style="font-size:13px;color:#fff">' + (r.display_name || 'Community Member') + '</div>'
                     + '<div style="font-size:11px;color:#8080A0">Joined ' + joinDate + '</div></div></div>';
             }).join('');
         } else if (friendsList) {
@@ -3599,7 +3616,7 @@
                 var mBadge = m.role === 'admin' ? ' <i class="fas fa-crown" style="color:#f39c12;font-size:10px"></i>' : m.role === 'co_admin' ? ' <i class="fas fa-star" style="color:#9b59b6;font-size:10px"></i>' : '';
                 membersHtml += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0">' +
                     '<div style="width:28px;height:28px;border-radius:50%;background:' + hubGetAvatarColor(m.display_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">' + (m.display_name || '?')[0].toUpperCase() + '</div>' +
-                    '<span style="color:#ccc;font-size:13px">' + escapeHtmlSafe(m.display_name || 'Anonymous') + mBadge + '</span>' +
+                    '<span style="color:#ccc;font-size:13px">' + escapeHtmlSafe(m.display_name || 'Community Member') + mBadge + '</span>' +
                 '</div>';
             });
             if (data.members.length > 20) membersHtml += '<div style="color:#8080A0;font-size:12px;padding:4px 0">+ ' + (data.members.length - 20) + ' more</div>';
@@ -3635,7 +3652,7 @@
             html += '<div style="display:flex;align-items:center;gap:10px;background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.15);border-radius:10px;padding:10px 12px;margin-bottom:8px">' +
                 '<div style="width:32px;height:32px;border-radius:50%;background:' + hubGetAvatarColor(m.display_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">' + (m.display_name || '?')[0].toUpperCase() + '</div>' +
                 '<div style="flex:1">' +
-                    '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtmlSafe(m.display_name || 'Anonymous') + '</div>' +
+                    '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtmlSafe(m.display_name || 'Community Member') + '</div>' +
                     '<div style="color:#8080A0;font-size:11px">' + getTimeAgoFromDate(m.requested_at) + '</div>' +
                 '</div>' +
                 '<button onclick="roomMemberAction(' + m.membership_id + ',\'approve\')" style="background:#2ecc71;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">Approve</button>' +
@@ -3666,8 +3683,8 @@
 
         apiFetch('/rooms/feed?roomId=' + currentRoomId + '&type=' + currentRoomFeedType + '&limit=20').then(function(data) {
             if (!data || !data.posts || data.posts.length === 0) {
-                var emptyIcon = currentRoomFeedType === 'tea_talk' ? 'fa-mug-hot' : 'fa-thumbs-up';
-                var emptyText = currentRoomFeedType === 'tea_talk' ? 'No tea yet. Be the first to spill!' : 'No good guys posted yet.';
+                var emptyIcon = currentRoomFeedType === 'tea_talk' ? 'fa-comments' : 'fa-thumbs-up';
+                var emptyText = currentRoomFeedType === 'tea_talk' ? 'No posts yet. Be the first to share a safety insight!' : 'No good guys posted yet.';
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas ' + emptyIcon + '" style="font-size:24px;display:block;margin-bottom:8px;color:#9b59b6"></i>' + emptyText + '</div>';
                 return;
             }
@@ -3707,7 +3724,7 @@
     };
 
     function roomRenderPost(post) {
-        var authorName = post.author_name || 'Anonymous';
+        var authorName = post.author_name || 'Community Member';
         var initial = authorName[0].toUpperCase();
         var avatarColor = hubGetAvatarColor(authorName);
         var likeCount = parseInt(post.like_count) || 0;
@@ -3887,7 +3904,7 @@
                 data.replies.forEach(function(r) {
                     html += '<div style="display:flex;gap:10px;margin-bottom:8px">' +
                         '<div style="width:26px;height:26px;border-radius:50%;background:' + hubGetAvatarColor(r.author_name || '') + ';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">' + (r.author_name || '?')[0].toUpperCase() + '</div>' +
-                        '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(r.author_name || 'Anonymous') + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span><div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
+                        '<div style="flex:1"><span style="color:#fff;font-size:12px;font-weight:600">' + escapeHtmlSafe(r.author_name || 'Community Member') + '</span> <span style="color:#8080A0;font-size:10px">' + getTimeAgoFromDate(r.created_at) + '</span><div style="color:#ccc;font-size:13px;margin-top:2px">' + escapeHtmlSafe(r.body) + '</div></div>' +
                     '</div>';
                 });
             } else {

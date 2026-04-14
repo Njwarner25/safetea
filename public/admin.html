@@ -864,7 +864,7 @@
                         <div class="post-card-user">
                             <div class="post-card-avatar" style="background:${post.avatar_color || '#E8A0B5'}">${post.avatar_initial || '?'}</div>
                             <div class="post-card-meta">
-                                <div class="post-card-name">${escapeHtml(post.display_name || 'Anonymous')}</div>
+                                <div class="post-card-name">${escapeHtml(post.display_name || 'Community Member')}</div>
                                 <div class="post-card-info">${post.city || 'Unknown'} &middot; ${timeAgo(post.created_at)} &middot; ${post.category || 'general'}</div>
                             </div>
                         </div>
@@ -1340,7 +1340,7 @@
                                 <div class="post-card-user">
                                     <div class="post-card-avatar" style="background:${color}">${avatar}</div>
                                     <div class="post-card-meta">
-                                        <div class="post-card-name">${escapeHtml(post.display_name || 'Anonymous')}</div>
+                                        <div class="post-card-name">${escapeHtml(post.display_name || 'Community Member')}</div>
                                         <div class="post-card-info">${escapeHtml(post.category || 'general')} &middot; ${timeAgo(post.created_at)} &middot; ${post.likes || 0} likes &middot; ${post.reply_count || 0} replies</div>
                                     </div>
                                 </div>
@@ -1597,7 +1597,7 @@
                             '<div class="post-card-user">' +
                                 '<div class="post-card-avatar" style="background:' + (fb.avatar_color || '#E8A0B5') + '">' + (fb.avatar_initial || '?') + '</div>' +
                                 '<div class="post-card-meta">' +
-                                    '<div class="post-card-name">' + escapeHtml(fb.display_name || fb.email || 'Anonymous') + '</div>' +
+                                    '<div class="post-card-name">' + escapeHtml(fb.display_name || fb.email || 'Community Member') + '</div>' +
                                     '<div class="post-card-info">' + (fb.type || 'general') + ' &middot; ' + timeAgo(fb.created_at) + '</div>' +
                                 '</div>' +
                             '</div>' +

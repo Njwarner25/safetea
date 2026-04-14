@@ -36,6 +36,11 @@ function getSectionStatus(section: any): { label: string; color: string } {
 
 export default function BackgroundCheckScreen() {
   const user = useAuthStore((s) => s.user);
+  const [fullName, setFullName] = useState('');
+  const [age, setAge] = useState('');
+  const [isMentionsOpen, setIsMentionsOpen] = useState(false);
+  const selectedCity = useCityStore((s) => s.getSelectedCity());
+  const { bgResult, bgLoading, bgError, bgHistory, setBgLoading, setBgResult, setBgError, clearBgResult } = useBackgroundCheckStore();
 
   // SafeTea+ tier gate (accepts 'plus' or legacy 'pro')
   if (user?.tier !== 'plus' && user?.tier !== 'pro') {
@@ -54,12 +59,6 @@ export default function BackgroundCheckScreen() {
       </View>
     );
   }
-
-  const [fullName, setFullName] = useState('');
-  const [age, setAge] = useState('');
-  const [isMentionsOpen, setIsMentionsOpen] = useState(false);
-  const selectedCity = useCityStore((s) => s.getSelectedCity());
-  const { bgResult, bgLoading, bgError, bgHistory, setBgLoading, setBgResult, setBgError, clearBgResult } = useBackgroundCheckStore();
 
   const state = selectedCity?.state || '';
   const city = selectedCity?.name || '';

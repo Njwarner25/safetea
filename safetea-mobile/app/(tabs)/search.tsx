@@ -1,4 +1,4 @@
-import { View, Text, TextInput, StyleSheet, FlatList, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -28,7 +28,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: Spacing.xxl }}>
       <View style={styles.searchBar}>
         <FontAwesome5 name="search" size={16} color={Colors.textMuted} style={{ marginHorizontal: Spacing.sm }} />
         <TextInput
@@ -71,7 +71,7 @@ export default function SearchScreen() {
         FCRA Notice: Information provided is for personal safety purposes only.
         All data sourced from public records.
       </Text>
-    </View>
+    </ScrollView>
   );
 }
 

@@ -10,6 +10,20 @@ import SOSFloatingButton from '../components/SOSFloatingButton';
 
 export default function SafeWalkScreen() {
   const user = useAuthStore((s) => s.user);
+  const {
+    trustedContacts, activeSession, pastSessions,
+    addContact, removeContact, startSession, endSession, triggerPanic, triggerSOS, respondToCheckIn, addCheckIn,
+  } = useSafeWalkStore();
+
+  const [venue, setVenue] = useState('');
+  const [partnerName, setPartnerName] = useState('');
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [checkoutId, setCheckoutId] = useState<string | null>(null);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
+  const [newContactRelation, setNewContactRelation] = useState('');
+  const [showAddContact, setShowAddContact] = useState(false);
 
   if (user?.tier === 'free') {
     return (
@@ -27,20 +41,6 @@ export default function SafeWalkScreen() {
       </View>
     );
   }
-  const {
-    trustedContacts, activeSession, pastSessions,
-    addContact, removeContact, startSession, endSession, triggerPanic, triggerSOS, respondToCheckIn,
-  } = useSafeWalkStore();
-
-  const [venue, setVenue] = useState('');
-  const [partnerName, setPartnerName] = useState('');
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [checkoutId, setCheckoutId] = useState<string | null>(null);
-  const [newContactName, setNewContactName] = useState('');
-  const [newContactPhone, setNewContactPhone] = useState('');
-  const [newContactRelation, setNewContactRelation] = useState('');
-  const [showAddContact, setShowAddContact] = useState(false);
 
   const handleAddContact = () => {
     if (!newContactName.trim() || !newContactPhone.trim()) {
@@ -122,7 +122,7 @@ export default function SafeWalkScreen() {
       time: new Date().toISOString(),
       status: 'safe' as const,
     };
-    respondToCheckIn(checkIn.id, 'safe');
+    addCheckIn(checkIn);
     Alert.alert('Check-in Sent', 'Your trusted contact has been notified you are safe.');
   };
 

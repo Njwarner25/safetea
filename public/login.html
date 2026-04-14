@@ -239,6 +239,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
           <link rel="stylesheet" href="/mobile-viewport-lock.css">
+          <link rel="stylesheet" href="/ipad-responsive.css">
 </head>
       <body>
         <div class="auth-container">
@@ -413,6 +414,11 @@
     // Check if already logged in
     if (localStorage.getItem('safetea_token')) {
       window.location.href = '/dashboard.html';
+    }
+
+    // Auto-switch tab based on URL hash (e.g. /login#register from welcome page)
+    if (window.location.hash === '#register') {
+      document.addEventListener('DOMContentLoaded', function() { switchTab('register'); });
     }
 
     function switchTab(tab) {

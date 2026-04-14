@@ -69,6 +69,7 @@
         { "source": "/api/blog/news", "destination": "/api/blog/news" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
         { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },
+        { "source": "/api/iap/verify-receipt", "destination": "/api/iap/verify-receipt" },
         { "source": "/api/subscribe", "destination": "/api/subscribe" },
         { "source": "/api/stripe-test", "destination": "/api/stripe-test" },
         { "source": "/api/webhook-stripe", "destination": "/api/webhook-stripe" },

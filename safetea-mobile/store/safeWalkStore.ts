@@ -39,6 +39,7 @@ interface SafeWalkState {
   endSession: () => void;
   triggerPanic: () => void;
   triggerSOS: (type: string) => void;
+  addCheckIn: (checkIn: CheckIn) => void;
   respondToCheckIn: (checkInId: string, status: CheckInStatus) => void;
 }
 
@@ -57,6 +58,16 @@ export const useSafeWalkStore = create<SafeWalkState>((set, get) => ({
   })),
 
   startSession: (session) => set({ activeSession: session }),
+
+  addCheckIn: (checkIn) => set((state) => {
+    if (!state.activeSession) return state;
+    return {
+      activeSession: {
+        ...state.activeSession,
+        checkIns: [...state.activeSession.checkIns, checkIn],
+      },
+    };
+  }),
 
   endSession: () => set((state) => {
     if (!state.activeSession) return state;

@@ -37,7 +37,9 @@ function normalizeCrimeType(rawCategory) {
     return 'indecent_exposure';
   if (upper.includes('ASSAULT') || upper.includes('BATTERY'))
     return 'assault';
-  if (upper.includes('SEX OFFENSE') || upper.includes('OTHER SEX'))
+  if (upper.includes('SEX OFFENSE') || upper.includes('OTHER SEX') ||
+      upper.includes('FONDLING') || upper.includes('INCEST') ||
+      upper.includes('STATUTORY RAPE'))
     return 'sexual_assault';
   if (upper.includes('OFFENSES AGAINST FAMILY'))
     return 'domestic_violence';
@@ -97,15 +99,32 @@ const CITY_FETCHERS = {
   },
 
   new_york: async (daysBack) => {
-    const url = socrataUrl(
-      'https://data.cityofnewyork.us/resource/5uac-w243.json',
-      'cmplnt_fr_dt', 'ofns_desc',
-      ['RAPE', 'FELONY ASSAULT', 'SEX CRIMES', 'KIDNAPPING & RELATED OFFENSES', 'HARRASSMENT 2', 'ASSAULT 3 & RELATED OFFENSES'],
-      daysBack
-    );
+    // NYC publishes two datasets: "Current (Year To Date)" (5uac-w243) and
+    // "Historic" (qgea-i56i). The YTD dataset lags by ~1 quarter, so query
+    // both and merge to maximize coverage.
+    const categories = ['RAPE', 'FELONY ASSAULT', 'SEX CRIMES', 'KIDNAPPING & RELATED OFFENSES', 'HARRASSMENT 2', 'ASSAULT 3 & RELATED OFFENSES'];
     const headers = process.env.NYC_SOCRATA_TOKEN ? { 'X-App-Token': process.env.NYC_SOCRATA_TOKEN } : {};
-    const data = await safeFetch(url, headers);
-    return data.map(r => ({
+    const urlYTD = socrataUrl(
+      'https://data.cityofnewyork.us/resource/5uac-w243.json',
+      'cmplnt_fr_dt', 'ofns_desc', categories, daysBack
+    );
+    const urlHist = socrataUrl(
+      'https://data.cityofnewyork.us/resource/qgea-i56i.json',
+      'cmplnt_fr_dt', 'ofns_desc', categories, daysBack
+    );
+    const [dataYTD, dataHist] = await Promise.all([
+      safeFetch(urlYTD, headers).catch(() => []),
+      safeFetch(urlHist, headers).catch(() => [])
+    ]);
+    // Deduplicate by complaint number, preferring YTD (more current)
+    const seen = new Set();
+    const merged = [];
+    for (const r of [...dataYTD, ...dataHist]) {
+      if (!r.cmplnt_num || seen.has(r.cmplnt_num)) continue;
+      seen.add(r.cmplnt_num);
+      merged.push(r);
+    }
+    return merged.map(r => ({
       city: 'new_york',
       source_id: `new_york_${r.cmplnt_num}`,
       raw_category: r.ofns_desc,
@@ -118,29 +137,63 @@ const CITY_FETCHERS = {
   },
 
   los_angeles: async (daysBack) => {
-    const url = socrataUrl(
-      'https://data.lacity.org/resource/2nrs-mtv8.json',
-      'date_occ', 'crm_cd_desc',
-      ['BATTERY - SIMPLE ASSAULT', 'ASSAULT WITH DEADLY WEAPON, AGGRAVATED ASSAULT', 'INTIMATE PARTNER - SIMPLE ASSAULT', 'INTIMATE PARTNER - AGGRAVATED ASSAULT', 'RAPE, FORCIBLE', 'SEXUAL PENETRATION W/FOREIGN OBJECT', 'STALKING', 'KIDNAPPING', 'HUMAN TRAFFICKING - COMMERCIAL SEX ACTS', 'INDECENT EXPOSURE', 'PEEPING TOM'],
-      daysBack
-    );
+    // LAPD transitioned to NIBRS in March 2024. The old UCR dataset (2nrs-mtv8)
+    // stopped updating at Dec 2024. New NIBRS datasets:
+    //   y8y3-fqfu = 2024-2025 (NO lat/lon fields)
+    //   k7nn-b2ep = 2026-present (HAS hndrdth_lat/hndrdth_lon)
+    // Query the 2026+ dataset first (has coords), fall back to 2024-2025.
+    const nibrsCategories = [
+      'Aggravated Assault', 'Simple Assault', 'Intimidation',
+      'Rape', 'Sodomy', 'Sexual Assault With An Object', 'Fondling',
+      'Kidnapping/Abduction', 'Human Trafficking, Commercial Sex Acts',
+      'Human Trafficking, Involuntary Servitude', 'Stalking',
+      'Incest', 'Statutory Rape'
+    ];
     const headers = process.env.LA_SOCRATA_TOKEN ? { 'X-App-Token': process.env.LA_SOCRATA_TOKEN } : {};
-    const data = await safeFetch(url, headers);
-    return data.map(r => ({
+
+    // 2026+ dataset (has coordinates)
+    const url2026 = socrataUrl(
+      'https://data.lacity.org/resource/k7nn-b2ep.json',
+      'date_occ', 'nibr_description', nibrsCategories, daysBack
+    );
+    // 2024-2025 dataset (no coordinates — records will be filtered out later)
+    const url2425 = socrataUrl(
+      'https://data.lacity.org/resource/y8y3-fqfu.json',
+      'date_occ', 'nibr_description', nibrsCategories, daysBack
+    );
+
+    const [data2026, data2425] = await Promise.all([
+      safeFetch(url2026, headers).catch(() => []),
+      safeFetch(url2425, headers).catch(() => [])
+    ]);
+
+    // Deduplicate by uniquenibrno
+    const seen = new Set();
+    const merged = [];
+    for (const r of [...data2026, ...data2425]) {
+      const key = r.uniquenibrno || r.caseno;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(r);
+    }
+
+    return merged.map(r => ({
       city: 'los_angeles',
-      source_id: `los_angeles_${r.dr_no}`,
-      raw_category: r.crm_cd_desc,
-      description: r.crm_cd_desc,
-      latitude: parseFloat(r.lat),
-      longitude: parseFloat(r.lon),
+      source_id: `los_angeles_${r.uniquenibrno || r.caseno}`,
+      raw_category: r.nibr_description,
+      description: `${r.nibr_description}${r.domestic_violence_crime === 'Yes' ? ' (DOMESTIC)' : ''}`,
+      latitude: parseFloat(r.hndrdth_lat || r.lat),
+      longitude: parseFloat(r.hndrdth_lon || r.lon),
       occurred_at: r.date_occ,
-      block_address: r.location
+      block_address: r.premis_desc || r.area_name
     }));
   },
 
   dallas: async (daysBack) => {
+    // The old dataset (yn72-daik) dropped the date1 column. The newer
+    // "Police Incidents" dataset (qv6i-rri7) has date1 and all NIBRS fields.
     const url = socrataUrl(
-      'https://www.dallasopendata.com/resource/yn72-daik.json',
+      'https://www.dallasopendata.com/resource/qv6i-rri7.json',
       'date1', 'nibrs_crime_category',
       ['ASSAULT OFFENSES', 'SEX OFFENSES', 'KIDNAPPING/ABDUCTION', 'HUMAN TRAFFICKING'],
       daysBack
@@ -151,81 +204,140 @@ const CITY_FETCHERS = {
       const geo = r.geocoded_column || {};
       return {
         city: 'dallas',
-        source_id: `dallas_${r.servnumb}`,
+        source_id: `dallas_${r.incidentnum}`,
         raw_category: r.nibrs_crime_category,
         description: r.nibrs_crime || r.nibrs_crime_category,
-        latitude: parseFloat(geo.latitude || r.y_coordinate),
-        longitude: parseFloat(geo.longitude || r.x_cordinate),
+        latitude: parseFloat(geo.latitude || r.y_cordinate),
+        longitude: parseFloat(geo.longitude || r.x_coordinate),
         occurred_at: r.date1,
-        block_address: r.location1
+        block_address: r.incident_address
       };
     });
   },
 
   atlanta: async (daysBack) => {
-    const url = socrataUrl(
-      'https://opendata.atlantapd.org/resource/crime-data.json',
-      'occur_date', 'ucr_literal',
-      ['AGG ASSAULT', 'RAPE', 'ROBBERY', 'KIDNAPPING'],
-      daysBack
-    );
-    const headers = process.env.ATLANTA_SOCRATA_TOKEN ? { 'X-App-Token': process.env.ATLANTA_SOCRATA_TOKEN } : {};
-    const data = await safeFetch(url, headers);
+    // Atlanta moved from Socrata to ArcGIS Hub. The crime data lives at
+    // services3.arcgis.com under org Et5Qfajgiyosiw4d, service
+    // OpenDataWebsite_Crime_view, layer 0. Fields use NIBRS naming.
+    const since = new Date(Date.now() - daysBack * 86400000).getTime();
+    const offenses = [
+      'Aggravated Assault', 'Simple Assault', 'Intimidation',
+      'Rape', 'Sodomy', 'Sexual Assault With An Object', 'Fondling',
+      'Kidnapping/Abduction', 'Human Trafficking, Commercial Sex Acts',
+      'Human Trafficking, Involuntary Servitude', 'Stalking', 'Robbery',
+      'Indecent Exposure'
+    ].map(o => `'${o}'`).join(',');
+    const params = new URLSearchParams({
+      where: `OccurredFromDate >= ${since} AND NIBRS_Offense IN (${offenses})`,
+      outFields: 'OBJECTID,ReportNumber,NIBRS_Offense,OccurredFromDate,Latitude,Longitude,StreetAddress,NibrsUcrCode',
+      outSR: '4326',
+      resultRecordCount: '2000',
+      orderByFields: 'OccurredFromDate DESC',
+      f: 'json'
+    });
+    const baseUrl = 'https://services3.arcgis.com/Et5Qfajgiyosiw4d/ArcGIS/rest/services/OpenDataWebsite_Crime_view/FeatureServer/0/query';
+    const data = await safeFetch(`${baseUrl}?${params}`);
     return data.map(r => ({
       city: 'atlanta',
-      source_id: `atlanta_${r.report_number}`,
-      raw_category: r.ucr_literal,
-      description: r.ibr_code || r.ucr_literal,
-      latitude: parseFloat(r.latitude),
-      longitude: parseFloat(r.longitude),
-      occurred_at: r.occur_date,
-      block_address: r.location
+      source_id: `atlanta_${r.ReportNumber || r.OBJECTID}`,
+      raw_category: r.NIBRS_Offense,
+      description: r.NIBRS_Offense,
+      latitude: parseFloat(r.Latitude),
+      longitude: parseFloat(r.Longitude),
+      occurred_at: r.OccurredFromDate ? new Date(r.OccurredFromDate).toISOString() : null,
+      block_address: r.StreetAddress
     }));
   },
 
   houston: async (daysBack) => {
-    const baseUrl = 'https://services1.arcgis.com/HPAghgOBFDCVCCyR/arcgis/rest/services/HPD_Crime_Summary_2020_2024/FeatureServer/0/query';
+    // Houston moved to mycity2.houstontx.gov. The NIBRS_Recent_Crime_Reports
+    // FeatureServer has fields prefixed with USER_. Coordinates come from
+    // the geometry object (need outSR=4326 for lat/lon).
+    const since = new Date(Date.now() - daysBack * 86400000).getTime();
+    const offenses = [
+      'Aggravated Assault', 'Simple Assault', 'Intimidation',
+      'Rape', 'Sodomy', 'Sexual Assault With An Object', 'Fondling',
+      'Kidnapping/Abduction', 'Human Trafficking, Commercial Sex Acts',
+      'Human Trafficking, Involuntary Servitude', 'Stalking'
+    ].map(o => `'${o}'`).join(',');
+    const baseUrl = 'https://mycity2.houstontx.gov/pubgis02/rest/services/HPD/NIBRS_Recent_Crime_Reports/FeatureServer/0/query';
     const params = new URLSearchParams({
-      where: `NIBRSDescription IN ('Aggravated Assault','Simple Assault','Rape','Sodomy','Sexual Assault With An Object','Fondling','Kidnapping/Abduction','Human Trafficking','Stalking','Intimidation')`,
-      outFields: '*',
+      where: `USER_RMSOccurrenceDate >= ${since} AND USER_NIBRSDescription IN (${offenses})`,
+      outFields: 'OBJECTID,USER_Incident,USER_NIBRSDescription,USER_NIBRSClass,USER_RMSOccurrenceDate,USER_StreetName,USER_BlockRange,USER_StreetType',
+      outSR: '4326',
+      returnGeometry: 'true',
       resultRecordCount: '2000',
-      orderByFields: 'Date DESC',
+      orderByFields: 'USER_RMSOccurrenceDate DESC',
       f: 'json'
     });
-    const data = await safeFetch(`${baseUrl}?${params}`);
-    return data.map(r => ({
-      city: 'houston',
-      source_id: `houston_${r.ObjectId}`,
-      raw_category: r.NIBRSDescription,
-      description: r.NIBRSDescription,
-      latitude: parseFloat(r.MapLatitude),
-      longitude: parseFloat(r.MapLongitude),
-      occurred_at: r.Date ? new Date(r.Date).toISOString() : null,
-      block_address: r.StreetName
-    }));
+    const res = await fetch(`${baseUrl}?${params}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const json = await res.json();
+    if (json.error) throw new Error(`ArcGIS error: ${JSON.stringify(json.error).slice(0, 200)}`);
+    const features = json.features || [];
+    return features.map(f => {
+      const r = f.attributes;
+      const geo = f.geometry || {};
+      return {
+        city: 'houston',
+        source_id: `houston_${r.USER_Incident || r.OBJECTID}`,
+        raw_category: r.USER_NIBRSDescription,
+        description: r.USER_NIBRSDescription,
+        latitude: parseFloat(geo.y),
+        longitude: parseFloat(geo.x),
+        occurred_at: r.USER_RMSOccurrenceDate ? new Date(r.USER_RMSOccurrenceDate).toISOString() : null,
+        block_address: [r.USER_BlockRange, r.USER_StreetName, r.USER_StreetType].filter(Boolean).join(' ')
+      };
+    });
   },
 
   miami: async (daysBack) => {
-    const since = new Date(Date.now() - daysBack * 86400000).toISOString().split('.')[0];
-    const where = encodeURIComponent(`report_date > '${since}'`);
-    const url = `https://data.miamigov.com/resource/crimes.json?$where=${where}&$limit=2000&$order=${encodeURIComponent('report_date DESC')}`;
-    const headers = process.env.MIAMI_SOCRATA_TOKEN ? { 'X-App-Token': process.env.MIAMI_SOCRATA_TOKEN } : {};
-    const data = await safeFetch(url, headers);
-    return data.map(r => ({
-      city: 'miami',
-      source_id: `miami_${r.case_number}`,
-      raw_category: r.offense,
-      description: r.offense,
-      latitude: parseFloat(r.latitude),
-      longitude: parseFloat(r.longitude),
-      occurred_at: r.report_date,
-      block_address: r.location_address
-    }));
+    // The old data.miamigov.com Socrata endpoint was decommissioned.
+    // Miami/Miami-Dade does not currently publish a queryable crime incident
+    // API with lat/lon. Using CrimeMapping.com BAIR data as a fallback,
+    // which is what Miami PD links to from their official website.
+    // If this endpoint also fails, return empty gracefully.
+    try {
+      const since = new Date(Date.now() - daysBack * 86400000).toISOString();
+      const now = new Date().toISOString();
+      const url = `https://www.crimemapping.com/api/Incidents/Get?` + new URLSearchParams({
+        lat: '25.7617',
+        lng: '-80.1918',
+        radius: '15',
+        startDate: since,
+        endDate: now,
+        categories: 'Assault,Sex Crimes,Robbery,Kidnapping'
+      });
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json', 'Referer': 'https://www.crimemapping.com/' }
+      });
+      if (!res.ok) {
+        console.warn(`[CrimeAlerts] miami: CrimeMapping API returned ${res.status}, returning empty`);
+        return [];
+      }
+      const json = await res.json();
+      const items = Array.isArray(json) ? json : (json.incidents || json.data || []);
+      return items.map(r => ({
+        city: 'miami',
+        source_id: `miami_${r.id || r.caseNumber || r.incidentId}`,
+        raw_category: r.type || r.category || r.offense,
+        description: r.description || r.type || r.category || '',
+        latitude: parseFloat(r.lat || r.latitude),
+        longitude: parseFloat(r.lng || r.longitude),
+        occurred_at: r.date || r.incidentDate || r.reportDate,
+        block_address: r.location || r.address || ''
+      }));
+    } catch (err) {
+      console.warn(`[CrimeAlerts] miami: ${err.message} — endpoint unavailable, returning empty`);
+      return [];
+    }
   },
 
   boston: async (daysBack) => {
+    // The CKAN resource UUID changed. Current resource for "Crime Incident
+    // Reports - 2023 to Present" is b973d8cb-eeb2-4e7e-99da-c92938efc9c0.
     const since = new Date(Date.now() - daysBack * 86400000).toISOString().split('T')[0];
-    const sqlQuery = `SELECT * FROM "12cb3883-56f5-47de-afa5-3b1cf61b257b" WHERE "OCCURRED_ON_DATE" >= '${since}' AND "OFFENSE_DESCRIPTION" IN ('ASSAULT - AGGRAVATED','ASSAULT - AGGRAVATED - BATTERY','RAPE','INDECENT ASSAULT','KIDNAPPING','KIDNAPPING/ENTICING','HARASSMENT','STALKING','HUMAN TRAFFICKING - INVOLUNTARY SERVITUDE','HUMAN TRAFFICKING - COMMERCIAL SEX ACTS') ORDER BY "OCCURRED_ON_DATE" DESC LIMIT 2000`;
+    const sqlQuery = `SELECT * FROM "b973d8cb-eeb2-4e7e-99da-c92938efc9c0" WHERE "OCCURRED_ON_DATE" >= '${since}' AND "OFFENSE_DESCRIPTION" IN ('ASSAULT - AGGRAVATED','ASSAULT - AGGRAVATED - BATTERY','RAPE','INDECENT ASSAULT','KIDNAPPING','KIDNAPPING/ENTICING','HARASSMENT','STALKING','HUMAN TRAFFICKING - INVOLUNTARY SERVITUDE','HUMAN TRAFFICKING - COMMERCIAL SEX ACTS') ORDER BY "OCCURRED_ON_DATE" DESC LIMIT 2000`;
     const url = `https://data.boston.gov/api/3/action/datastore_search_sql?sql=${encodeURIComponent(sqlQuery)}`;
     const data = await safeFetch(url);
     return data.map(r => ({

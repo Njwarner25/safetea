@@ -17,7 +17,7 @@
     "crons": [
         { "path": "/api/cron/cleanup-photos", "schedule": "0 3 * * *" },
         { "path": "/api/cron/fetch-crime-alerts", "schedule": "0 4 * * *" },
-        { "path": "/api/cron/ai-moderate", "schedule": "*/30 * * * *" },
+        { "path": "/api/cron/ai-moderate", "schedule": "0 1,7,13,19 * * *" },
         { "path": "/api/cron/checkin-reminders", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" },
         { "path": "/api/cron/unlock-cities", "schedule": "0 5 * * *" },
@@ -110,6 +110,7 @@
         { "source": "/api/admin/warn", "destination": "/api/admin/warn" },
         { "source": "/api/admin/ai-enforce", "destination": "/api/admin/ai-enforce" },
         { "source": "/api/admin/ai-admin", "destination": "/api/admin/ai-admin" },
+        { "source": "/api/admin/watermark-action", "destination": "/api/admin/watermark-action" },
         { "source": "/api/admin/scan-watermark", "destination": "/api/admin/scan-watermark" },
         { "source": "/api/admin/moderators", "destination": "/api/admin/moderators" },
         { "source": "/api/admin/reports", "destination": "/api/admin/reports" },

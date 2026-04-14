@@ -58,6 +58,16 @@ module.exports = async function handler(req, res) {
       [admin.id, user_id, reason, type, banUntil]
     );
 
+    // Send inbox notification explaining why and that safety tools still work
+    const banMsg = type === 'permanent'
+      ? `🚫 ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been permanently suspended from SafeTea community features (posts, chats, rooms).\n\nReason: ${reason}\n\nYou can still use SafeTea's safety tools including Date Check-in, SafeLink, SOS, Red Flag Scanner, and Catfish Scanner.\n\nTo appeal this decision, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n— SafeTea Safety Team`
+      : `⚠️ ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been temporarily suspended from SafeTea community features (posts, chats, rooms) for ${duration_days || 'an unspecified number of'} day(s).\n\nReason: ${reason}\n\nYou can still use SafeTea's safety tools including Date Check-in, SafeLink, SOS, Red Flag Scanner, and Catfish Scanner during this time.\n\nTo appeal, email support@getsafetea.app.\n\n— SafeTea Safety Team`;
+    await run(
+      `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
+       VALUES ($1, $1, $2, true, NOW())`,
+      [user_id, banMsg]
+    ).catch(function(e) { console.error('[Ban] Inbox notification failed:', e.message); });
+
     console.log(`[BAN] Admin ${admin.id} banned user ${user_id} (${type}): ${reason}`);
 
     return res.status(200).json({

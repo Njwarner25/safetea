@@ -118,10 +118,10 @@ module.exports = async function handler(req, res) {
       // Hide all user's posts
       await run('UPDATE posts SET hidden = true WHERE user_id = $1', [user_id]);
 
-      // Send inbox notification to user
+      // Send inbox notification to user — explain why and that they can still use safety tools
       const banMsg = ban_type === 'permanent'
-        ? `⛔ Your account has been permanently suspended.\n\nReason: ${reason}\n\nIf you believe this is a mistake, contact support at support@getsafetea.app.`
-        : `⚠️ Your account has been temporarily suspended for ${duration_days} day(s).\n\nReason: ${reason}\n\nYour access will be restored on ${banUntil.toLocaleDateString()}. If you believe this is a mistake, contact support@getsafetea.app.`;
+        ? `🚫 ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been permanently suspended from SafeTea community features (posts, chats, rooms).\n\nReason: ${reason}\n\nYou can still use SafeTea's safety tools including Date Check-in, SafeLink, SOS, Red Flag Scanner, and Catfish Scanner.\n\nTo appeal this decision, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n— SafeTea Safety Team`
+        : `⚠️ ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been temporarily suspended from SafeTea community features (posts, chats, rooms) for ${duration_days} day(s).\n\nReason: ${reason}\n\nYour community access will be restored on ${banUntil.toLocaleDateString()}. You can still use SafeTea's safety tools including Date Check-in, SafeLink, SOS, Red Flag Scanner, and Catfish Scanner during this time.\n\nTo appeal this decision, email support@getsafetea.app with your account email and a detailed explanation.\n\n— SafeTea Safety Team`;
       await run(
         `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
          VALUES ($1, $1, $2, true, NOW())`,

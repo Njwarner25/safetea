@@ -258,20 +258,46 @@ function normalizeRecords(records) {
     .filter(Boolean);
 }
 
-// ─── Upsert ───
+// ─── Batch Upsert (50 rows per INSERT) ───
 async function upsertAlerts(alerts) {
+  const BATCH_SIZE = 50;
+  const COLS = 10; // city, source_id, crime_type, description, latitude, longitude, occurred_at, block_address, severity, raw_category
   let count = 0;
-  for (const a of alerts) {
+
+  for (let i = 0; i < alerts.length; i += BATCH_SIZE) {
+    const batch = alerts.slice(i, i + BATCH_SIZE);
+    const params = [];
+    const valueClauses = [];
+
+    for (let j = 0; j < batch.length; j++) {
+      const a = batch[j];
+      const offset = j * COLS;
+      valueClauses.push(`($${offset+1}, $${offset+2}, $${offset+3}, $${offset+4}, $${offset+5}, $${offset+6}, $${offset+7}, $${offset+8}, $${offset+9}, $${offset+10})`);
+      params.push(a.city, a.source_id, a.crime_type, a.description, a.latitude, a.longitude, a.occurred_at, a.block_address, a.severity, a.raw_category);
+    }
+
     try {
       await run(
         `INSERT INTO crime_alerts (city, source_id, crime_type, description, latitude, longitude, occurred_at, block_address, severity, raw_category)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         VALUES ${valueClauses.join(', ')}
          ON CONFLICT (source_id) DO UPDATE SET description = EXCLUDED.description, updated_at = NOW()`,
-        [a.city, a.source_id, a.crime_type, a.description, a.latitude, a.longitude, a.occurred_at, a.block_address, a.severity, a.raw_category]
+        params
       );
-      count++;
+      count += batch.length;
     } catch (err) {
-      // skip duplicates or bad data
+      console.error(`[CrimeAlerts] Batch upsert failed (${batch.length} rows):`, err.message);
+      // Fall back to individual inserts for this batch
+      for (const a of batch) {
+        try {
+          await run(
+            `INSERT INTO crime_alerts (city, source_id, crime_type, description, latitude, longitude, occurred_at, block_address, severity, raw_category)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             ON CONFLICT (source_id) DO UPDATE SET description = EXCLUDED.description, updated_at = NOW()`,
+            [a.city, a.source_id, a.crime_type, a.description, a.latitude, a.longitude, a.occurred_at, a.block_address, a.severity, a.raw_category]
+          );
+          count++;
+        } catch (e) { /* skip bad row */ }
+      }
     }
   }
   return count;
@@ -281,33 +307,33 @@ async function upsertAlerts(alerts) {
 async function fetchAllCities() {
   const cities = Object.keys(CITY_FETCHERS);
   let totalInserted = 0;
+  const cityResults = {};
 
-  const results = await Promise.allSettled(
-    cities.map(async (city) => {
-      try {
-        console.log(`[CrimeAlerts] Fetching ${city}...`);
-        const raw = await CITY_FETCHERS[city](30);
-        const normalized = normalizeRecords(raw);
-        console.log(`[CrimeAlerts] ${city}: ${raw.length} raw -> ${normalized.length} normalized`);
-        return normalized;
-      } catch (err) {
-        console.error(`[CrimeAlerts] ${city} failed:`, err.message);
-        return [];
+  // Fetch cities sequentially to avoid overwhelming external APIs + Vercel
+  for (const city of cities) {
+    try {
+      console.log(`[CrimeAlerts] Fetching ${city}...`);
+      const raw = await CITY_FETCHERS[city](30);
+      const normalized = normalizeRecords(raw);
+      console.log(`[CrimeAlerts] ${city}: ${raw.length} raw -> ${normalized.length} normalized`);
+
+      if (normalized.length > 0) {
+        const count = await upsertAlerts(normalized);
+        totalInserted += count;
+        cityResults[city] = { raw: raw.length, normalized: normalized.length, inserted: count };
+      } else {
+        cityResults[city] = { raw: raw.length, normalized: 0, inserted: 0 };
       }
-    })
-  );
-
-  for (const result of results) {
-    if (result.status === 'fulfilled' && result.value.length > 0) {
-      const count = await upsertAlerts(result.value);
-      totalInserted += count;
+    } catch (err) {
+      console.error(`[CrimeAlerts] ${city} failed:`, err.message);
+      cityResults[city] = { error: err.message };
     }
   }
 
   // Clean up alerts older than 90 days
   await run(`DELETE FROM crime_alerts WHERE occurred_at < NOW() - INTERVAL '90 days'`);
 
-  console.log(`[CrimeAlerts] Total upserted: ${totalInserted}`);
+  console.log(`[CrimeAlerts] Total upserted: ${totalInserted}`, JSON.stringify(cityResults));
   return totalInserted;
 }
 

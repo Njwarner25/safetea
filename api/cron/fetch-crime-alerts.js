@@ -2,6 +2,9 @@ const { fetchAllCities } = require('../../services/crimeDataFetcher');
 const { authenticate } = require('../_utils/auth');
 const { getOne } = require('../_utils/db');
 
+// Allow up to 120 seconds for fetching crime data from multiple city APIs
+module.exports.config = { maxDuration: 120 };
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 

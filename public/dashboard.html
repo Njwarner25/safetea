@@ -2395,6 +2395,7 @@
                 <button class="hub-tab" data-hubsub="catfish" onclick="switchHubTab('catfish')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-camera"></i> Photo Verification</button>
                 <button class="hub-tab" data-hubsub="search" onclick="switchHubTab('search')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-shield-alt"></i> Safety Resources</button>
                 <button class="hub-tab" data-hubsub="namewatch" onclick="switchHubTab('namewatch')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-eye"></i> Name Watch</button>
+                <button class="hub-tab" data-hubsub="alerts" onclick="switchHubTab('alerts')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-map-marker-alt"></i> Area Alerts</button>
                 <button class="hub-tab" data-hubsub="referral" onclick="switchHubTab('referral')" style="background:#22223A;color:#8080A0;border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-heart"></i> Good Guys</button>
             </div>
 
@@ -2492,6 +2493,18 @@
                     <div style="display:flex;gap:8px">
                         <button onclick="viewSafeTeaReport()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-file-alt"></i> View Details</button>
                         <button onclick="shareDateLink()" style="flex:1;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:10px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-share-alt"></i> Share Live Link</button>
+                    </div>
+                </div>
+
+                <!-- ====== AREA ALERTS CARD ====== -->
+                <div onclick="switchHubTab('alerts')" style="background:linear-gradient(135deg,rgba(241,196,15,0.08),rgba(241,196,15,0.02));border:1px solid rgba(241,196,15,0.2);border-radius:14px;padding:18px 20px;margin-bottom:20px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(241,196,15,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(241,196,15,0.2)'">
+                    <div style="display:flex;align-items:center;gap:16px">
+                        <div style="min-width:48px;height:48px;background:rgba(241,196,15,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-map-marker-alt" style="font-size:22px;color:#f1c40f"></i></div>
+                        <div style="flex:1">
+                            <h4 class="home-card-title" style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Area Alerts</h4>
+                            <p class="home-card-desc" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Nearby safety incidents from public crime data. Know before you go.</p>
+                        </div>
+                        <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </div>
                 </div>
 
@@ -2812,6 +2825,81 @@
             <!-- Tea Talk removed from Home — lives exclusively in SafeTea Hub -->
 
             <!-- Good Guy referral removed from Home — lives exclusively in SafeTea Hub -->
+
+            <!-- HUB: AREA ALERTS -->
+            <div id="hub-alerts" class="hub-sub" style="display:none">
+                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
+
+                <div style="margin-bottom:20px">
+                    <h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:10px"><i class="fas fa-map-marker-alt" style="color:#f1c40f"></i> Area Alerts</h3>
+                    <p style="color:#8080A0;font-size:13px;line-height:1.5">Nearby safety incidents pulled from public crime data. Enable location to see alerts near you.</p>
+                </div>
+
+                <!-- Location prompt -->
+                <div id="area-alerts-prompt" style="background:#22223A;border-radius:14px;padding:24px;text-align:center;margin-bottom:20px">
+                    <div style="width:56px;height:56px;background:rgba(241,196,15,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-location-crosshairs" style="font-size:24px;color:#f1c40f"></i></div>
+                    <p style="color:#C8C8E0;font-size:14px;margin-bottom:16px">Enable location access to see safety incidents near you.</p>
+                    <button onclick="detectLocationAndFetch()" style="background:linear-gradient(135deg,#f1c40f,#f39c12);color:#1A1A2E;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-location-arrow"></i> Enable Location</button>
+                </div>
+
+                <!-- Loading -->
+                <div id="area-alerts-loading" style="display:none;text-align:center;padding:40px 0">
+                    <div style="width:40px;height:40px;border:3px solid rgba(232,160,181,0.2);border-top-color:#E8A0B5;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px"></div>
+                    <p style="color:#8080A0;font-size:13px">Scanning your area...</p>
+                </div>
+
+                <!-- Filters -->
+                <div id="area-alerts-filters" style="display:none;background:#22223A;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <label style="color:#8080A0;font-size:12px;font-weight:500">Radius:</label>
+                        <select id="alert-radius" onchange="refreshAreaAlerts()" style="background:#141428;color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;font-size:13px;font-family:'Inter',sans-serif">
+                            <option value="0.25">0.25 mi</option>
+                            <option value="0.5" selected>0.5 mi</option>
+                            <option value="1">1 mi</option>
+                            <option value="2">2 mi</option>
+                            <option value="5">5 mi</option>
+                        </select>
+                        <label style="color:#8080A0;font-size:12px;font-weight:500">Time:</label>
+                        <select id="alert-days" onchange="refreshAreaAlerts()" style="background:#141428;color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;font-size:13px;font-family:'Inter',sans-serif">
+                            <option value="7">7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                        <button onclick="refreshAreaAlerts()" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;margin-left:auto"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div id="area-alerts-summary" style="display:none"></div>
+
+                <!-- Alert list -->
+                <div id="area-alerts-list" style="display:none"></div>
+
+                <!-- Empty state -->
+                <div id="area-alerts-empty" style="display:none;background:#22223A;border-radius:14px;padding:32px;text-align:center">
+                    <div style="width:56px;height:56px;background:rgba(46,204,113,0.12);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px"><i class="fas fa-check-circle" style="font-size:24px;color:#2ecc71"></i></div>
+                    <p style="color:#2ecc71;font-size:15px;font-weight:600;margin-bottom:6px">All Clear</p>
+                    <p style="color:#8080A0;font-size:13px">No safety incidents reported near your location in this time period.</p>
+                </div>
+
+                <!-- Watch Zones section -->
+                <div style="margin-top:24px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                        <h4 style="color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px"><i class="fas fa-map-pin" style="color:#E8A0B5;font-size:14px"></i> Watch Zones</h4>
+                        <button onclick="addWatchZone()" style="background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.2);color:#E8A0B5;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif"><i class="fas fa-plus"></i> Add Zone</button>
+                    </div>
+                    <div id="watch-zones-list" style="color:#8080A0;font-size:13px">
+                        <p>No watch zones set. Tap "Add Zone" to monitor an area.</p>
+                    </div>
+                </div>
+
+                <!-- Disclaimer -->
+                <div style="margin-top:20px;background:rgba(241,196,15,0.06);border:1px solid rgba(241,196,15,0.1);border-radius:10px;padding:12px 16px">
+                    <p style="color:#8080A0;font-size:11px;line-height:1.5;margin:0"><i class="fas fa-info-circle" style="color:#f1c40f;margin-right:4px"></i> Data sourced from public municipal crime databases. SafeTea is not a law enforcement tool. Always use your best judgment and take personal safety precautions.</p>
+                </div>
+            </div>
 
             <!-- HUB: INVITE & EARN (Growth Referral) -->
             <div id="hub-growreferral" class="hub-sub" style="display:none">

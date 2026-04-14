@@ -230,16 +230,18 @@ module.exports = async function handler(req, res) {
               'INSERT INTO replies (post_id, user_id, body, content, created_at) VALUES ($1, $2, $3, $3, $4)',
               [postInfo.id, replyUserId, replyText, new Date(now - Math.floor(Math.random() * 5 * 86400000)).toISOString()]
             );
-            await run('UPDATE posts SET reply_count = reply_count + 1 WHERE id = $1', [postInfo.id]);
+            await run('UPDATE posts SET reply_count = COALESCE(reply_count, 0) + 1 WHERE id = $1', [postInfo.id]).catch(function() {});
             results.replies_created++;
           } catch(e) {}
         }
       }
 
-      // Update like counts on posts
+      // Update like counts on posts (like_count column may not exist — skip if so)
       for (const postInfo of postIds) {
-        const likeCount = await getOne('SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1', [postInfo.id]);
-        await run('UPDATE posts SET like_count = $1 WHERE id = $2', [parseInt(likeCount.count), postInfo.id]);
+        try {
+          const likeCount = await getOne('SELECT COUNT(*) as count FROM post_likes WHERE post_id = $1', [postInfo.id]);
+          await run('UPDATE posts SET like_count = $1 WHERE id = $2', [parseInt(likeCount.count), postInfo.id]);
+        } catch(e) { /* like_count column may not exist */ }
       }
 
       // Update city post count

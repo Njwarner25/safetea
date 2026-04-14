@@ -3634,12 +3634,14 @@
                 leaveBtn.style.display = 'block';
             }
 
-            // Show delete button only for room creator
+            // Show delete buttons only for room creator
+            var me = getUser();
+            var meId = me && me.id;
+            var isCreator = meId && String(room.created_by) === String(meId);
             var rvDeleteBtn = document.getElementById('rv-delete-btn');
-            if (rvDeleteBtn) {
-                var meId = window.currentUser && window.currentUser.id;
-                rvDeleteBtn.style.display = (meId && String(room.created_by) === String(meId)) ? 'block' : 'none';
-            }
+            if (rvDeleteBtn) rvDeleteBtn.style.display = isCreator ? 'block' : 'none';
+            var rvAdminDeleteBtn = document.getElementById('rv-admin-delete-btn');
+            if (rvAdminDeleteBtn) rvAdminDeleteBtn.style.display = isCreator ? 'inline-block' : 'none';
 
             // Load feed
             switchRoomFeedTab(currentRoomFeedType);

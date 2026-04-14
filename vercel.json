@@ -56,6 +56,7 @@
         { "source": "/api/recording/contacts", "destination": "/api/recording/contacts" },
         { "source": "/api/recording/debug-sms", "destination": "/api/recording/debug-sms" },
         { "source": "/api/migrate-recording", "destination": "/api/migrate-recording" },
+        { "source": "/api/safelink/active", "destination": "/api/safelink/active" },
         { "source": "/api/safelink/start", "destination": "/api/safelink/start" },
         { "source": "/api/safelink/location", "destination": "/api/safelink/location" },
         { "source": "/api/safelink/stop", "destination": "/api/safelink/stop" },

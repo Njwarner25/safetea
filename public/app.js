@@ -2291,14 +2291,12 @@
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
 
-            // Transparent repeating diagonal watermark across entire image
+            // Diagonal tiled watermark — identifies uploader
             var fontSize = Math.max(18, Math.round(img.width * 0.045));
             ctx.font = '700 ' + fontSize + 'px Inter, sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Rotate -30 degrees and tile across entire canvas
             ctx.save();
             ctx.translate(img.width / 2, img.height / 2);
             ctx.rotate(-30 * Math.PI / 180);
@@ -2308,9 +2306,19 @@
             var spacingY = fontSize * 3.5;
             var diag = Math.sqrt(img.width * img.width + img.height * img.height);
 
+            // Dark outline for contrast on light areas
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+            ctx.lineWidth = 2;
             for (var y = -diag; y < diag; y += spacingY) {
                 for (var x = -diag; x < diag; x += spacingX) {
-                    ctx.fillText(text, x, y);
+                    ctx.strokeText(text, x, y);
+                }
+            }
+            // White fill for contrast on dark areas
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+            for (var y2 = -diag; y2 < diag; y2 += spacingY) {
+                for (var x2 = -diag; x2 < diag; x2 += spacingX) {
+                    ctx.fillText(text, x2, y2);
                 }
             }
             ctx.restore();
@@ -2333,25 +2341,26 @@
 
     function wmApplyText(ctx, w, h, userId) {
         var text = 'ST:' + userId;
-        // Scale font by DPR so text appears consistent size regardless of screen density
         var dpr = window.devicePixelRatio || 1;
-        var fontSize = Math.round(48 * dpr);
-        var spacingY = Math.round(80 * dpr);
-        var spacingX = Math.round(240 * dpr);
+
+        // ─── Layer 1: Tiled diagonal text (survives cropping) ───
+        var fontSize = Math.round(42 * dpr);
+        var spacingY = Math.round(70 * dpr);
+        var spacingX = Math.round(200 * dpr);
 
         var pat = document.createElement('canvas');
         pat.width = w; pat.height = h;
         var pCtx = pat.getContext('2d');
         pCtx.font = 'bold ' + fontSize + 'px monospace';
         pCtx.textBaseline = 'top';
-        pCtx.rotate(-0.06);
-        var margin = Math.round(100 * dpr);
-        // Draw dark outline first (readable on light backgrounds), then white fill (readable on dark)
+        pCtx.rotate(-0.08);
+        var margin = Math.round(120 * dpr);
+        // Dark outline + white fill for readability on any background
         for (var y = -margin; y < h + margin; y += spacingY) {
             for (var x = -margin; x < w + margin; x += spacingX) {
                 if (!WM_DEBUG) {
-                    pCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-                    pCtx.lineWidth = Math.round(2 * dpr);
+                    pCtx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+                    pCtx.lineWidth = Math.round(3 * dpr);
                     pCtx.strokeText(text, x, y);
                 }
                 pCtx.fillStyle = WM_DEBUG ? '#ff0000' : '#ffffff';
@@ -2359,10 +2368,57 @@
             }
         }
         ctx.save();
-        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.35;
+        ctx.globalAlpha = WM_DEBUG ? 0.5 : 0.04;
         ctx.drawImage(pat, 0, 0);
         ctx.restore();
-        if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr);
+
+        // ─── Layer 2: Edge strip watermark (most reliable for AI decoding) ───
+        // Semi-transparent strip along bottom with repeated "ST:[id]" text
+        // This is where the decoder focuses first — high contrast, consistent position
+        var stripH = Math.round(28 * dpr);
+        var stripFont = Math.round(16 * dpr);
+        ctx.save();
+        ctx.globalAlpha = WM_DEBUG ? 0.6 : 0.06;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, h - stripH, w, stripH);
+        ctx.globalAlpha = WM_DEBUG ? 0.9 : 0.15;
+        ctx.font = 'bold ' + stripFont + 'px monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'middle';
+        var stripText = text + '   ';
+        var stripTextW = ctx.measureText(stripText).width || (stripFont * 5);
+        for (var sx = 4; sx < w; sx += stripTextW) {
+            ctx.fillText(text, sx, h - stripH / 2);
+        }
+        ctx.restore();
+
+        // ─── Layer 3: Corner markers (survives cropping, very reliable) ───
+        var cornerFont = Math.round(14 * dpr);
+        ctx.save();
+        ctx.globalAlpha = WM_DEBUG ? 0.7 : 0.08;
+        ctx.font = 'bold ' + cornerFont + 'px monospace';
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+        ctx.lineWidth = Math.round(1.5 * dpr);
+        var pad = Math.round(6 * dpr);
+        // Top-left
+        ctx.strokeText(text, pad, pad + cornerFont);
+        ctx.fillText(text, pad, pad + cornerFont);
+        // Top-right
+        ctx.textAlign = 'right';
+        ctx.strokeText(text, w - pad, pad + cornerFont);
+        ctx.fillText(text, w - pad, pad + cornerFont);
+        // Bottom-left
+        ctx.textAlign = 'left';
+        ctx.strokeText(text, pad, h - stripH - pad);
+        ctx.fillText(text, pad, h - stripH - pad);
+        // Bottom-right
+        ctx.textAlign = 'right';
+        ctx.strokeText(text, w - pad, h - stripH - pad);
+        ctx.fillText(text, w - pad, h - stripH - pad);
+        ctx.restore();
+
+        if (WM_DEBUG) console.log('[WM DEBUG] Watermark drawn — text:', text, 'fontSize:', fontSize, 'canvas:', w + 'x' + h, 'dpr:', dpr, 'layers: tiled + edge strip + corners');
     }
 
     // Legacy function name kept for stegoEmbed compatibility

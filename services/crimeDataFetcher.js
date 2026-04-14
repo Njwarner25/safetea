@@ -46,8 +46,12 @@ function normalizeCrimeType(rawCategory) {
 function buildSocrataQuery(baseUrl, dateField, categoryField, categories, daysBack, appToken) {
   const since = new Date(Date.now() - daysBack * 86400000).toISOString();
   const catList = categories.map(c => `'${c}'`).join(',');
-  const query = `${baseUrl}?$where=${dateField} > '${since}' AND ${categoryField} in(${catList})&$limit=5000&$order=${dateField} DESC`;
-  return { url: query, headers: appToken ? { 'X-App-Token': appToken } : {} };
+  const whereClause = `${dateField} > '${since}' AND ${categoryField} in(${catList})`;
+  const url = new URL(baseUrl);
+  url.searchParams.set('$where', whereClause);
+  url.searchParams.set('$limit', '2000');
+  url.searchParams.set('$order', `${dateField} DESC`);
+  return { url: url.toString(), headers: appToken ? { 'X-App-Token': appToken } : {} };
 }
 
 const CITY_FETCHERS = {
@@ -58,8 +62,18 @@ const CITY_FETCHERS = {
       ['ASSAULT', 'BATTERY', 'CRIMINAL SEXUAL ASSAULT', 'SEX OFFENSE', 'STALKING', 'KIDNAPPING', 'DOMESTIC VIOLENCE', 'INTIMIDATION', 'HUMAN TRAFFICKING'],
       daysBack, process.env.CHICAGO_SOCRATA_TOKEN
     );
+    console.log('[CrimeAlerts] Chicago URL:', url);
     const res = await fetch(url, { headers });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Chicago API returned ${res.status}: ${text.slice(0, 200)}`);
+    }
     const data = await res.json();
+    if (!Array.isArray(data)) {
+      console.error('[CrimeAlerts] Chicago returned non-array:', JSON.stringify(data).slice(0, 200));
+      return [];
+    }
+    console.log(`[CrimeAlerts] Chicago raw records: ${data.length}`);
     return (data || []).map(r => ({
       city: 'chicago',
       source_id: `chicago_${r.id}`,
@@ -334,7 +348,7 @@ async function fetchAllCities() {
   await run(`DELETE FROM crime_alerts WHERE occurred_at < NOW() - INTERVAL '90 days'`);
 
   console.log(`[CrimeAlerts] Total upserted: ${totalInserted}`, JSON.stringify(cityResults));
-  return totalInserted;
+  return { total: totalInserted, cities: cityResults };
 }
 
 module.exports = { fetchAllCities, SAFETY_CATEGORY_MAP, normalizeCrimeType };

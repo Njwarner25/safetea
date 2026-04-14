@@ -31,9 +31,9 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log('[CrimeAlerts] Cron job started...');
-    const count = await fetchAllCities();
-    console.log(`[CrimeAlerts] Cron job complete. ${count} records processed.`);
-    return res.status(200).json({ success: true, records_processed: count });
+    const result = await fetchAllCities();
+    console.log(`[CrimeAlerts] Cron job complete. ${result.total} records processed.`);
+    return res.status(200).json({ success: true, records_processed: result.total, cities: result.cities });
   } catch (err) {
     console.error('[CrimeAlerts] Cron job failed:', err);
     return res.status(500).json({ error: 'Cron job failed', details: err.message });

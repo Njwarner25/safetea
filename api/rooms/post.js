@@ -24,6 +24,27 @@ module.exports = async function handler(req, res) {
       const validTypes = ['tea_talk', 'good_guys'];
       const postType = validTypes.includes(type) ? type : 'tea_talk';
 
+      // Ban check: suspended users cannot post but can still use safety tools
+      if (user.banned) {
+        const isTempExpired = user.ban_type === 'temporary' && user.ban_until && new Date(user.ban_until) < new Date();
+        if (!isTempExpired) {
+          return res.status(403).json({
+            error: 'account_suspended',
+            ban_type: user.ban_type,
+            ban_until: user.ban_until || null,
+            message: 'Your community access is suspended. You can still use SafeTea safety tools. To appeal, email support@getsafetea.app.'
+          });
+        }
+      }
+
+      // Verification gate: must be identity-verified to post in rooms
+      if (!user.identity_verified) {
+        return res.status(403).json({
+          error: 'verification_required',
+          message: 'You must complete identity verification before posting in rooms. Go to Settings > Verify Identity to get started.'
+        });
+      }
+
       // Trust score gate: require >= 80
       if ((user.trust_score || 0) < 80) {
         return res.status(403).json({

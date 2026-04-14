@@ -2188,7 +2188,7 @@
                         html += '<p style="color:#fff;font-size:13px">' + escapeHtml(u.custom_display_name || u.display_name || 'Unknown') + ' — ' + escapeHtml(u.email || '') + '</p>';
                         html += '<p style="color:#8080A0;font-size:11px">City: ' + escapeHtml(u.city || 'N/A') + ' | Tier: ' + (u.subscription_tier || 'free') + ' | Trust: ' + (u.trust_score || 'N/A') + '</p>';
                         html += '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
-                        html += '<button class="btn btn-sm btn-ghost" onclick="applyAIDecision(0,\'warn\',' + u.id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>';
+                        html += '<button class="btn btn-sm btn-ghost" onclick="warnUser(' + u.id + ',\'' + escapeHtml(u.custom_display_name || u.display_name || 'Unknown').replace(/'/g, "\\'") + '\')"><i class="fas fa-exclamation-triangle"></i> Warn</button>';
                         html += '<button class="btn btn-sm btn-flag" onclick="quickBan(' + u.id + ',7)"><i class="fas fa-clock"></i> Suspend</button>';
                         html += '<button class="btn btn-sm btn-danger" onclick="quickBan(' + u.id + ',0)"><i class="fas fa-ban"></i> Ban</button>';
                         html += '<button class="btn btn-sm btn-primary" onclick="wmCreateLeakReport(' + u.id + ',\'' + escapeHtml(data.viewer.watermark) + '\',\'' + escapeHtml(data.aiResponse && data.aiResponse.confidence || 'unknown') + '\')"><i class="fas fa-file-alt"></i> Leak Report</button>';
@@ -2269,7 +2269,7 @@
                                 '<div><span style="color:#8080A0">Warnings:</span> <span style="color:#ccc">' + (found.warning_count || 0) + '</span></div>' +
                             '</div>' +
                             '<div style="display:flex;gap:8px;margin-top:12px">' +
-                                '<button class="btn btn-sm btn-ghost" onclick="applyAIDecision(0, \'warn\', ' + found.id + ')"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
+                                '<button class="btn btn-sm btn-ghost" onclick="warnUser(' + found.id + ',\'' + escapeHtml(found.custom_display_name || found.display_name || 'Unknown').replace(/'/g, "\\'") + '\')"><i class="fas fa-exclamation-triangle"></i> Warn</button>' +
                                 '<button class="btn btn-sm btn-flag" onclick="quickBan(' + found.id + ', 7)"><i class="fas fa-clock"></i> Suspend 7d</button>' +
                                 '<button class="btn btn-sm btn-danger" onclick="quickBan(' + found.id + ', 0)"><i class="fas fa-ban"></i> Ban</button>' +
                             '</div>' +
@@ -2293,8 +2293,8 @@
                     body: JSON.stringify({
                         user_id: userId,
                         reason: 'Screenshot sharing detected via watermark tracing',
-                        duration_days: days || null,
-                        permanent: days === 0
+                        ban_type: days === 0 ? 'permanent' : 'temporary',
+                        duration_days: days || null
                     })
                 });
                 var data = await res.json();

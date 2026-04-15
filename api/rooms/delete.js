@@ -28,9 +28,9 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'Only the original room creator can delete a room' });
     }
 
-    // Delete in order: posts reactions, post replies, posts, memberships, room
-    await run(`DELETE FROM room_post_reactions WHERE post_id IN (SELECT id FROM room_posts WHERE room_id = $1)`, [roomId]);
-    await run(`DELETE FROM room_post_replies WHERE post_id IN (SELECT id FROM room_posts WHERE room_id = $1)`, [roomId]);
+    // Delete in order: post likes, post replies, posts, memberships, room
+    await run(`DELETE FROM room_post_likes WHERE post_id IN (SELECT id FROM room_posts WHERE room_id = $1)`, [roomId]);
+    await run(`DELETE FROM room_replies WHERE post_id IN (SELECT id FROM room_posts WHERE room_id = $1)`, [roomId]);
     await run(`DELETE FROM room_posts WHERE room_id = $1`, [roomId]);
     await run(`DELETE FROM room_memberships WHERE room_id = $1`, [roomId]);
     await run(`DELETE FROM sorority_rooms WHERE id = $1`, [roomId]);

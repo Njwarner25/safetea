@@ -33,7 +33,7 @@ set_string NSCameraUsageDescription \
   "SafeTea uses your camera for identity verification (Didit liveness check) and to capture photo evidence for community safety warnings."
 
 set_string NSMicrophoneUsageDescription \
-  "SafeTea uses your microphone for the Record & Protect safety feature during dates."
+  "SafeTea uses your microphone for the Record & Protect emergency safety feature."
 
 set_string NSPhotoLibraryUsageDescription \
   "SafeTea accesses your photo library so you can upload evidence photos when reporting unsafe individuals."
@@ -42,7 +42,10 @@ set_string NSPhotoLibraryAddUsageDescription \
   "SafeTea saves verification photos to your library after a successful identity check."
 
 set_string NSLocationWhenInUseUsageDescription \
-  "SafeTea uses your location to show city-based safety feeds and to enable SafeWalk live tracking when you start a date check-in."
+  "SafeTea uses your location to send accurate emergency alerts to your trusted contacts and to show city-based safety feeds."
+
+set_string NSContactsUsageDescription \
+  "SafeTea uses your contacts to let you designate trusted safety contacts for emergency alerts."
 
 set_string NSLocationAlwaysAndWhenInUseUsageDescription \
   "SafeTea keeps your SafeWalk check-in active in the background so trusted contacts can see your location until you mark yourself safe."

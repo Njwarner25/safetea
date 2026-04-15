@@ -1,4 +1,4 @@
-SafeTea is a personal safety platform that helps women feel safer while dating. Get real-time safety insights from a moderated community, verify identities, and stay connected with trusted contacts.
+SafeTea is a personal safety platform that helps you feel safer when meeting someone new. Verify identities, check names against community reports, and send emergency alerts to trusted contacts.
 
 KEY FEATURES:
 
@@ -8,16 +8,16 @@ Join city-based safety communities where members share moderated safety experien
 Identity Verification
 Verify your identity with AI-powered selfie + liveness checks. See trust scores for other community members based on their verification status.
 
-Date Check-In (SafeWalk)
-Share your date details with trusted contacts via SMS. Real-time location tracking lets your contacts know where you are until you mark yourself safe.
+SafeWalk Check-In
+Share your plans and location with trusted contacts via SMS. Real-time location tracking lets your contacts know where you are until you mark yourself safe.
 
 Emergency SOS
 One-tap emergency features including fake incoming call, discreet audio recording with location sharing, and direct 911 access.
 
 Photo Verification
-Upload screenshots from dating apps and our AI analyzes them for signs of catfishing — metadata checks, editing detection, and reverse image search.
+Upload screenshots and our AI analyzes them for signs of deception — metadata checks, editing detection, and reverse image search.
 
-Red Flag Scanner
+Conversation Scanner
 Paste a conversation and our AI identifies manipulation tactics, love bombing, gaslighting, and other warning signs.
 
 Private Sorority Rooms

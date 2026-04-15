@@ -113,7 +113,7 @@ module.exports = async function handler(req, res) {
         const message =
           `SafeTea Report\n` +
           `━━━━━━━━━━━━━━━━━\n` +
-          `${user.display_name || 'A SafeTea user'} shared their date details with you.\n\n` +
+          `${user.display_name || 'A SafeTea user'} shared their trip details with you.\n\n` +
           `Meeting: ${checkout.date_name}\n` +
           `Where: ${checkout.venue_name}${checkout.venue_address ? '\nAddress: ' + checkout.venue_address : ''}\n` +
           `When: ${dateTime}\n` +

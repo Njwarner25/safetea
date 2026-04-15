@@ -198,7 +198,7 @@ class ApiClient {
     });
   }
 
-  // SafeWalk — Share date details with contacts
+  // SafeWalk — Share trip details with contacts
   async shareDateDetails(checkoutId: string, contacts: { name: string; phone: string }[]) {
     return this.request<any>('/dates/share', {
       method: 'POST',

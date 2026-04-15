@@ -32,7 +32,7 @@ export default function SafeWalkScreen() {
           <Text style={styles.gateIcon}>🔒</Text>
           <Text style={styles.gateTitle}>SafeWalk is a SafeTea+ Feature</Text>
           <Text style={styles.gateDesc}>
-            Share your date details with trusted contacts and get check-in reminders. Upgrade to SafeTea+ to unlock.
+            Share your plans with trusted contacts and get check-in reminders. Upgrade to SafeTea+ to unlock.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
             <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
@@ -208,7 +208,7 @@ export default function SafeWalkScreen() {
           ) : (
             <View style={styles.setupCard}>
               <Text style={styles.sectionTitle}>Start a SafeWalk</Text>
-              <Text style={styles.setupDesc}>Share your date details with a trusted contact. They'll be notified if you miss a check-in.</Text>
+              <Text style={styles.setupDesc}>Share your plans with a trusted contact. They'll be notified if you miss a check-in.</Text>
 
               <TextInput
                 style={styles.input}

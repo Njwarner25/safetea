@@ -16,7 +16,7 @@ const TOOLS: Tool[] = [
   {
     icon: 'calendar-check',
     title: 'SafeTea Check-In',
-    desc: 'Share your date details with a trusted contact and set timed check-ins for safety',
+    desc: 'Share your plans with a trusted contact and set timed check-ins for safety',
     color: Colors.coral,
     bgColor: Colors.coralMuted,
     route: '/safewalk',

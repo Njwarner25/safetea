@@ -204,7 +204,7 @@
             avatarEl.textContent = initial;
             if (user.avatar_color) avatarEl.style.background = user.avatar_color;
         }
-        if (welcomeEl) welcomeEl.innerHTML = 'Welcome back, ' + escapeHtmlSafe(displayName) + '! <span style="font-size:20px">&#128150;</span>';
+        if (welcomeEl) welcomeEl.innerHTML = 'Welcome back, ' + escapeHtmlSafe(displayName) + '!';
         if (avatarPreview) {
             avatarPreview.textContent = initial;
             if (user.avatar_color) avatarPreview.style.background = user.avatar_color;

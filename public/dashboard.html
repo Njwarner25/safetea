@@ -5005,7 +5005,8 @@
                 // Show delete button only for room creator
                 var crDeleteBtn = document.getElementById('cr-delete-btn');
                 if (crDeleteBtn) {
-                    var meId = window.currentUser && window.currentUser.id;
+                    try { var me = JSON.parse(localStorage.getItem('safetea_user')); } catch(e) { var me = null; }
+                    var meId = me && me.id;
                     crDeleteBtn.style.display = (meId && String(room.created_by) === String(meId)) ? 'block' : 'none';
                 }
 

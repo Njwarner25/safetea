@@ -3425,7 +3425,7 @@
     window.shareReferralSMS = function() {
         var urlEl = document.getElementById('grow-share-url');
         if (urlEl && urlEl.value) {
-            var msg = 'Hey! Check out SafeTea \u2014 it helps women stay safe while dating. Join my community: ' + urlEl.value;
+            var msg = 'Hey! Check out SafeTea \u2014 a personal safety app with identity verification, emergency alerts, and a community that looks out for each other. Join here: ' + urlEl.value;
             var isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             if (isMob) {
                 window.open('sms:?&body=' + encodeURIComponent(msg));
@@ -3441,8 +3441,8 @@
         var urlEl = document.getElementById('grow-share-url');
         if (urlEl && urlEl.value && navigator.share) {
             navigator.share({
-                title: 'SafeTea - Date Smarter. Stay Safer.',
-                text: 'Join SafeTea \u2014 a private community where women protect each other in the dating world.',
+                title: 'SafeTea — Personal Safety App',
+                text: 'Join SafeTea \u2014 verify identities, check names, and send emergency alerts. A safety community built by women, for women.',
                 url: urlEl.value
             }).catch(function() {});
         } else {
@@ -3469,7 +3469,7 @@
         { fact: 'Stalking affects 1 in 6 women at some point in their lives — compared to 1 in 19 men.', source: 'Bureau of Justice Statistics' },
         { fact: 'Nearly 3 out of 4 stalking victims know their stalker in some capacity.', source: 'Bureau of Justice Statistics' },
         { fact: 'Women are 70% more likely to experience violence on a first date than men.', source: 'Journal of Interpersonal Violence' },
-        { fact: '43% of dating college women reported experiencing violent and abusive dating behaviors.', source: 'Liz Claiborne Inc. Study' },
+        { fact: '43% of college women reported experiencing violent and abusive behaviors from a partner.', source: 'Liz Claiborne Inc. Study' },
         { fact: 'Domestic violence is the leading cause of injury to women between the ages of 15 and 44.', source: 'U.S. Surgeon General' },
         { fact: '10 million people are physically abused by an intimate partner every year in the U.S.', source: 'NCADV' },
         { fact: 'Women who are abused are 8 times more likely to be killed if there is a firearm in the home.', source: 'American Journal of Public Health' },
@@ -3477,19 +3477,19 @@
         { fact: '1 in 7 women has been stalked by an intimate partner to the point of feeling very fearful.', source: 'CDC NISVS' },
         { fact: '38 million U.S. women have experienced intimate partner physical violence in their lifetime.', source: 'CDC NISVS' },
         { fact: 'Homicide is the 5th leading cause of death for women ages 20-44 in the U.S.', source: 'CDC WISQARS' },
-        { fact: 'Digital abuse is the most common form of dating abuse among young people.', source: 'Love Is Respect' },
+        { fact: 'Digital abuse is the most common form of relationship abuse among young people.', source: 'Love Is Respect' },
         { fact: 'Having a safety plan can reduce risk of injury by 60%.', source: 'Journal of Interpersonal Violence' },
         { fact: 'Sharing date details with a friend before meeting someone new is the #1 safety tip from law enforcement.', source: 'National Crime Prevention Council' },
         { fact: 'Abusers who strangle their partners are 10 times more likely to eventually kill them.', source: 'Journal of Emergency Medicine' },
         { fact: 'Women experience about 4.8 million intimate partner-related physical assaults per year.', source: 'CDC' },
         { fact: '1 in 5 women has been the victim of attempted or completed rape in her lifetime.', source: 'CDC NISVS' },
-        // Dating safety tips
+        // Personal safety tips
         { fact: 'Always meet a first date in a public place — never at your home or theirs.', source: 'National Sexual Violence Resource Center' },
         { fact: 'Trust your gut: women who acted on early warning signs were 3x less likely to be victimized.', source: 'The Gift of Fear, Gavin de Becker' },
         { fact: 'Love bombing — excessive flattery and attention early on — is the #1 predictor of future emotional abuse.', source: 'Journal of Personality and Social Psychology' },
         { fact: '53% of online daters admit to lying on their profile. Reverse-image search photos before meeting.', source: 'Pew Research Center' },
         { fact: 'Sharing your live location with a trusted friend during dates can be a lifesaver — literally.', source: 'National Crime Prevention Council' },
-        { fact: 'If someone pressures you to move off a dating app to text immediately, it can be a red flag for controlling behavior.', source: 'Love Is Respect' },
+        { fact: 'If someone pressures you to move off an app to text immediately, it can be a red flag for controlling behavior.', source: 'Love Is Respect' },
         { fact: 'Coercive control — isolation, monitoring, and manipulation — is now a criminal offense in many states.', source: 'National Network to End Domestic Violence' },
         { fact: '85% of domestic violence victims return to their abuser at least once. Support, don\'t judge.', source: 'National Domestic Violence Hotline' },
         { fact: 'Financial abuse occurs in 99% of domestic violence cases — it\'s the #1 reason victims stay.', source: 'National Network to End Domestic Violence' },
@@ -3505,8 +3505,8 @@
         { fact: 'The National Domestic Violence Hotline is available 24/7: call 1-800-799-7233 or text START to 88788.', source: 'NDVH' },
         { fact: 'Safety planning is the single most effective tool for reducing harm. SafeTea\'s Date Check-In is your digital safety plan.', source: 'SafeTea' },
         { fact: 'You are never responsible for someone else\'s abusive behavior — no matter what they tell you.', source: 'National Domestic Violence Hotline' },
-        { fact: 'Communities that talk openly about dating violence see 40% higher reporting rates and faster interventions.', source: 'Journal of Community Psychology' },
-        { fact: 'Women who use safety apps report feeling 60% more confident going on dates.', source: 'Dating Safety Alliance Survey' }
+        { fact: 'Communities that talk openly about interpersonal violence see 40% higher reporting rates and faster interventions.', source: 'Journal of Community Psychology' },
+        { fact: 'Women who use safety apps report feeling 60% more confident meeting someone new.', source: 'Safety Alliance Survey' }
     ];
 
     function initDidYouKnow() {

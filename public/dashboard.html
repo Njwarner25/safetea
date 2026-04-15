@@ -2656,8 +2656,8 @@
                     <a href="/blog" style="display:flex;align-items:center;gap:16px;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px 20px;text-decoration:none;color:inherit;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(242,112,89,0.3)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(255,255,255,0.06)'">
                         <div style="min-width:44px;height:44px;background:rgba(242,112,89,0.12);border-radius:12px;display:flex;align-items:center;justify-content:center"><i class="fas fa-book-open" style="font-size:20px;color:#f27059"></i></div>
                         <div style="flex:1">
-                            <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Dating Safety Tips</h4>
-                            <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Read our blog for expert advice on staying safe while dating.</p>
+                            <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Safety Tips</h4>
+                            <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Read our blog for expert advice on staying safe when meeting someone new.</p>
                         </div>
                         <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px;flex-shrink:0"></i>
                     </a>
@@ -2883,7 +2883,7 @@
                         </div>
                         <input type="file" id="pv-file-input" accept="image/jpeg,image/png,image/webp,image/heic" style="display:none" onchange="pvHandleFile(this)">
 
-                        <p style="color:#555;font-size:11px;margin-bottom:16px;line-height:1.4">Screenshots of dating profiles work great. JPEG, PNG, HEIC, WebP up to 10MB each.</p>
+                        <p style="color:#555;font-size:11px;margin-bottom:16px;line-height:1.4">Screenshots of online profiles work great. JPEG, PNG, HEIC, WebP up to 10MB each.</p>
 
                         <div style="background:rgba(232,160,181,0.06);border:1px solid rgba(232,160,181,0.1);border-radius:10px;padding:12px 14px;margin-bottom:16px">
                             <p style="color:#8080A0;font-size:12px;margin:0;line-height:1.5"><i class="fas fa-lock" style="color:#E8A0B5;margin-right:6px"></i> Photos are analyzed and immediately deleted. We do not store any uploaded images.</p>
@@ -3826,7 +3826,7 @@
     <script>
     // ============ REFERRAL / SHARE FUNCTIONS ============
     var referralShareUrl = 'https://www.getsafetea.app';
-    var referralShareMessage = 'Hey! Check out SafeTea — it helps women stay safe while dating. Join our community and get safety tools for your next date.';
+    var referralShareMessage = 'Hey! Check out SafeTea — a personal safety app with identity verification, emergency alerts, and a community that looks out for each other.';
 
     // Load referral code from API, fall back to landing page
     (function loadReferralCode() {
@@ -3992,7 +3992,7 @@
 
     function shareReferralEmail() {
         var url = getShareUrl();
-        var subject = 'Check out SafeTea — Stay Safe While Dating';
+        var subject = 'Check out SafeTea — Personal Safety App';
         var body = referralShareMessage + '\n\n' + url;
         window.open('mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body));
     }

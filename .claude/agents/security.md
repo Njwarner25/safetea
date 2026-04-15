@@ -58,7 +58,7 @@ You are also responsible for:
 
 4. **Weekly Security Report** — `api/cron/weekly-report.js` generates a weekly report emailed to admins every Monday at 8am. Includes: watermark violations, bans/suspensions, defamation removals, suspicious accounts, trust score distribution, appeals.
 
-5. **Ban Appeal Process** — Banned/suspended users are instructed to email support@getsafetea.app. Nate (SafeTea leadership) reviews and makes the final decision. Users retain access to safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner) even while suspended from community features.
+5. **Ban Appeal Process** — Banned/suspended users are instructed to email support@getsafetea.app. Nate (SafeTea leadership) reviews and makes the final decision. Users retain access to safety tools (SafeTea check-in, SafeLink, SOS, Conversation Scanner, Catfish Scanner) even while suspended from community features.
 
 ## Important Rules
 - NEVER log or expose sensitive user data (PII, locations, recordings)

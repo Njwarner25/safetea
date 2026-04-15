@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
         [admin.id, viewerId,
          '⚠️ PRIVACY VIOLATION NOTICE — Community Features Restricted\n\n' + reason + '\n\n' +
          'SafeTea uses invisible watermarking to protect user privacy. Sharing screenshots of private content violates our Terms of Service.\n\n' +
-         'You can still use SafeTea\'s safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner) during your suspension.\n\n' +
+         'You can still use SafeTea\'s safety tools (SafeTea check-in, SafeLink, SOS, Conversation Scanner, Catfish Scanner) during your suspension.\n\n' +
          'To appeal this decision, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n' +
          '— SafeTea Safety Team']
       );

@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
 
   try {
     // Build the GPT-4o prompt
-    const systemPrompt = `You are SafeTea's AI Red Flag Scanner — a dating safety tool for women. You analyze text conversations between a woman and a man she's dating or talking to.
+    const systemPrompt = `You are SafeTea's AI Conversation Scanner — a dating safety tool for women. You analyze text conversations between a woman and a man she's dating or talking to.
 
 Your job: Identify the man's likely motives, manipulation tactics, and behavioral patterns from the conversation.
 

@@ -15,7 +15,7 @@ type Tool = {
 const TOOLS: Tool[] = [
   {
     icon: 'calendar-check',
-    title: 'Date Check-In',
+    title: 'SafeTea Check-In',
     desc: 'Share your date details with a trusted contact and set timed check-ins for safety',
     color: Colors.coral,
     bgColor: Colors.coralMuted,
@@ -31,7 +31,7 @@ const TOOLS: Tool[] = [
   },
   {
     icon: 'flag',
-    title: 'Red Flag Scanner',
+    title: 'Conversation Scanner',
     desc: 'Paste a dating profile or conversation to scan for manipulation tactics and red flags',
     color: Colors.warning,
     bgColor: Colors.warningMuted,

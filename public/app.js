@@ -1042,7 +1042,7 @@
         }, 1000);
     }
 
-    window.dateCheckIn = function() {
+    window.safeTeaCheckIn = function() {
         if (!activeDateData) { if (typeof showToast === 'function') showToast('No active date to check in from'); return; }
 
         var dateId = activeDateData.id;
@@ -1497,7 +1497,7 @@
         html += '<div style="text-align:left;color:#A0A0C0;font-size:13px;line-height:1.8;margin-top:16px">';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Know who you\'re meeting — background & identity checks</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SOS tools — Fake Call, Record & Alert, one-tap 911</div>';
-        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Date Check-In with live GPS tracking for contacts</div>';
+        html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SafeTea Check-In with live GPS tracking for contacts</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>Name Watch — get alerts when someone is mentioned</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>SMS notifications to your trusted circle</div>';
         html += '<div><i class="fas fa-check" style="color:#E8A0B5;width:16px;margin-right:6px"></i>AI photo verification — catch catfish before you meet</div>';
@@ -3503,7 +3503,7 @@
         { fact: 'Sextortion scams increased 300% from 2021 to 2023. Never share intimate images with someone you haven\'t met.', source: 'FBI IC3 Report' },
         // Empowerment & resources
         { fact: 'The National Domestic Violence Hotline is available 24/7: call 1-800-799-7233 or text START to 88788.', source: 'NDVH' },
-        { fact: 'Safety planning is the single most effective tool for reducing harm. SafeTea\'s Date Check-In is your digital safety plan.', source: 'SafeTea' },
+        { fact: 'Safety planning is the single most effective tool for reducing harm. SafeTea\'s SafeTea Check-In is your digital safety plan.', source: 'SafeTea' },
         { fact: 'You are never responsible for someone else\'s abusive behavior — no matter what they tell you.', source: 'National Domestic Violence Hotline' },
         { fact: 'Communities that talk openly about interpersonal violence see 40% higher reporting rates and faster interventions.', source: 'Journal of Community Psychology' },
         { fact: 'Women who use safety apps report feeling 60% more confident meeting someone new.', source: 'Safety Alliance Survey' }

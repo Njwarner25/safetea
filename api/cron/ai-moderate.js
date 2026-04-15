@@ -200,7 +200,7 @@ async function analyzeAndEnforce(post, source) {
           `Your ${contentType} was removed and your community access has been suspended for ${suspendDays} days.\n\n` +
           `Reason: ${result.reasoning}\n\n` +
           (result.defamation_detected ? `SafeTea does not allow unverified factual accusations about identifiable individuals. Opinions and personal experiences are welcome, but presenting unverified claims as fact is not permitted.\n\n` : '') +
-          `You can still use SafeTea's safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner) during your suspension.\n\n` +
+          `You can still use SafeTea's safety tools (SafeTea check-in, SafeLink, SOS, Conversation Scanner, Catfish Scanner) during your suspension.\n\n` +
           `To appeal, email support@getsafetea.app with your account email and a detailed explanation.\n\n— SafeTea Safety Team`;
 
         await run(
@@ -224,7 +224,7 @@ async function analyzeAndEnforce(post, source) {
           `Reason: ${result.reasoning}\n` +
           `Severity: ${severity.toUpperCase()} violation\n` +
           `Strike: ${warningCount + 1}\n\n` +
-          `You can still use SafeTea's safety tools (Date Check-in, SafeLink, SOS, Red Flag Scanner, Catfish Scanner).\n\n` +
+          `You can still use SafeTea's safety tools (SafeTea check-in, SafeLink, SOS, Conversation Scanner, Catfish Scanner).\n\n` +
           `To appeal, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n— SafeTea Safety Team`;
 
         await run(

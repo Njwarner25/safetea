@@ -337,7 +337,7 @@ async function runPhotoVerification(images) {
   // Universal safety recommendations
   if (results.overallRisk === 'high') {
     results.recommendations.push('Do not share personal information with this person until you can verify their identity.');
-    results.recommendations.push('Use SafeTea Date Check-In if you do decide to meet.');
+    results.recommendations.push('Use SafeTea SafeTea Check-In if you do decide to meet.');
   }
   results.recommendations.push('Always meet in a public place for first dates.');
 

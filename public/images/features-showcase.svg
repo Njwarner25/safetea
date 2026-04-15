@@ -24,12 +24,12 @@
   <ellipse cx="200" cy="200" rx="200" ry="180" fill="#E8A0B5" opacity="0.03" filter="url(#fsGlow)"/>
   <ellipse cx="500" cy="250" rx="150" ry="150" fill="#9b59b6" opacity="0.03" filter="url(#fsGlow)"/>
 
-  <!-- Card 1: Date Check-In -->
+  <!-- Card 1: SafeTea Check-In -->
   <g transform="translate(30, 40)" filter="url(#fsShadow)">
     <rect width="200" height="150" rx="16" fill="#22223A" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
     <circle cx="30" cy="30" r="14" fill="#2ecc71" opacity="0.15"/>
     <path d="M24 30l4 4 8-8" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" fill="none"/>
-    <text x="52" y="34" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">Date Check-In</text>
+    <text x="52" y="34" fill="#F5E0D5" font-family="Inter,sans-serif" font-size="13" font-weight="600">SafeTea Check-In</text>
     <rect x="16" y="52" width="168" height="1" fill="rgba(255,255,255,0.06)"/>
     <!-- Location pin -->
     <circle cx="32" cy="74" r="4" fill="#2ecc71" opacity="0.5"/>

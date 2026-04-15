@@ -1,5 +1,5 @@
 const { getMany, run } = require('../_utils/db');
-const { sendDateCheckInReminderEmail } = require('../../services/email');
+const { sendSafeTeaCheckInReminderEmail } = require('../../services/email');
 
 module.exports = async function handler(req, res) {
   // Only allow GET (Vercel cron) or POST
@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
     for (const checkout of overdue) {
       if (checkout.email) {
         try {
-          await sendDateCheckInReminderEmail(
+          await sendSafeTeaCheckInReminderEmail(
             checkout.email,
             checkout.display_name,
             checkout.date_name,

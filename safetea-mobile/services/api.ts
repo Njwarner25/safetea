@@ -190,7 +190,7 @@ class ApiClient {
     });
   }
 
-  // SafeWalk — Date Check-in (safe return)
+  // SafeWalk — SafeTea check-in (safe return)
   async dateCheckin(checkoutId: string, safetyRating?: number, notes?: string) {
     return this.request<any>('/dates/checkin', {
       method: 'POST',

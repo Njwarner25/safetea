@@ -119,9 +119,9 @@ function sendWelcomeEmail(to, displayName) {
 
       <p><strong style="color:#E8A0B5;">Your SafeTea Tools:</strong></p>
       <ul style="padding-left:20px;margin:12px 0;">
-        <li><strong>Date Check-In</strong> — Share your location with trusted contacts</li>
+        <li><strong>SafeTea Check-In</strong> — Share your location with trusted contacts</li>
         <li><strong>Photo Verification</strong> — AI-powered catfish detection</li>
-        <li><strong>Red Flag Scanner</strong> — Analyze conversations for red flags</li>
+        <li><strong>Conversation Scanner</strong> — Analyze conversations for red flags</li>
         <li><strong>SOS Record & Protect</strong> — Emergency recording and alerts</li>
         <li><strong>Name Watch</strong> — Monitor names and get alerts when mentioned</li>
       </ul>
@@ -194,7 +194,7 @@ function sendStrikeBanEmail(to, displayName, strikeCount, isBanned) {
   });
 }
 
-function sendDateCheckInReminderEmail(to, displayName, dateName, venue) {
+function sendSafeTeaCheckInReminderEmail(to, displayName, dateName, venue) {
   return sendEmail({
     to,
     subject: `🔔 Check-in reminder: Are you safe? — SafeTea`,
@@ -370,7 +370,7 @@ module.exports = {
   sendNameWatchMatchEmail,
   sendRemovalStatusEmail,
   sendStrikeBanEmail,
-  sendDateCheckInReminderEmail,
+  sendSafeTeaCheckInReminderEmail,
   sendCityUnlockEmail,
   sendWeeklyModReportEmail,
   sendVerificationRequestEmail,

@@ -33,8 +33,6 @@
         .blog-nav-links a { color: #8080A0; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: all 0.2s; }
         .blog-nav-links a:hover, .blog-nav-links a.active { color: #fff; background: rgba(255,255,255,0.05); }
         .blog-nav-links a.active { color: #E8A0B5; }
-        .blog-nav-right a { color: #E8A0B5; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 20px; border: 1px solid #E8A0B5; border-radius: 8px; transition: all 0.2s; }
-        .blog-nav-right a:hover { background: #E8A0B5; color: #1A1A2E; }
 
         /* HERO */
         .blog-hero { text-align: center; padding: 60px 24px 40px; background: linear-gradient(135deg, rgba(232,160,181,0.1), rgba(242,112,89,0.05)); }
@@ -99,11 +97,6 @@
         .blog-article-body a { color: #E8A0B5; text-decoration: underline; }
         .blog-article-body .callout { background: rgba(242,112,89,0.1); border: 1px solid rgba(242,112,89,0.2); border-radius: 12px; padding: 16px 20px; margin: 20px 0; }
         .blog-article-body .callout strong { color: #f27059; }
-        .blog-article-cta { background: linear-gradient(135deg, rgba(232,160,181,0.15), rgba(242,112,89,0.1)); border: 1px solid rgba(232,160,181,0.2); border-radius: 16px; padding: 32px; text-align: center; margin-top: 40px; }
-        .blog-article-cta h3 { color: #fff; font-size: 20px; margin-bottom: 8px; }
-        .blog-article-cta p { color: #8080A0; font-size: 14px; margin-bottom: 16px; }
-        .blog-article-cta a { display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; padding: 12px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: transform 0.2s; }
-        .blog-article-cta a:hover { transform: translateY(-2px); }
 
         /* FOOTER */
         .blog-footer { background: #22223A; border-top: 1px solid rgba(255,255,255,0.06); padding: 32px 24px; text-align: center; }
@@ -136,9 +129,6 @@
                 <a href="#" onclick="filterCategory('tips');return false">Tips</a>
                 <a href="#" onclick="filterCategory('stories');return false">Stories</a>
             </div>
-        </div>
-        <div class="blog-nav-right">
-            <a href="/dashboard.html">Open App</a>
         </div>
     </nav>
 
@@ -430,12 +420,7 @@
                     '</div>' +
                 '</div>' +
                 '<img class="blog-article-hero-img" src="' + article.image + '" alt="' + article.title + '" onerror="this.style.display=\'none\'">' +
-                '<div class="blog-article-body">' + article.body + '</div>' +
-                '<div class="blog-article-cta">' +
-                    '<h3><i class="fas fa-shield-alt"></i> Stay Safe with SafeTea</h3>' +
-                    '<p>Date Check-Out, Photo Verification, Conversation Scanner, and more — all in one app.</p>' +
-                    '<a href="/dashboard.html">Open SafeTea</a>' +
-                '</div>';
+                '<div class="blog-article-body">' + article.body + '</div>';
 
             document.getElementById('blog-list').style.display = 'none';
             document.getElementById('blog-article').classList.add('active');

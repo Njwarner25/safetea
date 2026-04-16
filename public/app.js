@@ -489,8 +489,128 @@
     }
 
     // ============ WATCH ZONES ============
+    var wzModalOpen = false;
+
     window.addWatchZone = function() {
-        if (typeof showToast === 'function') showToast('Watch zones feature coming soon!');
+        if (wzModalOpen) return;
+        wzModalOpen = true;
+
+        var overlay = document.createElement('div');
+        overlay.id = 'wz-modal-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+        overlay.innerHTML =
+            '<div style="background:#22223A;border-radius:16px;padding:24px;max-width:400px;width:100%;border:1px solid rgba(255,255,255,0.08)">' +
+            '<h3 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:4px">Add Watch Zone</h3>' +
+            '<p style="color:#8080A0;font-size:13px;margin-bottom:20px">Get alerts when incidents happen near a place you care about (home, work, gym, etc.)</p>' +
+            '<label style="color:#F0D0C0;font-size:13px;font-weight:500;display:block;margin-bottom:6px">Label</label>' +
+            '<input id="wz-name" placeholder="e.g. Home, Work, Gym" maxlength="50" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px">' +
+            '<label style="color:#F0D0C0;font-size:13px;font-weight:500;display:block;margin-bottom:6px">Location</label>' +
+            '<button onclick="wzUseCurrentLocation()" id="wz-geo-btn" style="width:100%;background:rgba(232,160,181,0.1);border:1px solid rgba(232,160,181,0.3);color:#E8A0B5;padding:10px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-bottom:10px"><i class="fas fa-location-crosshairs"></i> Use Current Location</button>' +
+            '<div style="display:flex;gap:8px;margin-bottom:14px">' +
+            '<input id="wz-lat" placeholder="Latitude" type="number" step="0.0000001" style="flex:1;min-width:0;background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 12px;border-radius:8px;font-size:13px;font-family:inherit">' +
+            '<input id="wz-lng" placeholder="Longitude" type="number" step="0.0000001" style="flex:1;min-width:0;background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 12px;border-radius:8px;font-size:13px;font-family:inherit">' +
+            '</div>' +
+            '<label style="color:#F0D0C0;font-size:13px;font-weight:500;display:block;margin-bottom:6px">Radius</label>' +
+            '<select id="wz-radius" style="width:100%;background:#1A1A2E;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:20px">' +
+            '<option value="0.25">0.25 mi (1-2 blocks)</option>' +
+            '<option value="0.5" selected>0.5 mi (neighborhood)</option>' +
+            '<option value="1">1 mi (wider area)</option>' +
+            '<option value="2">2 mi (broader zone)</option>' +
+            '</select>' +
+            '<div style="display:flex;gap:8px">' +
+            '<button onclick="wzCloseModal()" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,0.15);color:#8080A0;padding:11px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">Cancel</button>' +
+            '<button onclick="wzSubmit()" id="wz-submit-btn" style="flex:1;background:#E8A0B5;border:none;color:#1A1A2E;padding:11px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Save Zone</button>' +
+            '</div>' +
+            '</div>';
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) wzCloseModal(); });
+        document.body.appendChild(overlay);
+        setTimeout(function() { var n = document.getElementById('wz-name'); if (n) n.focus(); }, 50);
+    };
+
+    window.wzCloseModal = function() {
+        var o = document.getElementById('wz-modal-overlay');
+        if (o) o.remove();
+        wzModalOpen = false;
+    };
+
+    window.wzUseCurrentLocation = function() {
+        var btn = document.getElementById('wz-geo-btn');
+        if (!navigator.geolocation) {
+            if (typeof showToast === 'function') showToast('Geolocation not supported on this device');
+            return;
+        }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...'; }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                var latEl = document.getElementById('wz-lat');
+                var lngEl = document.getElementById('wz-lng');
+                if (latEl) latEl.value = pos.coords.latitude.toFixed(7);
+                if (lngEl) lngEl.value = pos.coords.longitude.toFixed(7);
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Location captured'; btn.style.color = '#2ecc71'; btn.style.borderColor = 'rgba(46,204,113,0.3)'; }
+            },
+            function() {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Use Current Location'; }
+                if (typeof showToast === 'function') showToast('Location denied. Enter coordinates manually.');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
+    };
+
+    window.wzSubmit = function() {
+        var nameEl = document.getElementById('wz-name');
+        var latEl = document.getElementById('wz-lat');
+        var lngEl = document.getElementById('wz-lng');
+        var radEl = document.getElementById('wz-radius');
+        var name = ((nameEl && nameEl.value) || '').trim();
+        var lat = parseFloat(latEl && latEl.value);
+        var lng = parseFloat(lngEl && lngEl.value);
+        var radius = parseFloat(radEl && radEl.value);
+        if (!name) {
+            if (typeof showToast === 'function') showToast('Please enter a label for this zone');
+            return;
+        }
+        if (!isFinite(lat) || !isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            if (typeof showToast === 'function') showToast('Please capture or enter a valid location');
+            return;
+        }
+        var btn = document.getElementById('wz-submit-btn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+        fetch('/api/watch-zones', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, latitude: lat, longitude: lng, radius_miles: radius, source: 'manual' })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            if (!res.ok) {
+                if (typeof showToast === 'function') showToast((res.data && res.data.error) || 'Failed to save zone');
+                if (btn) { btn.disabled = false; btn.textContent = 'Save Zone'; }
+                return;
+            }
+            wzCloseModal();
+            loadWatchZones();
+            if (typeof showToast === 'function') showToast('Watch zone saved');
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast('Network error. Please try again.');
+            if (btn) { btn.disabled = false; btn.textContent = 'Save Zone'; }
+        });
+    };
+
+    window.deleteWatchZone = function(id) {
+        if (!confirm('Remove this watch zone?')) return;
+        fetch('/api/watch-zones?id=' + encodeURIComponent(id), {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + getToken() }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function() {
+            loadWatchZones();
+            if (typeof showToast === 'function') showToast('Zone removed');
+        })
+        .catch(function() {
+            if (typeof showToast === 'function') showToast('Failed to remove zone');
+        });
     };
 
     function loadWatchZones() {
@@ -499,18 +619,38 @@
         fetch('/api/watch-zones', { headers: { 'Authorization': 'Bearer ' + getToken() } })
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                if (data.zones && data.zones.length > 0) {
-                    var html = '';
-                    data.zones.forEach(function(z) {
-                        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">';
-                        html += '<i class="fas fa-map-pin" style="color:#E8A0B5"></i>';
-                        html += '<span style="color:#fff;font-size:13px">' + escapeHtmlSafe(z.label || z.address || 'Zone') + '</span>';
-                        html += '</div>';
-                    });
-                    el.innerHTML = html;
-                } else {
+                var zones = Array.isArray(data) ? data : (data.zones || []);
+                if (!zones.length) {
                     el.innerHTML = '<p style="font-size:13px">No watch zones set. Tap "Add Zone" to monitor an area.</p>';
+                    return;
                 }
+                var html = '';
+                zones.forEach(function(z) {
+                    html += '<div data-wz-id="' + z.id + '" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#1A1A2E;border-radius:8px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.04)">';
+                    html += '<i class="fas fa-map-pin" style="color:#E8A0B5;font-size:13px"></i>';
+                    html += '<div style="flex:1;min-width:0">';
+                    html += '<div style="color:#fff;font-size:13px;font-weight:500">' + escapeHtmlSafe(z.name || 'Watch Zone') + '</div>';
+                    html += '<div class="wz-zone-alerts" style="color:#8080A0;font-size:11px">Within ' + z.radius_miles + ' mi</div>';
+                    html += '</div>';
+                    html += '<button onclick="deleteWatchZone(' + z.id + ')" aria-label="Remove zone" style="background:transparent;border:none;color:#8080A0;font-size:13px;cursor:pointer;padding:6px"><i class="fas fa-trash"></i></button>';
+                    html += '</div>';
+                });
+                el.innerHTML = html;
+                // Per-zone alert count (async, last 30 days)
+                zones.forEach(function(z) {
+                    fetch('/api/alerts/area?lat=' + z.latitude + '&lon=' + z.longitude + '&radius=' + z.radius_miles + '&days=30&limit=1', {
+                        headers: { 'Authorization': 'Bearer ' + getToken() }
+                    }).then(function(r) { return r.json(); }).then(function(d) {
+                        var row = el.querySelector('[data-wz-id="' + z.id + '"] .wz-zone-alerts');
+                        if (!row) return;
+                        var total = (d && d.total) || 0;
+                        if (total > 0) {
+                            row.innerHTML = '<span style="color:#e74c3c">● ' + total + ' alert' + (total !== 1 ? 's' : '') + '</span> within ' + z.radius_miles + ' mi · 30d';
+                        } else {
+                            row.innerHTML = '<span style="color:#2ecc71">● All clear</span> within ' + z.radius_miles + ' mi · 30d';
+                        }
+                    }).catch(function() {});
+                });
             })
             .catch(function() {
                 el.innerHTML = '<p style="font-size:13px">No watch zones set.</p>';

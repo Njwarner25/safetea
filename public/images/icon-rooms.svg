@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="roomsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9b59b6"/>
+      <stop offset="100%" stop-color="#E8A0B5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="#22223A" stroke="url(#roomsGrad)" stroke-width="2"/>
+  <!-- Chat bubble -->
+  <path d="M32 46c0-4.4 3.6-8 8-8h40c4.4 0 8 3.6 8 8v22c0 4.4-3.6 8-8 8H58l-10 10v-10h-8c-4.4 0-8-3.6-8-8V46z" fill="url(#roomsGrad)" opacity="0.18" stroke="url(#roomsGrad)" stroke-width="2"/>
+  <!-- Three dots / members -->
+  <circle cx="48" cy="57" r="4" fill="url(#roomsGrad)"/>
+  <circle cx="60" cy="57" r="4" fill="url(#roomsGrad)"/>
+  <circle cx="72" cy="57" r="4" fill="url(#roomsGrad)"/>
+  <!-- Lock badge (top-right) -->
+  <circle cx="86" cy="34" r="12" fill="#1A1A2E" stroke="url(#roomsGrad)" stroke-width="2"/>
+  <path d="M82 36v-4a4 4 0 018 0v4" stroke="url(#roomsGrad)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <rect x="81" y="36" width="10" height="7" rx="1.5" fill="url(#roomsGrad)"/>
+</svg>

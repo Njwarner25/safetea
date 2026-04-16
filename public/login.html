@@ -380,6 +380,11 @@
                   </div>
                 </div>
 
+                <label style="display:flex;align-items:flex-start;gap:10px;margin:8px 0 14px;font-size:13px;color:#C8C8E0;line-height:1.5;cursor:pointer">
+                  <input type="checkbox" id="reg-consent" required style="margin-top:3px;flex-shrink:0;accent-color:#E8A0B5;width:16px;height:16px;cursor:pointer">
+                  <span>I am 18 or older and I agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:#E8A0B5">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:#E8A0B5">Privacy Policy</a>.</span>
+                </label>
+
                 <button type="submit" class="btn-primary" id="register-btn">
                   <img src="/images/safetea-logo.svg" alt="" style="height:18px"> Create Account
           </button>
@@ -522,6 +527,12 @@
       const password = document.getElementById('reg-password').value;
       const city = document.getElementById('reg-city').value;
       const state = document.getElementById('reg-state').value.toUpperCase();
+      const consent = document.getElementById('reg-consent').checked;
+
+      if (!consent) {
+        showError('You must agree to the Terms of Service and Privacy Policy to create an account.');
+        return;
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Creating account...';

@@ -59,128 +59,198 @@
 
     <div class="hero">
         <h1>Privacy <span>Policy</span></h1>
-        <p>Last updated: March 31, 2026</p>
+        <p>Last updated: April 16, 2026 • Effective: April 16, 2026</p>
     </div>
 
     <div class="container">
         <div class="section">
             <h2><i class="fas fa-shield-halved"></i> Our Commitment to Privacy</h2>
-            <p>SafeTea is built on the principle that women deserve to date safely without sacrificing their privacy. We collect only what's necessary to provide our safety features, and we never sell your data.</p>
+            <p>SafeTea is a personal safety utility. We collect only what's necessary to provide our safety features, we encrypt what we store, and we never sell your data. This Policy explains what we collect, how we use it, who processes it, how long we keep it, and the rights you have — including under the EU General Data Protection Regulation (GDPR) and the California Consumer Privacy Act as amended by the CPRA (together, "CCPA").</p>
             <div class="highlight">
-                <p><strong>TL;DR:</strong> We don't sell your data. We don't show your real name. We don't track you outside the app. Your safety information stays private.</p>
+                <p><strong>TL;DR:</strong> We don't sell your data. We don't share your identity with other users. We don't track you across the web. Safety information stays private. You can delete your account and all associated data at any time.</p>
             </div>
+            <p><strong>Data Controller:</strong> SafeTea, Inc. ("SafeTea", "we", "us"). Contact us anytime at <a href="mailto:support@getsafetea.app">support@getsafetea.app</a>.</p>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-database"></i> Information We Collect</h2>
+
             <h3>Account Information</h3>
             <ul>
-                <li><strong>Email address</strong> — for login and important notifications (Name Watch alerts, safety check-ins)</li>
-                <li><strong>Display name</strong> — a pseudonym you choose, never your real name</li>
-                <li><strong>City</strong> — to connect you with your local community</li>
-                <li><strong>Phone number</strong> (optional) — for SMS-based login and SafeTea Check-In notifications</li>
+                <li><strong>Email address</strong> — for login, password reset, and safety-critical notifications (Name Watch alerts, check-in reminders)</li>
+                <li><strong>Password</strong> — never stored in plain text; hashed with bcrypt</li>
+                <li><strong>Display name</strong> — a pseudonym you choose; not required to be your real name</li>
+                <li><strong>City and state</strong> — to connect you with your local community and route area alerts</li>
+                <li><strong>Phone number</strong> (optional, required for some safety features) — for SMS two-factor authentication, SafeTea Check-In notifications, and SOS alerts</li>
+                <li><strong>Date of birth</strong> — to confirm you are 18 or older</li>
+            </ul>
+
+            <h3>Identity Verification Data</h3>
+            <ul>
+                <li><strong>Selfie and liveness gesture photos</strong> — used by our AI to confirm a live human is present. Analyzed and discarded after the verification attempt; not retained as image files.</li>
+                <li><strong>Government ID data via Didit</strong> — when you opt into enhanced verification, Didit (our regulated identity-verification processor) collects a scan of your government-issued ID and a selfie. Didit, not SafeTea, processes and stores this biometric and document data. SafeTea receives only a pass/fail result, a redacted record, and a session ID.</li>
+                <li><strong>Connected social accounts</strong> (optional) — if you choose to link a social profile to boost your Trust Score, we store the public URL and an AI-derived legitimacy score. We do not store your social credentials.</li>
+                <li><strong>Illinois residents:</strong> Biometric processing for identity verification is performed by Didit under Didit's own Biometric Information Privacy Act (BIPA) disclosure, which you will be shown prior to the verification step.</li>
             </ul>
 
             <h3>Content You Create</h3>
             <ul>
-                <li>Community posts and replies</li>
-                <li>Name Watch entries (stored privately, visible only to you)</li>
-                <li>SafeTea Check-In details (shared only with your chosen contacts)</li>
-                <li>Conversation Scanner conversations (analyzed by AI, not stored permanently)</li>
-                <li>Photo Verification photo uploads (analyzed and discarded — we don't store your photos)</li>
+                <li>Community posts, replies, reports, and comments</li>
+                <li>Name Watch entries (stored privately to your account; not visible to other users)</li>
+                <li>SafeTea Check-In ("SafeWalk") meeting details and trusted-contact phone numbers (shared only with the contacts you choose)</li>
+                <li>Conversation Scanner text you submit (analyzed by AI, summary retained for up to 90 days, raw text not retained after analysis)</li>
+                <li>Photos you upload (verification photos discarded after analysis; community photos stored and watermarked)</li>
+                <li>SOS / Record &amp; Protect recordings and GPS track (audio chunks, location samples, and transcripts captured during an active SOS session)</li>
             </ul>
 
-            <h3>Automatically Collected</h3>
+            <h3>Usage Data (Automatically Collected)</h3>
             <ul>
-                <li>IP address — for rate limiting and abuse prevention only</li>
-                <li>Device type and browser — for rendering the site correctly</li>
-                <li>Approximate location — only when you explicitly use "Use My Location" for area alerts</li>
+                <li><strong>Device identifier</strong> — a randomly generated device ID used to bind a session to a device and detect abusive re-registration</li>
+                <li><strong>IP address</strong> — for rate limiting, abuse prevention, and security logging</li>
+                <li><strong>Device model, operating system, app version, and browser</strong> — for compatibility and crash diagnostics</li>
+                <li><strong>Search history within SafeTea</strong> — queries you run against Conversation Scanner, Name Watch, scam database, and background check. Stored against your account to populate recent-search UI and power product improvements.</li>
+                <li><strong>Approximate location</strong> — only when you enable "Use My Location" for area alerts, SafeWalk, or SOS. Precise GPS is collected only during an active SafeTea Check-In or SOS session.</li>
+                <li><strong>Purchase metadata</strong> — Stripe customer and subscription IDs; Apple and Google in-app-purchase receipts. We never see or store your full payment card number.</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2><i class="fas fa-lock"></i> How We Protect Your Data</h2>
+            <h2><i class="fas fa-magnifying-glass"></i> Name Watch &amp; Third-Party Data</h2>
+            <p>Name Watch is a private alert system: you add names or initials of people you intend to meet, and SafeTea notifies you if anyone in the community posts content matching those names. Because this feature inherently involves querying against data about people other than you, we apply additional limits:</p>
             <ul>
-                <li><strong>Encryption</strong> — all data is encrypted in transit (HTTPS/TLS) and at rest</li>
-                <li><strong>Privacy by design</strong> — no real names are required or displayed. Your display name is a private pseudonym.</li>
-                <li><strong>No screenshots</strong> — our mobile app blocks screen capture to protect shared experiences</li>
-                <li><strong>Watermarked photos</strong> — uploaded photos are digitally watermarked to trace unauthorized distribution</li>
-                <li><strong>Rate limiting</strong> — API endpoints are protected against abuse and brute-force attacks</li>
-                <li><strong>Passwords</strong> — hashed with bcrypt, never stored in plain text</li>
+                <li><strong>Queries are private to you.</strong> Entries in your Name Watch list are visible only to you. Other users cannot see whom you are watching.</li>
+                <li><strong>We do not purchase or scrape third-party dossiers.</strong> Name Watch matches against community posts submitted inside SafeTea, not external social media, public records, or data brokers.</li>
+                <li><strong>Non-matching third-party data is not retained.</strong> When you run a Name Watch scan, the query strings are matched against existing posts and the result set is returned. We do not build a permanent profile of the third party from the query, and non-matching names generate no new record about the third party.</li>
+                <li><strong>Matches are logged.</strong> When a new community post matches one of your watched names, we store the match (post ID, match type, timestamp) so we can notify you and show you the alert history.</li>
+                <li><strong>Conversation Scanner and Background Check</strong> follow the same rule: third-party content you submit for analysis is processed by our AI providers, a summary result is returned to you, and the raw content is not retained beyond operational timeouts (see Retention below).</li>
             </ul>
+            <div class="highlight">
+                <p><strong>Ethical &amp; legal boundaries of Name Watch and related tools.</strong> These features exist for your personal safety when meeting someone new. They are not a surveillance, harassment, doxxing, debt-collection, or stalking tool. Using SafeTea to aggregate information about an ex-partner in violation of a protective order, to harass a specific person, to out a person's identity publicly, or to build a dossier on a third party for commercial purposes is a violation of our Terms of Service and will result in account termination. Where applicable, we cooperate with law enforcement under valid legal process.</p>
+            </div>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-share-nodes"></i> How We Use Your Information</h2>
             <ul>
-                <li>To provide safety features (Name Watch, SafeTea Check-In, Conversation Scanner, Photo Verification)</li>
-                <li>To send you safety-critical notifications (Name Watch matches, check-in reminders)</li>
-                <li>To moderate content and enforce community guidelines</li>
-                <li>To improve our AI analysis accuracy</li>
-                <li>To scan user-generated content for policy violations using automated AI systems (see AI Moderation Disclosure below)</li>
+                <li>To provide safety features (Name Watch, SafeTea Check-In, Conversation Scanner, Background Check, Photo Verification, SOS / Record &amp; Protect)</li>
+                <li>To send you safety-critical notifications (Name Watch matches, check-in reminders, SOS escalations to trusted contacts)</li>
+                <li>To verify your identity and age, and to calculate your Trust Score</li>
+                <li>To moderate user-generated content and enforce Community Guidelines</li>
+                <li>To process payments and manage subscriptions</li>
+                <li>To detect, prevent, and investigate fraud, abuse, harassment, and security incidents</li>
+                <li>To comply with legal obligations and respond to lawful requests</li>
             </ul>
-
             <h3>AI Moderation Disclosure</h3>
-            <p>SafeTea may utilize automated systems, including artificial intelligence, to identify potentially harmful or policy-violating content. These AI systems scan content for profanity, personal information, threats, and other policy violations. AI moderation is advisory in nature only — automated systems do not create, modify, or contribute to user content. Flagged content may be reviewed by our team. The use of AI moderation does not constitute editorial control over user content.</p>
+            <p>SafeTea uses automated systems, including large-language-model AI, to help identify potentially harmful or policy-violating content (profanity, doxxing, threats, NCII, off-platform solicitation). AI moderation is advisory in nature only — automated systems do not create, modify, or contribute to user content. Flagged content may be reviewed by our team. Use of AI moderation does not constitute editorial control over user content under Section 230 of the Communications Decency Act.</p>
             <div class="highlight">
-                <p><strong>We never:</strong> sell your data to advertisers, share your identity with other users, give law enforcement access without a valid warrant, or use your data for targeted advertising.</p>
+                <p><strong>We never:</strong> sell or rent your personal information, share your identity with other users without your consent, serve behavioral ads, or use your data for cross-context behavioral advertising.</p>
             </div>
         </div>
 
         <div class="section">
-            <h2><i class="fas fa-handshake"></i> Third-Party Services</h2>
-            <p>We use the following third-party services:</p>
+            <h2><i class="fas fa-handshake"></i> Third-Party Processors (Sub-Processors)</h2>
+            <p>We share data only with the service providers needed to operate SafeTea. Each processor is bound by a data processing agreement that restricts them to processing on our instructions.</p>
             <ul>
-                <li><strong>Vercel</strong> — hosting and serverless functions (US-based)</li>
-                <li><strong>Neon/Vercel Postgres</strong> — database storage (US-based)</li>
-                <li><strong>OpenAI</strong> — AI analysis for Conversation Scanner and Photo Verification. Conversations are sent to OpenAI for analysis but are not used to train their models.</li>
-                <li><strong>SendGrid</strong> — transactional emails (Name Watch alerts, welcome emails)</li>
-                <li><strong>Stripe</strong> — payment processing for subscriptions. We never see or store your credit card number.</li>
-                <li><strong>Twilio</strong> — SMS authentication and SafeTea Check-In notifications</li>
+                <li><strong>Vercel</strong> (US) — web hosting, serverless API functions, edge caching</li>
+                <li><strong>Railway</strong> (US) — Node.js application server, cron worker, scheduled jobs</li>
+                <li><strong>Neon / Vercel Postgres</strong> (US) — primary encrypted database</li>
+                <li><strong>Stripe</strong> (US, global) — payment processing for subscriptions and one-time purchases. Card data is tokenized by Stripe; we never see or store your full card number.</li>
+                <li><strong>Apple</strong> (In-App Purchase, iOS push notifications) and <strong>Google</strong> (Play Billing, Android push, Play Integrity) — mobile purchase processing and device-level notifications</li>
+                <li><strong>Twilio</strong> (US) — SMS for two-factor authentication, SafeTea Check-In reminders, SOS notifications to trusted contacts</li>
+                <li><strong>SendGrid</strong> (US) — transactional email (welcome, password reset, Name Watch alerts)</li>
+                <li><strong>Didit</strong> (EU) — regulated identity and age verification. Didit processes government-ID scans and biometric data as an independent controller under its own privacy policy; SafeTea receives only the verification result and session reference.</li>
+                <li><strong>Anthropic</strong> (US) — Claude language model for Conversation Scanner, Background Check analysis, AI moderation, and SOS fake-call script generation. Inputs are processed under Anthropic's zero-retention API terms and are not used to train Anthropic's models.</li>
+                <li><strong>ElevenLabs</strong> (US) — synthesized voice generation for the SOS fake-call feature. Only generated audio is returned; voice samples submitted for preview are ephemeral.</li>
+            </ul>
+            <p>We publish a canonical list of current sub-processors; material changes will be notified by email or in-app notice at least 14 days before they take effect.</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-lock"></i> How We Store and Protect Your Data</h2>
+            <ul>
+                <li><strong>In transit</strong> — all traffic is encrypted with TLS 1.2+ (HTTPS). The mobile app enforces HTTPS-only connections.</li>
+                <li><strong>At rest</strong> — databases and object storage are encrypted using AES-256 managed by our hosting providers (Neon, Vercel, Railway).</li>
+                <li><strong>Passwords</strong> — hashed with bcrypt. We cannot recover a password; we can only reset it.</li>
+                <li><strong>Biometrics</strong> — processed by Didit under their BIPA-compliant flow; SafeTea does not retain biometric images.</li>
+                <li><strong>SOS recordings</strong> — uploaded in encrypted chunks during an active session and retained for 90 days so you and your trusted contacts can review or download the incident evidence.</li>
+                <li><strong>Watermarking</strong> — community photos are tagged with a steganographic watermark identifying the viewer's user ID to deter unauthorized redistribution.</li>
+                <li><strong>Access controls</strong> — only a small number of authorized employees can access production data, and only under least-privilege and audit logging.</li>
+                <li><strong>Rate limiting and abuse prevention</strong> — API endpoints are rate-limited to protect against credential stuffing and scraping.</li>
             </ul>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-clock-rotate-left"></i> Data Retention</h2>
             <ul>
-                <li><strong>Community posts</strong> — retained until deleted by you or a moderator</li>
-                <li><strong>Conversation Scanner results</strong> — summary stored for 90 days, conversation text not permanently stored</li>
-                <li><strong>Catfish scan photos</strong> — analyzed in memory and discarded immediately after scanning</li>
-                <li><strong>Crime alerts</strong> — retained for 90 days (rolling window from public data sources)</li>
-                <li><strong>Account data</strong> — retained until you delete your account</li>
-                <li><strong>Rate limit records</strong> — automatically purged after the time window expires</li>
+                <li><strong>Account data</strong> — retained for the life of your account. On account deletion, data is removed from production within 30 days and from backups within 90 days.</li>
+                <li><strong>Community posts, comments, reports</strong> — retained until removed by you or a moderator; moderation records retained 2 years for appeals.</li>
+                <li><strong>Name Watch entries and match history</strong> — retained until you remove them or delete your account.</li>
+                <li><strong>Conversation Scanner results</strong> — summary retained up to 90 days; raw submitted text is not retained after analysis.</li>
+                <li><strong>Background Check queries</strong> — result summary retained up to 90 days; underlying third-party query data not retained.</li>
+                <li><strong>Photo Verification / Catfish Scanner images</strong> — analyzed and discarded immediately after the decision is returned.</li>
+                <li><strong>SOS / Record &amp; Protect sessions</strong> — audio chunks, location pings, and transcripts retained 90 days so you can download evidence, then purged.</li>
+                <li><strong>Identity verification records</strong> — verification pass/fail and session ID retained up to 7 years for fraud prevention and legal compliance. Raw biometric images are not stored by SafeTea.</li>
+                <li><strong>Security, access, and request logs</strong> — retained up to 30 days except where needed for an active investigation.</li>
+                <li><strong>Payment records</strong> — retained as required by applicable tax and financial-records law (typically 7 years).</li>
             </ul>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-gavel"></i> Legal Bases for Processing (GDPR)</h2>
+            <p>If you are in the European Economic Area, the United Kingdom, or Switzerland, we rely on the following legal bases under GDPR Article 6:</p>
+            <ul>
+                <li><strong>Performance of a contract (Art. 6(1)(b))</strong> — to create your account and deliver the safety features you sign up for.</li>
+                <li><strong>Consent (Art. 6(1)(a))</strong> — for optional phone collection, marketing email, precise location, social-account linking, and identity verification. You can withdraw consent at any time.</li>
+                <li><strong>Legitimate interests (Art. 6(1)(f))</strong> — to secure our service, prevent fraud and abuse, moderate harmful content, and develop product improvements. Our interests are balanced against your rights; you may object at any time.</li>
+                <li><strong>Legal obligation (Art. 6(1)(c))</strong> — to respond to lawful government requests, tax records, and mandated reporting (including NCII under the TAKE IT DOWN Act).</li>
+                <li><strong>Protection of vital interests (Art. 6(1)(d))</strong> — during an active SOS session when we reasonably believe you or another person is at risk of serious harm.</li>
+            </ul>
+            <p>Special categories of data (biometric, precise location, audio of individuals) are processed only with your explicit consent (Art. 9(2)(a)) or to protect vital interests (Art. 9(2)(c)).</p>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-user-gear"></i> Your Rights</h2>
-            <p>You have the right to:</p>
+            <p>Regardless of where you live, you can exercise the following rights by emailing <a href="mailto:support@getsafetea.app">support@getsafetea.app</a> or by using the in-app controls in Settings:</p>
             <ul>
-                <li><strong>Access</strong> your data — view your profile, posts, and Name Watch list anytime</li>
-                <li><strong>Delete</strong> your account — removes all your data permanently (Settings > Delete Account)</li>
-                <li><strong>Export</strong> your data — contact <a href="mailto:support@getsafetea.app">support@getsafetea.app</a></li>
-                <li><strong>Correct</strong> your information — edit your profile anytime in Settings</li>
-                <li><strong>Opt out</strong> of non-essential emails — toggle notifications in Settings</li>
+                <li><strong>Access</strong> — request a copy of the personal data we hold about you.</li>
+                <li><strong>Portability / Export</strong> — receive your data in a machine-readable format.</li>
+                <li><strong>Correction</strong> — update your profile directly in Settings or ask us to fix inaccurate data.</li>
+                <li><strong>Deletion</strong> — delete your account and associated data (Settings &rarr; Delete Account), subject to limited exceptions for legal, fraud, and safety obligations.</li>
+                <li><strong>Restriction / Objection</strong> — ask us to restrict or stop processing in defined circumstances.</li>
+                <li><strong>Withdraw consent</strong> — at any time, without affecting processing that already occurred.</li>
+                <li><strong>Lodge a complaint</strong> — EU/UK users may complain to their supervisory authority.</li>
             </ul>
+
+            <h3>California Residents (CCPA/CPRA)</h3>
+            <p>California residents have additional rights under the CCPA, including the right to know what personal information we collect, the right to delete, the right to correct, and the right to limit the use of sensitive personal information. <strong>We do not sell personal information and we do not share personal information for cross-context behavioral advertising as those terms are defined by the CCPA.</strong> No opt-out is necessary because no sale or cross-context sharing occurs. To exercise any CCPA right, email <a href="mailto:support@getsafetea.app">support@getsafetea.app</a>; we will not discriminate against you for exercising your rights.</p>
+
+            <h3>Authorized Agents</h3>
+            <p>You may use an authorized agent to submit a request on your behalf; we will verify the agent's authority before acting.</p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-globe"></i> International Transfers</h2>
+            <p>Most SafeTea processors are based in the United States. If you access SafeTea from outside the US, your data will be transferred to and processed in the US and other jurisdictions where our processors operate. Where required by law, we rely on Standard Contractual Clauses (EU/UK) or equivalent safeguards to protect transferred data.</p>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-child"></i> Age Requirements</h2>
-            <p>SafeTea is intended for users 18 years and older. We do not knowingly collect data from anyone under 18. If you believe a minor is using SafeTea, contact us at <a href="mailto:support@getsafetea.app">support@getsafetea.app</a>.</p>
+            <p>SafeTea is for users 18 and older. We do not knowingly collect personal data from anyone under 18. If you believe a minor is using SafeTea, contact <a href="mailto:support@getsafetea.app">support@getsafetea.app</a> and we will investigate and remove the account.</p>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-bell"></i> Changes to This Policy</h2>
-            <p>We may update this policy from time to time. We'll notify you of significant changes via email or an in-app notice. Continued use after changes constitutes acceptance.</p>
+            <p>We may update this Policy from time to time. When we do, we will change the "Last updated" date above. For material changes, we will notify you by email or in-app notice at least 14 days before the new Policy takes effect. Continued use of SafeTea after changes take effect constitutes acceptance.</p>
         </div>
 
         <div class="section">
             <h2><i class="fas fa-envelope"></i> Contact Us</h2>
-            <p>Questions about privacy? Contact us:</p>
+            <p>For any privacy question, data request, or complaint:</p>
             <ul>
-                <li>Email: <a href="mailto:support@getsafetea.app">support@getsafetea.app</a></li>
-                <li>General: <a href="mailto:info@getsafetea.app">info@getsafetea.app</a></li>
+                <li>Email: <a href="mailto:support@getsafetea.app">support@getsafetea.app</a> (Subject line: "Privacy Request")</li>
+                <li>General inquiries: <a href="mailto:info@getsafetea.app">info@getsafetea.app</a></li>
             </ul>
+            <p>We aim to respond to all verifiable privacy requests within 30 days (or 45 days for CCPA requests, with a 45-day extension where permitted).</p>
         </div>
     </div>
 

@@ -15,8 +15,8 @@
   <meta name="apple-mobile-web-app-title" content="SafeTea">
   <meta name="application-name" content="SafeTea">
   <meta name="format-detection" content="telephone=no">
-    <title>SafeTea Blog — Dating Safety Tips, News & Resources</title>
-    <meta name="description" content="Stay safe while dating. Real stories, expert tips, and the latest news about online dating safety from SafeTea.">
+    <title>SafeTea Blog — Dating Safety Tips & Resources</title>
+    <meta name="description" content="Stay safe while dating. Expert tips, guides, and resources about online dating safety from the SafeTea team.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
@@ -68,7 +68,6 @@
         .blog-card-body { padding: 20px; }
         .blog-tag { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .tag-safety { background: rgba(46,204,113,0.15); color: #2ecc71; }
-        .tag-news { background: rgba(52,152,219,0.15); color: #3498db; }
         .tag-tips { background: rgba(242,112,89,0.15); color: #f27059; }
         .tag-stories { background: rgba(232,160,181,0.15); color: #E8A0B5; }
         .tag-product { background: rgba(155,89,182,0.15); color: #9b59b6; }
@@ -106,20 +105,6 @@
         .blog-article-cta a { display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; padding: 12px 32px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: transform 0.2s; }
         .blog-article-cta a:hover { transform: translateY(-2px); }
 
-        /* NEWS TICKER */
-        .blog-news-section { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 32px; border: 1px solid rgba(255,255,255,0.06); }
-        .blog-news-section h3 { color: #fff; font-size: 16px; margin-bottom: 16px; }
-        .blog-news-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-        .blog-news-item:last-child { border-bottom: none; }
-        .blog-news-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(52,152,219,0.15); display: flex; align-items: center; justify-content: center; color: #3498db; flex-shrink: 0; }
-        .blog-news-item a { color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; line-height: 1.4; }
-        .blog-news-item a:hover { color: #E8A0B5; }
-        .blog-news-item .news-source { font-size: 11px; color: #8080A0; margin-top: 4px; }
-
-        /* LOADING */
-        .blog-loading { text-align: center; padding: 40px; }
-        .blog-loading i { font-size: 24px; color: #E8A0B5; }
-
         /* FOOTER */
         .blog-footer { background: #22223A; border-top: 1px solid rgba(255,255,255,0.06); padding: 32px 24px; text-align: center; }
         .blog-footer p { color: #8080A0; font-size: 13px; }
@@ -148,7 +133,6 @@
             <div class="blog-nav-links">
                 <a href="#" class="active" onclick="filterCategory('all');return false">All Posts</a>
                 <a href="#" onclick="filterCategory('safety');return false">Safety</a>
-                <a href="#" onclick="filterCategory('news');return false">News</a>
                 <a href="#" onclick="filterCategory('tips');return false">Tips</a>
                 <a href="#" onclick="filterCategory('stories');return false">Stories</a>
             </div>
@@ -163,28 +147,19 @@
         <!-- HERO -->
         <div class="blog-hero">
             <h1>Stay Safe. <span>Date Smart.</span></h1>
-            <p>Real tips, news, and stories about online dating safety. Because going on a date shouldn't feel like a risk.</p>
+            <p>Expert tips, guides, and resources from the SafeTea team. Because going on a date shouldn't feel like a risk.</p>
         </div>
 
         <!-- FILTERS -->
         <div class="blog-filters">
             <button class="blog-filter active" onclick="filterCategory('all')">All</button>
             <button class="blog-filter" onclick="filterCategory('safety')"><i class="fas fa-shield-alt"></i> Safety</button>
-            <button class="blog-filter" onclick="filterCategory('news')"><i class="fas fa-newspaper"></i> News</button>
             <button class="blog-filter" onclick="filterCategory('tips')"><i class="fas fa-lightbulb"></i> Tips</button>
             <button class="blog-filter" onclick="filterCategory('stories')"><i class="fas fa-heart"></i> Stories</button>
             <button class="blog-filter" onclick="filterCategory('product')"><i class="fas fa-mobile-alt"></i> Product</button>
         </div>
 
         <div class="blog-container">
-            <!-- RECENT NEWS SECTION (fetched live) -->
-            <div class="blog-news-section" id="news-section">
-                <h3><i class="fas fa-bolt" style="color:#f1c40f"></i> Latest Dating Safety News</h3>
-                <div id="news-feed">
-                    <div class="blog-loading"><i class="fas fa-spinner fa-spin"></i> Loading latest news...</div>
-                </div>
-            </div>
-
             <!-- ARTICLES GRID -->
             <div class="blog-grid" id="blog-grid">
                 <!-- Articles populated by JS -->
@@ -334,27 +309,6 @@
                     '<div class="callout"><strong>Get started:</strong> Open the SafeTea app, go to Hub > Date Check, and try your first check-out. It takes about 60 seconds to fill out and could make all the difference.</div>'
             },
             {
-                id: 'romance-scam-statistics',
-                category: 'news',
-                tag: 'News',
-                tagClass: 'tag-news',
-                title: 'Romance Scams Hit Record $1.3 Billion in Losses',
-                excerpt: 'New FTC data reveals that romance scams continue to rise, with online dating platforms being the primary vector.',
-                image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
-                author: 'SafeTea Team',
-                date: 'March 10, 2026',
-                readTime: '5 min read',
-                body: '<p>Romance scams aren\'t just an inconvenience — they\'re a massive financial crime that devastates real people. The latest data from the Federal Trade Commission paints a sobering picture.</p>' +
-                    '<h2>The Numbers</h2>' +
-                    '<p>The FTC reports that consumers lost over $1.3 billion to romance scams in a recent year, making it one of the costliest forms of fraud. The median individual loss was $4,400 — but some victims lost hundreds of thousands of dollars.</p>' +
-                    '<h2>Who\'s Targeted</h2>' +
-                    '<p>While anyone can be a victim, the data shows that people ages 60-69 report the highest median losses. However, people ages 18-29 actually report the most total cases. The scammers are equal-opportunity predators.</p>' +
-                    '<h2>How to Protect Yourself</h2>' +
-                    '<p>The best defense is awareness. Never send money to someone you haven\'t met in person, be skeptical of profiles that seem too perfect, and use tools like SafeTea\'s Photo Verification and Conversation Scanner to verify the people you\'re talking to.</p>' +
-                    '<blockquote>If someone you\'ve never met in person asks you for money, that is a scam. Full stop. No matter how convincing their story is.</blockquote>' +
-                    '<div class="callout"><strong>Report it:</strong> If you believe you\'ve been a victim of a romance scam, report it to the FTC at ReportFraud.ftc.gov and to the dating platform where you met the person.</div>'
-            },
-            {
                 id: 'share-location-guide',
                 category: 'tips',
                 tag: 'Tips',
@@ -494,65 +448,8 @@
             window.scrollTo(0, 0);
         };
 
-        // ==================== LIVE NEWS FEED ====================
-        function loadNews() {
-            var feed = document.getElementById('news-feed');
-            // Fetch real news from our API
-            var controller = new AbortController();
-            var timeout = setTimeout(function() { controller.abort(); }, 5000);
-            fetch('/api/blog/news', { signal: controller.signal })
-                .then(function(res) { clearTimeout(timeout); return res.json(); })
-                .then(function(data) {
-                    if (!data || !data.articles || data.articles.length === 0) {
-                        feed.innerHTML = '<p style="color:#8080A0;font-size:13px;text-align:center;padding:12px">No recent news available.</p>';
-                        return;
-                    }
-                    var html = '';
-                    data.articles.slice(0, 6).forEach(function(item) {
-                        html += '<div class="blog-news-item">' +
-                            '<div class="blog-news-icon"><i class="fas fa-newspaper"></i></div>' +
-                            '<div>' +
-                                '<a href="' + (item.url || '#') + '" target="_blank" rel="noopener">' + escapeHtml(item.title) + '</a>' +
-                                '<div class="news-source">' + escapeHtml(item.source || '') + (item.date ? ' &bull; ' + item.date : '') + '</div>' +
-                            '</div>' +
-                        '</div>';
-                    });
-                    feed.innerHTML = html;
-                })
-                .catch(function() {
-                    // Fallback: show curated news
-                    feed.innerHTML = renderFallbackNews();
-                });
-        }
-
-        function renderFallbackNews() {
-            var fallback = [
-                { title: 'FTC Reports Record Losses from Romance Scams', source: 'Federal Trade Commission', date: '2026' },
-                { title: 'Dating Apps Add New Safety Features Amid Growing Concerns', source: 'Tech News', date: '2026' },
-                { title: 'Study: 57% of Women Experience Harassment on Dating Apps', source: 'Pew Research', date: '2026' },
-                { title: 'How AI is Being Used to Create More Convincing Catfish Profiles', source: 'Wired', date: '2026' },
-                { title: 'New State Laws Require Dating Apps to Disclose Safety Policies', source: 'Reuters', date: '2026' },
-            ];
-            var html = '';
-            fallback.forEach(function(item) {
-                html += '<div class="blog-news-item">' +
-                    '<div class="blog-news-icon"><i class="fas fa-newspaper"></i></div>' +
-                    '<div><a href="#">' + item.title + '</a><div class="news-source">' + item.source + ' &bull; ' + item.date + '</div></div>' +
-                '</div>';
-            });
-            return html;
-        }
-
-        function escapeHtml(s) {
-            if (!s) return '';
-            var d = document.createElement('div');
-            d.textContent = s;
-            return d.innerHTML;
-        }
-
         // ==================== INIT ====================
         renderArticles('all');
-        loadNews();
 
         // Handle URL hash for direct article links
         if (window.location.hash) {

@@ -271,7 +271,7 @@ City: ${post.city || 'unknown'}`;
   }
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -311,3 +311,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'AI tasks cron failed', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('run-ai-tasks', handler);

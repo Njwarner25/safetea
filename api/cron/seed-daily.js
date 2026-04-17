@@ -90,7 +90,7 @@ async function generateAIPost(city, category) {
   }
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   // Vercel cron sends GET requests
   if (req.method === 'OPTIONS') { res.setHeader('Access-Control-Allow-Origin', '*'); return res.status(200).end(); }
 
@@ -168,3 +168,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Seed failed', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('seed-daily', handler);

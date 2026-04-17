@@ -171,6 +171,7 @@
         { "source": "/api/migrate-apple-iap", "destination": "/api/migrate-apple-iap" },
         { "source": "/api/migrate-post-interactions", "destination": "/api/migrate-post-interactions" },
         { "source": "/api/migrate-trust-score", "destination": "/api/migrate-trust-score" },
+        { "source": "/api/migrate-cron-runs", "destination": "/api/migrate-cron-runs" },
         { "source": "/api/migrate-connected-accounts", "destination": "/api/migrate-connected-accounts" },
         { "source": "/api/migrate-linking-preferences", "destination": "/api/migrate-linking-preferences" },
         { "source": "/api/cleanup-storage", "destination": "/api/cleanup-storage" },

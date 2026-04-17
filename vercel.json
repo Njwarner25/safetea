@@ -26,7 +26,8 @@
         { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" },
         { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" },
-        { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" }
+        { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" },
+        { "path": "/api/cron/stripe-sync", "schedule": "0 4 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },

@@ -5,6 +5,12 @@ module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Protect migration endpoint — consistent with other /api/migrate-*
+  const secret = req.query.secret || req.headers['x-migrate-secret'];
+  if (secret !== process.env.MIGRATE_SECRET) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   const results = [];
 
   try {

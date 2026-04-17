@@ -155,8 +155,6 @@
         { "source": "/api/photos/removal-public", "destination": "/api/photos/removal-public" },
         { "source": "/api/photos", "destination": "/api/photos" },
         { "source": "/api/subscriptions/cancel", "destination": "/api/subscriptions/cancel" },
-        { "source": "/api/subscriptions/checkout", "destination": "/api/subscriptions/checkout" },
-        { "source": "/api/subscriptions/refund", "destination": "/api/subscriptions/refund" },
         { "source": "/api/subscriptions/status", "destination": "/api/subscriptions/status" },
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/migrate", "destination": "/api/migrate" },

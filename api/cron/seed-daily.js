@@ -53,11 +53,6 @@ const FALLBACK_GOOD_GUYS = [
   "Had a date cancel because he was sick and he actually rescheduled for the next day instead of ghosting. Low bar but I'll take it 😅"
 ];
 
-function pickRandom(arr, count) {
-  var shuffled = arr.slice().sort(function() { return 0.5 - Math.random(); });
-  return shuffled.slice(0, count);
-}
-
 async function generateAIPost(city, category) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;

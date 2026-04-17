@@ -1,12 +1,13 @@
 const { getOne, getMany, run } = require('../_utils/db');
 
 /**
- * Daily community seeder — runs every 3 hours from 8am-11pm CT.
- * Each run picks 2-3 random cities, generates 1-2 organic posts per city
- * using AI, posted from existing seed accounts.
+ * Daily community seeder — runs every 3 hours.
+ * Each run seeds ALL 8 cities with 1 organic post each (AI-generated),
+ * posted from existing seed accounts. Guarantees daily coverage across
+ * every city.
  *
- * Vercel cron: 0 8,11,14,17,20,23 * * *  (every 3 hours, 6 runs/day)
- * That's ~12-18 posts/day spread across 8 cities.
+ * Vercel cron: 0 13,16,19,22,1,4 * * *  (every 3 hours, 6 runs/day)
+ * That's ~48 posts/day — 6 per city per day across all 8 cities.
  */
 
 const CITIES = ['Chicago', 'Dallas', 'Houston', 'Atlanta', 'Miami', 'Los Angeles', 'Philadelphia', 'New York'];
@@ -108,30 +109,23 @@ module.exports = async function handler(req, res) {
   const results = { posts: [], errors: [] };
 
   try {
-    // Pick 2-3 random cities for this run
-    const citiesToSeed = pickRandom(CITIES, 2 + Math.floor(Math.random() * 2));
+    // Seed all 8 cities every run to guarantee daily coverage
+    const citiesToSeed = CITIES;
 
     for (const cityName of citiesToSeed) {
       // Find a random seed account in this city
-      const seedAccount = await getOne(
+      const account = await getOne(
         `SELECT id, display_name FROM users WHERE email LIKE $1 AND city = $2 ORDER BY RANDOM() LIMIT 1`,
         ['%@seed.safetea.local', cityName]
       );
 
-      if (!seedAccount) {
+      if (!account) {
         results.errors.push({ city: cityName, error: 'No seed accounts found' });
         continue;
       }
 
-      // 1-2 posts per city per run
-      const postCount = 1 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < postCount; i++) {
-        // Alternate a different seed account for each post
-        const account = i === 0 ? seedAccount : await getOne(
-          `SELECT id, display_name FROM users WHERE email LIKE $1 AND city = $2 AND id != $3 ORDER BY RANDOM() LIMIT 1`,
-          ['%@seed.safetea.local', cityName, seedAccount.id]
-        ) || seedAccount;
-
+      // 1 post per city per run (6 runs/day = 6 posts/city/day)
+      {
         const category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
 
         // Try AI generation first, fall back to templates

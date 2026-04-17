@@ -1,7 +1,7 @@
 const { getMany, run } = require('../_utils/db');
 const { sendSafeTeaCheckInReminderEmail } = require('../../services/email');
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   // Only allow GET (Vercel cron) or POST
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -56,3 +56,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Cron failed', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('checkin-reminders', handler);

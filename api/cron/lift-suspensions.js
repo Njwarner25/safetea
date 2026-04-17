@@ -11,7 +11,7 @@ const { getMany, run } = require('../_utils/db');
 const { cors } = require('../_utils/auth');
 const { sendEmail, wrapHtml } = require('../../services/email');
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -81,3 +81,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Cron job failed', message: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('lift-suspensions', handler);

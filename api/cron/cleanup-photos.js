@@ -13,7 +13,7 @@
 const { getMany, run } = require('../_utils/db');
 const { cors } = require('../_utils/auth');
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     console.error('CRITICAL: CRON_SECRET environment variable is not set.');
@@ -131,3 +131,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to execute photo cleanup', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('cleanup-photos', handler);

@@ -11,13 +11,14 @@ function tierFromPriceId(priceId) {
   return null;
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Protect with MIGRATE_SECRET
+  // Allow Vercel cron invocations; require MIGRATE_SECRET for manual runs
+  const cronHeader = req.headers['x-vercel-cron'];
   const secret = req.query.secret;
-  if (secret !== process.env.MIGRATE_SECRET) {
+  if (!cronHeader && secret !== process.env.MIGRATE_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -189,3 +190,5 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('stripe-sync', handler);

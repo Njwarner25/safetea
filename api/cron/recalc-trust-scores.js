@@ -3,7 +3,7 @@ const { recalculateTrustScore } = require('../_utils/trust-score');
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   // Verify cron auth
   if (CRON_SECRET) {
     const auth = req.headers.authorization;
@@ -54,3 +54,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Cron job failed', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('recalc-trust-scores', handler);

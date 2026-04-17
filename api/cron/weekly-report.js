@@ -3,7 +3,7 @@ const { sendWeeklyModReportEmail } = require('../../services/email');
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -216,3 +216,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Weekly report failed', details: err.message });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('weekly-report', handler);

@@ -15,35 +15,39 @@ module.exports = async function handler(req, res) {
   try {
     const body = await parseBody(req);
 
-    // Verify webhook signature if secret is configured
-    if (WEBHOOK_SECRET) {
-      const signature = req.headers['x-signature-v2'];
-      const timestamp = req.headers['x-timestamp'];
+    // Signature verification is REQUIRED — refuse requests if secret is missing
+    // so a misconfigured deploy can never flip didit_verified without Didit's signature.
+    if (!WEBHOOK_SECRET) {
+      console.error('[Didit Callback] WEBHOOK_SECRET_KEY not configured — rejecting request');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
 
-      if (!signature || !timestamp) {
-        console.error('[Didit Callback] Missing signature or timestamp headers');
-        return res.status(401).json({ error: 'Missing authentication headers' });
-      }
+    const signature = req.headers['x-signature-v2'];
+    const timestamp = req.headers['x-timestamp'];
 
-      // Check timestamp is within 300 seconds
-      const now = Math.floor(Date.now() / 1000);
-      const ts = parseInt(timestamp);
-      if (Math.abs(now - ts) > 300) {
-        console.error('[Didit Callback] Timestamp too old:', now - ts, 'seconds');
-        return res.status(401).json({ error: 'Timestamp expired' });
-      }
+    if (!signature || !timestamp) {
+      console.error('[Didit Callback] Missing signature or timestamp headers');
+      return res.status(401).json({ error: 'Missing authentication headers' });
+    }
 
-      // Compute HMAC-SHA256 of sorted canonical JSON body
-      const sortedBody = JSON.stringify(sortObject(body));
-      const expectedSig = crypto
-        .createHmac('sha256', WEBHOOK_SECRET)
-        .update(sortedBody)
-        .digest('hex');
+    // Check timestamp is within 300 seconds
+    const now = Math.floor(Date.now() / 1000);
+    const ts = parseInt(timestamp);
+    if (Math.abs(now - ts) > 300) {
+      console.error('[Didit Callback] Timestamp too old:', now - ts, 'seconds');
+      return res.status(401).json({ error: 'Timestamp expired' });
+    }
 
-      if (signature !== expectedSig) {
-        console.error('[Didit Callback] Signature mismatch');
-        return res.status(401).json({ error: 'Invalid signature' });
-      }
+    // Compute HMAC-SHA256 of sorted canonical JSON body
+    const sortedBody = JSON.stringify(sortObject(body));
+    const expectedSig = crypto
+      .createHmac('sha256', WEBHOOK_SECRET)
+      .update(sortedBody)
+      .digest('hex');
+
+    if (signature !== expectedSig) {
+      console.error('[Didit Callback] Signature mismatch');
+      return res.status(401).json({ error: 'Invalid signature' });
     }
 
     const { session_id, status, vendor_data, decision, webhook_type } = body;

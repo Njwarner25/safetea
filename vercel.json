@@ -26,7 +26,8 @@
         { "path": "/api/cron/recalc-trust-scores", "schedule": "0 6 * * *" },
         { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" },
-        { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" }
+        { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" },
+        { "path": "/api/cron/stripe-sync", "schedule": "0 4 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -154,8 +155,6 @@
         { "source": "/api/photos/removal-public", "destination": "/api/photos/removal-public" },
         { "source": "/api/photos", "destination": "/api/photos" },
         { "source": "/api/subscriptions/cancel", "destination": "/api/subscriptions/cancel" },
-        { "source": "/api/subscriptions/checkout", "destination": "/api/subscriptions/checkout" },
-        { "source": "/api/subscriptions/refund", "destination": "/api/subscriptions/refund" },
         { "source": "/api/subscriptions/status", "destination": "/api/subscriptions/status" },
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/migrate", "destination": "/api/migrate" },
@@ -172,6 +171,7 @@
         { "source": "/api/migrate-apple-iap", "destination": "/api/migrate-apple-iap" },
         { "source": "/api/migrate-post-interactions", "destination": "/api/migrate-post-interactions" },
         { "source": "/api/migrate-trust-score", "destination": "/api/migrate-trust-score" },
+        { "source": "/api/migrate-cron-runs", "destination": "/api/migrate-cron-runs" },
         { "source": "/api/migrate-connected-accounts", "destination": "/api/migrate-connected-accounts" },
         { "source": "/api/migrate-linking-preferences", "destination": "/api/migrate-linking-preferences" },
         { "source": "/api/cleanup-storage", "destination": "/api/cleanup-storage" },

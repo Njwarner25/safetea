@@ -2,7 +2,7 @@ const { getMany, getOne, run } = require('../_utils/db');
 const { cors } = require('../_utils/auth');
 const { sendCityUnlockEmail } = require('../../services/email');
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -105,3 +105,5 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('unlock-cities', handler);

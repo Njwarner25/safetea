@@ -16,7 +16,7 @@ const { cors } = require('../_utils/auth');
 // Tier hierarchy: free < plus < pro
 const TIER_RANK = { free: 0, plus: 1, pro: 2 };
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -184,3 +184,5 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+module.exports = require('../_utils/cron-wrapper').withCronLogging('expire-referrals', handler);

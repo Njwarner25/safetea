@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#E8A0B5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SafeTea">
+    <meta name="application-name" content="SafeTea">
+    <meta name="format-detection" content="telephone=no">
+    <title>SafeTea Pulse — SafeTea</title>
+    <meta name="description" content="SafeTea Pulse — real-time safety awareness during active sessions. Detects inactivity, route changes, and missed check-ins.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 600px; margin: 0 auto; padding: 24px 20px 60px; }
+
+        .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+        .back-link i { font-size: 12px; }
+
+        .hero { text-align: center; margin: 16px 0 32px; }
+        .hero-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 84px; height: 84px; background: rgba(231,76,60,0.12);
+            border: 2px solid rgba(231,76,60,0.25);
+            border-radius: 24px; margin-bottom: 18px;
+            animation: pulse 1.8s ease-in-out infinite;
+        }
+        .hero-icon i { font-size: 34px; color: #e74c3c; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231,76,60,0.18); }
+            50%      { transform: scale(1.04); box-shadow: 0 0 0 16px rgba(231,76,60,0); }
+        }
+        .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }
+        .hero .tagline { color: #E8A0B5; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+        .hero p { color: #B0B0C8; font-size: 15px; line-height: 1.6; max-width: 440px; margin: 0 auto; }
+
+        .section-title { font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin: 28px 0 12px; }
+
+        .card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px; }
+
+        .feature-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+        .feature-row + .feature-row { border-top: 1px solid rgba(255,255,255,0.04); }
+        .feature-icon { min-width: 40px; height: 40px; border-radius: 12px; background: rgba(232,160,181,0.12); display: flex; align-items: center; justify-content: center; }
+        .feature-icon i { font-size: 16px; color: #E8A0B5; }
+        .feature-text h4 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+        .feature-text p { font-size: 13px; color: #8080A0; line-height: 1.5; }
+
+        .download-card {
+            background: linear-gradient(135deg, rgba(232,160,181,0.14), rgba(155,89,182,0.08));
+            border: 1px solid rgba(232,160,181,0.25);
+            border-radius: 18px;
+            padding: 26px 22px;
+            margin-bottom: 16px;
+        }
+        .download-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .download-card p { color: #B0B0C8; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+
+        .download-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%;
+            background: linear-gradient(135deg, #E8A0B5, #D4768E);
+            color: #fff; border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 15px; font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            margin-bottom: 10px;
+        }
+        .download-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,160,181,0.25); }
+        .download-btn i { font-size: 20px; }
+
+        .ios-note {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #8080A0;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .ios-note i { color: #8080A0; }
+
+        .install-steps { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; padding: 16px 18px; margin-top: 14px; }
+        .install-steps h5 { font-size: 12px; font-weight: 700; color: #E8A0B5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .install-steps ol { margin: 0; padding-left: 20px; }
+        .install-steps li { font-size: 13px; color: #B0B0C8; line-height: 1.7; }
+
+        .footer-note { text-align: center; padding: 24px 0 8px; color: #8080A0; font-size: 12px; }
+        .footer-note i { margin-right: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav">
+            <a href="/dashboard" class="back-link"><i class="fas fa-chevron-left"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="hero">
+            <div class="hero-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="tagline">Available on Mobile</div>
+            <h1>SafeTea Pulse</h1>
+            <p>Real-time safety awareness during active sessions. Pulse watches for anomalies while you're walking, on a date, or headed somewhere — and alerts your trusted contact if something seems off.</p>
+        </div>
+
+        <div class="section-title">What Pulse watches for</div>
+        <div class="card">
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-walking"></i></div>
+                <div class="feature-text">
+                    <h4>Inactivity</h4>
+                    <p>No movement for longer than expected — Pulse checks in.</p>
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-route"></i></div>
+                <div class="feature-text">
+                    <h4>Route changes</h4>
+                    <p>Unexpected detour away from your destination.</p>
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-clock"></i></div>
+                <div class="feature-text">
+                    <h4>Missed check-ins</h4>
+                    <p>Your scheduled check-in window passed without a response.</p>
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="feature-text">
+                    <h4>Session overruns</h4>
+                    <p>Your trip is running much longer than planned.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">How it works</div>
+        <div class="card">
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-question"></i></div>
+                <div class="feature-text">
+                    <h4>"Are you okay?"</h4>
+                    <p>If something seems off, Pulse prompts you with vibration and a countdown.</p>
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-bell"></i></div>
+                <div class="feature-text">
+                    <h4>No response → alert sent</h4>
+                    <p>Your trusted contact gets your name, location, and anomaly type automatically.</p>
+                </div>
+            </div>
+            <div class="feature-row">
+                <div class="feature-icon"><i class="fas fa-home"></i></div>
+                <div class="feature-text">
+                    <h4>Safe Zones</h4>
+                    <p>Inside trusted locations like home or work, Pulse pauses on its own.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Get Pulse on your phone</div>
+
+        <div class="download-card">
+            <h3><i class="fab fa-android" style="color:#3DDC84;margin-right:8px"></i>Download for Android</h3>
+            <p>Install the latest build directly. Pulse runs in the Tools tab once the app is open.</p>
+            <a href="https://expo.dev/artifacts/eas/jNNJE1hhTQ9rzfRusDs3U6.apk" class="download-btn" download>
+                <i class="fas fa-download"></i> Download APK
+            </a>
+
+            <div class="install-steps">
+                <h5>Install steps</h5>
+                <ol>
+                    <li>Tap the button above on your Android phone.</li>
+                    <li>Open the downloaded <code>.apk</code> file.</li>
+                    <li>If prompted, allow "Install from unknown sources" for your browser.</li>
+                    <li>Open SafeTea → <b>Tools</b> tab → tap <b>SafeTea Pulse</b>.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="ios-note">
+            <i class="fab fa-apple"></i> iOS version coming soon — TestFlight build pending
+        </div>
+
+        <div class="footer-note">
+            <i class="fas fa-shield-alt"></i> Pulse activates automatically when you start a SafeTea Check-In session.
+        </div>
+    </div>
+</body>
+</html>

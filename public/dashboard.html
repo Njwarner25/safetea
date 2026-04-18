@@ -1846,51 +1846,6 @@
         /* Pink badge colors stay pink */
         /* Green success colors stay green */
 
-        /* ===== ROOMS / SORORITY — Light Mode ===== */
-        [data-theme="light"] #hub-sororityrooms div[style*="background:#22223A"],
-        [data-theme="light"] #hub-sororityrooms div[style*="background: #22223A"] {
-            background: var(--st-surface) !important;
-            border: 1px solid var(--st-border) !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-        }
-        [data-theme="light"] #hub-sororityrooms div[style*="background:#1A1A2E"],
-        [data-theme="light"] #hub-sororityrooms div[style*="background:#141428"] {
-            background: var(--st-surface-soft) !important;
-            border-color: var(--st-border) !important;
-        }
-        [data-theme="light"] #hub-sororityrooms input[style*="background:#141428"],
-        [data-theme="light"] #hub-sororityrooms input[style*="background:#1A1A2E"],
-        [data-theme="light"] #hub-sororityrooms textarea[style*="background:#141428"],
-        [data-theme="light"] #hub-sororityrooms textarea[style*="background:#1A1A2E"],
-        [data-theme="light"] #hub-sororityrooms select[style*="background:#141428"] {
-            background: var(--st-surface-soft) !important;
-            border-color: var(--st-border) !important;
-            color: var(--st-text) !important;
-        }
-        /* Room post cards — fix white-on-white borders */
-        [data-theme="light"] #hub-sororityrooms div[style*="border:1px solid rgba(255,255,255"] {
-            border-color: var(--st-border) !important;
-        }
-        [data-theme="light"] #hub-sororityrooms img[style*="border:1px solid rgba(255,255,255"] {
-            border-color: var(--st-border) !important;
-        }
-        /* Room post text */
-        [data-theme="light"] #hub-sororityrooms div[style*="color:#ccc"],
-        [data-theme="light"] #hub-sororityrooms span[style*="color:#ccc"],
-        [data-theme="light"] #hub-sororityrooms p[style*="color:#ccc"] {
-            color: var(--st-text) !important;
-        }
-        [data-theme="light"] #hub-sororityrooms div[style*="color:#666"],
-        [data-theme="light"] #hub-sororityrooms span[style*="color:#666"] {
-            color: #888 !important;
-        }
-        /* Room reply borders */
-        [data-theme="light"] #hub-sororityrooms div[style*="border-top:1px solid rgba(255,255,255"] {
-            border-top-color: var(--st-border) !important;
-        }
-        [data-theme="light"] #hub-sororityrooms div[style*="border-bottom:1px solid rgba(255,255,255"] {
-            border-bottom-color: var(--st-border) !important;
-        }
 
         /* ===== Photo Verification — Light Mode ===== */
         [data-theme="light"] #hub-catfish div[style*="border:1px solid rgba(255,255,255"],
@@ -3130,38 +3085,9 @@
                 </div>
             </div>
 
-            <!-- HUB: SORORITY ROOMS -->
-            <div id="hub-sororityrooms" class="hub-sub" style="display:none">
-                <button onclick="switchHubTab('overview')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Home</button>
-
-                <!-- Sorority Rooms Header -->
-                <div style="margin-bottom:20px">
-                    <h2 style="color:#fff;font-size:20px;display:flex;align-items:center;gap:10px"><i class="fas fa-door-open" style="color:#9b59b6"></i> Sorority Rooms</h2>
-                    <p style="color:#8080A0;font-size:14px;margin-top:4px">Private, invite-only spaces for your chapter and sisters.</p>
-                </div>
-
-                <!-- Action Buttons -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-                    <button onclick="showCreateRoomModal()" style="background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-plus"></i> Create Room</button>
-                    <button onclick="showJoinRoomModal()" style="background:#22223A;color:#9b59b6;border:1px solid rgba(155,89,182,0.3);padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px"><i class="fas fa-key"></i> Join Room</button>
-                </div>
-
-                <!-- My Rooms List -->
-                <div id="sr-my-rooms" style="margin-bottom:20px">
-                    <div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading your rooms...</div>
-                </div>
-
-                <!-- Empty State -->
-                <div id="sr-empty-state" style="display:none;text-align:center;padding:40px 20px">
-                    <div style="width:64px;height:64px;background:rgba(155,89,182,0.12);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-door-open" style="font-size:28px;color:#9b59b6"></i></div>
-                    <h3 style="color:#fff;font-size:18px;margin-bottom:8px">No Rooms Yet</h3>
-                    <p style="color:#8080A0;font-size:14px;line-height:1.5;max-width:300px;margin:0 auto">Create a private room for your sorority chapter or join one with an invite code.</p>
-                </div>
-            </div>
-
             <!-- HUB: ROOM VIEW (individual room) -->
             <div id="hub-roomview" class="hub-sub" style="display:none">
-                <button onclick="switchHubTab('sororityrooms')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Rooms</button>
+                <button onclick="switchHubTab('community')" class="hub-back-btn" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#E8A0B5;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-bottom:16px"><i class="fas fa-arrow-left"></i> Back to Rooms</button>
 
                 <!-- Room Header (branded) -->
                 <div id="rv-header" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;margin-bottom:16px">

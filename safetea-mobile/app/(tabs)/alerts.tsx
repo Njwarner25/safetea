@@ -46,6 +46,14 @@ const TOOLS: Tool[] = [
     route: '/sos',
   },
   {
+    icon: 'heartbeat',
+    title: 'SafeTea Pulse',
+    desc: 'Real-time monitoring during active sessions — detects inactivity, route changes, and missed check-ins',
+    color: Colors.danger,
+    bgColor: Colors.dangerMuted,
+    route: '/pulse',
+  },
+  {
     icon: 'eye',
     title: 'Name Watch',
     desc: 'Monitor names of people you\'re dating and get alerts when they\'re mentioned',

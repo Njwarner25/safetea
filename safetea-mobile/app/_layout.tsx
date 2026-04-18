@@ -108,6 +108,15 @@ export default function RootLayout() {
             headerTintColor: Colors.textPrimary,
           }}
         />
+        <Stack.Screen
+          name="pulse"
+          options={{
+            headerShown: true,
+            headerTitle: 'SafeTea Pulse',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
       </Stack>
       <PulseAreYouOkayPrompt />
     </>

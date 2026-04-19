@@ -14,11 +14,13 @@
     <meta name="apple-mobile-web-app-title" content="SafeTea">
     <meta name="application-name" content="SafeTea">
     <meta name="format-detection" content="telephone=no">
-    <title>SafeTea Pulse — SafeTea</title>
-    <meta name="description" content="SafeTea Pulse — real-time safety awareness during active sessions. Detects inactivity, route changes, and missed check-ins.">
+    <title>SafeTea Pulse — Real-time safety watch</title>
+    <meta name="description" content="SafeTea Pulse — real-time safety awareness during active sessions. Detects inactivity, route changes, and missed check-ins, and alerts your trusted contact on no response.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/mobile-viewport-lock.css">
+    <script src="/capacitor-bridge.js" defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
@@ -56,49 +58,72 @@
         .feature-text h4 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
         .feature-text p { font-size: 13px; color: #8080A0; line-height: 1.5; }
 
-        .download-card {
-            background: linear-gradient(135deg, rgba(232,160,181,0.14), rgba(155,89,182,0.08));
-            border: 1px solid rgba(232,160,181,0.25);
-            border-radius: 18px;
-            padding: 26px 22px;
-            margin-bottom: 16px;
+        /* ------ Session UI (replaces the old APK-download card) ------ */
+        .session-card {
+            background: linear-gradient(135deg, rgba(231,76,60,0.12), rgba(155,89,182,0.06));
+            border: 1px solid rgba(231,76,60,0.22);
+            border-radius: 16px; padding: 22px 20px; margin-bottom: 16px;
         }
-        .download-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-        .download-card p { color: #B0B0C8; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+        .session-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .session-card > p { font-size: 13px; color: #B0B0C8; line-height: 1.5; margin-bottom: 18px; }
 
-        .download-btn {
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%;
-            background: linear-gradient(135deg, #E8A0B5, #D4768E);
-            color: #fff; border: none;
-            padding: 16px 20px;
-            border-radius: 12px;
-            font-size: 15px; font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            text-decoration: none;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            margin-bottom: 10px;
+        .field-label { display: block; font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin: 16px 0 8px; }
+        .field-input, .field-select {
+            width: 100%; background: #0D0D1A; color: #fff;
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+            padding: 13px 14px; font-size: 14px; font-family: inherit; outline: none;
         }
-        .download-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,160,181,0.25); }
-        .download-btn i { font-size: 20px; }
+        .field-input:focus, .field-select:focus { border-color: rgba(232,160,181,0.5); }
 
-        .ios-note {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            color: #8080A0;
-            padding: 14px 20px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 500;
+        .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            color: #B0B0C8; padding: 9px 14px; border-radius: 999px;
+            font-size: 13px; font-weight: 500; cursor: pointer;
+            transition: all 0.15s; user-select: none;
         }
-        .ios-note i { color: #8080A0; }
+        .chip:hover { border-color: rgba(232,160,181,0.35); }
+        .chip.active { background: rgba(232,160,181,0.16); border-color: #E8A0B5; color: #fff; }
 
-        .install-steps { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; padding: 16px 18px; margin-top: 14px; }
-        .install-steps h5 { font-size: 12px; font-weight: 700; color: #E8A0B5; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .install-steps ol { margin: 0; padding-left: 20px; }
-        .install-steps li { font-size: 13px; color: #B0B0C8; line-height: 1.7; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .btn-primary {
+            display: block; width: 100%; background: linear-gradient(135deg, #E8A0B5, #D4768E);
+            color: #fff; border: none; padding: 16px;
+            border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: transform 0.15s;
+            margin-top: 20px;
+        }
+        .btn-primary:hover { transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+
+        .active-session { display: none; }
+        .active-session .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+        .stat-tile { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; text-align: center; }
+        .stat-tile .val { font-size: 22px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+        .stat-tile .lbl { font-size: 11px; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 4px; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .status-pill.watching { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.2); }
+        .status-pill.alert    { background: rgba(231,76,60,0.14); color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
+
+        .toast {
+            position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+            background: #22223A; border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px;
+            z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .toast.show { opacity: 1; }
+
+        .empty-contacts {
+            padding: 12px 14px; font-size: 13px; color: #B0B0C8;
+            background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .empty-contacts a { color: #E8A0B5; font-weight: 600; }
 
         .footer-note { text-align: center; padding: 24px 0 8px; color: #8080A0; font-size: 12px; }
         .footer-note i { margin-right: 4px; }
@@ -112,9 +137,78 @@
 
         <div class="hero">
             <div class="hero-icon"><i class="fas fa-heartbeat"></i></div>
-            <div class="tagline">Available on Mobile</div>
+            <div class="tagline">Real-time safety watch</div>
             <h1>SafeTea Pulse</h1>
-            <p>Real-time safety awareness during active sessions. Pulse watches for anomalies while you're walking, on a date, or headed somewhere — and alerts your trusted contact if something seems off.</p>
+            <p>Pulse watches over you while you're walking, on a date, or headed somewhere — and alerts your trusted contact if something seems off.</p>
+        </div>
+
+        <!-- Start a session -->
+        <div id="session-start" class="session-card">
+            <h3><i class="fas fa-play-circle" style="color:#E8A0B5;margin-right:8px"></i>Start a Pulse session</h3>
+            <p>Choose a session type, pick a trusted contact, and let Pulse watch until you end it.</p>
+
+            <label class="field-label">Session type</label>
+            <div class="chip-row" id="type-chips">
+                <div class="chip active" data-value="walking">Walking</div>
+                <div class="chip" data-value="date">Date</div>
+                <div class="chip" data-value="ride">Ride</div>
+                <div class="chip" data-value="meetup">Meetup</div>
+                <div class="chip" data-value="custom">Custom</div>
+            </div>
+
+            <label class="field-label" for="trusted-contact">Trusted contact</label>
+            <select id="trusted-contact" class="field-select">
+                <option value="">Loading your contacts…</option>
+            </select>
+            <div id="no-contacts" class="empty-contacts" style="display:none;margin-top:8px">
+                No trusted contacts saved yet. <a href="/dashboard#tab-profile">Add one in your profile</a>, or enter a new one below.
+            </div>
+
+            <label class="field-label" for="destination">Destination (optional)</label>
+            <input id="destination" class="field-input" type="text" placeholder="e.g., Coffee on Milwaukee Ave">
+
+            <div class="grid-2">
+                <div>
+                    <label class="field-label" for="duration">Expected duration</label>
+                    <select id="duration" class="field-select">
+                        <option value="30">30 min</option>
+                        <option value="60" selected>1 hour</option>
+                        <option value="120">2 hours</option>
+                        <option value="180">3 hours</option>
+                        <option value="240">4 hours</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label" for="checkin-interval">Check-in every</label>
+                    <select id="checkin-interval" class="field-select">
+                        <option value="5">5 min</option>
+                        <option value="10" selected>10 min</option>
+                        <option value="15">15 min</option>
+                        <option value="20">20 min</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="btn-start" class="btn-primary"><i class="fas fa-play"></i> Start Pulse</button>
+        </div>
+
+        <!-- Active session -->
+        <div id="session-active" class="active-session">
+            <div class="session-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                    <h3 style="margin:0"><i class="fas fa-circle-dot" style="color:#2ecc71;margin-right:8px"></i>Pulse watching</h3>
+                    <span id="session-status" class="status-pill watching"><i class="fas fa-shield-heart"></i> Active</span>
+                </div>
+                <p id="session-summary" style="margin-bottom:0"></p>
+
+                <div class="stat-grid">
+                    <div class="stat-tile"><div class="val" id="stat-elapsed">0:00</div><div class="lbl">Elapsed</div></div>
+                    <div class="stat-tile"><div class="val" id="stat-remaining">0:00</div><div class="lbl">Until end</div></div>
+                </div>
+
+                <button id="btn-checkin" class="btn-primary"><i class="fas fa-check"></i> I'm safe — check in now</button>
+                <button id="btn-end" class="btn-primary btn-secondary" style="margin-top:10px"><i class="fas fa-stop"></i> End session</button>
+            </div>
         </div>
 
         <div class="section-title">What Pulse watches for</div>
@@ -174,33 +268,278 @@
             </div>
         </div>
 
-        <div class="section-title">Get Pulse on your phone</div>
-
-        <div class="download-card">
-            <h3><i class="fab fa-android" style="color:#3DDC84;margin-right:8px"></i>Download for Android</h3>
-            <p>Install the latest build directly. Pulse runs in the Tools tab once the app is open.</p>
-            <a href="https://expo.dev/artifacts/eas/jNNJE1hhTQ9rzfRusDs3U6.apk" class="download-btn" download>
-                <i class="fas fa-download"></i> Download APK
-            </a>
-
-            <div class="install-steps">
-                <h5>Install steps</h5>
-                <ol>
-                    <li>Tap the button above on your Android phone.</li>
-                    <li>Open the downloaded <code>.apk</code> file.</li>
-                    <li>If prompted, allow "Install from unknown sources" for your browser.</li>
-                    <li>Open SafeTea → <b>Tools</b> tab → tap <b>SafeTea Pulse</b>.</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="ios-note">
-            <i class="fab fa-apple"></i> iOS version coming soon — TestFlight build pending
-        </div>
-
         <div class="footer-note">
-            <i class="fas fa-shield-alt"></i> Pulse activates automatically when you start a SafeTea Check-In session.
+            <i class="fas fa-shield-alt"></i> Pulse runs locally in your browser or in the SafeTea app. End your session when you're safe.
         </div>
     </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var TOKEN_KEY = 'safetea_token';
+        var SESSION_STATE = 'safetea_pulse_active';
+        var token = localStorage.getItem(TOKEN_KEY);
+        if (!token) { window.location.href = '/login'; return; }
+
+        var state = {
+            sessionType: 'walking',
+            sessionKey: null,
+            contactId: null,
+            startedAt: null,
+            expectedEndAt: null,
+            checkinIntervalMs: 10 * 60 * 1000,
+            nextPromptAt: null,
+            tickTimer: null,
+            promptTimer: null
+        };
+
+        var el = {
+            startCard: document.getElementById('session-start'),
+            activeCard: document.getElementById('session-active'),
+            typeChips: document.getElementById('type-chips'),
+            contactSelect: document.getElementById('trusted-contact'),
+            noContacts: document.getElementById('no-contacts'),
+            destination: document.getElementById('destination'),
+            duration: document.getElementById('duration'),
+            checkinInterval: document.getElementById('checkin-interval'),
+            btnStart: document.getElementById('btn-start'),
+            btnCheckin: document.getElementById('btn-checkin'),
+            btnEnd: document.getElementById('btn-end'),
+            statusPill: document.getElementById('session-status'),
+            summary: document.getElementById('session-summary'),
+            elapsed: document.getElementById('stat-elapsed'),
+            remaining: document.getElementById('stat-remaining'),
+            toast: document.getElementById('toast')
+        };
+
+        function h(method, path, body) {
+            return fetch(path, {
+                method: method,
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined
+            }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); });
+        }
+
+        function toast(msg) {
+            el.toast.textContent = msg;
+            el.toast.classList.add('show');
+            setTimeout(function () { el.toast.classList.remove('show'); }, 2500);
+        }
+
+        function fmt(ms) {
+            if (ms < 0) ms = 0;
+            var s = Math.floor(ms / 1000);
+            var m = Math.floor(s / 60);
+            var h = Math.floor(m / 60);
+            var rs = s % 60, rm = m % 60;
+            if (h > 0) return h + ':' + String(rm).padStart(2, '0') + ':' + String(rs).padStart(2, '0');
+            return m + ':' + String(rs).padStart(2, '0');
+        }
+
+        // Session type chips
+        Array.prototype.forEach.call(el.typeChips.querySelectorAll('.chip'), function (c) {
+            c.addEventListener('click', function () {
+                Array.prototype.forEach.call(el.typeChips.querySelectorAll('.chip'), function (x) { x.classList.remove('active'); });
+                c.classList.add('active');
+                state.sessionType = c.dataset.value;
+            });
+        });
+
+        // Load contacts
+        h('GET', '/api/recording/contacts').then(function (r) {
+            var contacts = (r.data && r.data.contacts) || r.data || [];
+            if (!Array.isArray(contacts)) contacts = [];
+            el.contactSelect.innerHTML = '';
+            if (contacts.length === 0) {
+                el.contactSelect.style.display = 'none';
+                el.noContacts.style.display = 'block';
+            } else {
+                contacts.forEach(function (c) {
+                    var o = document.createElement('option');
+                    o.value = String(c.id);
+                    o.textContent = c.contact_name + (c.contact_phone ? ' · ' + c.contact_phone : '');
+                    el.contactSelect.appendChild(o);
+                });
+            }
+        }).catch(function () {
+            el.contactSelect.innerHTML = '<option value="">(Could not load contacts)</option>';
+        });
+
+        // Restore session if one is active (e.g., after reload during an active session)
+        var saved = localStorage.getItem(SESSION_STATE);
+        if (saved) {
+            try {
+                var s = JSON.parse(saved);
+                if (s.sessionKey && s.expectedEndAt && new Date(s.expectedEndAt).getTime() > Date.now()) {
+                    state = Object.assign(state, s);
+                    enterActive();
+                } else {
+                    localStorage.removeItem(SESSION_STATE);
+                }
+            } catch (e) { localStorage.removeItem(SESSION_STATE); }
+        }
+
+        // Start
+        el.btnStart.addEventListener('click', function () {
+            if (!state.sessionType) return toast('Pick a session type first');
+            var contactId = el.contactSelect.value || null;
+            var minutes = parseInt(el.duration.value, 10) || 60;
+            state.checkinIntervalMs = (parseInt(el.checkinInterval.value, 10) || 10) * 60 * 1000;
+            var expectedEndAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
+            el.btnStart.disabled = true;
+            el.btnStart.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting…';
+
+            // Ask for location once up front (mobile-native via bridge, web fallback inside bridge)
+            var geoPromise = (window.SafeTeaNative && window.SafeTeaNative.geo)
+                ? window.SafeTeaNative.geo.current().catch(function () { return null; })
+                : Promise.resolve(null);
+
+            geoPromise.then(function (pos) {
+                return h('POST', '/api/pulse/session', {
+                    sessionType: state.sessionType,
+                    trustedContactId: contactId,
+                    destination: el.destination.value ? { label: el.destination.value } : null,
+                    expectedEndAt: expectedEndAt,
+                    pulseEnabled: true
+                }).then(function (r) {
+                    if (!r.ok || !r.data.session) throw new Error(r.data.error || 'Failed to start');
+                    var sess = r.data.session;
+                    state.sessionKey = sess.session_key;
+                    state.contactId = contactId;
+                    state.startedAt = new Date(sess.started_at).getTime();
+                    state.expectedEndAt = new Date(expectedEndAt).getTime();
+
+                    // Persist minimal state so a reload doesn't lose the active session
+                    localStorage.setItem(SESSION_STATE, JSON.stringify({
+                        sessionKey: state.sessionKey,
+                        contactId: state.contactId,
+                        startedAt: state.startedAt,
+                        expectedEndAt: state.expectedEndAt,
+                        sessionType: state.sessionType,
+                        checkinIntervalMs: state.checkinIntervalMs
+                    }));
+
+                    if (pos) patchSession({ lastKnownLocation: { latitude: pos.lat, longitude: pos.lng } });
+
+                    if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+                    document.body.dataset.safeteaSessionActive = '1';
+
+                    enterActive();
+                });
+            }).catch(function (err) {
+                toast(err.message || 'Could not start session');
+                el.btnStart.disabled = false;
+                el.btnStart.innerHTML = '<i class="fas fa-play"></i> Start Pulse';
+            });
+        });
+
+        function enterActive() {
+            el.startCard.style.display = 'none';
+            el.activeCard.style.display = 'block';
+            var label = state.sessionType.charAt(0).toUpperCase() + state.sessionType.slice(1);
+            el.summary.textContent = label + ' session · started ' + new Date(state.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            state.nextPromptAt = Date.now() + state.checkinIntervalMs;
+
+            clearInterval(state.tickTimer);
+            state.tickTimer = setInterval(tick, 1000);
+            tick();
+        }
+
+        function tick() {
+            var now = Date.now();
+            el.elapsed.textContent = fmt(now - state.startedAt);
+            el.remaining.textContent = fmt(state.expectedEndAt - now);
+
+            if (now >= state.expectedEndAt) {
+                // Session overran the expected end — prompt the user
+                firePrompt('session_overrun', 'Your session is past its expected end time. Are you still safe?');
+                state.expectedEndAt = now + 15 * 60 * 1000; // re-check in 15 min if they answer "safe"
+                return;
+            }
+
+            if (now >= state.nextPromptAt) {
+                firePrompt('checkin_due', 'Time for a check-in. Are you okay?');
+                state.nextPromptAt = now + state.checkinIntervalMs;
+            }
+        }
+
+        function firePrompt(anomalyType, message) {
+            if (state.promptTimer) return; // already showing
+            var hasBridge = window.SafeTeaNative && window.SafeTeaNative.safetyPrompt;
+            if (hasBridge) {
+                window.SafeTeaNative.safetyPrompt({
+                    message: message,
+                    timeoutSec: 30,
+                    onOk: function () { handleSafe(anomalyType); },
+                    onNeedHelp: function (info) { handleEscalate(anomalyType, info && info.reason); }
+                });
+            } else {
+                // Fallback for desktop browsers: use confirm-style dialog; auto-escalate after 30s
+                var ok = window.confirm(message + '\n\nClick OK if you\u2019re safe, Cancel if you need help. (Pulse will alert your contact in 30s if you don\u2019t respond.)');
+                if (ok) handleSafe(anomalyType); else handleEscalate(anomalyType, 'user');
+            }
+        }
+
+        function handleSafe(anomalyType) {
+            if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+            toast('Checked in · Pulse still watching');
+            // Refresh location + move the anchor forward
+            var geo = (window.SafeTeaNative && window.SafeTeaNative.geo) ? window.SafeTeaNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
+            geo.then(function (pos) {
+                patchSession(pos ? { lastKnownLocation: { latitude: pos.lat, longitude: pos.lng }, anomalyType: null } : { anomalyType: null });
+            });
+        }
+
+        function handleEscalate(anomalyType, reason) {
+            if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('ERROR');
+            el.statusPill.classList.remove('watching');
+            el.statusPill.classList.add('alert');
+            el.statusPill.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Alerting contact';
+
+            var geo = (window.SafeTeaNative && window.SafeTeaNative.geo) ? window.SafeTeaNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
+            geo.then(function (pos) {
+                h('POST', '/api/pulse/escalate', {
+                    sessionKey: state.sessionKey,
+                    anomalyType: anomalyType,
+                    reason: reason || 'no-response',
+                    lastKnownLocation: pos ? { latitude: pos.lat, longitude: pos.lng } : null
+                });
+                patchSession(pos
+                    ? { anomalyType: anomalyType, lastKnownLocation: { latitude: pos.lat, longitude: pos.lng } }
+                    : { anomalyType: anomalyType });
+            });
+            toast('Your trusted contact has been alerted');
+        }
+
+        function patchSession(extra) {
+            return h('PATCH', '/api/pulse/session', Object.assign({ sessionKey: state.sessionKey }, extra));
+        }
+
+        // Manual check-in
+        el.btnCheckin.addEventListener('click', function () {
+            if (window.SafeTeaNative) window.SafeTeaNative.haptics.impact('Light');
+            handleSafe('manual_checkin');
+            state.nextPromptAt = Date.now() + state.checkinIntervalMs;
+        });
+
+        // End session
+        el.btnEnd.addEventListener('click', function () {
+            if (!window.confirm('End this Pulse session? Monitoring will stop.')) return;
+            h('PATCH', '/api/pulse/session', { sessionKey: state.sessionKey, status: 'ended' }).then(function () {
+                clearInterval(state.tickTimer);
+                localStorage.removeItem(SESSION_STATE);
+                document.body.dataset.safeteaSessionActive = '0';
+                if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+                toast('Session ended · Stay safe');
+                setTimeout(function () { window.location.reload(); }, 900);
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

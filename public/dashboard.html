@@ -338,7 +338,7 @@
         .community-post-action .liked { color: #e74c3c; }
         .community-post-action-spacer { flex: 1; }
         /* Quick Post Bar (bottom) */
-        .community-quickpost { position: fixed; bottom: 60px; left: 0; right: 0; z-index: 50; padding: 10px 16px; background: rgba(255,255,255,0.97); border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; backdrop-filter: blur(10px); }
+        .community-quickpost { position: fixed; bottom: calc(60px + env(safe-area-inset-bottom)); left: 0; right: 0; z-index: 50; padding: 10px 16px; background: rgba(255,255,255,0.97); border-top: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; backdrop-filter: blur(10px); }
         .community-quickpost input { flex: 1; background: #f5f5f5; border: 1px solid #eee; border-radius: 24px; padding: 12px 18px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; color: #333; }
         .community-quickpost input::placeholder { color: #aaa; }
         .community-quickpost input:focus { border-color: #E8A0B5; }
@@ -391,13 +391,15 @@
         @media (max-width: 1024px) { .sidebar-right { display: none; } .inbox-conversations { width: 240px; } }
         @media (max-width: 768px) {
             .topnav-nav { display: none; }
-            .main-content, .search-section, .alerts-section, .profile-section, .inbox-section { padding: 16px 16px 80px; }
+            .main-content, .search-section, .alerts-section, .profile-section, .inbox-section { padding: 16px 16px calc(80px + env(safe-area-inset-bottom)); }
             .inbox-layout { flex-direction: column; }
             .inbox-conversations { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
             .mobile-tab-bar {
                 display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
                 background: #22223A; border-top: 1px solid rgba(255,255,255,0.06);
-                justify-content: space-around; align-items: center; height: 60px; padding: 0 8px;
+                justify-content: space-around; align-items: center;
+                height: calc(60px + env(safe-area-inset-bottom));
+                padding: 0 8px env(safe-area-inset-bottom);
             }
             .mobile-tab-bar a {
                 display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -3577,7 +3579,7 @@
     <div class="toast" id="toast"></div>
 
     <!-- ====== FLOATING SOS BUTTON ====== -->
-    <div id="sos-floating-btn" style="position:fixed;bottom:90px;right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
+    <div id="sos-floating-btn" style="position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));right:20px;width:56px;height:56px;background:linear-gradient(135deg,#e74c3c,#c0392b);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;box-shadow:0 4px 20px rgba(231,76,60,0.4);transition:all 0.2s;animation:sosPulse 3s ease-in-out infinite;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none">
         <span style="color:#fff;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;letter-spacing:0.5px">SOS</span>
         <!-- Countdown ring for dismiss (hidden by default) -->
         <svg id="sos-ring" style="position:absolute;top:-4px;left:-4px;width:64px;height:64px;transform:rotate(-90deg);pointer-events:none;display:none">

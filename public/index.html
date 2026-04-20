@@ -3,6 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <script>
+    // When loaded inside the SafeTea native shell (Capacitor WebView), skip the
+    // marketing landing and go straight to /login — the login page itself
+    // redirects signed-in users to /dashboard. Desktop and mobile browsers
+    // continue to see the landing page.
+    (function () {
+      var isCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+      // UA fallback in case Capacitor runtime hasn't attached window.Capacitor yet
+      var uaMatch = / Capacitor\//i.test(navigator.userAgent || '');
+      if (isCapacitor || uaMatch) {
+        window.location.replace('/login');
+      }
+    })();
+  </script>
   <!-- Mobile / PWA / native shell branding -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">

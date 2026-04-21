@@ -86,6 +86,16 @@
     .ai-pending { color: #8080A0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
     .ai-pending i { animation: spin 1.2s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .activity-toggle { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #B0B0C8; padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; }
+    .activity-toggle:hover { border-color: rgba(232,160,181,0.3); color: #fff; }
+    .activity-log { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; margin-top: 10px; }
+    .activity-log.open { display: block; }
+    .activity-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-icon { min-width: 24px; height: 24px; border-radius: 6px; background: rgba(232,160,181,0.1); color: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .activity-text { flex: 1; color: #D0D0E0; }
+    .activity-time { color: #8080A0; font-size: 11px; }
     .entry-actions { margin-left: auto; display: flex; gap: 4px; }
     .entry-action-btn { background: none; border: none; color: #8080A0; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .entry-action-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
@@ -164,6 +174,9 @@
     </div>
 
     <div id="timeline" class="timeline"></div>
+
+    <button class="activity-toggle" onclick="toggleActivity()"><i class="fas fa-clock-rotate-left"></i> Activity log</button>
+    <div id="activity-log" class="activity-log"></div>
   </div>
 
   <!-- Fixed composer (hidden while folder loads) -->
@@ -477,6 +490,80 @@
       document.title = '';
       window.location.replace('https://www.google.com/search?q=weather');
     };
+
+    var activityLoaded = false;
+    window.toggleActivity = function () {
+      var box = document.getElementById('activity-log');
+      var opening = !box.classList.contains('open');
+      box.classList.toggle('open');
+      if (opening && !activityLoaded) loadActivity();
+    };
+
+    function loadActivity() {
+      var box = document.getElementById('activity-log');
+      box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px"><i class="fas fa-spinner fa-spin"></i> Loading activity…</div>';
+      fetch('/api/vault/audit?folder_id=' + encodeURIComponent(folderId) + '&limit=100', { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          activityLoaded = true;
+          var events = (data && data.events) || [];
+          if (!events.length) {
+            box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px">No activity yet.</div>';
+            return;
+          }
+          box.innerHTML = events.map(function (e) {
+            return '<div class="activity-row">' +
+              '<div class="activity-icon"><i class="' + iconFor(e.action) + '"></i></div>' +
+              '<div class="activity-text">' + esc(labelFor(e)) + '</div>' +
+              '<div class="activity-time">' + fmtDate(e.created_at) + '</div>' +
+            '</div>';
+          }).join('');
+        })
+        .catch(function () {
+          box.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:10px">Could not load activity.</div>';
+        });
+    }
+
+    function iconFor(action) {
+      if (action.indexOf('entry') === 0) return 'fas fa-pen-to-square';
+      if (action.indexOf('folder') === 0) return 'fas fa-folder';
+      if (action.indexOf('file') === 0) return 'fas fa-paperclip';
+      if (action.indexOf('access_request') === 0) return 'fas fa-envelope-open-text';
+      if (action.indexOf('export') === 0) return 'fas fa-file-export';
+      if (action.indexOf('ai') === 0) return 'fas fa-wand-magic-sparkles';
+      if (action.indexOf('admin') === 0) return 'fas fa-shield-halved';
+      if (action.indexOf('contact') === 0) return 'fas fa-user-group';
+      return 'fas fa-circle';
+    }
+    function labelFor(e) {
+      var map = {
+        'folder.create': 'Folder created',
+        'folder.view': 'You opened the folder',
+        'folder.update': 'Folder updated',
+        'folder.delete': 'Folder archived',
+        'folder.archive': 'Folder archived',
+        'folder.legal_hold': 'Legal hold changed',
+        'entry.create': 'Entry added',
+        'entry.view': 'Entry opened',
+        'entry.update': 'Entry edited',
+        'entry.delete': 'Entry deleted',
+        'file.upload': 'File attached',
+        'file.download': 'File downloaded',
+        'file.delete': 'File removed',
+        'access_request.submit': 'A trusted contact requested access',
+        'access_request.approve': 'You approved an access request',
+        'access_request.deny': 'You denied an access request',
+        'access_request.expire': 'An access request expired',
+        'access_request.release': 'Folder auto-released to a contact',
+        'export.generate': 'Export generated',
+        'export.download': 'Shared export was downloaded',
+        'export.purge': 'Export was removed',
+        'ai.organize': 'AI summarized an entry',
+        'admin.break_glass.request': 'Admin requested privileged access',
+        'admin.break_glass.access': 'Admin accessed privileged data',
+      };
+      return map[e.action] || e.action;
+    }
 
     loadAll();
   })();

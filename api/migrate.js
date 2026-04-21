@@ -181,8 +181,14 @@ module.exports = async function handler(req, res) {
             recipient_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
             content TEXT NOT NULL,
             is_read BOOLEAN DEFAULT false,
+            is_system BOOLEAN DEFAULT false,
+            system_type VARCHAR(40),
+            related_post_id INTEGER,
             created_at TIMESTAMP DEFAULT NOW()
         )`;
+        try { await sql`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE messages ADD COLUMN IF NOT EXISTS system_type VARCHAR(40)`; } catch(e) {}
+        try { await sql`ALTER TABLE messages ADD COLUMN IF NOT EXISTS related_post_id INTEGER`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id)`; } catch(e) {}
 

@@ -2,6 +2,14 @@ const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { sendStrikeBanEmail } = require('../../services/email');
 
+// Production messages table was created before is_system / system_type existed.
+// The ban flow INSERTs with is_system, which used to fail with "column does not
+// exist" and return 500 on every ban. Add them if missing before any INSERT.
+async function ensureMessagesSchema() {
+  try { await run(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false`); } catch (_) {}
+  try { await run(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS system_type VARCHAR(40)`); } catch (_) {}
+}
+
 module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -13,6 +21,8 @@ module.exports = async function handler(req, res) {
   if (user.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });
   }
+
+  await ensureMessagesSchema();
 
   // GET /api/admin/ban?user_id=X — Check ban status
   if (req.method === 'GET') {
@@ -65,12 +75,14 @@ module.exports = async function handler(req, res) {
         // Unhide posts
         await run('UPDATE posts SET hidden = false WHERE user_id = $1', [user_id]);
 
-        // Send inbox notification to user
-        await run(
-          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
-           VALUES ($1, $1, $2, true, NOW())`,
-          [user_id, '✅ Your account has been unsuspended. You can now use SafeTea again. Please review our community guidelines to avoid future issues.']
-        );
+        // Send inbox notification to user (isolated — a failure here never breaks the ban)
+        try {
+          await run(
+            `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
+             VALUES ($1, $1, $2, true, NOW())`,
+            [user_id, '✅ Your account has been unsuspended. You can now use SafeTea again. Please review our community guidelines to avoid future issues.']
+          );
+        } catch (e) { console.error('[Ban] unban inbox notice failed:', e.message); }
 
         return res.status(200).json({ message: 'User unbanned successfully', user_id });
       }
@@ -122,11 +134,13 @@ module.exports = async function handler(req, res) {
       const banMsg = ban_type === 'permanent'
         ? `🚫 ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been permanently suspended from SafeTea community features (posts, chats, rooms).\n\nReason: ${reason}\n\nYou can still use SafeTea's safety tools including SafeTea check-in, SafeLink, SOS, Conversation Scanner, and Catfish Scanner.\n\nTo appeal this decision, email support@getsafetea.app with your account email and a detailed explanation. Appeals are reviewed by SafeTea leadership.\n\n— SafeTea Safety Team`
         : `⚠️ ACCOUNT SUSPENDED — Community Features Restricted\n\nYour account has been temporarily suspended from SafeTea community features (posts, chats, rooms) for ${duration_days} day(s).\n\nReason: ${reason}\n\nYour community access will be restored on ${banUntil.toLocaleDateString()}. You can still use SafeTea's safety tools including SafeTea check-in, SafeLink, SOS, Conversation Scanner, and Catfish Scanner during this time.\n\nTo appeal this decision, email support@getsafetea.app with your account email and a detailed explanation.\n\n— SafeTea Safety Team`;
-      await run(
-        `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
-         VALUES ($1, $1, $2, true, NOW())`,
-        [user_id, banMsg]
-      );
+      try {
+        await run(
+          `INSERT INTO messages (sender_id, recipient_id, content, is_system, created_at)
+           VALUES ($1, $1, $2, true, NOW())`,
+          [user_id, banMsg]
+        );
+      } catch (e) { console.error('[Ban] ban inbox notice failed:', e.message); }
 
       // Send ban notification email (non-blocking)
       const targetUser = await getOne('SELECT email, display_name FROM users WHERE id = $1', [user_id]);

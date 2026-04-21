@@ -16,13 +16,25 @@ module.exports = async function handler(req, res) {
     try {
       // Self-thread: system messages (SafeTea Alerts)
       if (parseInt(userId) === user.id) {
-        const messages = await getMany(
-          `SELECT id, sender_id, recipient_id, content, is_read, is_system, system_type, created_at
-           FROM messages
-           WHERE sender_id = $1 AND recipient_id = $1 AND is_system = true
-           ORDER BY created_at ASC`,
-          [user.id]
-        );
+        // Fallback-safe query: related_post_id may not exist on older databases
+        let messages;
+        try {
+          messages = await getMany(
+            `SELECT id, sender_id, recipient_id, content, is_read, is_system, system_type, related_post_id, created_at
+             FROM messages
+             WHERE sender_id = $1 AND recipient_id = $1 AND is_system = true
+             ORDER BY created_at ASC`,
+            [user.id]
+          );
+        } catch (_) {
+          messages = await getMany(
+            `SELECT id, sender_id, recipient_id, content, is_read, is_system, system_type, NULL AS related_post_id, created_at
+             FROM messages
+             WHERE sender_id = $1 AND recipient_id = $1 AND is_system = true
+             ORDER BY created_at ASC`,
+            [user.id]
+          );
+        }
 
         // Mark all as read
         await run(

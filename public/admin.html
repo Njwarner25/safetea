@@ -2298,10 +2298,14 @@
                     })
                 });
                 var data = await res.json();
-                if (!res.ok) throw new Error(data.error);
+                if (!res.ok) throw new Error(data.error || 'Server error');
                 showToast(days === 0 ? 'User permanently banned' : 'User suspended for ' + days + ' days');
+                // Refresh whichever list is currently visible so the row updates
+                if (typeof loadUsers === 'function') { try { loadUsers(); } catch(_){} }
+                if (typeof loadFlags === 'function') { try { loadFlags(); } catch(_){} }
+                if (typeof loadRoomReports === 'function') { try { loadRoomReports(); } catch(_){} }
             } catch (err) {
-                showToast('Failed: ' + err.message, true);
+                showToast('Failed: ' + (err.message || 'Unknown error'), true);
             }
         }
 

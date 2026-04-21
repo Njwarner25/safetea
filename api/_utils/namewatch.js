@@ -1,6 +1,17 @@
 const { getMany, getOne, run } = require('./db');
 const { sendPushNotification } = require('../../services/push');
 
+// Defensive: older production databases may not have related_post_id / system_type
+// / is_system yet. Add them once per cold start so INSERTs below don't 500.
+let _namewatchSchemaEnsured = false;
+async function ensureMessagesSchema() {
+    if (_namewatchSchemaEnsured) return;
+    _namewatchSchemaEnsured = true;
+    try { await run(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_system BOOLEAN DEFAULT false`); } catch (_) {}
+    try { await run(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS system_type VARCHAR(40)`); } catch (_) {}
+    try { await run(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS related_post_id INTEGER`); } catch (_) {}
+}
+
 // Generate search terms from a display name
 function generateSearchTerms(name) {
     const terms = [];
@@ -31,6 +42,7 @@ function generateSearchTerms(name) {
 // Check a new post against all watched names in the same city
 async function checkNewPostAgainstWatchedNames(postId, postContent, postCity) {
     try {
+        await ensureMessagesSchema();
         const watchedNames = await getMany(
             `SELECT wn.id, wn.search_terms, wn.user_id FROM watched_names wn
              JOIN users u ON wn.user_id = u.id
@@ -59,15 +71,22 @@ async function checkNewPostAgainstWatchedNames(postId, postContent, postCity) {
                             [wn.id]
                         );
 
-                        // Send inbox system message
+                        // Send inbox system message — related_post_id lets the client
+                        // deep-link the inbox item to the post that triggered it.
                         run(
-                            `INSERT INTO messages (sender_id, recipient_id, content, is_system, system_type, created_at)
-                             VALUES ($1, $1, $2, true, 'namewatch', NOW())`,
-                            [wn.user_id, 'Name Watch Alert: A watched name was mentioned in a new post in your area. Check your Alerts tab.']
+                            `INSERT INTO messages (sender_id, recipient_id, content, is_system, system_type, related_post_id, created_at)
+                             VALUES ($1, $1, $2, true, 'namewatch', $3, NOW())`,
+                            [wn.user_id, 'Name Watch Alert: A watched name was mentioned in a new post. Tap to view the post.', postId]
                         ).catch(() => {});
 
-                        // Send push notification
-                        sendPushNotification(wn.user_id, 'Name Watch Alert', 'A watched name was mentioned in a new post', { type: 'namewatch' }).catch(() => {});
+                        // Push notification carries the post id so tapping the push
+                        // also lands the user on the post (capacitor-bridge reads data.link).
+                        sendPushNotification(
+                            wn.user_id,
+                            'Name Watch Alert',
+                            'A watched name was mentioned in a new post',
+                            { type: 'namewatch', post_id: postId, link: '/dashboard#post-' + postId }
+                        ).catch(() => {});
                     } catch (e) { /* ignore duplicate */ }
                     break;
                 }

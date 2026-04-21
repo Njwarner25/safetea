@@ -69,6 +69,23 @@
     .entry-expand { background: none; border: none; color: #E8A0B5; font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; font-family: inherit; }
     .entry-footer { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     .tag-chip { background: rgba(232,160,181,0.1); color: #E8A0B5; font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 500; }
+    .tag-chip.suggested { background: rgba(155,89,182,0.1); color: #b27de0; border: 1px dashed rgba(155,89,182,0.3); cursor: pointer; }
+
+    .ai-summary {
+      display: flex; align-items: flex-start; gap: 8px;
+      margin-top: 10px; padding: 10px 12px;
+      background: rgba(155,89,182,0.06); border: 1px solid rgba(155,89,182,0.15);
+      border-radius: 10px;
+    }
+    .ai-summary i { color: #b27de0; font-size: 11px; margin-top: 3px; flex-shrink: 0; }
+    .ai-summary-body { flex: 1; }
+    .ai-summary-label { font-size: 10px; font-weight: 700; color: #9474c0; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+    .ai-summary-text { font-size: 13px; color: #C8C4E0; line-height: 1.5; }
+    .ai-summary-dates { margin-top: 6px; font-size: 11px; color: #9474c0; }
+    .ai-summary-dates .low-conf { opacity: 0.7; font-style: italic; }
+    .ai-pending { color: #8080A0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
+    .ai-pending i { animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .entry-actions { margin-left: auto; display: flex; gap: 4px; }
     .entry-action-btn { background: none; border: none; color: #8080A0; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .entry-action-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
@@ -248,6 +265,35 @@
       el.composer.style.display = f.legal_hold ? 'none' : 'block';
     }
 
+    function renderAiBlock(e) {
+      // AI summary only shown for entries that have one. Pending state
+      // shown only while we're actively waiting on organize().
+      if (e.ai_status === 'pending' && state.folder && state.folder.ai_enabled) {
+        return '<div class="ai-summary"><span class="ai-pending"><i class="fas fa-circle-notch"></i> Organizing…</span></div>';
+      }
+      if (!e.ai_summary && !(e.ai_dates && e.ai_dates.length)) return '';
+      var datesHtml = '';
+      if (e.ai_dates && e.ai_dates.length) {
+        datesHtml = '<div class="ai-summary-dates">' +
+          e.ai_dates.map(function (d) {
+            var iso = d && d.iso ? d.iso : '';
+            var label = iso ? fmtDate(iso) : '';
+            var cls = d && d.low_confidence ? ' class="low-conf"' : '';
+            var hint = d && d.low_confidence ? ' (approximate)' : '';
+            return '<span' + cls + '><i class="far fa-clock"></i> ' + esc(label) + esc(hint) + '</span>';
+          }).join(' &bull; ') +
+          '</div>';
+      }
+      return '<div class="ai-summary">' +
+        '<i class="fas fa-wand-magic-sparkles"></i>' +
+        '<div class="ai-summary-body">' +
+          '<div class="ai-summary-label">AI summary</div>' +
+          (e.ai_summary ? '<div class="ai-summary-text">' + esc(e.ai_summary) + '</div>' : '') +
+          datesHtml +
+        '</div>' +
+      '</div>';
+    }
+
     function renderTimeline() {
       if (!state.entries.length) {
         el.timeline.innerHTML =
@@ -280,6 +326,7 @@
             '<span class="entry-time">' + esc(timeLabel) + '</span>' +
           '</div>' +
           bodyHtml +
+          renderAiBlock(e) +
           '<div class="entry-footer">' +
             tagHtml +
             '<div class="entry-actions">' +
@@ -347,10 +394,29 @@
           el.input.style.height = 'auto';
           if (window.SafeTeaNative && window.SafeTeaNative.haptics) window.SafeTeaNative.haptics.impact('Light');
           reloadEntries();
+          // If the folder has AI enabled, quietly organize in the background.
+          // Failures don't bother the user — the original content is saved.
+          if (state.folder && state.folder.ai_enabled && r.data && r.data.entry && r.data.entry.id) {
+            organizeEntry(r.data.entry.id);
+          }
         })
         .catch(function (err) { toast(err.message || 'Save failed'); })
         .finally(function () { window.enableSend(); });
     };
+
+    function organizeEntry(entryId) {
+      fetch('/api/vault/ai/organize', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ entry_id: parseInt(entryId, 10) })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          // Silent — the summary will appear on the next timeline refresh.
+          if (r.ok) reloadEntries();
+        })
+        .catch(function () { /* swallow; original entry is unaffected */ });
+    }
 
     window.expandEntry = function (id, btn) {
       var body = document.getElementById('b' + id);

@@ -167,6 +167,7 @@
         { "source": "/api/vault/files/upload", "destination": "/api/vault/files/upload" },
         { "source": "/api/vault/files/:id", "destination": "/api/vault/files/[id]" },
         { "source": "/api/vault/resources", "destination": "/api/vault/resources" },
+        { "source": "/api/vault/ai/organize", "destination": "/api/vault/ai/organize" },
         { "source": "/vault", "destination": "/vault.html" },
         { "source": "/vault-folder", "destination": "/vault-folder.html" },
         { "source": "/api/migrate-stripe", "destination": "/api/migrate-stripe" },

@@ -3082,8 +3082,7 @@
             warning: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(231,76,60,0.15);color:#e74c3c">Warning</span>',
             question: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(91,160,208,0.15);color:#5BA0D0">Question</span>',
             positive: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Positive</span>',
-            general: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">General</span>',
-            referral: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(46,204,113,0.15);color:#2ecc71">Referral</span>'
+            general: '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:rgba(232,160,181,0.15);color:#E8A0B5">General</span>'
         };
         return map[category] || '';
     }
@@ -3213,180 +3212,18 @@
         document.body.appendChild(modal);
     };
 
-    // ==================== REFER A GOOD ONE ====================
-    var referralPhotoData = null;
-
-    window.handleReferralPhoto = function(input) {
-        if (input.files && input.files[0]) {
-            var file = input.files[0];
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Photo must be under 5MB', true);
-                input.value = '';
-                return;
-            }
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                addWatermark(e.target.result, function(watermarked) {
-                    referralPhotoData = watermarked;
-                    var preview = document.getElementById('hub-referral-photo-preview');
-                    var img = document.getElementById('hub-referral-photo-img');
-                    if (img) img.src = watermarked;
-                    if (preview) preview.style.display = 'inline-block';
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    window.removeReferralPhoto = function() {
-        referralPhotoData = null;
-        var preview = document.getElementById('hub-referral-photo-preview');
-        var input = document.getElementById('hub-referral-photo');
-        if (preview) preview.style.display = 'none';
-        if (input) input.value = '';
-    };
-
-    function hubRenderReferral(post) {
-        var authorName = post.author_name || 'Community Member';
-        var initial = authorName[0].toUpperCase();
-        var avatarColor = hubGetAvatarColor(authorName);
-        var personName = post.title || 'Unknown';
-        var replyCount = post.reply_count || 0;
-        var likeCount = parseInt(post.like_count) || 0;
-        var dislikeCount = parseInt(post.dislike_count) || 0;
-        var bumpCount = parseInt(post.bump_count) || 0;
-        var userLiked = post.user_liked === true || post.user_liked === 't';
-        var userDisliked = post.user_disliked === true || post.user_disliked === 't';
-        var userBumped = post.user_bumped === true || post.user_bumped === 't';
-        var canMod = canModifyPost(post);
-
-        return '<div id="post-' + post.id + '" style="background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px">' +
-            '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
-                '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
-                '<div>' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getPlusBadgeHtml(post.author_tier) + '</div>' +
-                    '<div style="font-size:11px;color:#2ecc71"><i class="fas fa-star"></i> Recommender</div>' +
-                '</div>' +
-            '</div>' +
-            '<div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.15);border-radius:10px;padding:14px;margin-bottom:12px">' +
-                '<div style="font-size:18px;font-weight:700;color:#2ecc71">' + escapeHtmlSafe(personName) + '</div>' +
-                (post.city ? '<span style="font-size:11px;color:#8080A0;background:#141428;padding:2px 8px;border-radius:20px;margin-top:6px;display:inline-block">' + escapeHtmlSafe(post.city) + '</span>' : '') +
-            '</div>' +
-            (post.image_url ? (function(){ if(typeof wmRegisterImage==='function')wmRegisterImage(post.id,post.image_url); return '<div style="margin-bottom:12px;position:relative"><canvas data-wm-postid="' + post.id + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.06);opacity:0;transition:opacity 0.3s;display:block"></canvas><div class="stego-spinner" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#8080A0;font-size:12px"><i class="fas fa-spinner fa-spin"></i></div></div>'; })() : '') +
-            '<div data-post-body style="font-size:14px;line-height:1.6;color:#ccc;font-style:italic;margin-bottom:12px">"' + escapeHtmlSafe(post.body) + '"</div>' +
-            // Ask About Him button
-            (post.user_id ? '<div style="margin-bottom:12px"><button onclick="hubContactPoster(' + post.user_id + ', \'' + escapeHtmlSafe(authorName).replace(/'/g, "\\'") + '\')" style="background:linear-gradient(135deg,#E8A0B5,#C77DBA);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i class="fas fa-envelope"></i> Ask About Him</button></div>' : '') +
-            // Unified action bar
-            '<div style="display:flex;align-items:center;gap:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">' +
-                '<button id="like-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'like\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userLiked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userLiked ? 'fas' : 'far') + ' fa-thumbs-up"></i> <span id="like-count-' + post.id + '">' + likeCount + '</span></button>' +
-                '<button id="dislike-btn-' + post.id + '" onclick="votePost(' + post.id + ',\'dislike\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userDisliked ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="' + (userDisliked ? 'fas' : 'far') + ' fa-thumbs-down"></i> <span id="dislike-count-' + post.id + '">' + dislikeCount + '</span></button>' +
-                '<button onclick="toggleReplies(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:#8080A0" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-comment"></i> <span id="reply-count-' + post.id + '">' + replyCount + '</span></button>' +
-                '<button id="bump-btn-' + post.id + '" onclick="bumpPost(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s;color:' + (userBumped ? '#E8A0B5' : '#8080A0') + '" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-arrow-up"></i> <span id="bump-count-' + post.id + '">' + bumpCount + '</span></button>' +
-                '<div style="margin-left:auto;display:flex;align-items:center;gap:2px">' +
-                    (canMod ? '<button onclick="deletePost(' + post.id + ',\'referral\')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.color=\'#e74c3c\';this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.color=\'#8080A0\';this.style.background=\'none\'" title="Delete post"><i class="fas fa-trash-alt"></i></button>' : '') +
-                    '<button onclick="showReportModal(' + post.id + ')" style="background:none;border:none;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.color=\'#e74c3c\';this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.color=\'#8080A0\';this.style.background=\'none\'" title="Report post"><i class="fas fa-flag"></i></button>' +
-                    '<div style="position:relative" id="menu-anchor-' + post.id + '">' +
-                        '<button onclick="showPostMenu(' + post.id + ',' + canMod + ',\'referral\')" style="background:none;border:none;font-size:14px;cursor:pointer;padding:6px 10px;border-radius:6px;color:#8080A0;transition:all 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.05)\'" onmouseout="this.style.background=\'none\'"><i class="fas fa-ellipsis-h"></i></button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>' +
-            // Reply container (hidden by default)
-            '<div id="replies-' + post.id + '" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.04)"></div>' +
-        '</div>';
-    }
-
+    // "Good Guys" referral feed removed 2026-04 — SafeTea does not host posts that
+    // evaluate or rate individuals. The hub tab now shows a "no longer available"
+    // notice so anyone hitting the legacy URL lands somewhere coherent.
     function hubLoadReferralPosts() {
         var container = document.getElementById('hub-referral-posts');
         if (!container) return;
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Loading referrals...</div>';
-        apiFetch('/posts?feed=referral&limit=20').then(function(posts) {
-            if (!posts || posts.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-heart" style="font-size:32px;display:block;margin-bottom:12px"></i><p>No referrals yet</p><small>Be the first to recommend a good guy!</small></div>';
-                return;
-            }
-            var html = '';
-            posts.forEach(function(post) { html += hubRenderReferral(post); });
-            container.innerHTML = html;
-            observeStegoCanvases(container);
-        }).catch(function() {
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-exclamation-triangle"></i> Could not load referrals</div>';
-        });
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-shield-halved" style="font-size:32px;display:block;margin-bottom:12px"></i><p>This feed is no longer available.</p><small>SafeTea does not host posts that evaluate or rate individuals. For safety talk, use Tea Talk.</small></div>';
     }
-
-    window.hubSubmitReferral = function() {
-        var name = document.getElementById('hub-referral-name').value.trim();
-        var city = document.getElementById('hub-referral-city') ? document.getElementById('hub-referral-city').value.trim() : '';
-        var relation = document.getElementById('hub-referral-relation') ? document.getElementById('hub-referral-relation').value : '';
-        var body = document.getElementById('hub-referral-body').value.trim();
-        if (!name || !body) { showToast('Please fill in the name and your recommendation.', true); return; }
-        apiFetch('/posts', {
-            method: 'POST',
-            body: JSON.stringify({ title: name, body: body + (relation && relation !== 'How do you know him?' ? ' [' + relation + ']' : ''), category: 'referral', city: city || null, feed: 'referral', image_url: referralPhotoData || null })
-        }).then(function(data) {
-            if (data && data.error) { showToast(data.error, true); return; }
-            document.getElementById('hub-referral-name').value = '';
-            if (document.getElementById('hub-referral-city')) document.getElementById('hub-referral-city').value = '';
-            document.getElementById('hub-referral-body').value = '';
-            if (document.getElementById('hub-referral-relation')) document.getElementById('hub-referral-relation').selectedIndex = 0;
-            removeReferralPhoto();
-            showToast('Referral submitted!');
-            hubLoadReferralPosts();
-        }).catch(function() {
-            showToast('Failed to submit referral.', true);
-        });
-    };
-
-    window.hubContactPoster = function(posterId, posterName) {
-        var modal = document.createElement('div');
-        modal.className = 'dc-share-modal';
-        modal.id = 'hub-contact-modal';
-        modal.innerHTML =
-            '<div class="dc-share-modal-content">' +
-                '<h3 style="color:#fff;margin-bottom:16px"><i class="fas fa-envelope" style="color:#E8A0B5"></i> Ask About Him</h3>' +
-                '<p style="color:#8080A0;font-size:13px;margin-bottom:12px">Send a message to <strong style="color:#fff">' + escapeHtmlSafe(posterName) + '</strong> about their referral.</p>' +
-                '<div class="dc-form-group">' +
-                    '<textarea id="hub-contact-message" rows="4" placeholder="Hi! I saw your referral and would love to know more..." style="width:100%;padding:12px;background:#2A2A44;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#fff;font-size:14px;resize:vertical;font-family:inherit"></textarea>' +
-                '</div>' +
-                '<button id="hub-contact-send-btn" class="dc-btn dc-btn-primary" onclick="hubSendContactMessage(' + posterId + ', \'' + escapeHtmlSafe(posterName).replace(/'/g, "\\'") + '\')"><i class="fas fa-paper-plane"></i> Send Message</button>' +
-                '<button class="dc-btn dc-btn-outline" style="margin-top:8px" onclick="document.getElementById(\'hub-contact-modal\').remove()"><i class="fas fa-times"></i> Cancel</button>' +
-            '</div>';
-        document.body.appendChild(modal);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    };
-
-    window.hubSendContactMessage = function(posterId, posterName) {
-        var textarea = document.getElementById('hub-contact-message');
-        var content = textarea.value.trim();
-        if (!content) { showToast('Please type a message.', true); return; }
-
-        var btn = document.getElementById('hub-contact-send-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-
-        apiFetch('/messages', {
-            method: 'POST',
-            body: JSON.stringify({ recipient_id: posterId, content: content })
-        }).then(function(data) {
-            if (data && (data.message || data.id)) {
-                showToast('Message sent to ' + posterName + '!');
-                var modal = document.getElementById('hub-contact-modal');
-                if (modal) modal.remove();
-            } else {
-                showToast((data && data.error) || 'Failed to send message', true);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-            }
-        }).catch(function() {
-            showToast('Failed to send message.', true);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        });
-    };
 
     // ==================== POST EDIT / DELETE ====================
     function reloadFeed(feed) {
         if (feed === 'community') hubLoadCommunityPosts();
-        else if (feed === 'referral') hubLoadReferralPosts();
     }
 
     window.deletePost = function(postId, feed) {
@@ -3832,9 +3669,7 @@
 
         apiFetch('/rooms/feed?roomId=' + currentRoomId + '&type=' + currentRoomFeedType + '&limit=20').then(function(data) {
             if (!data || !data.posts || data.posts.length === 0) {
-                var emptyIcon = currentRoomFeedType === 'tea_talk' ? 'fa-comments' : 'fa-thumbs-up';
-                var emptyText = currentRoomFeedType === 'tea_talk' ? 'No posts yet. Be the first to share a safety insight!' : 'No good guys posted yet.';
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas ' + emptyIcon + '" style="font-size:24px;display:block;margin-bottom:8px;color:#9b59b6"></i>' + emptyText + '</div>';
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#8080A0"><i class="fas fa-comments" style="font-size:24px;display:block;margin-bottom:8px;color:#9b59b6"></i>No posts yet. Share a safety insight — no names or accusations about specific people.</div>';
                 return;
             }
             var html = '';
@@ -3884,9 +3719,8 @@
         var likeActive = userReaction === 'like';
         var dislikeActive = userReaction === 'dislike';
         var pinnedHtml = post.pinned ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(241,196,15,0.15);color:#f1c40f;margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : '';
-        var typeBadge = post.type === 'good_guys'
-            ? '<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(46,204,113,0.15);color:#2ecc71">Good Guy</span> '
-            : '';
+        // Good Guys badge removed 2026-04 — rooms are safety-only
+        var typeBadge = '';
         var u = getUser();
         var isAuthor = u && post.author_id === u.id;
         var isSafeTeaAdmin = u && (u.role === 'admin' || u.role === 'moderator');

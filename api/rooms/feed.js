@@ -35,7 +35,8 @@ module.exports = async function handler(req, res) {
 
     let typeFilter = '';
     const params = [roomId, user.id, limit, offset];
-    if (type === 'tea_talk' || type === 'good_guys') {
+    // Good Guys removed 2026-04 — only tea_talk type is valid going forward
+    if (type === 'tea_talk') {
       typeFilter = `AND p.type = $5`;
       params.push(type);
     }

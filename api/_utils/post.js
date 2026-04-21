@@ -25,9 +25,9 @@ module.exports = async function handler(req, res) {
     const body = await parseBody(req);
     const { content, category, photo_id } = body;
 
-    // Validate category
-    if (!category || !['tea-talk', 'good-guys'].includes(category)) {
-      return res.status(400).json({ error: 'Invalid category. Must be tea-talk or good-guys' });
+    // Validate category — Good Guys removed 2026-04; safety-only categories going forward
+    if (!category || !['tea-talk'].includes(category)) {
+      return res.status(400).json({ error: 'Invalid category. Must be tea-talk' });
     }
 
     // Validate content length

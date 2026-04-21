@@ -23,7 +23,8 @@ const CITY_CONTEXT = {
   'New York': { neighborhoods: ['West Village', 'Williamsburg', 'Upper East Side', 'Astoria', 'Park Slope', 'Harlem'], transit: 'subway', vibe: 'fast-paced, diverse, opinionated' }
 };
 
-const CATEGORIES = ['tea-talk', 'good-guys'];
+// Good Guys removed 2026-04 — tea-talk only going forward
+const CATEGORIES = ['tea-talk'];
 
 // Fallback posts if AI is unavailable — rotating pool so they don't repeat
 const FALLBACK_TEA_TALK = [

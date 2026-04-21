@@ -53,10 +53,16 @@ function getKEK() {
 }
 
 /**
- * Generate a fresh DEK for a new folder. Returns the wrapped form ready to
- * persist in the folder row.
+ * Generate a fresh DEK for a new folder. Returns BOTH the plaintext DEK (for
+ * immediate in-memory use by the caller to encrypt the first fields) AND the
+ * wrapped form ready to persist in the folder row.
  *
- * @returns {{ dek_wrapped: string, dek_iv: string, dek_tag: string }} base64 fields
+ * The caller must NOT persist the plaintext `dek` anywhere — it should be
+ * used synchronously to `encryptField()` the initial content, then go out of
+ * scope. All later reads / writes of the same folder re-derive the DEK via
+ * unwrapFolderKey().
+ *
+ * @returns {{ dek: Buffer, dek_wrapped: string, dek_iv: string, dek_tag: string }}
  */
 function createFolderKey() {
   const kek = getKEK();
@@ -66,6 +72,7 @@ function createFolderKey() {
   const wrapped = Buffer.concat([cipher.update(dek), cipher.final()]);
   const tag = cipher.getAuthTag();
   return {
+    dek,
     dek_wrapped: wrapped.toString('base64'),
     dek_iv: iv.toString('base64'),
     dek_tag: tag.toString('base64'),

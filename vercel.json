@@ -160,6 +160,8 @@
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/migrate", "destination": "/api/migrate" },
         { "source": "/api/migrate-vault", "destination": "/api/migrate-vault" },
+        { "source": "/api/vault/folders", "destination": "/api/vault/folders" },
+        { "source": "/api/vault/folders/:id", "destination": "/api/vault/folders/[id]" },
         { "source": "/api/migrate-stripe", "destination": "/api/migrate-stripe" },
         { "source": "/api/migrate-referrals", "destination": "/api/migrate-referrals" },
         { "source": "/api/migrate-crime-alerts", "destination": "/api/migrate-crime-alerts" },

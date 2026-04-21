@@ -55,8 +55,8 @@ module.exports = async function handler(req, res) {
       commentsCount: 0,
     }));
 
+    // Good Guys category removed 2026-04 — tea-talk only
     const teaTalkCount = mapped.filter((p) => p.category === 'tea-talk').length;
-    const goodGuysCount = mapped.filter((p) => p.category === 'good-guys').length;
 
     return res.status(200).json({
       query: {
@@ -66,7 +66,6 @@ module.exports = async function handler(req, res) {
       },
       totalMentions: mapped.length,
       teaTalkCount,
-      goodGuysCount,
       posts: mapped,
     });
   } catch (error) {

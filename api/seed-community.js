@@ -162,16 +162,10 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      for (let i = 0; i < 4; i++) {
-        const gIdx = (cityIdx * 2 + i) % GOOD_GUYS_TEMPLATES.length;
-        goodPosts.push({
-          author: accountNames[(i + 5) % accountNames.length],
-          category: 'good-guys',
-          body: GOOD_GUYS_TEMPLATES[gIdx]
-        });
-      }
-
-      const allPosts = [...teaPosts, ...goodPosts];
+      // Good Guys category removed 2026-04 — tea-talk only going forward.
+      // Legacy GOOD_GUYS_TEMPLATES constants are preserved for historical
+      // migrations but no new posts are seeded with that category.
+      const allPosts = [...teaPosts];
 
       // Create posts with timestamps spread over last 7 days
       const now = Date.now();

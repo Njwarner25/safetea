@@ -21,7 +21,8 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Room ID and text are required' });
       }
 
-      const validTypes = ['tea_talk', 'good_guys'];
+      // Good Guys removed 2026-04 — Sorority Rooms are now tea_talk-only
+      const validTypes = ['tea_talk'];
       const postType = validTypes.includes(type) ? type : 'tea_talk';
 
       // Ban check: suspended users cannot post but can still use safety tools

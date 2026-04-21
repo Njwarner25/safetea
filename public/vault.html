@@ -50,6 +50,34 @@
     }
     .privacy-note i { color: #2ecc71; flex-shrink: 0; margin-top: 2px; }
 
+    .request-alert {
+      background: linear-gradient(135deg, rgba(241,196,15,0.12), rgba(231,76,60,0.06));
+      border: 1px solid rgba(241,196,15,0.3); border-radius: 14px;
+      padding: 14px 16px; margin: 20px 0; display: none;
+    }
+    .request-alert.visible { display: block; }
+    .request-alert-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .request-alert-header i { color: #f1c40f; }
+    .request-alert-header h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .request-row { background: rgba(0,0,0,0.15); border-radius: 10px; padding: 12px; margin-top: 8px; }
+    .request-row-who { font-size: 13px; font-weight: 600; color: #fff; }
+    .request-row-meta { font-size: 12px; color: #B0B0C8; margin-top: 2px; }
+    .request-row-reason { font-size: 13px; color: #F0D0C0; margin-top: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-left: 2px solid #E8A0B5; border-radius: 0 8px 8px 0; line-height: 1.5; }
+    .request-row-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-approve { background: #2ecc71; color: #0D0D1A; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-deny { background: transparent; color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    .contacts-link {
+      display: flex; align-items: center; gap: 10px;
+      color: #E8A0B5; font-size: 13px; font-weight: 600;
+      text-decoration: none; padding: 10px 14px;
+      background: rgba(232,160,181,0.05); border: 1px solid rgba(232,160,181,0.15);
+      border-radius: 10px; margin-top: 12px;
+    }
+    .contacts-link:hover { background: rgba(232,160,181,0.1); }
+    .contacts-link .label { flex: 1; }
+    .contacts-link i { font-size: 12px; }
+
     .folders-header { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 12px; }
     .folders-header h2 { font-size: 16px; font-weight: 700; color: #fff; }
     .folders-header .count { color: #8080A0; font-size: 13px; font-weight: 500; }
@@ -155,6 +183,21 @@
       <i class="fas fa-lock"></i>
       <span>Everything in your Vault is end-to-end encrypted with your private key. Even SafeTea staff cannot read your notes without going through a logged break-glass process — which notifies you immediately.</span>
     </div>
+
+    <!-- Pending access requests (only shown if there are any) -->
+    <div id="request-alert" class="request-alert" aria-live="polite">
+      <div class="request-alert-header">
+        <i class="fas fa-bell"></i>
+        <h3 id="request-alert-title">Someone is requesting access</h3>
+      </div>
+      <div id="request-list"></div>
+    </div>
+
+    <a href="/vault-contacts" class="contacts-link">
+      <i class="fas fa-user-group"></i>
+      <span class="label">Manage trusted contacts</span>
+      <i class="fas fa-chevron-right"></i>
+    </a>
 
     <div class="folders-header">
       <h2>Your folders</h2>
@@ -279,6 +322,62 @@
         });
     }
 
+    // Pending access requests inbox (shows only if count > 0)
+    function loadRequests() {
+      var alertEl = document.getElementById('request-alert');
+      var listEl = document.getElementById('request-list');
+      var titleEl = document.getElementById('request-alert-title');
+      fetch('/api/vault/access-requests?status=pending', { headers: headers() })
+        .then(function (r) { return r.ok ? r.json() : { requests: [] }; })
+        .then(function (data) {
+          var reqs = (data && data.requests) || [];
+          if (!reqs.length) { alertEl.classList.remove('visible'); return; }
+          titleEl.textContent = reqs.length === 1
+            ? 'Someone is requesting access'
+            : reqs.length + ' people are requesting access';
+          alertEl.classList.add('visible');
+          listEl.innerHTML = reqs.map(function (r) {
+            var endsAt = new Date(r.countdown_ends_at);
+            var hrs = Math.max(0, Math.round((endsAt.getTime() - Date.now()) / 3600000));
+            var who = r.contact_name || r.contact_email || 'A trusted contact';
+            return '<div class="request-row">' +
+              '<div class="request-row-who">' + esc(who) + '</div>' +
+              '<div class="request-row-meta">' +
+                'Folder: ' + esc(r.folder_title || '(folder)') +
+                ' \u2022 ' + (hrs <= 0 ? 'Countdown ended' : hrs + ' hours left to respond') +
+              '</div>' +
+              '<div class="request-row-reason">' + esc(r.reason || '(no reason given)') + '</div>' +
+              '<div class="request-row-actions">' +
+                '<button class="btn-approve" onclick="approveRequest(\'' + r.id + '\')"><i class="fas fa-check"></i> Approve</button>' +
+                '<button class="btn-deny" onclick="denyRequest(\'' + r.id + '\')"><i class="fas fa-xmark"></i> Deny</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        })
+        .catch(function () {});
+    }
+
+    window.approveRequest = function (id) {
+      if (!confirm('Approve this request? The contact will receive an email with a link. (V1 note: the actual export link is prepared in a follow-up step.)')) return;
+      fetch('/api/vault/access-requests/' + encodeURIComponent(id) + '/approve', { method: 'POST', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Approve failed');
+          toast('Approved'); loadRequests();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+    window.denyRequest = function (id) {
+      if (!confirm('Deny this request? The contact will receive a neutral "not granted" email.')) return;
+      fetch('/api/vault/access-requests/' + encodeURIComponent(id) + '/deny', { method: 'POST', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Deny failed');
+          toast('Denied'); loadRequests();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
     // Public
     window.openCreateModal = function () {
       el.title.value = '';
@@ -321,6 +420,7 @@
     };
 
     loadFolders();
+    loadRequests();
   })();
   </script>
 </body>

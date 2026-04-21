@@ -200,6 +200,23 @@ module.exports = async function handler(req, res) {
         REFERENCES vault_exports(id) ON DELETE SET NULL`;
     } catch(e) { /* already exists */ }
 
+    // OTP tracking columns on vault_access_requests. Never stores the
+    // plaintext code — only a SHA-256 hash. otp_attempts guards brute-force.
+    try { await sql`ALTER TABLE vault_access_requests ADD COLUMN IF NOT EXISTS otp_code_hash CHAR(64)`; } catch(e) {}
+    try { await sql`ALTER TABLE vault_access_requests ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMPTZ`; } catch(e) {}
+    try { await sql`ALTER TABLE vault_access_requests ADD COLUMN IF NOT EXISTS otp_attempts INTEGER NOT NULL DEFAULT 0`; } catch(e) {}
+
+    // Short-lived session tokens for the contact-facing portal. The contact
+    // is NOT a SafeTea account holder; this is the only auth surface they
+    // touch. Token = 32-byte base64url. Expires in 30 min.
+    await sql`CREATE TABLE IF NOT EXISTS vault_contact_sessions (
+      token         CHAR(43) PRIMARY KEY,
+      contact_id    BIGINT NOT NULL REFERENCES vault_trusted_contacts(id) ON DELETE CASCADE,
+      expires_at    TIMESTAMPTZ NOT NULL,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_vault_contact_sessions_exp ON vault_contact_sessions(expires_at)`; } catch(e) {}
+
     // ============================================================
     // 8. vault_audit_log — append-only event stream
     // ============================================================

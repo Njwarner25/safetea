@@ -11,6 +11,7 @@
 
 const { authenticate, cors } = require('../_utils/auth');
 const { getOne, getMany } = require('../_utils/db');
+const { blockIfNotPlus } = require('../../services/vault/gating');
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
@@ -22,6 +23,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
 
   const folderId = parseInt(req.query.folder_id, 10);

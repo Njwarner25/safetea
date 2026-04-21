@@ -14,6 +14,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getUserVaultPrefs, setUserVaultPrefs } = require('../../services/vault/pulse-hook');
 const audit = require('../../services/vault/audit');
+const { blockIfNotPlus } = require('../../services/vault/gating');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -21,6 +22,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
 
   try {

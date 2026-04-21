@@ -15,6 +15,7 @@ const { getOne, getMany, run } = require('../../_utils/db');
 const { unwrapFolderKey, encryptField, decryptField } = require('../../../services/vault/encryption');
 const assistant = require('../../../services/vault/assistant');
 const audit = require('../../../services/vault/audit');
+const { blockIfNotPlus } = require('../../../services/vault/gating');
 
 const MAX_MESSAGE_LEN = 4000;
 const MAX_HISTORY_RETURN = 50;
@@ -25,6 +26,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
   if (!assistant.isEnabled()) {
     // Spec: while the system prompt is pending practitioner review, the

@@ -25,6 +25,7 @@ const {
   decryptField,
 } = require('../../services/vault/encryption');
 const audit = require('../../services/vault/audit');
+const { blockIfNotPlus } = require('../../services/vault/gating');
 
 // Guardrails on user input
 const MAX_TITLE_LEN = 200;
@@ -38,6 +39,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
 
   // Fail-closed: no vault operations without a configured KEK.
   if (!process.env.VAULT_KEK) {

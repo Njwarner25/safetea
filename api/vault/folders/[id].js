@@ -21,6 +21,7 @@ const {
   decryptField,
 } = require('../../../services/vault/encryption');
 const audit = require('../../../services/vault/audit');
+const { blockIfNotPlus } = require('../../../services/vault/gating');
 
 const MAX_TITLE_LEN = 200;
 const MAX_DESC_LEN = 2000;
@@ -33,6 +34,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) {
     return res.status(503).json({ error: 'Vault is not yet available. VAULT_KEK is not configured.' });
   }

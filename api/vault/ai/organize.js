@@ -28,6 +28,7 @@ const { getOne, run } = require('../../_utils/db');
 const { unwrapFolderKey, encryptField, decryptField } = require('../../../services/vault/encryption');
 const { organizeText } = require('../../../services/vault/ai');
 const audit = require('../../../services/vault/audit');
+const { blockIfNotPlus } = require('../../../services/vault/gating');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -36,6 +37,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
   if (!process.env.VAULT_GEMINI_API_KEY) {
     return res.status(503).json({ error: 'AI organization not configured' });

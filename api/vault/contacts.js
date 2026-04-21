@@ -15,6 +15,7 @@ const { getOne, getMany, run } = require('../_utils/db');
 const ownerCrypto = require('../../services/vault/owner-crypto');
 const notifications = require('../../services/vault/notifications');
 const audit = require('../../services/vault/audit');
+const { blockIfNotPlus } = require('../../services/vault/gating');
 
 const MAX_CONTACTS_PER_OWNER = 10;
 
@@ -24,6 +25,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
 
   try {

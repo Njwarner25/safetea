@@ -21,6 +21,7 @@ const { getOne, getMany } = require('../_utils/db');
 const { unwrapFolderKey, encryptField, decryptField } = require('../../services/vault/encryption');
 const audit = require('../../services/vault/audit');
 const H = require('../../services/vault/entry-helpers');
+const { blockIfNotPlus } = require('../../services/vault/gating');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -28,6 +29,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) {
     return res.status(503).json({ error: 'Vault is not yet available. VAULT_KEK is not configured.' });
   }

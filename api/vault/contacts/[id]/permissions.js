@@ -14,6 +14,7 @@
 const { authenticate, cors, parseBody } = require('../../../_utils/auth');
 const { getOne, getMany, run } = require('../../../_utils/db');
 const audit = require('../../../../services/vault/audit');
+const { blockIfNotPlus } = require('../../../../services/vault/gating');
 
 const MIN_HOURS = 1;
 const MAX_HOURS = 168;
@@ -24,6 +25,7 @@ module.exports = async function handler(req, res) {
 
   const user = await authenticate(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
 
   const contactId = parseInt(req.query.id, 10);

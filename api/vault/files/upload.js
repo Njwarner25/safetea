@@ -24,6 +24,7 @@ const { getOne, run } = require('../../_utils/db');
 const { encryptField, unwrapFolderKey, fileChecksum } = require('../../../services/vault/encryption');
 const storage = require('../../../services/vault/storage');
 const audit = require('../../../services/vault/audit');
+const { blockIfNotPlus } = require('../../../services/vault/gating');
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -55,6 +56,8 @@ module.exports = async function handler(req, res) {
   const user = await authenticate(req);
   const isCompletion = !!(req.body && req.body.type === 'blob.upload-completed');
   if (!user && !isCompletion) return res.status(401).json({ error: 'Unauthorized' });
+  // Only gate the owner-initiated leg; blob completion callbacks are internal.
+  if (user && !isCompletion && blockIfNotPlus(user, res)) return;
 
   if (!process.env.VAULT_KEK) {
     return res.status(503).json({ error: 'Vault is not yet available. VAULT_KEK is not configured.' });

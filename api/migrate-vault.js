@@ -218,6 +218,23 @@ module.exports = async function handler(req, res) {
     try { await sql`CREATE INDEX IF NOT EXISTS idx_vault_contact_sessions_exp ON vault_contact_sessions(expires_at)`; } catch(e) {}
 
     // ============================================================
+    // 9. vault_assistant_messages — Journaling Assistant chat history
+    // ============================================================
+    // Each row is one user-or-assistant message, encrypted per-folder
+    // like entries. The assistant is gated on folder.ai_enabled AND the
+    // server-wide VAULT_ASSISTANT_ENABLED feature flag.
+    await sql`CREATE TABLE IF NOT EXISTS vault_assistant_messages (
+      id            BIGSERIAL PRIMARY KEY,
+      folder_id     BIGINT NOT NULL REFERENCES vault_folders(id) ON DELETE CASCADE,
+      owner_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role          VARCHAR(10) NOT NULL CHECK (role IN ('user','assistant','system')),
+      content_enc   TEXT NOT NULL,
+      resources_surfaced BIGINT[] NOT NULL DEFAULT '{}',
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_vault_assistant_messages_folder ON vault_assistant_messages(folder_id, created_at DESC)`; } catch(e) {}
+
+    // ============================================================
     // 8. vault_audit_log — append-only event stream
     // ============================================================
     // No UPDATE, no DELETE. Enforced by convention in application code +
@@ -489,6 +506,8 @@ module.exports = async function handler(req, res) {
         'vault_exports',
         'vault_audit_log',
         'vault_resources',
+        'vault_contact_sessions',
+        'vault_assistant_messages',
       ],
       resources_seeded: true,
     });

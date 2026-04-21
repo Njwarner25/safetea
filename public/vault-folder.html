@@ -96,6 +96,23 @@
     .activity-icon { min-width: 24px; height: 24px; border-radius: 6px; background: rgba(232,160,181,0.1); color: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 10px; }
     .activity-text { flex: 1; color: #D0D0E0; }
     .activity-time { color: #8080A0; font-size: 11px; }
+
+    .assistant-toggle { background: linear-gradient(135deg, rgba(232,160,181,0.1), rgba(155,89,182,0.08)); border: 1px solid rgba(232,160,181,0.2); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; margin-left: 8px; }
+    .assistant-toggle i { color: #b27de0; }
+    .assistant-panel { display: none; background: #1A1A2E; border: 1px solid rgba(232,160,181,0.15); border-radius: 14px; padding: 14px; margin-top: 10px; }
+    .assistant-panel.open { display: block; }
+    .assistant-intro { font-size: 12px; color: #B0B0C8; line-height: 1.5; margin-bottom: 10px; }
+    .assistant-intro strong { color: #E8A0B5; }
+    .asst-messages { max-height: 320px; overflow-y: auto; padding: 4px; margin-bottom: 10px; }
+    .asst-msg { margin-bottom: 10px; padding: 10px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+    .asst-msg.user { background: rgba(232,160,181,0.12); color: #fff; margin-left: 40px; }
+    .asst-msg.assistant { background: rgba(155,89,182,0.08); color: #E8DDF5; border-left: 2px solid #b27de0; margin-right: 40px; }
+    .asst-compose { display: flex; gap: 8px; align-items: flex-end; }
+    .asst-compose textarea { flex: 1; background: #0D0D1A; border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-family: inherit; resize: none; min-height: 40px; max-height: 120px; outline: none; }
+    .asst-compose textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .asst-send { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 14px; }
+    .asst-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
     .entry-actions { margin-left: auto; display: flex; gap: 4px; }
     .entry-action-btn { background: none; border: none; color: #8080A0; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .entry-action-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
@@ -176,7 +193,18 @@
     <div id="timeline" class="timeline"></div>
 
     <button class="activity-toggle" onclick="toggleActivity()"><i class="fas fa-clock-rotate-left"></i> Activity log</button>
+    <button class="assistant-toggle" id="assistant-toggle-btn" style="display:none" onclick="toggleAssistant()"><i class="fas fa-comments"></i> Journaling Assistant</button>
     <div id="activity-log" class="activity-log"></div>
+    <div id="assistant-panel" class="assistant-panel">
+      <div class="assistant-intro">
+        <strong>Journaling Assistant.</strong> A supportive place to talk while you write. It's not a therapist, lawyer, or emergency service. What you type here is encrypted per folder, and your vault entries are never sent to the assistant — it only sees this chat.
+      </div>
+      <div id="asst-messages" class="asst-messages"></div>
+      <div class="asst-compose">
+        <textarea id="asst-input" placeholder="Talk it through. Take your time." rows="1" oninput="asstAutoGrow(this);asstEnableSend()"></textarea>
+        <button id="asst-send" class="asst-send" onclick="asstSend()" disabled><i class="fas fa-arrow-up"></i></button>
+      </div>
+    </div>
   </div>
 
   <!-- Fixed composer (hidden while folder loads) -->
@@ -491,6 +519,18 @@
       window.location.replace('https://www.google.com/search?q=weather');
     };
 
+    // Probe the assistant endpoint on load. If server returns 503 (feature
+    // flag off), the toggle stays hidden. This keeps the UI dark until the
+    // practitioner review is logged and the flag flips.
+    fetch('/api/vault/assistant/chat?folder_id=' + encodeURIComponent(folderId), { headers: headers() })
+      .then(function (r) {
+        if (r.ok) {
+          var btn = document.getElementById('assistant-toggle-btn');
+          if (btn && state.folder && state.folder.ai_enabled) btn.style.display = 'inline-flex';
+        }
+      })
+      .catch(function () {});
+
     var activityLoaded = false;
     window.toggleActivity = function () {
       var box = document.getElementById('activity-log');
@@ -564,6 +604,74 @@
       };
       return map[e.action] || e.action;
     }
+
+    // Journaling Assistant panel
+    var asstLoaded = false;
+    window.toggleAssistant = function () {
+      var panel = document.getElementById('assistant-panel');
+      var opening = !panel.classList.contains('open');
+      panel.classList.toggle('open');
+      if (opening && !asstLoaded) loadAsst();
+    };
+    function loadAsst() {
+      var box = document.getElementById('asst-messages');
+      box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+      fetch('/api/vault/assistant/chat?folder_id=' + encodeURIComponent(folderId), { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          asstLoaded = true;
+          renderAsstMessages((data && data.messages) || []);
+        })
+        .catch(function () {
+          box.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:10px">Assistant is unavailable.</div>';
+        });
+    }
+    function renderAsstMessages(list) {
+      var box = document.getElementById('asst-messages');
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px;text-align:center">Say something when you\'re ready. I\'ll be here.</div>';
+        return;
+      }
+      box.innerHTML = list.map(function (m) {
+        return '<div class="asst-msg ' + (m.role === 'user' ? 'user' : 'assistant') + '">' + esc(m.content) + '</div>';
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+    window.asstAutoGrow = function (t) { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; };
+    window.asstEnableSend = function () {
+      document.getElementById('asst-send').disabled = document.getElementById('asst-input').value.trim().length === 0;
+    };
+    window.asstSend = function () {
+      var input = document.getElementById('asst-input');
+      var text = input.value.trim();
+      if (!text) return;
+      var sendBtn = document.getElementById('asst-send');
+      sendBtn.disabled = true;
+      // Optimistic append
+      var box = document.getElementById('asst-messages');
+      box.innerHTML += '<div class="asst-msg user">' + esc(text) + '</div>' +
+        '<div class="asst-msg assistant" id="asst-thinking"><i class="fas fa-circle-notch fa-spin" style="color:#b27de0"></i> …</div>';
+      box.scrollTop = box.scrollHeight;
+      input.value = ''; input.style.height = 'auto';
+      fetch('/api/vault/assistant/chat', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ folder_id: parseInt(folderId, 10), message: text })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          var thinking = document.getElementById('asst-thinking');
+          if (thinking) thinking.remove();
+          if (!r.ok) throw new Error(r.data && r.data.error || 'No reply');
+          box.innerHTML += '<div class="asst-msg assistant">' + esc(r.data.reply || '') + '</div>';
+          box.scrollTop = box.scrollHeight;
+        })
+        .catch(function (err) {
+          var thinking = document.getElementById('asst-thinking');
+          if (thinking) thinking.remove();
+          toast(err.message || 'Send failed');
+        })
+        .finally(function () { window.asstEnableSend(); });
+    };
 
     loadAll();
   })();

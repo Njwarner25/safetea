@@ -159,6 +159,7 @@
         { "source": "/api/subscriptions/status", "destination": "/api/subscriptions/status" },
         { "source": "/api/feedback", "destination": "/api/feedback" },
         { "source": "/api/migrate", "destination": "/api/migrate" },
+        { "source": "/api/migrate-vault", "destination": "/api/migrate-vault" },
         { "source": "/api/migrate-stripe", "destination": "/api/migrate-stripe" },
         { "source": "/api/migrate-referrals", "destination": "/api/migrate-referrals" },
         { "source": "/api/migrate-crime-alerts", "destination": "/api/migrate-crime-alerts" },

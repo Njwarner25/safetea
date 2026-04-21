@@ -89,7 +89,12 @@ export default function ToolsScreen() {
                 <FontAwesome5 name="lock" size={24} color={colors.vault} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.vaultTitle, { color: colors.textPrimary }]}>Safety Vault</Text>
+                <View style={styles.vaultTitleRow}>
+                  <Text style={[styles.vaultTitle, { color: colors.textPrimary }]}>Safety Vault</Text>
+                  <View style={[styles.plusPill, { backgroundColor: colors.coralMuted }]}>
+                    <Text style={[styles.plusPillText, { color: colors.coral }]}>SafeTea+</Text>
+                  </View>
+                </View>
                 <Text style={[styles.vaultDesc, { color: colors.textSecondary }]}>
                   Encrypted journal for your eyes only. Log notes, photos, audio.
                 </Text>
@@ -227,6 +232,9 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-15deg' }],
   },
   vaultTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  vaultTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 },
+  plusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: BorderRadius.full },
+  plusPillText: { fontSize: 9, fontWeight: '700', letterSpacing: 0.5 },
   vaultIconCircle: {
     width: 52,
     height: 52,
@@ -234,7 +242,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  vaultTitle: { fontSize: FontSize.xl, fontWeight: '700', marginBottom: 3 },
+  vaultTitle: { fontSize: FontSize.xl, fontWeight: '700' },
   vaultDesc: { fontSize: FontSize.sm, lineHeight: 18 },
   vaultSeparator: { borderTopWidth: 1, opacity: 0.5, marginVertical: 10 },
   vaultStatsRow: { flexDirection: 'row', gap: 6 },

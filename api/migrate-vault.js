@@ -242,6 +242,224 @@ module.exports = async function handler(req, res) {
       console.warn('[migrate-vault] append-only trigger not installed:', e.message);
     }
 
+    // ============================================================
+    // 9. vault_resources — curated safety-resource directory
+    // ============================================================
+    // The Journaling Assistant is NEVER allowed to invent providers.
+    // It queries this table and surfaces only what comes back. Entries
+    // are hand-vetted by SafeTea + Community agent before they land here.
+    // Seed rows below cover national, vetted resources for V1; local
+    // providers (therapists, shelters) are deferred to V2 once a
+    // partnership + licensure verification process exists.
+    await sql`CREATE TABLE IF NOT EXISTS vault_resources (
+      id            BIGSERIAL PRIMARY KEY,
+      category      VARCHAR(30) NOT NULL CHECK (category IN (
+        'hotline','crisis_chat','app','directory','legal_aid','shelter'
+      )),
+      name          VARCHAR(200) NOT NULL,
+      description   TEXT NOT NULL,
+      url           TEXT,
+      phone         VARCHAR(30),
+      sms_info      VARCHAR(100),
+      country       VARCHAR(2) NOT NULL DEFAULT 'US',
+      state         VARCHAR(2),
+      city          VARCHAR(100),
+      tags          TEXT[] NOT NULL DEFAULT '{}',
+      verified_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      verified_by   VARCHAR(100),
+      active        BOOLEAN NOT NULL DEFAULT true,
+      sort_order    INTEGER NOT NULL DEFAULT 0,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`;
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_vault_resources_category ON vault_resources(category) WHERE active = true`; } catch(e) {}
+    try { await sql`CREATE INDEX IF NOT EXISTS idx_vault_resources_region ON vault_resources(country, state) WHERE active = true`; } catch(e) {}
+
+    // Seed the V1 curated list. Idempotent via UNIQUE on (name, country).
+    try { await sql`CREATE UNIQUE INDEX IF NOT EXISTS uq_vault_resources_name_country ON vault_resources(name, country)`; } catch(e) {}
+
+    // Hotlines (national, US)
+    await sql`INSERT INTO vault_resources (category, name, description, phone, sms_info, tags, verified_by, sort_order)
+      VALUES ('hotline', '988 Suicide & Crisis Lifeline',
+        'Free, confidential, 24/7 support for anyone in suicidal crisis or emotional distress.',
+        '988', 'Text or call 988',
+        ARRAY['suicide','crisis','mental_health','24_7'],
+        'SafeTea curated', 10)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, sms_info, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'National Domestic Violence Hotline',
+        '24/7 support, safety planning, and local referrals. Advocates are trained specifically in intimate-partner violence.',
+        '1-800-799-7233', 'Text START to 88788',
+        'https://www.thehotline.org',
+        ARRAY['dv','ipv','safety_planning','24_7'],
+        'SafeTea curated', 20)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'RAINN National Sexual Assault Hotline',
+        '24/7 confidential support. Connects to local rape-crisis centers.',
+        '1-800-656-4673', 'https://www.rainn.org',
+        ARRAY['sexual_assault','rape','crisis','24_7'],
+        'SafeTea curated', 30)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'Childhelp National Child Abuse Hotline',
+        'If you are worried about a child or are a young person in danger.',
+        '1-800-422-4453', 'https://www.childhelphotline.org',
+        ARRAY['child_abuse','youth','24_7'],
+        'SafeTea curated', 40)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'StrongHearts Native Helpline',
+        'Culturally appropriate DV and sexual-violence support for Native Americans and Alaska Natives.',
+        '1-844-762-8483', 'https://strongheartshelpline.org',
+        ARRAY['dv','native','indigenous','24_7'],
+        'SafeTea curated', 50)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'Trans Lifeline',
+        'Peer support for transgender people in crisis. Staffed by trans operators.',
+        '1-877-565-8860', 'https://translifeline.org',
+        ARRAY['trans','lgbtq','crisis'],
+        'SafeTea curated', 60)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, phone, url, tags, verified_by, sort_order)
+      VALUES ('hotline', 'Love Is Respect',
+        'Dating-abuse helpline for teens and young adults. Text, chat, or call.',
+        '1-866-331-9474', 'https://www.loveisrespect.org',
+        ARRAY['dating_abuse','youth','24_7'],
+        'SafeTea curated', 70)
+      ON CONFLICT (name, country) DO NOTHING`;
+
+    // Crisis chat
+    await sql`INSERT INTO vault_resources (category, name, description, sms_info, url, tags, verified_by, sort_order)
+      VALUES ('crisis_chat', 'Crisis Text Line',
+        'Free, 24/7 text-based support with a trained crisis counselor. Works when calling isn''t safe.',
+        'Text HOME to 741741',
+        'https://www.crisistextline.org',
+        ARRAY['crisis','text','24_7','silent'],
+        'SafeTea curated', 110)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('crisis_chat', 'RAINN Online Chat',
+        'Chat 1-on-1 with a trained staff member from a rape-crisis center.',
+        'https://hotline.rainn.org/online',
+        ARRAY['sexual_assault','chat','24_7','silent'],
+        'SafeTea curated', 120)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('crisis_chat', 'NDVH Online Chat',
+        'Private web-chat with a DV advocate. Works when calling could be overheard.',
+        'https://www.thehotline.org/get-help',
+        ARRAY['dv','chat','24_7','silent'],
+        'SafeTea curated', 130)
+      ON CONFLICT (name, country) DO NOTHING`;
+
+    // Apps (DV-specific)
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'myPlan',
+        'Safety-planning app built by Johns Hopkins for people in relationships that feel unsafe. Private; includes a quick-exit feature.',
+        'https://www.myplanapp.org',
+        ARRAY['dv','safety_planning','quick_exit','free'],
+        'SafeTea curated', 210)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Bright Sky',
+        'Free UK-based app (works internationally) for anyone in, or worried about, a domestic-abuse situation.',
+        'https://www.hestia.org/brightsky',
+        ARRAY['dv','safety_planning','free'],
+        'SafeTea curated', 220)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Aspire News',
+        'Disguised as a news app; inside is a hidden emergency button that alerts your trusted contacts with your location.',
+        'https://www.whengeorgiasmiled.org/aspire-news-app',
+        ARRAY['dv','disguised','emergency','free'],
+        'SafeTea curated', 230)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Noonlight',
+        'Panic-button safety app. A long-press summons trained dispatchers who can send police without you saying a word.',
+        'https://www.noonlight.com',
+        ARRAY['sos','panic_button','paid'],
+        'SafeTea curated', 240)
+      ON CONFLICT (name, country) DO NOTHING`;
+
+    // Apps (mental health + therapy)
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Calm',
+        'Guided meditations, sleep stories, and breathing exercises. Useful for regulating the nervous system after a trauma response.',
+        'https://www.calm.com',
+        ARRAY['mental_health','meditation','sleep','paid_freemium'],
+        'SafeTea curated', 310)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Headspace',
+        'Meditation and mindfulness with specific programs for anxiety, sleep, and processing difficult emotions.',
+        'https://www.headspace.com',
+        ARRAY['mental_health','meditation','paid_freemium'],
+        'SafeTea curated', 320)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'Talkspace',
+        'Subscription-based online therapy with licensed clinicians. Some plans accept insurance.',
+        'https://www.talkspace.com',
+        ARRAY['therapy','licensed','paid'],
+        'SafeTea curated', 330)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('app', 'BetterHelp',
+        'Large online-therapy platform; offers trauma-informed therapist filters and financial-aid tiers.',
+        'https://www.betterhelp.com',
+        ARRAY['therapy','licensed','paid','financial_aid'],
+        'SafeTea curated', 340)
+      ON CONFLICT (name, country) DO NOTHING`;
+
+    // Directories
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('directory', 'Psychology Today — trauma-informed therapist finder',
+        'Filterable therapist directory. Use the "trauma and PTSD" specialty filter plus your state to find nearby providers.',
+        'https://www.psychologytoday.com/us/therapists/trauma-and-ptsd',
+        ARRAY['therapy','directory','trauma_informed'],
+        'SafeTea curated', 410)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('directory', 'RAINN Local Centers',
+        'Find your nearest rape-crisis center with 24/7 advocates, free medical accompaniment, and legal support.',
+        'https://centers.rainn.org',
+        ARRAY['sexual_assault','directory','free'],
+        'SafeTea curated', 420)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('directory', 'DomesticShelters.org',
+        'Searchable directory of DV shelters nationwide with services, capacity, and eligibility notes.',
+        'https://www.domesticshelters.org',
+        ARRAY['dv','shelter','directory','free'],
+        'SafeTea curated', 430)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('directory', 'WomensLaw.org',
+        'State-by-state legal information for survivors: restraining orders, custody, immigration, housing.',
+        'https://www.womenslaw.org',
+        ARRAY['legal','dv','state_specific','free'],
+        'SafeTea curated', 440)
+      ON CONFLICT (name, country) DO NOTHING`;
+
+    // Legal aid
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('legal_aid', 'Legal Services Corporation',
+        'Find free civil legal-aid programs in your area. Covers family, housing, immigration.',
+        'https://www.lsc.gov/about-lsc/what-legal-aid/find-legal-aid',
+        ARRAY['legal','free','state_specific'],
+        'SafeTea curated', 510)
+      ON CONFLICT (name, country) DO NOTHING`;
+    await sql`INSERT INTO vault_resources (category, name, description, url, tags, verified_by, sort_order)
+      VALUES ('legal_aid', 'National Network to End Domestic Violence',
+        'Technology, policy, and legal resources for DV survivors. Partners with local orgs in every state.',
+        'https://www.nnedv.org',
+        ARRAY['dv','legal','policy','directory'],
+        'SafeTea curated', 520)
+      ON CONFLICT (name, country) DO NOTHING`;
+
     return res.status(200).json({
       ok: true,
       tables: [
@@ -253,7 +471,9 @@ module.exports = async function handler(req, res) {
         'vault_access_requests',
         'vault_exports',
         'vault_audit_log',
+        'vault_resources',
       ],
+      resources_seeded: true,
     });
   } catch (err) {
     console.error('[migrate-vault] failed:', err);

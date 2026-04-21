@@ -1873,8 +1873,16 @@
                 } else {
                     msgs.forEach(function(m) {
                         if (isSystemThread) {
-                            html += '<div class="msg-bubble received" style="background:rgba(232,160,181,0.08);border-left:3px solid #E8A0B5;position:relative">';
+                            // Name Watch alerts that carry related_post_id become clickable,
+                            // routing the user to the post that triggered the alert.
+                            var hasPost = !!m.related_post_id;
+                            var bubbleStyle = 'background:rgba(232,160,181,0.08);border-left:3px solid #E8A0B5;position:relative' + (hasPost ? ';cursor:pointer;transition:background 0.15s' : '');
+                            var bubbleExtras = hasPost ? ' onclick="openPostFromAlert(' + m.related_post_id + ')" role="button" tabindex="0" onmouseover="this.style.background=\'rgba(232,160,181,0.14)\'" onmouseout="this.style.background=\'rgba(232,160,181,0.08)\'"' : '';
+                            html += '<div class="msg-bubble received" style="' + bubbleStyle + '"' + bubbleExtras + '>';
                             html += escapeHtmlSafe(m.content);
+                            if (hasPost) {
+                                html += '<div style="margin-top:8px;color:#E8A0B5;font-size:12px;font-weight:600"><i class="fas fa-arrow-right"></i> View post</div>';
+                            }
                             html += '<div class="msg-time" style="font-size:10px;color:#8080A0;margin-top:4px">' + formatMsgTime(m.created_at);
                             html += ' <span class="msg-delete-btn" onclick="event.stopPropagation();deleteMessage(' + m.id + ')" title="Delete" style="cursor:pointer;opacity:0.4;margin-left:6px;font-size:11px">&times;</span>';
                             html += '</div></div>';
@@ -2434,6 +2442,62 @@
         return ' <span style="display:inline-block;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;vertical-align:middle;letter-spacing:0.5px;text-transform:uppercase">PLUS</span>';
     }
     window.getPlusBadgeHtml = getPlusBadgeHtml;
+
+    // Subtle verification indicator — small shield next to the author name on
+    // community posts. Only renders for identity-verified users; unverified /
+    // email-only accounts get nothing so the UI stays clean.
+    //   - identity_verified: teal shield, with the trust score in the title
+    //   - otherwise: no badge
+    function getVerificationBadgeHtml(post) {
+        if (!post) return '';
+        var verified = post.author_identity_verified === true || post.author_identity_verified === 't';
+        if (!verified) return '';
+        var score = parseInt(post.author_trust_score, 10);
+        var tip = 'Identity verified';
+        if (!isNaN(score) && score > 0) tip += ' · Trust ' + score;
+        return ' <span title="' + tip + '" aria-label="' + tip + '" style="display:inline-flex;align-items:center;gap:3px;color:#2ecc71;font-size:10px;vertical-align:middle;opacity:0.85;cursor:help"><i class="fas fa-shield-alt"></i>' +
+            (!isNaN(score) && score > 0 ? '<span style="font-weight:600;font-size:10px">' + score + '</span>' : '') +
+            '</span>';
+    }
+    window.getVerificationBadgeHtml = getVerificationBadgeHtml;
+
+    // Open a post from a Name Watch inbox alert.
+    // Switches to the community hub tab, scrolls to the post, highlights it.
+    // If the post isn't in the currently-rendered feed, toasts a fallback.
+    function openPostFromAlert(postId) {
+        if (!postId) return;
+        try { if (window.SafeTeaNative && window.SafeTeaNative.haptics) window.SafeTeaNative.haptics.impact('Light'); } catch (_) {}
+
+        function scrollToPost() {
+            var target = document.getElementById('post-' + postId);
+            if (!target) return false;
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Brief highlight
+            var original = target.style.boxShadow;
+            target.style.transition = 'box-shadow 0.4s ease';
+            target.style.boxShadow = '0 0 0 3px rgba(232,160,181,0.6)';
+            setTimeout(function () { target.style.boxShadow = original || ''; }, 2200);
+            return true;
+        }
+
+        // Ensure we're on the community tab before searching the DOM
+        if (typeof window.switchTab === 'function') {
+            try { window.switchTab('hub'); } catch (_) {}
+        }
+
+        // Give the tab switch a beat to render, then scroll. Retry once if the
+        // feed is still loading (rendered posts appear asynchronously).
+        setTimeout(function () {
+            if (scrollToPost()) return;
+            setTimeout(function () {
+                if (scrollToPost()) return;
+                if (typeof showToast === 'function') {
+                    showToast('Post not in the current feed. Check Alerts for all matches.');
+                }
+            }, 900);
+        }, 160);
+    }
+    window.openPostFromAlert = openPostFromAlert;
 
     // ==================== WATERMARK UTILITY ====================
     function addWatermark(dataUrl, callback) {
@@ -3117,7 +3181,7 @@
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div style="flex:1">' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getPlusBadgeHtml(post.author_tier) + ' ' + badgeHtml + trendingBadge + '</div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getVerificationBadgeHtml(post) + getPlusBadgeHtml(post.author_tier) + ' ' + badgeHtml + trendingBadge + '</div>' +
                     '<div style="font-size:12px;color:#666;margin-top:2px">' + getTimeAgoFromDate(post.created_at) + cityHtml + '</div>' +
                 '</div>' +
             '</div>' +
@@ -3264,7 +3328,7 @@
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
                 '<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div>' +
-                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getPlusBadgeHtml(post.author_tier) + '</div>' +
+                    '<div style="font-weight:600;font-size:14px;color:#fff">' + escapeHtmlSafe(authorName) + getVerificationBadgeHtml(post) + getPlusBadgeHtml(post.author_tier) + '</div>' +
                     '<div style="font-size:11px;color:#2ecc71"><i class="fas fa-star"></i> Recommender</div>' +
                 '</div>' +
             '</div>' +
@@ -3904,7 +3968,7 @@
             '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' +
                 '<div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;background:' + avatarColor + '">' + initial + '</div>' +
                 '<div style="flex:1">' +
-                    '<div style="font-weight:600;font-size:13px;color:#fff">' + escapeHtmlSafe(authorName) + ' ' + typeBadge + pinnedHtml + '</div>' +
+                    '<div style="font-weight:600;font-size:13px;color:#fff">' + escapeHtmlSafe(authorName) + getVerificationBadgeHtml(post) + ' ' + typeBadge + pinnedHtml + '</div>' +
                     '<div style="font-size:11px;color:#666;margin-top:1px">' + getTimeAgoFromDate(post.created_at) + '</div>' +
                 '</div>' +
             '</div>' +

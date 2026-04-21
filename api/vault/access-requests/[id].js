@@ -22,6 +22,7 @@ const { unwrapFolderKey, decryptField } = require('../../../services/vault/encry
 const ownerCrypto = require('../../../services/vault/owner-crypto');
 const notifications = require('../../../services/vault/notifications');
 const audit = require('../../../services/vault/audit');
+const { generateFolderExport } = require('../../../services/vault/export');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -69,12 +70,33 @@ module.exports = async function handler(req, res) {
         `UPDATE vault_access_requests SET status = 'approved', resolved_at = NOW() WHERE id = $1`,
         [row.id]
       );
-      // Slice 9 will generate the export + a real share URL here. For now:
-      // placeholder URL that points at the contact portal activation page;
-      // the contact sees "access approved" but the actual share link is a
-      // V1 stub. Audit records reflect the stub state.
-      const shareUrl = (process.env.PUBLIC_APP_URL || 'https://getsafetea.app').replace(/\/$/, '') +
-        '/vault-request?share=' + encodeURIComponent(row.id) + '&status=approved';
+
+      // Slice 9: generate a real export + signed share URL.
+      let shareUrl;
+      let exportId = null;
+      try {
+        const result = await generateFolderExport({
+          folderId: row.folder_id,
+          ownerUserId: user.id,
+          triggeredBy: 'access_request',
+          accessRequestId: row.id,
+          expiresHours: 72,
+          req: req,
+        });
+        shareUrl = result.shareUrl;
+        exportId = result.exportId;
+        // Link the export back to the access_request row
+        await run(
+          `UPDATE vault_access_requests SET release_export_id = $1 WHERE id = $2`,
+          [exportId, row.id]
+        );
+      } catch (expErr) {
+        console.error('[vault/access-requests] export generation failed:', expErr && expErr.message);
+        // Fall back to a stub so the approval itself isn't lost. Owner
+        // can retry the export via /api/vault/exports.
+        shareUrl = (process.env.PUBLIC_APP_URL || 'https://getsafetea.app').replace(/\/$/, '') +
+          '/vault-request?share=' + encodeURIComponent(row.id) + '&status=export-failed';
+      }
 
       notifications.sendAccessApproved(row.contact_email, contactName, folderTitle, shareUrl)
         .catch(function () {});
@@ -87,10 +109,10 @@ module.exports = async function handler(req, res) {
         target_type: 'access_request',
         target_id: row.id,
         folder_id: row.folder_id,
-        metadata: { contact_id: row.contact_id, export_pending: true },
+        metadata: { contact_id: row.contact_id, export_id: exportId },
       });
 
-      return res.status(200).json({ ok: true, status: 'approved', export_stub: true });
+      return res.status(200).json({ ok: true, status: 'approved', export_id: exportId });
     }
 
     // action === 'deny'

@@ -20,6 +20,7 @@ const { cors } = require('../_utils/auth');
 const { getMany, run } = require('../_utils/db');
 const notifications = require('../../services/vault/notifications');
 const audit = require('../../services/vault/audit');
+const { generateFolderExport, purgeExpired } = require('../../services/vault/export');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -62,9 +63,28 @@ module.exports = async function handler(req, res) {
         );
         results.released++;
 
-        // V1 stub share URL — slice 9 replaces with a real export link.
-        const shareUrl = (process.env.PUBLIC_APP_URL || 'https://getsafetea.app').replace(/\/$/, '') +
-          '/vault-request?share=' + encodeURIComponent(row.id) + '&status=auto-released';
+        // Slice 9: generate a real export + signed share URL.
+        let shareUrl;
+        let exportId = null;
+        try {
+          const result = await generateFolderExport({
+            folderId: row.folder_id,
+            ownerUserId: row.owner_user_id,
+            triggeredBy: 'access_request',
+            accessRequestId: row.id,
+            expiresHours: 72,
+          });
+          shareUrl = result.shareUrl;
+          exportId = result.exportId;
+          await run(
+            `UPDATE vault_access_requests SET release_export_id = $1 WHERE id = $2`,
+            [exportId, row.id]
+          );
+        } catch (expErr) {
+          console.error('[cron/vault-access-expire] export generation failed:', expErr && expErr.message);
+          shareUrl = (process.env.PUBLIC_APP_URL || 'https://getsafetea.app').replace(/\/$/, '') +
+            '/vault-request?share=' + encodeURIComponent(row.id) + '&status=export-failed';
+        }
 
         notifications.sendAccessApproved(row.contact_email, null, '(folder released)', shareUrl)
           .catch(function () {});
@@ -76,7 +96,7 @@ module.exports = async function handler(req, res) {
           target_type: 'access_request',
           target_id: row.id,
           folder_id: row.folder_id,
-          metadata: { auto_release: true, export_pending: true },
+          metadata: { auto_release: true, export_id: exportId },
         });
       } else {
         await run(
@@ -102,7 +122,12 @@ module.exports = async function handler(req, res) {
     // Housekeeping: drop expired sessions.
     await run(`DELETE FROM vault_contact_sessions WHERE expires_at < NOW()`);
 
-    return res.status(200).json({ ok: true, ...results });
+    // Slice 9 addition: purge expired export blobs (keeps rows for audit).
+    let purge = { scanned: 0, purged: 0 };
+    try { purge = await purgeExpired(); }
+    catch (e) { console.warn('[cron/vault-access-expire] export purge failed:', e && e.message); }
+
+    return res.status(200).json({ ok: true, ...results, exports_purged: purge.purged, exports_scanned: purge.scanned });
   } catch (err) {
     console.error('[cron/vault-access-expire] failed:', err);
     return res.status(500).json({ error: 'Cron failed', details: err && err.message });

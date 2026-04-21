@@ -193,13 +193,13 @@
       <div id="request-list"></div>
     </div>
 
-    <a href="/vault-contacts" class="contacts-link">
+    <a id="contacts-link" href="/vault-contacts" class="contacts-link">
       <i class="fas fa-user-group"></i>
       <span class="label">Manage trusted contacts</span>
       <i class="fas fa-chevron-right"></i>
     </a>
 
-    <div class="folders-header">
+    <div id="folders-header" class="folders-header">
       <h2>Your folders</h2>
       <span class="count" id="folder-count">&nbsp;</span>
     </div>
@@ -209,7 +209,7 @@
     </div>
   </div>
 
-  <button class="fab" onclick="openCreateModal()" title="New folder"><i class="fas fa-plus"></i></button>
+  <button id="new-folder-btn" class="fab" onclick="openCreateModal()" title="New folder"><i class="fas fa-plus"></i></button>
 
   <!-- New folder modal -->
   <div id="create-modal" class="modal-overlay" onclick="if(event.target===this)closeCreateModal()">
@@ -306,10 +306,35 @@
       }).join('');
     }
 
+    function renderUpsell() {
+      el.folders.innerHTML =
+        '<div class="empty-state" style="max-width:520px;margin:0 auto">' +
+          '<div style="width:72px;height:72px;margin:0 auto 16px;background:linear-gradient(135deg,rgba(232,160,181,0.18),rgba(155,89,182,0.12));border-radius:20px;display:flex;align-items:center;justify-content:center">' +
+            '<i class="fas fa-shield-heart" style="font-size:32px;color:#E8A0B5"></i>' +
+          '</div>' +
+          '<h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:8px">Safety Vault is a SafeTea+ feature</h3>' +
+          '<p style="color:#8080A0;font-size:14px;line-height:1.6;margin:0 auto 20px;max-width:420px">Encrypted journaling, trusted-contact release, AI organization, and activity-log audit. Upgrade to start documenting what matters — privately.</p>' +
+          '<a class="btn-primary" href="/dashboard#subscription" style="display:inline-flex;align-items:center;gap:8px"><i class="fas fa-crown"></i> Upgrade to SafeTea+</a>' +
+          '<div style="color:#8080A0;font-size:12px;margin-top:12px">$7.99/month or $66.99/year (save 30%)</div>' +
+        '</div>';
+      var reqAlert = document.getElementById('request-alert');
+      if (reqAlert) reqAlert.classList.remove('visible');
+      var newBtn = document.getElementById('new-folder-btn');
+      if (newBtn) newBtn.style.display = 'none';
+      var contactsLink = document.getElementById('contacts-link');
+      if (contactsLink) contactsLink.style.display = 'none';
+      var foldersHdr = document.getElementById('folders-header');
+      if (foldersHdr) foldersHdr.style.display = 'none';
+    }
+
     function loadFolders() {
       fetch('/api/vault/folders', { headers: headers() })
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); })
         .then(function (r) {
+          if (r.status === 403 && r.data && r.data.upgrade) {
+            renderUpsell();
+            return;
+          }
           if (r.status === 503) {
             el.folders.innerHTML = '<div class="empty-state"><p>The Vault is being prepared. Please try again in a moment.</p></div>';
             return;

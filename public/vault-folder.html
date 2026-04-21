@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <meta name="application-name" content="SafeTea">
+  <meta name="format-detection" content="telephone=no">
+  <title>Safety Vault — SafeTea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <script src="/capacitor-bridge.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 740px; margin: 0 auto; padding: 24px 20px 160px; }
+
+    .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+    .quick-exit { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #B0B0C8; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .quick-exit:hover { border-color: rgba(232,160,181,0.4); color: #fff; }
+
+    .folder-header { margin: 8px 0 20px; }
+    .folder-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .folder-title-row h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; flex: 1; min-width: 0; }
+    .folder-desc { color: #B0B0C8; font-size: 14px; margin-top: 6px; line-height: 1.5; }
+    .folder-badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-ai { background: rgba(155,89,182,0.15); color: #b27de0; border: 1px solid rgba(155,89,182,0.3); }
+    .badge-hold { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+    .folder-menu { position: relative; }
+    .folder-menu-btn { background: rgba(255,255,255,0.04); color: #fff; border: 1px solid rgba(255,255,255,0.08); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+    .folder-menu-list { display: none; position: absolute; right: 0; top: 44px; background: #1A1A2E; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; min-width: 180px; overflow: hidden; z-index: 50; box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+    .folder-menu.open .folder-menu-list { display: block; }
+    .folder-menu-list button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 11px 14px; color: #fff; font-size: 13px; font-family: inherit; cursor: pointer; }
+    .folder-menu-list button:hover { background: rgba(255,255,255,0.04); }
+    .folder-menu-list button.danger { color: #e74c3c; }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 10px; }
+    .toolbar h2 { font-size: 15px; font-weight: 700; color: #fff; }
+    .sort-toggle { display: inline-flex; background: rgba(255,255,255,0.04); border-radius: 999px; padding: 3px; border: 1px solid rgba(255,255,255,0.06); }
+    .sort-toggle button { background: none; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; color: #8080A0; border-radius: 999px; cursor: pointer; font-family: inherit; }
+    .sort-toggle button.active { background: rgba(232,160,181,0.16); color: #fff; }
+
+    .timeline { display: flex; flex-direction: column; gap: 10px; }
+
+    .entry-card {
+      background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 16px 18px;
+      transition: border-color 0.15s;
+    }
+    .entry-card:hover { border-color: rgba(232,160,181,0.2); }
+    .entry-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .entry-icon { min-width: 32px; height: 32px; border-radius: 8px; background: rgba(232,160,181,0.1); color: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .entry-type { font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 0.8px; }
+    .entry-time { margin-left: auto; font-size: 11px; color: #8080A0; }
+    .entry-body { color: #D0D0E0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+    .entry-body.collapsed { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+    .entry-expand { background: none; border: none; color: #E8A0B5; font-size: 12px; font-weight: 600; cursor: pointer; padding: 6px 0; font-family: inherit; }
+    .entry-footer { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .tag-chip { background: rgba(232,160,181,0.1); color: #E8A0B5; font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 500; }
+    .tag-chip.suggested { background: rgba(155,89,182,0.1); color: #b27de0; border: 1px dashed rgba(155,89,182,0.3); cursor: pointer; }
+
+    .ai-summary {
+      display: flex; align-items: flex-start; gap: 8px;
+      margin-top: 10px; padding: 10px 12px;
+      background: rgba(155,89,182,0.06); border: 1px solid rgba(155,89,182,0.15);
+      border-radius: 10px;
+    }
+    .ai-summary i { color: #b27de0; font-size: 11px; margin-top: 3px; flex-shrink: 0; }
+    .ai-summary-body { flex: 1; }
+    .ai-summary-label { font-size: 10px; font-weight: 700; color: #9474c0; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+    .ai-summary-text { font-size: 13px; color: #C8C4E0; line-height: 1.5; }
+    .ai-summary-dates { margin-top: 6px; font-size: 11px; color: #9474c0; }
+    .ai-summary-dates .low-conf { opacity: 0.7; font-style: italic; }
+    .ai-pending { color: #8080A0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
+    .ai-pending i { animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .activity-toggle { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #B0B0C8; padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; }
+    .activity-toggle:hover { border-color: rgba(232,160,181,0.3); color: #fff; }
+    .activity-log { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; margin-top: 10px; }
+    .activity-log.open { display: block; }
+    .activity-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 12px; }
+    .activity-row:last-child { border-bottom: none; }
+    .activity-icon { min-width: 24px; height: 24px; border-radius: 6px; background: rgba(232,160,181,0.1); color: #E8A0B5; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .activity-text { flex: 1; color: #D0D0E0; }
+    .activity-time { color: #8080A0; font-size: 11px; }
+
+    .assistant-toggle { background: linear-gradient(135deg, rgba(232,160,181,0.1), rgba(155,89,182,0.08)); border: 1px solid rgba(232,160,181,0.2); color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; margin-left: 8px; }
+    .assistant-toggle i { color: #b27de0; }
+    .assistant-panel { display: none; background: #1A1A2E; border: 1px solid rgba(232,160,181,0.15); border-radius: 14px; padding: 14px; margin-top: 10px; }
+    .assistant-panel.open { display: block; }
+    .assistant-intro { font-size: 12px; color: #B0B0C8; line-height: 1.5; margin-bottom: 10px; }
+    .assistant-intro strong { color: #E8A0B5; }
+    .asst-messages { max-height: 320px; overflow-y: auto; padding: 4px; margin-bottom: 10px; }
+    .asst-msg { margin-bottom: 10px; padding: 10px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+    .asst-msg.user { background: rgba(232,160,181,0.12); color: #fff; margin-left: 40px; }
+    .asst-msg.assistant { background: rgba(155,89,182,0.08); color: #E8DDF5; border-left: 2px solid #b27de0; margin-right: 40px; }
+    .asst-compose { display: flex; gap: 8px; align-items: flex-end; }
+    .asst-compose textarea { flex: 1; background: #0D0D1A; border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-family: inherit; resize: none; min-height: 40px; max-height: 120px; outline: none; }
+    .asst-compose textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .asst-send { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 14px; }
+    .asst-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .entry-actions { margin-left: auto; display: flex; gap: 4px; }
+    .entry-action-btn { background: none; border: none; color: #8080A0; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .entry-action-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .entry-action-btn.danger:hover { color: #e74c3c; }
+
+    .empty-state {
+      text-align: center; padding: 40px 24px;
+      background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 14px;
+    }
+    .empty-state .emo { font-size: 32px; margin-bottom: 10px; opacity: 0.7; }
+    .empty-state p { color: #B0B0C8; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+
+    /* Fixed compose bar */
+    .composer {
+      position: fixed; left: 0; right: 0;
+      bottom: calc(env(safe-area-inset-bottom));
+      background: #0D0D1A; border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      z-index: 40;
+    }
+    .composer-inner { max-width: 740px; margin: 0 auto; display: flex; align-items: flex-end; gap: 10px; }
+    .composer textarea {
+      flex: 1; background: #1A1A2E; border: 1px solid rgba(255,255,255,0.08);
+      color: #fff; padding: 11px 14px; border-radius: 14px;
+      font-size: 14px; font-family: inherit; resize: none; min-height: 44px; max-height: 160px;
+      outline: none;
+    }
+    .composer textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .composer-send {
+      background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff;
+      border: none; width: 44px; height: 44px; border-radius: 50%;
+      cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    }
+    .composer-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff;
+      border: none; padding: 11px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: #22223A; border: 1px solid rgba(255,255,255,0.08);
+      color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; }
+
+    .loading { text-align: center; padding: 40px; color: #8080A0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <a href="/vault" class="back-link"><i class="fas fa-chevron-left"></i> Vault</a>
+      <button class="quick-exit" onclick="quickExit()">
+        <i class="fas fa-door-open"></i> Quick exit
+      </button>
+    </div>
+
+    <div class="folder-header" id="folder-header">
+      <div class="loading"><i class="fas fa-spinner fa-spin"></i> Opening folder…</div>
+    </div>
+
+    <div class="toolbar" id="toolbar" style="display:none">
+      <h2>Timeline</h2>
+      <div class="sort-toggle" role="tablist">
+        <button id="sort-event" class="active" onclick="setSort('event')">Event date</button>
+        <button id="sort-logged" onclick="setSort('logged')">Logged</button>
+      </div>
+    </div>
+
+    <div id="timeline" class="timeline"></div>
+
+    <button class="activity-toggle" onclick="toggleActivity()"><i class="fas fa-clock-rotate-left"></i> Activity log</button>
+    <button class="assistant-toggle" id="assistant-toggle-btn" style="display:none" onclick="toggleAssistant()"><i class="fas fa-comments"></i> Journaling Assistant</button>
+    <div id="activity-log" class="activity-log"></div>
+    <div id="assistant-panel" class="assistant-panel">
+      <div class="assistant-intro">
+        <strong>Journaling Assistant.</strong> A supportive place to talk while you write. It's not a therapist, lawyer, or emergency service. What you type here is encrypted per folder, and your vault entries are never sent to the assistant — it only sees this chat.
+      </div>
+      <div id="asst-messages" class="asst-messages"></div>
+      <div class="asst-compose">
+        <textarea id="asst-input" placeholder="Talk it through. Take your time." rows="1" oninput="asstAutoGrow(this);asstEnableSend()"></textarea>
+        <button id="asst-send" class="asst-send" onclick="asstSend()" disabled><i class="fas fa-arrow-up"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed composer (hidden while folder loads) -->
+  <div class="composer" id="composer" style="display:none">
+    <div class="composer-inner">
+      <textarea id="compose-input" placeholder="Write a note. Only you see this." rows="1" oninput="autoGrow(this);enableSend()"></textarea>
+      <button id="compose-send" class="composer-send" onclick="sendNote()" disabled title="Save"><i class="fas fa-arrow-up"></i></button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var TOKEN_KEY = 'safetea_token';
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) { window.location.href = '/login'; return; }
+
+    var params = new URLSearchParams(window.location.search);
+    var folderId = params.get('id');
+    if (!folderId) { window.location.href = '/vault'; return; }
+
+    var state = {
+      folder: null,
+      entries: [],
+      sort: 'event',
+    };
+
+    var el = {
+      header: document.getElementById('folder-header'),
+      toolbar: document.getElementById('toolbar'),
+      timeline: document.getElementById('timeline'),
+      composer: document.getElementById('composer'),
+      input: document.getElementById('compose-input'),
+      send: document.getElementById('compose-send'),
+      toast: document.getElementById('toast'),
+      sortEvent: document.getElementById('sort-event'),
+      sortLogged: document.getElementById('sort-logged'),
+    };
+
+    function headers() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
+
+    function toast(msg) {
+      el.toast.textContent = msg;
+      el.toast.classList.add('show');
+      setTimeout(function () { el.toast.classList.remove('show'); }, 2400);
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      var now = new Date();
+      var sameYear = d.getFullYear() === now.getFullYear();
+      var dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: sameYear ? undefined : 'numeric' });
+      var timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      return dateStr + ' \u2022 ' + timeStr;
+    }
+
+    function typeIcon(t) {
+      return ({
+        note: 'fa-pen-to-square',
+        photo: 'fa-camera',
+        screenshot: 'fa-image',
+        document: 'fa-file-lines',
+        audio: 'fa-microphone'
+      }[t]) || 'fa-circle';
+    }
+
+    function renderHeader() {
+      var f = state.folder;
+      var badges = '';
+      if (f.ai_enabled) badges += '<span class="badge badge-ai"><i class="fas fa-wand-magic-sparkles"></i> AI on</span>';
+      if (f.legal_hold) badges += '<span class="badge badge-hold"><i class="fas fa-gavel"></i> Legal hold</span>';
+      el.header.innerHTML =
+        '<div class="folder-title-row">' +
+          '<h1>' + esc(f.title || 'Untitled') + '</h1>' +
+          '<div class="folder-menu" id="folder-menu">' +
+            '<button class="folder-menu-btn" onclick="toggleFolderMenu(event)" aria-label="Folder actions">\u2022\u2022\u2022</button>' +
+            '<div class="folder-menu-list">' +
+              '<button onclick="toggleAi()"><i class="fas fa-wand-magic-sparkles"></i> ' + (f.ai_enabled ? 'Turn AI off' : 'Turn AI on') + '</button>' +
+              '<button class="danger" onclick="deleteFolder()"><i class="fas fa-trash"></i> Delete folder</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        (f.description ? '<div class="folder-desc">' + esc(f.description) + '</div>' : '') +
+        (badges ? '<div class="folder-badges">' + badges + '</div>' : '');
+      el.toolbar.style.display = 'flex';
+      el.composer.style.display = f.legal_hold ? 'none' : 'block';
+    }
+
+    function renderAiBlock(e) {
+      // AI summary only shown for entries that have one. Pending state
+      // shown only while we're actively waiting on organize().
+      if (e.ai_status === 'pending' && state.folder && state.folder.ai_enabled) {
+        return '<div class="ai-summary"><span class="ai-pending"><i class="fas fa-circle-notch"></i> Organizing…</span></div>';
+      }
+      if (!e.ai_summary && !(e.ai_dates && e.ai_dates.length)) return '';
+      var datesHtml = '';
+      if (e.ai_dates && e.ai_dates.length) {
+        datesHtml = '<div class="ai-summary-dates">' +
+          e.ai_dates.map(function (d) {
+            var iso = d && d.iso ? d.iso : '';
+            var label = iso ? fmtDate(iso) : '';
+            var cls = d && d.low_confidence ? ' class="low-conf"' : '';
+            var hint = d && d.low_confidence ? ' (approximate)' : '';
+            return '<span' + cls + '><i class="far fa-clock"></i> ' + esc(label) + esc(hint) + '</span>';
+          }).join(' &bull; ') +
+          '</div>';
+      }
+      return '<div class="ai-summary">' +
+        '<i class="fas fa-wand-magic-sparkles"></i>' +
+        '<div class="ai-summary-body">' +
+          '<div class="ai-summary-label">AI summary</div>' +
+          (e.ai_summary ? '<div class="ai-summary-text">' + esc(e.ai_summary) + '</div>' : '') +
+          datesHtml +
+        '</div>' +
+      '</div>';
+    }
+
+    function renderTimeline() {
+      if (!state.entries.length) {
+        el.timeline.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="emo">\uD83D\uDCDD</div>' +
+            '<p>This folder is empty. Write something below when you\u2019re ready. You can always come back.</p>' +
+          '</div>';
+        return;
+      }
+      el.timeline.innerHTML = state.entries.map(function (e) {
+        var timeLabel = '';
+        if (state.sort === 'event') {
+          timeLabel = e.event_at ? fmtDate(e.event_at) : 'No event date';
+        } else {
+          timeLabel = fmtDate(e.logged_at);
+        }
+        var body = e.content || '';
+        var collapse = body.length > 320;
+        var bodyHtml = collapse
+          ? '<div class="entry-body collapsed" id="b' + e.id + '">' + esc(body) + '</div>' +
+            '<button class="entry-expand" onclick="expandEntry(\'' + e.id + '\', this)">Show more</button>'
+          : '<div class="entry-body">' + esc(body) + '</div>';
+        var tagHtml = (e.tags || []).map(function (t) {
+          return '<span class="tag-chip">' + esc(t) + '</span>';
+        }).join('');
+        return '<div class="entry-card" id="entry-' + e.id + '">' +
+          '<div class="entry-head">' +
+            '<div class="entry-icon"><i class="fas ' + typeIcon(e.entry_type) + '"></i></div>' +
+            '<span class="entry-type">' + esc(e.entry_type) + '</span>' +
+            '<span class="entry-time">' + esc(timeLabel) + '</span>' +
+          '</div>' +
+          bodyHtml +
+          renderAiBlock(e) +
+          '<div class="entry-footer">' +
+            tagHtml +
+            '<div class="entry-actions">' +
+              '<button class="entry-action-btn danger" onclick="deleteEntry(\'' + e.id + '\')" title="Delete"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function loadAll() {
+      Promise.all([
+        fetch('/api/vault/folders/' + encodeURIComponent(folderId), { headers: headers() }).then(function (r) { return r.json(); }),
+        fetch('/api/vault/entries?folder_id=' + encodeURIComponent(folderId) + '&sort=' + state.sort + '&dir=desc', { headers: headers() }).then(function (r) { return r.json(); }),
+      ]).then(function (results) {
+        if (!results[0] || !results[0].folder) throw new Error(results[0].error || 'Folder not found');
+        state.folder = results[0].folder;
+        state.entries = (results[1] && results[1].entries) || [];
+        document.title = state.folder.title + ' — Safety Vault';
+        renderHeader();
+        renderTimeline();
+      }).catch(function (err) {
+        el.header.innerHTML = '<div class="empty-state"><p>' + esc(err.message) + '</p><a class="btn-primary" href="/vault"><i class="fas fa-arrow-left"></i> Back to Vault</a></div>';
+      });
+    }
+
+    function reloadEntries() {
+      fetch('/api/vault/entries?folder_id=' + encodeURIComponent(folderId) + '&sort=' + state.sort + '&dir=desc', { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          state.entries = (data && data.entries) || [];
+          renderTimeline();
+        });
+    }
+
+    // Public handlers
+    window.setSort = function (s) {
+      state.sort = (s === 'logged') ? 'logged' : 'event';
+      el.sortEvent.classList.toggle('active', state.sort === 'event');
+      el.sortLogged.classList.toggle('active', state.sort === 'logged');
+      reloadEntries();
+    };
+
+    window.autoGrow = function (t) {
+      t.style.height = 'auto';
+      t.style.height = Math.min(160, t.scrollHeight) + 'px';
+    };
+    window.enableSend = function () {
+      el.send.disabled = el.input.value.trim().length === 0;
+    };
+
+    window.sendNote = function () {
+      var text = el.input.value.trim();
+      if (!text) return;
+      el.send.disabled = true;
+      fetch('/api/vault/entries', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ folder_id: parseInt(folderId, 10), entry_type: 'note', content: text })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Could not save');
+          el.input.value = '';
+          el.input.style.height = 'auto';
+          if (window.SafeTeaNative && window.SafeTeaNative.haptics) window.SafeTeaNative.haptics.impact('Light');
+          reloadEntries();
+          // If the folder has AI enabled, quietly organize in the background.
+          // Failures don't bother the user — the original content is saved.
+          if (state.folder && state.folder.ai_enabled && r.data && r.data.entry && r.data.entry.id) {
+            organizeEntry(r.data.entry.id);
+          }
+        })
+        .catch(function (err) { toast(err.message || 'Save failed'); })
+        .finally(function () { window.enableSend(); });
+    };
+
+    function organizeEntry(entryId) {
+      fetch('/api/vault/ai/organize', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ entry_id: parseInt(entryId, 10) })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          // Silent — the summary will appear on the next timeline refresh.
+          if (r.ok) reloadEntries();
+        })
+        .catch(function () { /* swallow; original entry is unaffected */ });
+    }
+
+    window.expandEntry = function (id, btn) {
+      var body = document.getElementById('b' + id);
+      if (body) body.classList.remove('collapsed');
+      if (btn) btn.remove();
+    };
+
+    window.deleteEntry = function (id) {
+      if (!confirm('Delete this entry? It can\'t be undone.')) return;
+      fetch('/api/vault/entries/' + encodeURIComponent(id), { method: 'DELETE', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Delete failed');
+          reloadEntries();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    window.toggleFolderMenu = function (e) {
+      if (e) e.stopPropagation();
+      var m = document.getElementById('folder-menu');
+      if (m) m.classList.toggle('open');
+    };
+    document.addEventListener('click', function () {
+      var m = document.getElementById('folder-menu');
+      if (m) m.classList.remove('open');
+    });
+
+    window.toggleAi = function () {
+      var next = !state.folder.ai_enabled;
+      fetch('/api/vault/folders/' + encodeURIComponent(folderId), {
+        method: 'PATCH',
+        headers: headers(),
+        body: JSON.stringify({ ai_enabled: next })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Update failed');
+          state.folder.ai_enabled = next;
+          renderHeader();
+          toast(next ? 'AI assistance on for this folder' : 'AI assistance off');
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    window.deleteFolder = function () {
+      if (!confirm('Delete this entire folder and every entry in it? This archives it and you won\'t see it in the list anymore.')) return;
+      fetch('/api/vault/folders/' + encodeURIComponent(folderId), { method: 'DELETE', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Delete failed');
+          window.location.href = '/vault';
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    window.quickExit = function () {
+      document.title = '';
+      window.location.replace('https://www.google.com/search?q=weather');
+    };
+
+    // Probe the assistant endpoint on load. If server returns 503 (feature
+    // flag off), the toggle stays hidden. This keeps the UI dark until the
+    // practitioner review is logged and the flag flips.
+    fetch('/api/vault/assistant/chat?folder_id=' + encodeURIComponent(folderId), { headers: headers() })
+      .then(function (r) {
+        if (r.ok) {
+          var btn = document.getElementById('assistant-toggle-btn');
+          if (btn && state.folder && state.folder.ai_enabled) btn.style.display = 'inline-flex';
+        }
+      })
+      .catch(function () {});
+
+    var activityLoaded = false;
+    window.toggleActivity = function () {
+      var box = document.getElementById('activity-log');
+      var opening = !box.classList.contains('open');
+      box.classList.toggle('open');
+      if (opening && !activityLoaded) loadActivity();
+    };
+
+    function loadActivity() {
+      var box = document.getElementById('activity-log');
+      box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px"><i class="fas fa-spinner fa-spin"></i> Loading activity…</div>';
+      fetch('/api/vault/audit?folder_id=' + encodeURIComponent(folderId) + '&limit=100', { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          activityLoaded = true;
+          var events = (data && data.events) || [];
+          if (!events.length) {
+            box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px">No activity yet.</div>';
+            return;
+          }
+          box.innerHTML = events.map(function (e) {
+            return '<div class="activity-row">' +
+              '<div class="activity-icon"><i class="' + iconFor(e.action) + '"></i></div>' +
+              '<div class="activity-text">' + esc(labelFor(e)) + '</div>' +
+              '<div class="activity-time">' + fmtDate(e.created_at) + '</div>' +
+            '</div>';
+          }).join('');
+        })
+        .catch(function () {
+          box.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:10px">Could not load activity.</div>';
+        });
+    }
+
+    function iconFor(action) {
+      if (action.indexOf('entry') === 0) return 'fas fa-pen-to-square';
+      if (action.indexOf('folder') === 0) return 'fas fa-folder';
+      if (action.indexOf('file') === 0) return 'fas fa-paperclip';
+      if (action.indexOf('access_request') === 0) return 'fas fa-envelope-open-text';
+      if (action.indexOf('export') === 0) return 'fas fa-file-export';
+      if (action.indexOf('ai') === 0) return 'fas fa-wand-magic-sparkles';
+      if (action.indexOf('admin') === 0) return 'fas fa-shield-halved';
+      if (action.indexOf('contact') === 0) return 'fas fa-user-group';
+      return 'fas fa-circle';
+    }
+    function labelFor(e) {
+      var map = {
+        'folder.create': 'Folder created',
+        'folder.view': 'You opened the folder',
+        'folder.update': 'Folder updated',
+        'folder.delete': 'Folder archived',
+        'folder.archive': 'Folder archived',
+        'folder.legal_hold': 'Legal hold changed',
+        'entry.create': 'Entry added',
+        'entry.view': 'Entry opened',
+        'entry.update': 'Entry edited',
+        'entry.delete': 'Entry deleted',
+        'file.upload': 'File attached',
+        'file.download': 'File downloaded',
+        'file.delete': 'File removed',
+        'access_request.submit': 'A trusted contact requested access',
+        'access_request.approve': 'You approved an access request',
+        'access_request.deny': 'You denied an access request',
+        'access_request.expire': 'An access request expired',
+        'access_request.release': 'Folder auto-released to a contact',
+        'export.generate': 'Export generated',
+        'export.download': 'Shared export was downloaded',
+        'export.purge': 'Export was removed',
+        'ai.organize': 'AI summarized an entry',
+        'admin.break_glass.request': 'Admin requested privileged access',
+        'admin.break_glass.access': 'Admin accessed privileged data',
+      };
+      return map[e.action] || e.action;
+    }
+
+    // Journaling Assistant panel
+    var asstLoaded = false;
+    window.toggleAssistant = function () {
+      var panel = document.getElementById('assistant-panel');
+      var opening = !panel.classList.contains('open');
+      panel.classList.toggle('open');
+      if (opening && !asstLoaded) loadAsst();
+    };
+    function loadAsst() {
+      var box = document.getElementById('asst-messages');
+      box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+      fetch('/api/vault/assistant/chat?folder_id=' + encodeURIComponent(folderId), { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          asstLoaded = true;
+          renderAsstMessages((data && data.messages) || []);
+        })
+        .catch(function () {
+          box.innerHTML = '<div style="color:#e74c3c;font-size:12px;padding:10px">Assistant is unavailable.</div>';
+        });
+    }
+    function renderAsstMessages(list) {
+      var box = document.getElementById('asst-messages');
+      if (!list.length) {
+        box.innerHTML = '<div style="color:#8080A0;font-size:12px;padding:10px;text-align:center">Say something when you\'re ready. I\'ll be here.</div>';
+        return;
+      }
+      box.innerHTML = list.map(function (m) {
+        return '<div class="asst-msg ' + (m.role === 'user' ? 'user' : 'assistant') + '">' + esc(m.content) + '</div>';
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+    window.asstAutoGrow = function (t) { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; };
+    window.asstEnableSend = function () {
+      document.getElementById('asst-send').disabled = document.getElementById('asst-input').value.trim().length === 0;
+    };
+    window.asstSend = function () {
+      var input = document.getElementById('asst-input');
+      var text = input.value.trim();
+      if (!text) return;
+      var sendBtn = document.getElementById('asst-send');
+      sendBtn.disabled = true;
+      // Optimistic append
+      var box = document.getElementById('asst-messages');
+      box.innerHTML += '<div class="asst-msg user">' + esc(text) + '</div>' +
+        '<div class="asst-msg assistant" id="asst-thinking"><i class="fas fa-circle-notch fa-spin" style="color:#b27de0"></i> …</div>';
+      box.scrollTop = box.scrollHeight;
+      input.value = ''; input.style.height = 'auto';
+      fetch('/api/vault/assistant/chat', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ folder_id: parseInt(folderId, 10), message: text })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          var thinking = document.getElementById('asst-thinking');
+          if (thinking) thinking.remove();
+          if (!r.ok) throw new Error(r.data && r.data.error || 'No reply');
+          box.innerHTML += '<div class="asst-msg assistant">' + esc(r.data.reply || '') + '</div>';
+          box.scrollTop = box.scrollHeight;
+        })
+        .catch(function (err) {
+          var thinking = document.getElementById('asst-thinking');
+          if (thinking) thinking.remove();
+          toast(err.message || 'Send failed');
+        })
+        .finally(function () { window.asstEnableSend(); });
+    };
+
+    loadAll();
+  })();
+  </script>
+</body>
+</html>

@@ -13,6 +13,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "@vercel/blob": "^0.27.0",
     "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -23,6 +25,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "openai": "^6.33.0",
+    "pdfkit": "^0.15.0",
     "pg": "^8.13.0",
     "stripe": "^14.0.0",
     "twilio": "^5.13.1",

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <meta name="theme-color" content="#E8A0B5">
+  <title>Shared safety record — SafeTea</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: #1A1A2E; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    header .brand { font-size: 17px; font-weight: 700; color: #E8A0B5; }
+    header .sub { font-size: 12px; color: #8080A0; margin-left: 8px; }
+    header .actions { display: flex; gap: 8px; }
+    .btn { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+    .btn.primary { background: linear-gradient(135deg, #E8A0B5, #D4768E); border-color: transparent; }
+    .btn.ghost { color: #B0B0C8; }
+
+    .banner { padding: 12px 18px; background: rgba(232,160,181,0.08); border-bottom: 1px solid rgba(232,160,181,0.15); font-size: 13px; color: #F0D0C0; line-height: 1.5; }
+    .banner strong { color: #E8A0B5; }
+
+    main { flex: 1; display: flex; flex-direction: column; }
+    iframe#pdf { flex: 1; width: 100%; border: none; background: #22223A; min-height: calc(100vh - 140px); }
+
+    .fallback { padding: 60px 20px; text-align: center; }
+    .fallback .emo { font-size: 40px; margin-bottom: 10px; }
+    .fallback h1 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .fallback p { color: #B0B0C8; font-size: 14px; max-width: 420px; margin: 0 auto 18px; line-height: 1.6; }
+
+    footer { padding: 10px 18px; background: #1A1A2E; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #666; text-align: center; }
+
+    @media (max-width: 600px) {
+      header { flex-wrap: wrap; gap: 8px; }
+      header .sub { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <span class="brand">SafeTea</span>
+      <span class="sub">Shared safety record · read-only</span>
+    </div>
+    <div class="actions">
+      <a id="download-btn" class="btn primary" href="#" download><i class="fas fa-download"></i> Download</a>
+      <button class="btn ghost" onclick="quickExit()" title="Close and go to a neutral page"><i class="fas fa-door-open"></i> Exit</button>
+    </div>
+  </header>
+
+  <div class="banner">
+    <strong>This is a shared safety record.</strong> It was generated once by the SafeTea Vault owner for your eyes. The link is temporary and private to you. Please do not forward it.
+  </div>
+
+  <main id="main">
+    <div class="fallback" id="loading">
+      <div class="emo"><i class="fas fa-circle-notch fa-spin" style="color:#E8A0B5"></i></div>
+      <p>Preparing the shared record…</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>SafeTea Safety Vault · timestamps may reflect logged and/or user-supplied times · AI summaries (if any) are organizational aids only and do not constitute legal evidence.</p>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('token');
+    if (!token) {
+      showError('This link is incomplete. Open the link directly from the email you received.');
+      return;
+    }
+
+    var shareEndpoint = '/api/share/' + encodeURIComponent(token);
+
+    // First, issue a HEAD-ish GET to see if the link is valid. The endpoint
+    // 302-redirects to the Blob URL on success; we follow it inline in the
+    // iframe. If it returns 404 / 410 / 429, show a friendly message.
+    fetch(shareEndpoint, { method: 'GET', redirect: 'manual' })
+      .then(function (r) {
+        // Manual redirect mode: r.type === 'opaqueredirect' means the server
+        // replied with a 30x. That's success from our POV.
+        if (r.type === 'opaqueredirect') { showViewer(); return; }
+        if (r.ok) { showViewer(); return; }
+        return r.json().then(function (j) {
+          if (r.status === 410) showError(j.error || 'This link has expired.');
+          else if (r.status === 404) showError('This link is not valid. It may already have been used or revoked.');
+          else if (r.status === 429) showError('Too many requests in a short time. Please wait a minute and try again.');
+          else showError(j.error || 'Could not load the shared record.');
+        });
+      })
+      .catch(function () { showError('Could not reach SafeTea. Check your connection and try again.'); });
+
+    function showViewer() {
+      var main = document.getElementById('main');
+      main.innerHTML = '<iframe id="pdf" src="' + shareEndpoint + '" title="Shared safety record"></iframe>';
+      var dl = document.getElementById('download-btn');
+      if (dl) dl.href = shareEndpoint;
+    }
+
+    function showError(msg) {
+      var main = document.getElementById('main');
+      main.innerHTML =
+        '<div class="fallback">' +
+          '<div class="emo">\uD83D\uDD12</div>' +
+          '<h1>The link is unavailable</h1>' +
+          '<p>' + escape(msg) + '</p>' +
+          '<p style="font-size:12px;color:#8080A0">If you believe this is an error, reach out to the person who shared this with you and ask them to generate a new link.</p>' +
+        '</div>';
+      var dl = document.getElementById('download-btn');
+      if (dl) dl.style.display = 'none';
+    }
+
+    function escape(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+    }
+
+    window.quickExit = function () {
+      document.title = '';
+      window.location.replace('https://www.google.com/search?q=weather');
+    };
+  })();
+  </script>
+</body>
+</html>

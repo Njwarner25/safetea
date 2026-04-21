@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <meta name="application-name" content="SafeTea">
+  <meta name="format-detection" content="telephone=no">
+  <title>Safety Vault — SafeTea</title>
+  <meta name="description" content="Your private, encrypted safety journal. Document, organize, and protect what matters — on your terms.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <script src="/capacitor-bridge.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px 20px 100px; }
+
+    .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+    .quick-exit { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #B0B0C8; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .quick-exit:hover { border-color: rgba(232,160,181,0.4); color: #fff; }
+
+    .hero { text-align: center; margin: 8px 0 24px; }
+    .hero-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 72px; height: 72px; background: rgba(232,160,181,0.12);
+      border: 2px solid rgba(232,160,181,0.25); border-radius: 20px;
+      margin-bottom: 14px;
+    }
+    .hero-icon i { font-size: 28px; color: #E8A0B5; }
+    .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.4px; }
+    .hero p { color: #B0B0C8; font-size: 14px; max-width: 440px; margin: 0 auto; line-height: 1.6; }
+
+    .privacy-note {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(46, 204, 113, 0.06); border: 1px solid rgba(46, 204, 113, 0.18);
+      border-radius: 12px; padding: 12px 14px; margin: 20px 0;
+      color: #C8E8D0; font-size: 12px; line-height: 1.5;
+    }
+    .privacy-note i { color: #2ecc71; flex-shrink: 0; margin-top: 2px; }
+
+    .request-alert {
+      background: linear-gradient(135deg, rgba(241,196,15,0.12), rgba(231,76,60,0.06));
+      border: 1px solid rgba(241,196,15,0.3); border-radius: 14px;
+      padding: 14px 16px; margin: 20px 0; display: none;
+    }
+    .request-alert.visible { display: block; }
+    .request-alert-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .request-alert-header i { color: #f1c40f; }
+    .request-alert-header h3 { font-size: 14px; font-weight: 700; color: #fff; }
+    .request-row { background: rgba(0,0,0,0.15); border-radius: 10px; padding: 12px; margin-top: 8px; }
+    .request-row-who { font-size: 13px; font-weight: 600; color: #fff; }
+    .request-row-meta { font-size: 12px; color: #B0B0C8; margin-top: 2px; }
+    .request-row-reason { font-size: 13px; color: #F0D0C0; margin-top: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-left: 2px solid #E8A0B5; border-radius: 0 8px 8px 0; line-height: 1.5; }
+    .request-row-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-approve { background: #2ecc71; color: #0D0D1A; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-deny { background: transparent; color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    .contacts-link {
+      display: flex; align-items: center; gap: 10px;
+      color: #E8A0B5; font-size: 13px; font-weight: 600;
+      text-decoration: none; padding: 10px 14px;
+      background: rgba(232,160,181,0.05); border: 1px solid rgba(232,160,181,0.15);
+      border-radius: 10px; margin-top: 12px;
+    }
+    .contacts-link:hover { background: rgba(232,160,181,0.1); }
+    .contacts-link .label { flex: 1; }
+    .contacts-link i { font-size: 12px; }
+
+    .folders-header { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 12px; }
+    .folders-header h2 { font-size: 16px; font-weight: 700; color: #fff; }
+    .folders-header .count { color: #8080A0; font-size: 13px; font-weight: 500; }
+
+    .folders-grid { display: flex; flex-direction: column; gap: 10px; }
+    .folder-card {
+      display: flex; align-items: center; gap: 14px;
+      background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 16px 18px; cursor: pointer;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .folder-card:hover { border-color: rgba(232,160,181,0.3); transform: translateY(-1px); }
+    .folder-icon { min-width: 44px; height: 44px; border-radius: 12px; background: rgba(232,160,181,0.12); display: flex; align-items: center; justify-content: center; }
+    .folder-icon i { color: #E8A0B5; font-size: 18px; }
+    .folder-body { flex: 1; min-width: 0; }
+    .folder-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .folder-meta { font-size: 12px; color: #8080A0; }
+    .folder-meta .hold { color: #e74c3c; margin-left: 6px; }
+    .folder-chev { color: #8080A0; font-size: 13px; }
+
+    .empty-state {
+      text-align: center; padding: 40px 24px;
+      background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 14px;
+    }
+    .empty-state .emo { font-size: 34px; margin-bottom: 10px; opacity: 0.7; }
+    .empty-state p { color: #B0B0C8; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff;
+      border: none; padding: 13px 22px; border-radius: 12px;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: transform 0.12s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .fab {
+      position: fixed; bottom: calc(24px + env(safe-area-inset-bottom));
+      right: 24px; width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff;
+      border: none; font-size: 22px; cursor: pointer; z-index: 50;
+      box-shadow: 0 6px 24px rgba(232,160,181,0.35);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fab:active { transform: scale(0.95); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5, 5, 15, 0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1A1A2E; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px; padding: 24px; max-width: 460px; width: 100%;
+      max-height: 85vh; overflow-y: auto;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal p.sub { color: #B0B0C8; font-size: 13px; margin-bottom: 18px; line-height: 1.5; }
+    .field-label { display: block; font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin: 14px 0 6px; }
+    .field-input, .field-textarea {
+      width: 100%; background: #0D0D1A; color: #fff;
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+      padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none;
+    }
+    .field-textarea { resize: vertical; min-height: 80px; }
+    .field-input:focus, .field-textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    .btn-secondary {
+      background: transparent; border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; padding: 11px 18px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: #22223A; border: 1px solid rgba(255,255,255,0.08);
+      color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px;
+      z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .toast.show { opacity: 1; }
+
+    .loading { text-align: center; padding: 40px; color: #8080A0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <a href="/dashboard" class="back-link"><i class="fas fa-chevron-left"></i> Back</a>
+      <button class="quick-exit" onclick="quickExit()" title="Close the Vault and go to a neutral page">
+        <i class="fas fa-door-open"></i> Quick exit
+      </button>
+    </div>
+
+    <div class="hero">
+      <div class="hero-icon"><i class="fas fa-shield-heart"></i></div>
+      <h1>Your Safety Vault</h1>
+      <p>Private safety journaling. Encrypted. Yours. You decide what to keep, what to share, and when.</p>
+    </div>
+
+    <div class="privacy-note">
+      <i class="fas fa-lock"></i>
+      <span>Everything in your Vault is end-to-end encrypted with your private key. Even SafeTea staff cannot read your notes without going through a logged break-glass process — which notifies you immediately.</span>
+    </div>
+
+    <!-- Pending access requests (only shown if there are any) -->
+    <div id="request-alert" class="request-alert" aria-live="polite">
+      <div class="request-alert-header">
+        <i class="fas fa-bell"></i>
+        <h3 id="request-alert-title">Someone is requesting access</h3>
+      </div>
+      <div id="request-list"></div>
+    </div>
+
+    <a id="contacts-link" href="/vault-contacts" class="contacts-link">
+      <i class="fas fa-user-group"></i>
+      <span class="label">Manage trusted contacts</span>
+      <i class="fas fa-chevron-right"></i>
+    </a>
+
+    <div id="folders-header" class="folders-header">
+      <h2>Your folders</h2>
+      <span class="count" id="folder-count">&nbsp;</span>
+    </div>
+
+    <div id="folders" class="folders-grid">
+      <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    </div>
+  </div>
+
+  <button id="new-folder-btn" class="fab" onclick="openCreateModal()" title="New folder"><i class="fas fa-plus"></i></button>
+
+  <!-- New folder modal -->
+  <div id="create-modal" class="modal-overlay" onclick="if(event.target===this)closeCreateModal()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>New Vault folder</h3>
+      <p class="sub">A folder holds your notes, photos, and documents about one topic. You can always rename or delete it.</p>
+      <label class="field-label" for="new-title">Folder name</label>
+      <input id="new-title" class="field-input" type="text" maxlength="200" placeholder="e.g., My notes" autocomplete="off">
+      <label class="field-label" for="new-desc">Description <span style="text-transform:none;letter-spacing:0;color:#5a5a7a;font-weight:500">(optional)</span></label>
+      <textarea id="new-desc" class="field-textarea" maxlength="2000" placeholder="Anything you want to remember about this folder. Only you see this."></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
+        <button id="create-btn" class="btn-primary" onclick="createFolder()"><i class="fas fa-check"></i> Create folder</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var TOKEN_KEY = 'safetea_token';
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) { window.location.href = '/login'; return; }
+
+    var el = {
+      folders: document.getElementById('folders'),
+      count: document.getElementById('folder-count'),
+      toast: document.getElementById('toast'),
+      modal: document.getElementById('create-modal'),
+      title: document.getElementById('new-title'),
+      desc: document.getElementById('new-desc'),
+      createBtn: document.getElementById('create-btn'),
+    };
+
+    function headers() {
+      return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    }
+
+    function toast(msg) {
+      el.toast.textContent = msg;
+      el.toast.classList.add('show');
+      setTimeout(function () { el.toast.classList.remove('show'); }, 2600);
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      var sec = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (sec < 60) return 'just now';
+      if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+      if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+      if (sec < 604800) return Math.floor(sec / 86400) + 'd ago';
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function renderFolders(list) {
+      if (!list.length) {
+        el.folders.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="emo">\uD83D\uDCD6</div>' +
+            '<p>No folders yet. Start a new one when you\u2019re ready. It\u2019s your space — take your time.</p>' +
+            '<button class="btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> Create your first folder</button>' +
+          '</div>';
+        el.count.textContent = '';
+        return;
+      }
+      el.count.textContent = list.length + (list.length === 1 ? ' folder' : ' folders');
+      el.folders.innerHTML = list.map(function (f) {
+        var entry = f.entry_count || 0;
+        var file = f.file_count || 0;
+        var pieces = [];
+        if (entry) pieces.push(entry + (entry === 1 ? ' entry' : ' entries'));
+        if (file) pieces.push(file + (file === 1 ? ' file' : ' files'));
+        pieces.push('Updated ' + timeAgo(f.updated_at));
+        var holdTag = f.legal_hold ? ' <span class="hold"><i class="fas fa-gavel"></i> Legal hold</span>' : '';
+        return '<a class="folder-card" href="/vault-folder?id=' + encodeURIComponent(f.id) + '">' +
+          '<div class="folder-icon"><i class="fas ' + (f.ai_enabled ? 'fa-wand-magic-sparkles' : 'fa-folder') + '"></i></div>' +
+          '<div class="folder-body">' +
+            '<div class="folder-title">' + esc(f.title || 'Untitled') + holdTag + '</div>' +
+            '<div class="folder-meta">' + pieces.join(' \u2022 ') + '</div>' +
+          '</div>' +
+          '<div class="folder-chev"><i class="fas fa-chevron-right"></i></div>' +
+        '</a>';
+      }).join('');
+    }
+
+    function renderUpsell() {
+      el.folders.innerHTML =
+        '<div class="empty-state" style="max-width:520px;margin:0 auto">' +
+          '<div style="width:72px;height:72px;margin:0 auto 16px;background:linear-gradient(135deg,rgba(232,160,181,0.18),rgba(155,89,182,0.12));border-radius:20px;display:flex;align-items:center;justify-content:center">' +
+            '<i class="fas fa-shield-heart" style="font-size:32px;color:#E8A0B5"></i>' +
+          '</div>' +
+          '<h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:8px">Safety Vault is a SafeTea+ feature</h3>' +
+          '<p style="color:#8080A0;font-size:14px;line-height:1.6;margin:0 auto 20px;max-width:420px">Encrypted journaling, trusted-contact release, AI organization, and activity-log audit. Upgrade to start documenting what matters — privately.</p>' +
+          '<a class="btn-primary" href="/dashboard#subscription" style="display:inline-flex;align-items:center;gap:8px"><i class="fas fa-crown"></i> Upgrade to SafeTea+</a>' +
+          '<div style="color:#8080A0;font-size:12px;margin-top:12px">$7.99/month or $66.99/year (save 30%)</div>' +
+        '</div>';
+      var reqAlert = document.getElementById('request-alert');
+      if (reqAlert) reqAlert.classList.remove('visible');
+      var newBtn = document.getElementById('new-folder-btn');
+      if (newBtn) newBtn.style.display = 'none';
+      var contactsLink = document.getElementById('contacts-link');
+      if (contactsLink) contactsLink.style.display = 'none';
+      var foldersHdr = document.getElementById('folders-header');
+      if (foldersHdr) foldersHdr.style.display = 'none';
+    }
+
+    function loadFolders() {
+      fetch('/api/vault/folders', { headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); })
+        .then(function (r) {
+          if (r.status === 403 && r.data && r.data.upgrade) {
+            renderUpsell();
+            return;
+          }
+          if (r.status === 503) {
+            el.folders.innerHTML = '<div class="empty-state"><p>The Vault is being prepared. Please try again in a moment.</p></div>';
+            return;
+          }
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Failed to load');
+          renderFolders(r.data.folders || []);
+        })
+        .catch(function (err) {
+          el.folders.innerHTML = '<div class="empty-state"><p>Could not load your Vault: ' + esc(err.message) + '</p><button class="btn-primary" onclick="location.reload()">Retry</button></div>';
+        });
+    }
+
+    // Pending access requests inbox (shows only if count > 0)
+    function loadRequests() {
+      var alertEl = document.getElementById('request-alert');
+      var listEl = document.getElementById('request-list');
+      var titleEl = document.getElementById('request-alert-title');
+      fetch('/api/vault/access-requests?status=pending', { headers: headers() })
+        .then(function (r) { return r.ok ? r.json() : { requests: [] }; })
+        .then(function (data) {
+          var reqs = (data && data.requests) || [];
+          if (!reqs.length) { alertEl.classList.remove('visible'); return; }
+          titleEl.textContent = reqs.length === 1
+            ? 'Someone is requesting access'
+            : reqs.length + ' people are requesting access';
+          alertEl.classList.add('visible');
+          listEl.innerHTML = reqs.map(function (r) {
+            var endsAt = new Date(r.countdown_ends_at);
+            var hrs = Math.max(0, Math.round((endsAt.getTime() - Date.now()) / 3600000));
+            var who = r.contact_name || r.contact_email || 'A trusted contact';
+            return '<div class="request-row">' +
+              '<div class="request-row-who">' + esc(who) + '</div>' +
+              '<div class="request-row-meta">' +
+                'Folder: ' + esc(r.folder_title || '(folder)') +
+                ' \u2022 ' + (hrs <= 0 ? 'Countdown ended' : hrs + ' hours left to respond') +
+              '</div>' +
+              '<div class="request-row-reason">' + esc(r.reason || '(no reason given)') + '</div>' +
+              '<div class="request-row-actions">' +
+                '<button class="btn-approve" onclick="approveRequest(\'' + r.id + '\')"><i class="fas fa-check"></i> Approve</button>' +
+                '<button class="btn-deny" onclick="denyRequest(\'' + r.id + '\')"><i class="fas fa-xmark"></i> Deny</button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        })
+        .catch(function () {});
+    }
+
+    window.approveRequest = function (id) {
+      if (!confirm('Approve this request? The contact will receive an email with a link. (V1 note: the actual export link is prepared in a follow-up step.)')) return;
+      fetch('/api/vault/access-requests/' + encodeURIComponent(id) + '/approve', { method: 'POST', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Approve failed');
+          toast('Approved'); loadRequests();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+    window.denyRequest = function (id) {
+      if (!confirm('Deny this request? The contact will receive a neutral "not granted" email.')) return;
+      fetch('/api/vault/access-requests/' + encodeURIComponent(id) + '/deny', { method: 'POST', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Deny failed');
+          toast('Denied'); loadRequests();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    // Public
+    window.openCreateModal = function () {
+      el.title.value = '';
+      el.desc.value = '';
+      el.modal.classList.add('open');
+      setTimeout(function () { el.title.focus(); }, 30);
+    };
+    window.closeCreateModal = function () {
+      el.modal.classList.remove('open');
+    };
+    window.createFolder = function () {
+      var title = el.title.value.trim();
+      if (!title) { toast('Give it a name first'); el.title.focus(); return; }
+      el.createBtn.disabled = true;
+      el.createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating…';
+      fetch('/api/vault/folders', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ title: title, description: el.desc.value.trim() })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Create failed');
+          closeCreateModal();
+          toast('Folder created');
+          setTimeout(function () {
+            window.location.href = '/vault-folder?id=' + encodeURIComponent(r.data.folder.id);
+          }, 400);
+        })
+        .catch(function (err) { toast(err.message || 'Could not create'); })
+        .finally(function () {
+          el.createBtn.disabled = false;
+          el.createBtn.innerHTML = '<i class="fas fa-check"></i> Create folder';
+        });
+    };
+    window.quickExit = function () {
+      // Neutral landing page; clears any "Safety Vault" tab title trail
+      document.title = '';
+      window.location.replace('https://www.google.com/search?q=weather');
+    };
+
+    loadFolders();
+    loadRequests();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#E8A0B5">
+  <title>Request access — SafeTea</title>
+  <meta name="description" content="SafeTea Vault portal for named trusted contacts.">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 480px; margin: 0 auto; padding: 40px 20px 60px; }
+    .brand { text-align: center; margin-bottom: 24px; }
+    .brand span { font-size: 22px; font-weight: 800; color: #E8A0B5; letter-spacing: -0.3px; }
+    .card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 28px 24px; }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+    .sub { color: #B0B0C8; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .field-label { display: block; font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin: 14px 0 6px; }
+    .field-input, .field-select, .field-textarea { width: 100%; background: #0D0D1A; color: #fff; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none; }
+    .field-textarea { resize: vertical; min-height: 110px; }
+    .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .btn-primary { display: block; width: 100%; background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 20px; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .err { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.25); color: #ffb5a8; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-top: 12px; }
+    .ok { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); color: #a6e0b8; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-top: 12px; }
+    .crisis { background: rgba(231,76,60,0.06); border: 1px solid rgba(231,76,60,0.2); color: #F0D0C0; padding: 14px 16px; border-radius: 12px; font-size: 13px; line-height: 1.6; margin-top: 20px; }
+    .crisis strong { color: #e74c3c; }
+    .footer { text-align: center; margin-top: 28px; color: #666; font-size: 11px; }
+    .step-hidden { display: none; }
+    .otp-field { letter-spacing: 6px; text-align: center; font-size: 20px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand"><span>SafeTea</span> <span style="color:#8080A0;font-weight:500">&middot; Vault portal</span></div>
+
+    <!-- Step 1: identify -->
+    <div id="step-identify" class="card">
+      <h1>You were named a trusted contact</h1>
+      <p class="sub">Enter the email address the SafeTea member used when they added you. We'll send you a one-time code to continue.</p>
+      <label class="field-label" for="email">Your email</label>
+      <input id="email" class="field-input" type="email" placeholder="name@example.com" autocomplete="email">
+      <div id="err-identify" class="err" style="display:none"></div>
+      <button id="btn-identify" class="btn-primary" onclick="sendCode()">Send me a code</button>
+
+      <div class="crisis">
+        <strong>If someone is in immediate danger,</strong> call 911 (US). For abuse-specific help: National Domestic Violence Hotline 1-800-799-7233 (24/7, free, confidential). For sexual assault: RAINN 1-800-656-4673.
+      </div>
+    </div>
+
+    <!-- Step 2: enter OTP -->
+    <div id="step-otp" class="card step-hidden">
+      <h1>Enter your code</h1>
+      <p class="sub">We sent a 6-digit code to your email. It's good for 10 minutes.</p>
+      <label class="field-label" for="code">Verification code</label>
+      <input id="code" class="field-input otp-field" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code">
+      <div id="err-otp" class="err" style="display:none"></div>
+      <button id="btn-otp" class="btn-primary" onclick="verifyCode()">Verify</button>
+      <p class="sub" style="text-align:center;margin-top:12px;margin-bottom:0"><a href="#" onclick="event.preventDefault();backToIdentify()" style="color:#E8A0B5;text-decoration:none">Use a different email</a></p>
+    </div>
+
+    <!-- Step 3: pick folder + reason -->
+    <div id="step-request" class="card step-hidden">
+      <h1>What do you need to request?</h1>
+      <p class="sub">Only folders they pre-authorized are shown. Your request goes to them first — they decide whether to approve.</p>
+      <label class="field-label" for="folder">Folder</label>
+      <select id="folder" class="field-select"></select>
+      <label class="field-label" for="reason">Why you're requesting access</label>
+      <textarea id="reason" class="field-textarea" maxlength="2000" placeholder="Share what's happening, kindly and honestly. They'll see this."></textarea>
+      <div id="err-request" class="err" style="display:none"></div>
+      <button id="btn-request" class="btn-primary" onclick="submitRequest()">Submit request</button>
+    </div>
+
+    <!-- Step 4: confirmation -->
+    <div id="step-done" class="card step-hidden">
+      <h1>Your request was sent</h1>
+      <p class="sub">They've been notified and have time to respond. You'll receive an email either way.</p>
+      <div id="done-countdown" class="ok"></div>
+      <div class="crisis" style="margin-top:20px">
+        <strong>If you believe someone is in danger right now,</strong> do not wait for this process. Call 911 (US) or your local emergency number. For help with safety planning while you wait, call NDVH at 1-800-799-7233 (24/7).
+      </div>
+    </div>
+
+    <!-- Stub: approved (slice 9 replaces with real shared folder) -->
+    <div id="step-approved" class="card step-hidden">
+      <h1>Access was approved</h1>
+      <p class="sub">The shared material is being prepared. When it's ready, you'll receive a separate email from SafeTea with a link to the read-only folder. That link is private to you — do not share it.</p>
+      <p class="sub" style="color:#9474c0">If you don't receive the follow-up email within a few minutes, check your spam folder or reply to the approval email.</p>
+    </div>
+
+    <div class="footer">
+      <p>This page is for named trusted contacts only. SafeTea does not create accounts for you.</p>
+      <p style="margin-top:6px"><a href="/" style="color:#8080A0">Go to SafeTea home</a></p>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var params = new URLSearchParams(window.location.search);
+    var inviteToken = params.get('token');
+    var shareRequestId = params.get('share');
+    var shareStatus = params.get('status');
+
+    // Slice-9 stub state. If the owner approved and we ended up here via the
+    // email link, just tell the contact the real share link is coming.
+    if (shareRequestId && (shareStatus === 'approved' || shareStatus === 'auto-released')) {
+      showStep('approved');
+      return;
+    }
+
+    // If no token in the URL, the page was opened directly — nothing to do.
+    if (!inviteToken) {
+      document.getElementById('step-identify').innerHTML =
+        '<h1>This link looks incomplete</h1><p class="sub">Open the SafeTea email you received and tap the link in that email. If you didn\'t receive one, you haven\'t been named a trusted contact yet.</p>';
+      return;
+    }
+
+    var state = {
+      sessionToken: null,
+      folders: [],
+    };
+
+    var el = {
+      email: document.getElementById('email'),
+      code: document.getElementById('code'),
+      folder: document.getElementById('folder'),
+      reason: document.getElementById('reason'),
+      btnIdentify: document.getElementById('btn-identify'),
+      btnOtp: document.getElementById('btn-otp'),
+      btnRequest: document.getElementById('btn-request'),
+      errIdentify: document.getElementById('err-identify'),
+      errOtp: document.getElementById('err-otp'),
+      errRequest: document.getElementById('err-request'),
+      doneCountdown: document.getElementById('done-countdown'),
+    };
+
+    function showStep(name) {
+      ['identify', 'otp', 'request', 'done', 'approved'].forEach(function (s) {
+        var node = document.getElementById('step-' + s);
+        if (node) node.classList.toggle('step-hidden', s !== name);
+      });
+    }
+
+    function errOn(err, msg) { err.textContent = msg; err.style.display = 'block'; }
+    function errOff(err) { err.style.display = 'none'; err.textContent = ''; }
+
+    window.sendCode = function () {
+      errOff(el.errIdentify);
+      var email = el.email.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errOn(el.errIdentify, 'Please enter a valid email address.');
+        return;
+      }
+      el.btnIdentify.disabled = true;
+      el.btnIdentify.textContent = 'Sending…';
+      fetch('/api/vault/contact-portal/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invite_token: inviteToken, email: email })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Could not send code');
+          showStep('otp');
+          setTimeout(function () { el.code.focus(); }, 30);
+        })
+        .catch(function (err) { errOn(el.errIdentify, err.message); })
+        .finally(function () { el.btnIdentify.disabled = false; el.btnIdentify.textContent = 'Send me a code'; });
+    };
+
+    window.verifyCode = function () {
+      errOff(el.errOtp);
+      var code = el.code.value.trim();
+      if (!/^[0-9]{6}$/.test(code)) { errOn(el.errOtp, 'Enter the 6-digit code from the email.'); return; }
+      el.btnOtp.disabled = true;
+      el.btnOtp.textContent = 'Verifying…';
+      fetch('/api/vault/contact-portal/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invite_token: inviteToken, email: el.email.value.trim(), code: code })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Invalid code');
+          state.sessionToken = r.data.session_token;
+          return fetch('/api/vault/contact-portal/request?session_token=' + encodeURIComponent(state.sessionToken));
+        })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Could not load folders');
+          state.folders = r.data.folders || [];
+          if (!state.folders.length) {
+            errOn(el.errOtp, 'You have not been authorized for any folders yet. Contact the SafeTea member directly.');
+            return;
+          }
+          el.folder.innerHTML = state.folders.map(function (f) {
+            return '<option value="' + f.folder_id + '">' + esc(f.title) + (f.legal_hold ? ' — legal hold' : '') + '</option>';
+          }).join('');
+          showStep('request');
+          setTimeout(function () { el.reason.focus(); }, 30);
+        })
+        .catch(function (err) { errOn(el.errOtp, err.message); })
+        .finally(function () { el.btnOtp.disabled = false; el.btnOtp.textContent = 'Verify'; });
+    };
+
+    window.backToIdentify = function () {
+      el.code.value = '';
+      errOff(el.errOtp);
+      showStep('identify');
+    };
+
+    window.submitRequest = function () {
+      errOff(el.errRequest);
+      var folderId = el.folder.value;
+      var reason = el.reason.value.trim();
+      if (!reason) { errOn(el.errRequest, 'Please share why you need access.'); return; }
+      el.btnRequest.disabled = true;
+      el.btnRequest.textContent = 'Submitting…';
+      fetch('/api/vault/contact-portal/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: state.sessionToken, folder_id: parseInt(folderId, 10), reason: reason })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Could not submit');
+          var endsAt = new Date(r.data.countdown_ends_at);
+          var hrs = Math.max(1, Math.round((endsAt.getTime() - Date.now()) / 3600000));
+          el.doneCountdown.innerHTML = '<i class="fas fa-clock"></i> They have up to <strong>' + hrs + ' hours</strong> to respond. You\'ll hear back by ' + endsAt.toLocaleString();
+          showStep('done');
+        })
+        .catch(function (err) { errOn(el.errRequest, err.message); })
+        .finally(function () { el.btnRequest.disabled = false; el.btnRequest.textContent = 'Submit request'; });
+    };
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <meta name="application-name" content="SafeTea">
+  <meta name="format-detection" content="telephone=no">
+  <title>Trusted Contacts — Safety Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <script src="/capacitor-bridge.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px 20px 120px; }
+
+    .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+    .quick-exit { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #B0B0C8; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; }
+
+    .hero { margin: 8px 0 24px; }
+    .hero h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 8px; }
+    .hero p { color: #B0B0C8; font-size: 14px; line-height: 1.6; max-width: 580px; }
+
+    .privacy-note { display: flex; align-items: flex-start; gap: 10px; background: rgba(232,160,181,0.06); border: 1px solid rgba(232,160,181,0.15); border-radius: 12px; padding: 12px 14px; color: #F0D0C0; font-size: 12px; line-height: 1.5; margin: 12px 0 24px; }
+    .privacy-note i { color: #E8A0B5; flex-shrink: 0; margin-top: 2px; }
+
+    .contacts-header { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 12px; }
+    .contacts-header h2 { font-size: 15px; font-weight: 700; }
+    .btn-add { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; gap: 6px; align-items: center; }
+
+    .contact-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; }
+    .contact-head { display: flex; align-items: center; gap: 12px; }
+    .avatar { min-width: 40px; height: 40px; border-radius: 50%; background: rgba(232,160,181,0.15); color: #E8A0B5; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+    .contact-name { font-size: 15px; font-weight: 600; }
+    .contact-email { font-size: 12px; color: #8080A0; margin-top: 2px; }
+    .status-chip { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.6px; margin-left: auto; }
+    .status-active { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.25); }
+    .status-pending { background: rgba(241,196,15,0.12); color: #f1c40f; border: 1px solid rgba(241,196,15,0.25); }
+    .status-revoked { background: rgba(128,128,160,0.12); color: #8080A0; border: 1px solid rgba(128,128,160,0.25); }
+    .contact-meta { margin-top: 10px; font-size: 12px; color: #8080A0; line-height: 1.5; }
+    .contact-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .btn-sm { background: transparent; color: #E8A0B5; border: 1px solid rgba(232,160,181,0.3); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-sm:hover { background: rgba(232,160,181,0.08); }
+    .btn-sm.danger { color: #e74c3c; border-color: rgba(231,76,60,0.3); }
+    .btn-sm.danger:hover { background: rgba(231,76,60,0.08); }
+
+    .empty-state { text-align: center; padding: 40px 24px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 14px; }
+    .empty-state .emo { font-size: 34px; margin-bottom: 10px; opacity: 0.7; }
+    .empty-state p { color: #B0B0C8; font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5,5,15,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 24px; max-width: 480px; width: 100%; max-height: 88vh; overflow-y: auto; }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal p.sub { color: #B0B0C8; font-size: 13px; line-height: 1.5; margin-bottom: 18px; }
+    .field-label { display: block; font-size: 11px; font-weight: 700; color: #8080A0; text-transform: uppercase; letter-spacing: 1.2px; margin: 14px 0 6px; }
+    .field-input, .field-select, .field-textarea { width: 100%; background: #0D0D1A; color: #fff; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: inherit; outline: none; }
+    .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: rgba(232,160,181,0.5); }
+    .field-textarea { resize: vertical; min-height: 70px; }
+    .helper { font-size: 12px; color: #8080A0; margin-top: 6px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; border: none; padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; gap: 6px; align-items: center; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .perm-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .perm-row:last-child { border: none; }
+    .perm-title { font-size: 14px; font-weight: 600; }
+    .perm-settings { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .perm-settings label { font-size: 12px; color: #B0B0C8; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+    .perm-settings input[type=checkbox] { width: 16px; height: 16px; accent-color: #E8A0B5; }
+    .perm-settings input[type=number] { width: 72px; background: #0D0D1A; border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 6px 8px; border-radius: 6px; font-family: inherit; font-size: 13px; }
+
+    .toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #22223A; border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 14px; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .toast.show { opacity: 1; }
+
+    .loading { text-align: center; padding: 40px; color: #8080A0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <a href="/vault" class="back-link"><i class="fas fa-chevron-left"></i> Vault</a>
+      <button class="quick-exit" onclick="quickExit()"><i class="fas fa-door-open"></i> Quick exit</button>
+    </div>
+
+    <div class="hero">
+      <h1>Trusted contacts</h1>
+      <p>People you name here can request access to specific parts of your Vault — only if you choose to grant it, and only the folders you pre-authorize.</p>
+    </div>
+
+    <div class="privacy-note">
+      <i class="fas fa-shield-halved"></i>
+      <span>Trusted contacts never have a SafeTea account and cannot log in. They can only see material you've explicitly approved for release.</span>
+    </div>
+
+    <div class="contacts-header">
+      <h2>Your contacts</h2>
+      <button class="btn-add" onclick="openAddModal()"><i class="fas fa-user-plus"></i> Add trusted contact</button>
+    </div>
+
+    <div id="contacts">
+      <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+    </div>
+  </div>
+
+  <!-- Add contact modal -->
+  <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
+    <div class="modal">
+      <h3>Add a trusted contact</h3>
+      <p class="sub">They'll get an email saying you named them as a trusted contact. They don't have to do anything unless a situation comes up.</p>
+      <label class="field-label">Their name</label>
+      <input id="c-name" class="field-input" type="text" maxlength="200" placeholder="First name or what you call them">
+      <label class="field-label">Their email</label>
+      <input id="c-email" class="field-input" type="email" placeholder="name@example.com" autocomplete="off">
+      <label class="field-label">Relationship <span style="text-transform:none;color:#5a5a7a;font-weight:500">(optional)</span></label>
+      <input id="c-rel" class="field-input" type="text" maxlength="200" placeholder="e.g., sister, best friend, mom">
+      <p class="helper">You can set which folders they can request, and whether those folders auto-release on timeout, after creating them.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button id="add-btn" class="btn-primary" onclick="submitAdd()"><i class="fas fa-paper-plane"></i> Send invite</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permissions modal -->
+  <div id="perm-modal" class="modal-overlay" onclick="if(event.target===this)closePermModal()">
+    <div class="modal">
+      <h3 id="perm-title">Folder access</h3>
+      <p class="sub">Tick which folders this contact can request. For each, choose whether it auto-releases if you don't respond in the countdown window.</p>
+      <div id="perm-list"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your folders…</div></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closePermModal()">Cancel</button>
+        <button id="perm-save" class="btn-primary" onclick="savePermissions()"><i class="fas fa-check"></i> Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var token = localStorage.getItem('safetea_token');
+    if (!token) { window.location.href = '/login'; return; }
+
+    var state = { contacts: [], folders: [], currentContactId: null, currentPermissions: {} };
+
+    var el = {
+      contacts: document.getElementById('contacts'),
+      toast: document.getElementById('toast'),
+      addModal: document.getElementById('add-modal'),
+      permModal: document.getElementById('perm-modal'),
+      permTitle: document.getElementById('perm-title'),
+      permList: document.getElementById('perm-list'),
+      addBtn: document.getElementById('add-btn'),
+      name: document.getElementById('c-name'),
+      email: document.getElementById('c-email'),
+      rel: document.getElementById('c-rel'),
+    };
+
+    function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+    function toast(m) { el.toast.textContent = m; el.toast.classList.add('show'); setTimeout(function () { el.toast.classList.remove('show'); }, 2400); }
+
+    function renderContacts() {
+      if (!state.contacts.length) {
+        el.contacts.innerHTML = '<div class="empty-state"><div class="emo">\uD83D\uDC65</div><p>You haven\'t named anyone yet. Pick someone you trust enough to let them request access in an emergency.</p><button class="btn-primary" onclick="openAddModal()"><i class="fas fa-user-plus"></i> Add your first contact</button></div>';
+        return;
+      }
+      el.contacts.innerHTML = state.contacts.map(function (c) {
+        var initial = (c.name || c.email || '?').charAt(0).toUpperCase();
+        var statusClass = 'status-' + c.status;
+        return '<div class="contact-card">' +
+          '<div class="contact-head">' +
+            '<div class="avatar">' + esc(initial) + '</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="contact-name">' + esc(c.name || '(unnamed)') + '</div>' +
+              '<div class="contact-email">' + esc(c.email) + '</div>' +
+            '</div>' +
+            '<span class="status-chip ' + statusClass + '">' + esc(c.status) + '</span>' +
+          '</div>' +
+          (c.relationship ? '<div class="contact-meta">' + esc(c.relationship) + '</div>' : '') +
+          (c.status !== 'revoked' ? '<div class="contact-actions">' +
+            '<button class="btn-sm" onclick="openPermModal(\'' + c.id + '\')"><i class="fas fa-folder-tree"></i> Folder access</button>' +
+            '<button class="btn-sm danger" onclick="revoke(\'' + c.id + '\')"><i class="fas fa-ban"></i> Revoke</button>' +
+          '</div>' : '') +
+        '</div>';
+      }).join('');
+    }
+
+    function load() {
+      Promise.all([
+        fetch('/api/vault/contacts', { headers: headers() }).then(function (r) { return r.json(); }),
+        fetch('/api/vault/folders', { headers: headers() }).then(function (r) { return r.json(); }),
+      ]).then(function (rs) {
+        state.contacts = (rs[0] && rs[0].contacts) || [];
+        state.folders = (rs[1] && rs[1].folders) || [];
+        renderContacts();
+      }).catch(function () {
+        el.contacts.innerHTML = '<div class="empty-state"><p>Could not load contacts. <a style="color:#E8A0B5" href="#" onclick="location.reload()">Retry</a></p></div>';
+      });
+    }
+
+    window.openAddModal = function () {
+      el.name.value = ''; el.email.value = ''; el.rel.value = '';
+      el.addModal.classList.add('open');
+      setTimeout(function () { el.name.focus(); }, 30);
+    };
+    window.closeAddModal = function () { el.addModal.classList.remove('open'); };
+    window.submitAdd = function () {
+      var name = el.name.value.trim(), email = el.email.value.trim(), rel = el.rel.value.trim();
+      if (!name || !email) { toast('Name and email are required'); return; }
+      el.addBtn.disabled = true;
+      el.addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending…';
+      fetch('/api/vault/contacts', { method: 'POST', headers: headers(), body: JSON.stringify({ name: name, email: email, relationship: rel }) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Could not add');
+          closeAddModal();
+          toast('Invite sent');
+          load();
+        })
+        .catch(function (err) { toast(err.message); })
+        .finally(function () { el.addBtn.disabled = false; el.addBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send invite'; });
+    };
+
+    window.revoke = function (contactId) {
+      if (!confirm('Revoke this contact? They\'ll no longer be able to request any folder. Pending requests they already submitted stay in your inbox for you to approve or deny.')) return;
+      fetch('/api/vault/contacts/' + encodeURIComponent(contactId), { method: 'DELETE', headers: headers() })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Revoke failed');
+          toast('Revoked');
+          load();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    window.openPermModal = function (contactId) {
+      state.currentContactId = contactId;
+      var c = state.contacts.find(function (x) { return x.id === contactId; });
+      el.permTitle.textContent = 'Folder access — ' + (c && c.name ? c.name : 'contact');
+      el.permList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+      el.permModal.classList.add('open');
+      fetch('/api/vault/contacts/' + encodeURIComponent(contactId) + '/permissions', { headers: headers() })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          state.currentPermissions = {};
+          (data.permissions || []).forEach(function (p) { state.currentPermissions[p.folder_id] = p; });
+          renderPermList();
+        });
+    };
+    window.closePermModal = function () { el.permModal.classList.remove('open'); };
+
+    function renderPermList() {
+      if (!state.folders.length) {
+        el.permList.innerHTML = '<p class="helper">You don\'t have any folders yet. Create one from the Vault first.</p>';
+        return;
+      }
+      el.permList.innerHTML = state.folders.map(function (f) {
+        var p = state.currentPermissions[f.id] || { can_request: false, auto_release_on_timeout: false, countdown_hours: 48 };
+        return '<div class="perm-row" data-folder-id="' + f.id + '">' +
+          '<div>' +
+            '<label style="display:flex;align-items:center;gap:10px;cursor:pointer">' +
+              '<input type="checkbox" class="perm-can" ' + (p.can_request ? 'checked' : '') + '>' +
+              '<span class="perm-title">' + esc(f.title || 'Untitled') + '</span>' +
+            '</label>' +
+            '<div class="perm-settings">' +
+              '<label><input type="checkbox" class="perm-auto" ' + (p.auto_release_on_timeout ? 'checked' : '') + '> Auto-release if I don\'t respond</label>' +
+              '<label>After <input type="number" class="perm-hours" min="1" max="168" value="' + (p.countdown_hours || 48) + '"> hours</label>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.savePermissions = function () {
+      var rows = el.permList.querySelectorAll('.perm-row');
+      var perms = [];
+      rows.forEach(function (row) {
+        var fid = parseInt(row.getAttribute('data-folder-id'), 10);
+        var can = row.querySelector('.perm-can').checked;
+        if (!can) return; // drop unticked folders
+        perms.push({
+          folder_id: fid,
+          can_request: true,
+          auto_release_on_timeout: row.querySelector('.perm-auto').checked,
+          countdown_hours: parseInt(row.querySelector('.perm-hours').value, 10) || 48,
+        });
+      });
+      fetch('/api/vault/contacts/' + encodeURIComponent(state.currentContactId) + '/permissions', {
+        method: 'PUT', headers: headers(),
+        body: JSON.stringify({ permissions: perms })
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.data && r.data.error || 'Save failed');
+          closePermModal();
+          toast('Saved');
+          load();
+        })
+        .catch(function (err) { toast(err.message); });
+    };
+
+    window.quickExit = function () {
+      document.title = '';
+      window.location.replace('https://www.google.com/search?q=weather');
+    };
+
+    load();
+  })();
+  </script>
+</body>
+</html>

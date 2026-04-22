@@ -19,7 +19,7 @@
 
 'use strict';
 
-const { authenticate, cors } = require('../../_utils/auth');
+const { authenticate, cors, parseBody } = require('../../_utils/auth');
 const { getOne, run } = require('../../_utils/db');
 const { encryptField, unwrapFolderKey, fileChecksum } = require('../../../services/vault/encryption');
 const storage = require('../../../services/vault/storage');
@@ -58,7 +58,12 @@ module.exports = async function handler(req, res) {
   // we trust it by virtue of the handshake tokenPayload we signed in
   // onBeforeGenerateToken.
   const user = await authenticate(req);
-  const isCompletion = !!(req.body && req.body.type === 'blob.upload-completed');
+  // Parse the JSON body ourselves — Vercel plain functions don't do it for us.
+  // Both legs of the handshake (token-issue + blob.upload-completed callback)
+  // need the parsed body, so do it once up front.
+  let parsedBody = {};
+  try { parsedBody = (await parseBody(req)) || {}; } catch (_) { parsedBody = {}; }
+  const isCompletion = !!(parsedBody && parsedBody.type === 'blob.upload-completed');
   if (!user && !isCompletion) return res.status(401).json({ error: 'Unauthorized' });
   // Only gate the owner-initiated leg; blob completion callbacks are internal.
   if (user && !isCompletion && blockIfNotPlus(user, res)) return;
@@ -72,6 +77,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const jsonResponse = await storage.handleClientUpload(req, res, {
+      body: parsedBody,
       onBeforeGenerateToken: async function (pathname, clientPayload) {
         // clientPayload is a JSON string from the browser; parse defensively.
         let payload = {};

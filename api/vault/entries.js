@@ -82,9 +82,41 @@ async function handleList(req, res, user) {
     [folderId]
   );
 
+  // Pull all attached files for this folder in a single query. Decrypt
+  // their storage_key + filename under the folder DEK alongside the
+  // entries so the timeline can render media inline without N+1 fetches.
+  // (Per-file downloads are still audited when the user opens a file
+  // via GET /api/vault/files/:id — this endpoint logs a single ENTRY_LIST
+  // at the folder level.)
+  const fileRows = await getMany(
+    `SELECT id, entry_id, storage_key, mime_type, byte_size, filename_enc, created_at
+     FROM vault_files
+     WHERE folder_id = $1 AND deleted_at IS NULL AND entry_id IS NOT NULL
+     ORDER BY created_at ASC`,
+    [folderId]
+  );
+
   const dek = unwrapFolderKey(folder);
   let entries;
   try {
+    // Index files by entry_id, decrypting under DEK.
+    const filesByEntry = {};
+    for (const fr of fileRows) {
+      const eid = String(fr.entry_id);
+      if (!filesByEntry[eid]) filesByEntry[eid] = [];
+      let filename = null, url = null;
+      try { if (fr.filename_enc) filename = decryptField(dek, fr.filename_enc); } catch (_) {}
+      try { if (fr.storage_key) url = decryptField(dek, fr.storage_key); } catch (_) {}
+      filesByEntry[eid].push({
+        id: String(fr.id),
+        filename: filename,
+        mime_type: fr.mime_type,
+        byte_size: Number(fr.byte_size),
+        download_url: url,
+        created_at: fr.created_at,
+      });
+    }
+
     entries = rows.map(function (row) {
       return {
         id: String(row.id),
@@ -103,6 +135,7 @@ async function handleList(req, res, user) {
         deleted: !!row.deleted_at,
         created_at: row.created_at,
         updated_at: row.updated_at,
+        files: filesByEntry[String(row.id)] || [],
       };
     });
   } finally {

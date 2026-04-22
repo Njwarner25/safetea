@@ -7,7 +7,7 @@
 
 const { decryptField } = require('./encryption');
 
-const ENTRY_TYPES = ['note', 'photo', 'screenshot', 'document', 'audio'];
+const ENTRY_TYPES = ['note', 'photo', 'screenshot', 'document', 'audio', 'video'];
 const MAX_CONTENT_LEN = 50000;
 const MAX_TAGS = 10;
 const MAX_TAG_LEN = 30;

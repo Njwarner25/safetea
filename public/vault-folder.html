@@ -562,11 +562,19 @@
         // two-phase signed-token upload. This lifts the 4.5 MB serverless
         // body limit (file goes direct to Blob; our handler signs the token
         // and receives the completion callback).
+        //
+        // Important: upload() is exported from the /client subpath only,
+        // not from the package root. The root is server-only (handleUpload,
+        // put, head, del) and would throw "upload is not a function".
         setProgress('Uploading ' + file.name + '…', true);
-        var mod = await import('https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.3/+esm');
+        var mod = await import('https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.3/client/+esm');
+        var blobUpload = mod.upload || (mod.default && mod.default.upload);
+        if (typeof blobUpload !== 'function') {
+          throw new Error('Blob client upload() not found — check @vercel/blob version');
+        }
         var safeName = (file.name || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
         var pathname = 'vault/' + folderId + '/' + Date.now() + '-' + safeName;
-        await mod.upload(pathname, file, {
+        await blobUpload(pathname, file, {
           access: 'public',
           handleUploadUrl: '/api/vault/files/upload',
           clientPayload: JSON.stringify({

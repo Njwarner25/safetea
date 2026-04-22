@@ -183,6 +183,7 @@
         { "source": "/api/vault/exports/:id", "destination": "/api/vault/exports/[id]" },
         { "source": "/api/share/:token", "destination": "/api/share/[token]" },
         { "source": "/api/vault/audit", "destination": "/api/vault/audit" },
+        { "source": "/api/vault/stats", "destination": "/api/vault/stats" },
         { "source": "/api/vault/admin/break-glass", "destination": "/api/vault/admin/break-glass" },
         { "source": "/api/vault/admin/legal-hold", "destination": "/api/vault/admin/legal-hold" },
         { "source": "/api/vault/integration-settings", "destination": "/api/vault/integration-settings" },

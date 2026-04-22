@@ -614,33 +614,37 @@
           });
         } catch (blobErr) {
           // @vercel/blob/client hides the server's actual 4xx reason behind
-          // a generic "failed to receive (client) token" message. If that's
-          // what we got, probe the endpoint ourselves with the same payload
-          // shape and surface the real error from our server.
-          var msg = (blobErr && blobErr.message) || '';
-          if (/failed to receive.*token/i.test(msg)) {
-            try {
-              var probe = await fetch('/api/vault/files/upload', {
-                method: 'POST',
-                headers: headers(),
-                body: JSON.stringify({
-                  type: 'blob.generate-client-token',
-                  payload: {
-                    pathname: pathname,
-                    callbackUrl: window.location.origin + '/api/vault/files/upload',
-                    clientPayload: clientPayloadStr,
-                    multipart: false,
-                  },
-                }),
-              });
-              if (!probe.ok) {
-                var j = {};
-                try { j = await probe.json(); } catch (_) {}
-                throw new Error((j && j.error) ? j.error : ('Upload rejected (HTTP ' + probe.status + ')'));
-              }
-            } catch (probeErr) {
-              throw probeErr;
+          // generic messages like "failed to receive token" / "failed to
+          // retrieve token" / BlobAccessError. Always probe the same endpoint
+          // with an identical generate-client-token request — if the server
+          // is rejecting the upload, its JSON error comes back plainly.
+          console.error('[vault upload] blob client error:', blobErr);
+          try {
+            var probe = await fetch('/api/vault/files/upload', {
+              method: 'POST',
+              headers: headers(),
+              body: JSON.stringify({
+                type: 'blob.generate-client-token',
+                payload: {
+                  pathname: pathname,
+                  callbackUrl: window.location.origin + '/api/vault/files/upload',
+                  clientPayload: clientPayloadStr,
+                  multipart: false,
+                },
+              }),
+            });
+            if (!probe.ok) {
+              var j = {};
+              try { j = await probe.json(); } catch (_) {}
+              throw new Error((j && j.error) ? j.error : ('Upload rejected (HTTP ' + probe.status + ')'));
             }
+            // Probe says server is happy — fall through to rethrow the
+            // original blob client error, which is likely a network/auth
+            // issue between the browser and Blob storage (not us).
+          } catch (probeErr) {
+            // If the probe itself produced a meaningful error (4xx JSON),
+            // surface that — it's almost certainly the real reason.
+            if (probeErr && probeErr.message && probeErr !== blobErr) throw probeErr;
           }
           throw blobErr;
         }

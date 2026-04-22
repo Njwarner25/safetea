@@ -10,7 +10,7 @@
                 { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
                 { "key": "Permissions-Policy", "value": "camera=(), microphone=(self), geolocation=(self)" },
                 { "key": "X-DNS-Prefetch-Control", "value": "off" },
-                { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com https://js.stripe.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https: data:; media-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://nominatim.openstreetmap.org https://*.stripe.com https://serpapi.com https://www.openstreetmap.org; frame-src https://www.openstreetmap.org https://www.google.com https://js.stripe.com https://checkout.stripe.com" }
+                { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com https://js.stripe.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; media-src 'self' data: blob: https://*.public.blob.vercel-storage.com; connect-src 'self' https://*.googleapis.com https://nominatim.openstreetmap.org https://*.stripe.com https://serpapi.com https://www.openstreetmap.org https://blob.vercel-storage.com https://*.public.blob.vercel-storage.com https://cdn.jsdelivr.net; frame-src https://www.openstreetmap.org https://www.google.com https://js.stripe.com https://checkout.stripe.com" }
             ]
         }
     ],
@@ -183,6 +183,7 @@
         { "source": "/api/vault/exports/:id", "destination": "/api/vault/exports/[id]" },
         { "source": "/api/share/:token", "destination": "/api/share/[token]" },
         { "source": "/api/vault/audit", "destination": "/api/vault/audit" },
+        { "source": "/api/vault/stats", "destination": "/api/vault/stats" },
         { "source": "/api/vault/admin/break-glass", "destination": "/api/vault/admin/break-glass" },
         { "source": "/api/vault/admin/legal-hold", "destination": "/api/vault/admin/legal-hold" },
         { "source": "/api/vault/integration-settings", "destination": "/api/vault/integration-settings" },

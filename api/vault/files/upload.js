@@ -40,6 +40,10 @@ const ALLOWED_MIME = new Set([
   'audio/webm',
   'audio/aac',
   'audio/ogg',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-m4v',
 ]);
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB per file (V1)

@@ -38,6 +38,33 @@ function isEnabled() {
     && !!process.env.VAULT_ASSISTANT_OPENAI_KEY;
 }
 
+/**
+ * Per-user gate. Returns true if EITHER:
+ *   - VAULT_ASSISTANT_ENABLED=true (global flip; everyone with SafeTea+ passes)
+ *   - the user's email is in VAULT_ASSISTANT_ALLOWLIST (comma-separated,
+ *     case-insensitive) — for piloting the assistant to a small group
+ *     before the global flip while practitioner review is still pending.
+ *
+ * Both paths still require VAULT_ASSISTANT_OPENAI_KEY to be set.
+ */
+function isEnabledForUser(user) {
+  if (!process.env.VAULT_ASSISTANT_OPENAI_KEY) return false;
+  if (process.env.VAULT_ASSISTANT_ENABLED === 'true') return true;
+
+  const allowlistRaw = process.env.VAULT_ASSISTANT_ALLOWLIST || '';
+  if (!allowlistRaw.trim()) return false;
+  if (!user || !user.email) return false;
+
+  const email = String(user.email).trim().toLowerCase();
+  if (!email) return false;
+
+  const allowed = allowlistRaw
+    .split(',')
+    .map(function (s) { return s.trim().toLowerCase(); })
+    .filter(Boolean);
+  return allowed.indexOf(email) !== -1;
+}
+
 function getClient() {
   if (!process.env.VAULT_ASSISTANT_OPENAI_KEY) return null;
   return new OpenAI({ apiKey: process.env.VAULT_ASSISTANT_OPENAI_KEY });
@@ -143,7 +170,13 @@ function formatResourcesBlock(resources) {
  * @returns {Promise<{ reply: string, resources_surfaced: number[], model: string }>}
  */
 async function respond(opts) {
-  if (!isEnabled()) {
+  // Handler (api/vault/assistant/chat.js) gates per-user via isEnabledForUser;
+  // this is defense-in-depth. Allow through if the global flag is on OR an
+  // allowlist exists (handler already validated membership).
+  const allowlistPresent = !!(process.env.VAULT_ASSISTANT_ALLOWLIST || '').trim();
+  const openAiKeyPresent = !!process.env.VAULT_ASSISTANT_OPENAI_KEY;
+  const allowed = openAiKeyPresent && (process.env.VAULT_ASSISTANT_ENABLED === 'true' || allowlistPresent);
+  if (!allowed) {
     throw new Error('Journaling Assistant is currently disabled');
   }
   const client = getClient();
@@ -192,5 +225,6 @@ async function respond(opts) {
 module.exports = {
   respond,
   isEnabled,
+  isEnabledForUser,
   SYSTEM_PROMPT,
 };

@@ -28,10 +28,12 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
   if (blockIfNotPlus(user, res)) return;
   if (!process.env.VAULT_KEK) return res.status(503).json({ error: 'Vault not configured' });
-  if (!assistant.isEnabled()) {
+  if (!assistant.isEnabledForUser(user)) {
     // Spec: while the system prompt is pending practitioner review, the
-    // flag stays off and this endpoint returns 503. The UI should hide
-    // the chat widget when it sees this.
+    // global flag stays off. The assistant can be opened selectively via
+    // VAULT_ASSISTANT_ALLOWLIST (comma-separated emails) for founder-led
+    // pilot testing before the global flip. The UI should hide the chat
+    // widget when it sees this 503.
     return res.status(503).json({ error: 'Journaling Assistant is currently disabled.' });
   }
 

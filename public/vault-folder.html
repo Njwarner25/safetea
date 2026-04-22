@@ -87,6 +87,22 @@
     .ai-pending i { animation: spin 1.2s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .entry-files { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .file-thumb-link { display: inline-block; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+    .file-thumb { display: block; width: 160px; height: 160px; object-fit: cover; background: #0F0F1E; }
+    .file-media { width: 100%; }
+    .file-media audio, .file-media video { width: 100%; max-width: 420px; border-radius: 10px; background: #0F0F1E; }
+    .file-meta { font-size: 11px; color: #8080A0; margin-top: 4px; }
+    .file-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: #E8A0B5; text-decoration: none; font-size: 13px; }
+    .file-link:hover { background: rgba(232,160,181,0.08); }
+    .file-meta-inline { color: #8080A0; font-size: 11px; margin-left: 6px; }
+    .attach-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #B0B0C8; padding: 0 14px; border-radius: 999px; font-size: 13px; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; height: 40px; flex-shrink: 0; }
+    .attach-btn:hover:not(:disabled) { border-color: rgba(232,160,181,0.3); color: #fff; }
+    .attach-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .attach-btn i { color: #E8A0B5; }
+    .upload-progress { font-size: 12px; color: #8080A0; padding: 6px 14px; }
+    .upload-progress i { color: #E8A0B5; margin-right: 6px; }
+
     .activity-toggle { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #B0B0C8; padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; }
     .activity-toggle:hover { border-color: rgba(232,160,181,0.3); color: #fff; }
     .activity-log { display: none; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; margin-top: 10px; }
@@ -209,7 +225,10 @@
 
   <!-- Fixed composer (hidden while folder loads) -->
   <div class="composer" id="composer" style="display:none">
+    <div id="upload-progress" class="upload-progress" style="display:none"><i class="fas fa-circle-notch fa-spin"></i> <span id="upload-progress-text">Uploading…</span></div>
     <div class="composer-inner">
+      <button id="attach-btn" type="button" class="attach-btn" onclick="document.getElementById('attach-input').click()" title="Attach photo, audio, or video"><i class="fas fa-paperclip"></i></button>
+      <input type="file" id="attach-input" style="display:none" accept="image/*,audio/*,video/*,application/pdf" onchange="handleAttachPicked(this)" />
       <textarea id="compose-input" placeholder="Write a note. Only you see this." rows="1" oninput="autoGrow(this);enableSend()"></textarea>
       <button id="compose-send" class="composer-send" onclick="sendNote()" disabled title="Save"><i class="fas fa-arrow-up"></i></button>
     </div>
@@ -280,8 +299,49 @@
         photo: 'fa-camera',
         screenshot: 'fa-image',
         document: 'fa-file-lines',
-        audio: 'fa-microphone'
+        audio: 'fa-microphone',
+        video: 'fa-video'
       }[t]) || 'fa-circle';
+    }
+
+    function entryTypeFromMime(mime) {
+      if (!mime) return 'document';
+      if (mime.indexOf('image/') === 0) return 'photo';
+      if (mime.indexOf('audio/') === 0) return 'audio';
+      if (mime.indexOf('video/') === 0) return 'video';
+      return 'document';
+    }
+
+    function humanSize(bytes) {
+      if (!bytes || bytes < 1024) return (bytes || 0) + ' B';
+      if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function renderFiles(files) {
+      if (!files || !files.length) return '';
+      return '<div class="entry-files">' + files.map(function (f) {
+        var url = f.download_url || '';
+        var name = esc(f.filename || 'attachment');
+        var meta = esc(humanSize(f.byte_size));
+        var mime = f.mime_type || '';
+        if (mime.indexOf('image/') === 0 && url) {
+          return '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="file-thumb-link">' +
+            '<img class="file-thumb" src="' + esc(url) + '" alt="' + name + '" loading="lazy" />' +
+          '</a>';
+        }
+        if (mime.indexOf('audio/') === 0 && url) {
+          return '<div class="file-media"><audio controls preload="metadata" src="' + esc(url) + '"></audio>' +
+            '<div class="file-meta">' + name + ' &middot; ' + meta + '</div></div>';
+        }
+        if (mime.indexOf('video/') === 0 && url) {
+          return '<div class="file-media"><video controls preload="metadata" src="' + esc(url) + '"></video>' +
+            '<div class="file-meta">' + name + ' &middot; ' + meta + '</div></div>';
+        }
+        // PDF / other — download link
+        return '<a class="file-link" href="' + esc(url) + '" target="_blank" rel="noopener">' +
+          '<i class="fas fa-paperclip"></i> ' + name + ' <span class="file-meta-inline">' + meta + '</span></a>';
+      }).join('') + '</div>';
     }
 
     function renderHeader() {
@@ -367,6 +427,7 @@
             '<span class="entry-time">' + esc(timeLabel) + '</span>' +
           '</div>' +
           bodyHtml +
+          renderFiles(e.files) +
           renderAiBlock(e) +
           '<div class="entry-footer">' +
             tagHtml +
@@ -444,6 +505,93 @@
         .catch(function (err) { toast(err.message || 'Save failed'); })
         .finally(function () { window.enableSend(); });
     };
+
+    var uploadInFlight = false;
+
+    window.handleAttachPicked = function (input) {
+      if (!input.files || !input.files[0]) return;
+      var file = input.files[0];
+      input.value = '';
+      if (uploadInFlight) { toast('Wait for the current upload to finish.'); return; }
+      uploadFile(file).catch(function (e) {
+        console.error(e);
+        toast((e && e.message) ? e.message : 'Upload failed');
+      });
+    };
+
+    function setProgress(msg, show) {
+      var wrap = document.getElementById('upload-progress');
+      var text = document.getElementById('upload-progress-text');
+      if (!wrap) return;
+      if (show) { text.textContent = msg; wrap.style.display = 'block'; }
+      else { wrap.style.display = 'none'; }
+    }
+
+    async function uploadFile(file) {
+      if (state.folder && state.folder.legal_hold) {
+        toast('Folder is under legal hold.');
+        return;
+      }
+      var maxBytes = 25 * 1024 * 1024;
+      if (file.size > maxBytes) {
+        toast('File is larger than 25 MB.');
+        return;
+      }
+      var entryType = entryTypeFromMime(file.type);
+      var attachBtn = document.getElementById('attach-btn');
+      uploadInFlight = true;
+      if (attachBtn) attachBtn.disabled = true;
+      setProgress('Creating entry…', true);
+
+      try {
+        // Step 1 — create an entry of the matching type so the file has
+        // an entry_id to attach to. Content is the caption the user typed
+        // (if any) at the moment of attach.
+        var caption = (el.input && el.input.value || '').trim();
+        var createPayload = { folder_id: parseInt(folderId, 10), entry_type: entryType };
+        if (caption) createPayload.content = caption;
+        var entryResp = await fetch('/api/vault/entries', {
+          method: 'POST', headers: headers(), body: JSON.stringify(createPayload),
+        });
+        var entryJson = await entryResp.json();
+        if (!entryResp.ok) throw new Error((entryJson && entryJson.error) || 'Could not create entry');
+        var entryId = parseInt(entryJson.entry.id, 10);
+        if (caption) { el.input.value = ''; el.input.style.height = 'auto'; window.enableSend(); }
+
+        // Step 2 — dynamic-import the Vercel Blob client and run the
+        // two-phase signed-token upload. This lifts the 4.5 MB serverless
+        // body limit (file goes direct to Blob; our handler signs the token
+        // and receives the completion callback).
+        setProgress('Uploading ' + file.name + '…', true);
+        var mod = await import('https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.3/+esm');
+        var safeName = (file.name || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
+        var pathname = 'vault/' + folderId + '/' + Date.now() + '-' + safeName;
+        await mod.upload(pathname, file, {
+          access: 'public',
+          handleUploadUrl: '/api/vault/files/upload',
+          clientPayload: JSON.stringify({
+            folder_id: parseInt(folderId, 10),
+            entry_id: entryId,
+            filename: file.name,
+            mime_type: file.type,
+            byte_size: file.size,
+          }),
+        });
+
+        // Step 3 — the server's onUploadCompleted hook has now written
+        // vault_files + audit log. Refresh the timeline to pull the row.
+        setProgress('Finishing…', true);
+        reloadEntries();
+        toast('Attached.');
+        if (state.folder && state.folder.ai_enabled && entryType !== 'note') {
+          organizeEntry(entryId);
+        }
+      } finally {
+        uploadInFlight = false;
+        setProgress('', false);
+        if (attachBtn) attachBtn.disabled = false;
+      }
+    }
 
     function organizeEntry(entryId) {
       fetch('/api/vault/ai/organize', {

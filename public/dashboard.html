@@ -445,6 +445,95 @@
         .datecheck-header h2 { font-size: 22px; color: #fff; }
         .datecheck-header p { color: #8080A0; font-size: 14px; margin-top: 8px; }
         .plus-badge { display: inline-block; background: linear-gradient(135deg, #f27059, #E8A0B5); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; }
+
+        /* ===== Tools dashboard (Zone A SOS banner, Zone B Vault hero, Zone C Record, Zone D grid) ===== */
+        .tools-dashboard { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+        .tools-dash-subtitle { color: #F5E0D5; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
+        [data-theme="light"] .tools-dash-subtitle { color: var(--st-text-soft); }
+
+        .tools-sos-banner {
+            display: flex; align-items: center; gap: 14px;
+            background: linear-gradient(135deg, rgba(231,76,60,0.25), rgba(155,89,182,0.15));
+            border: 1px solid rgba(231,76,60,0.2);
+            border-radius: 24px;
+            padding: 16px; margin-bottom: 10px;
+            cursor: pointer; user-select: none;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+        .tools-sos-banner:active { transform: scale(0.99); opacity: 0.9; }
+        .tools-sos-icon { font-size: 22px; color: #e74c3c; }
+        .tools-sos-body { flex: 1; min-width: 0; }
+        .tools-sos-title { font-size: 17px; font-weight: 700; color: #fff; }
+        [data-theme="light"] .tools-sos-title { color: var(--st-text); }
+        .tools-sos-sub { font-size: 11px; color: #8080A0; margin-top: 2px; }
+        .tools-sos-tap { padding: 6px 12px; border-radius: 999px; background: rgba(231,76,60,0.15); color: #e74c3c; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+
+        .tools-vault-card {
+            display: block; position: relative;
+            background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.05));
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 24px; padding: 18px; margin-bottom: 10px;
+            overflow: hidden; text-decoration: none;
+            transition: transform 0.15s;
+        }
+        .tools-vault-card:active { transform: scale(0.995); }
+        .tools-vault-watermark { position: absolute; right: -8px; bottom: -12px; font-size: 80px; color: #C9A84C; opacity: 0.06; transform: rotate(-15deg); pointer-events: none; }
+        .tools-vault-top { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+        .tools-vault-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(201,168,76,0.12); display: flex; align-items: center; justify-content: center; color: #C9A84C; font-size: 24px; flex-shrink: 0; }
+        .tools-vault-head { flex: 1; min-width: 0; }
+        .tools-vault-title-row { display: flex; align-items: center; gap: 0; margin-bottom: 3px; }
+        .tools-vault-title { font-size: 20px; font-weight: 700; color: #fff; }
+        [data-theme="light"] .tools-vault-title { color: var(--st-text); }
+        .tools-vault-desc { font-size: 13px; line-height: 1.4; color: #F5E0D5; }
+        [data-theme="light"] .tools-vault-desc { color: var(--st-text-soft); }
+        .tools-vault-chev { color: #8080A0; font-size: 14px; }
+        .tools-vault-sep { border-top: 1px solid rgba(201,168,76,0.15); margin: 12px 0 10px; position: relative; z-index: 1; }
+        .tools-vault-stats { display: flex; gap: 6px; position: relative; z-index: 1; }
+        .tools-vault-stat { flex: 1; background: rgba(201,168,76,0.12); border-radius: 10px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .tv-stat-emoji { font-size: 16px; margin-bottom: 2px; }
+        .tv-stat-val { font-size: 15px; font-weight: 700; color: #C9A84C; line-height: 1.2; }
+        .tv-stat-lbl { font-size: 10px; color: #8080A0; margin-top: 1px; }
+
+        .tools-sos-record {
+            display: flex; align-items: center; gap: 12px;
+            background: linear-gradient(135deg, rgba(231,76,60,0.12), transparent);
+            border: 1px solid rgba(231,76,60,0.15);
+            border-radius: 16px;
+            padding: 16px 14px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            transition: transform 0.15s;
+        }
+        .tools-sos-record:active { transform: scale(0.995); }
+        .tools-sos-record-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(231,76,60,0.15); color: #e74c3c; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .tools-sos-record-body { flex: 1; min-width: 0; }
+        .tools-sos-record-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        [data-theme="light"] .tools-sos-record-title { color: var(--st-text); }
+        .tools-sos-record-desc { font-size: 13px; line-height: 1.4; color: #F5E0D5; }
+        [data-theme="light"] .tools-sos-record-desc { color: var(--st-text-soft); }
+
+        .tools-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px; }
+        .tools-grid-cell {
+            background: #22223A;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 14px;
+            text-decoration: none;
+            transition: transform 0.15s, border-color 0.15s, background 0.15s;
+            cursor: pointer;
+            display: block;
+        }
+        .tools-grid-cell:active { transform: scale(0.99); background: #2A2A4A; border-color: rgba(232,160,181,0.2); }
+        [data-theme="light"] .tools-grid-cell { background: var(--st-surface); border-color: var(--st-border); }
+        [data-theme="light"] .tools-grid-cell:active { background: var(--st-surface-muted); }
+        .tools-grid-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 20px; }
+        .tools-grid-title { font-size: 13px; font-weight: 700; color: #fff; }
+        [data-theme="light"] .tools-grid-title { color: var(--st-text); }
+        .tools-grid-desc { font-size: 10px; color: #8080A0; margin-top: 2px; }
+
+        .tools-footer { text-align: center; margin-top: 24px; padding: 0 24px; }
+        .tools-footer i { color: #8080A0; margin-bottom: 6px; display: block; }
+        .tools-footer p { font-size: 11px; color: #8080A0; line-height: 1.4; margin: 0; }
         .datecheck-card { background: #22223A; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06); }
         .datecheck-card h3 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 16px; }
         .dc-form-group { margin-bottom: 14px; }
@@ -2274,95 +2363,89 @@
 
     <!-- ALERTS TAB -->
     <div id="tab-alerts" class="tab-section">
-        <div style="max-width:720px;margin:0 auto;padding:24px">
-            <div style="margin-bottom:24px">
-                <h2 style="color:#fff;font-size:22px;margin-bottom:6px;display:flex;align-items:center;gap:10px"><i class="fas fa-toolbox" style="color:#E8A0B5"></i> SafeTea Tools</h2>
-                <p style="color:#8080A0;font-size:14px">Your personal safety toolkit. Tap any tool to get started.</p>
+        <div class="tools-dashboard">
+            <p class="tools-dash-subtitle">Your personal safety toolkit for every stage of dating.</p>
+
+            <!-- Zone 1: Emergency SOS banner -->
+            <div class="tools-sos-banner" onclick="if(typeof showSOSActionSheet==='function'){showSOSActionSheet()}else{showToast('Emergency options coming soon')}" role="button" aria-label="Emergency SOS. Opens emergency options: fake call, record audio, or call 911" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){this.click();event.preventDefault()}">
+                <div class="tools-sos-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="tools-sos-body">
+                    <div class="tools-sos-title">Emergency SOS</div>
+                    <div class="tools-sos-sub">Fake call · Record · 911</div>
+                </div>
+                <span class="tools-sos-tap">TAP</span>
             </div>
 
-            <!-- Tool 1: SafeTea Check-In -->
-            <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('datecheck')},100)" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.1),rgba(232,160,181,0.04));border:1px solid rgba(232,160,181,0.2);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.2)'">
-                <div style="min-width:48px;height:48px;background:rgba(232,160,181,0.15);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-calendar-check" style="font-size:22px;color:#E8A0B5"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SafeTea Check-In</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Share your plans with trusted contacts via SMS. Live tracking + safety check-in.</p>
+            <!-- Zone 2: Safety Vault (hero card) -->
+            <a href="/vault" class="tools-vault-card" aria-label="Safety Vault. Private encrypted journal.">
+                <i class="fas fa-lock tools-vault-watermark" aria-hidden="true"></i>
+                <div class="tools-vault-top">
+                    <div class="tools-vault-icon"><i class="fas fa-lock"></i></div>
+                    <div class="tools-vault-head">
+                        <div class="tools-vault-title-row">
+                            <span class="tools-vault-title">Safety Vault</span>
+                            <span class="plus-badge">SafeTea+</span>
+                        </div>
+                        <div class="tools-vault-desc">Encrypted journal for your eyes only. Log notes, photos, audio, video.</div>
+                    </div>
+                    <i class="fas fa-chevron-right tools-vault-chev"></i>
                 </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </div>
-
-            <!-- Tool 2: Photo Verification -->
-            <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('catfish')},100)" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(52,152,219,0.08),rgba(52,152,219,0.02));border:1px solid rgba(52,152,219,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(52,152,219,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(52,152,219,0.15)'">
-                <div style="min-width:48px;height:48px;background:rgba(52,152,219,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-camera" style="font-size:22px;color:#3498db"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Photo Verification</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Analyze profile photos for catfishing — metadata, editing software, reverse image search.</p>
+                <div class="tools-vault-sep"></div>
+                <div class="tools-vault-stats">
+                    <div class="tools-vault-stat"><span class="tv-stat-emoji">📝</span><span class="tv-stat-val" id="tools-vault-entries">—</span><span class="tv-stat-lbl">Entries</span></div>
+                    <div class="tools-vault-stat"><span class="tv-stat-emoji">📷</span><span class="tv-stat-val" id="tools-vault-photos">—</span><span class="tv-stat-lbl">Photos</span></div>
+                    <div class="tools-vault-stat"><span class="tv-stat-emoji">🎙️</span><span class="tv-stat-val" id="tools-vault-audio">—</span><span class="tv-stat-lbl">Audio</span></div>
+                    <div class="tools-vault-stat"><span class="tv-stat-emoji">🛡️</span><span class="tv-stat-val" id="tools-vault-guardian">—</span><span class="tv-stat-lbl">Guardian</span></div>
                 </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </div>
-
-            <!-- Tool 3: Conversation Scanner -->
-            <a href="/redflag.html" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(231,76,60,0.08),rgba(231,76,60,0.02));border:1px solid rgba(231,76,60,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(231,76,60,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.15)'">
-                <div style="min-width:48px;height:48px;background:rgba(231,76,60,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-flag" style="font-size:22px;color:#e74c3c"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Conversation Scanner</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Paste a conversation and our AI analyzes messages for red flags, manipulation, and true motives.</p>
-                </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
             </a>
 
-            <!-- Tool 4: SOS Record & Protect -->
-            <div onclick="if(typeof showSOSActionSheet==='function'){showSOSActionSheet()}else{showToast('SOS Record & Protect coming soon!')}" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(155,89,182,0.08),rgba(155,89,182,0.02));border:1px solid rgba(155,89,182,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(155,89,182,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(155,89,182,0.15)'">
-                <div style="min-width:48px;height:48px;background:rgba(155,89,182,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microphone-alt" style="font-size:22px;color:#9b59b6"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SOS Record & Protect</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Discreetly record audio, send your location to contacts, and trigger emergency alerts.</p>
+            <!-- Zone 3: SOS Record & Protect -->
+            <a href="/pulse.html" class="tools-sos-record">
+                <div class="tools-sos-record-icon"><i class="fas fa-microphone-alt"></i></div>
+                <div class="tools-sos-record-body">
+                    <div class="tools-sos-record-title">SOS Record & Protect</div>
+                    <div class="tools-sos-record-desc">Discreet audio recording, location alerts & emergency triggers</div>
                 </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
+                <i class="fas fa-chevron-right tools-vault-chev"></i>
+            </a>
+
+            <!-- Zone 4: 3×2 grid -->
+            <div class="tools-grid">
+                <a class="tools-grid-cell" onclick="switchTab('hub');setTimeout(function(){switchHubTab('datecheck')},100)" aria-label="Check-In. Share plans via SMS">
+                    <div class="tools-grid-icon" style="background:rgba(46,204,113,0.15)"><i class="fas fa-calendar-check" style="color:#2ecc71"></i></div>
+                    <div class="tools-grid-title">Check-In</div>
+                    <div class="tools-grid-desc">Share plans via SMS</div>
+                </a>
+                <a class="tools-grid-cell" onclick="switchTab('hub');setTimeout(function(){switchHubTab('catfish')},100)" aria-label="Photo Verify. Detect catfishing">
+                    <div class="tools-grid-icon" style="background:rgba(52,152,219,0.15)"><i class="fas fa-camera" style="color:#3498db"></i></div>
+                    <div class="tools-grid-title">Photo Verify</div>
+                    <div class="tools-grid-desc">Detect catfishing</div>
+                </a>
+                <a class="tools-grid-cell" href="/redflag.html" aria-label="Convo Scanner. Analyze red flags">
+                    <div class="tools-grid-icon" style="background:rgba(241,196,15,0.15)"><i class="fas fa-flag" style="color:#f1c40f"></i></div>
+                    <div class="tools-grid-title">Convo Scanner</div>
+                    <div class="tools-grid-desc">Analyze red flags</div>
+                </a>
+                <a class="tools-grid-cell" href="/safelink.html" aria-label="SafeLink. Live location share">
+                    <div class="tools-grid-icon" style="background:rgba(232,160,181,0.15)"><i class="fas fa-link" style="color:#E8A0B5"></i></div>
+                    <div class="tools-grid-title">SafeLink</div>
+                    <div class="tools-grid-desc">Live location share</div>
+                </a>
+                <a class="tools-grid-cell" href="/pulse.html" aria-label="Pulse. Session monitoring">
+                    <div class="tools-grid-icon" style="background:rgba(155,89,182,0.15)"><i class="fas fa-heartbeat" style="color:#9b59b6"></i></div>
+                    <div class="tools-grid-title">Pulse</div>
+                    <div class="tools-grid-desc">Session monitoring</div>
+                </a>
+                <a class="tools-grid-cell" onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100)" aria-label="Name Watch. Monitor mentions">
+                    <div class="tools-grid-icon" style="background:rgba(241,196,15,0.15)"><i class="fas fa-eye" style="color:#f1c40f"></i></div>
+                    <div class="tools-grid-title">Name Watch</div>
+                    <div class="tools-grid-desc">Monitor mentions</div>
+                </a>
             </div>
 
-            <!-- Tool 4b: SafeLink -->
-            <a href="/safelink.html" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(242,112,89,0.08),rgba(242,112,89,0.02));border:1px solid rgba(242,112,89,0.18);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(242,112,89,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(242,112,89,0.18)'">
-                <div style="min-width:48px;height:48px;background:rgba(242,112,89,0.14);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-link" style="font-size:22px;color:#f27059"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SafeLink</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Share your live location with trusted contacts. Walking, commuting, or anywhere you want backup.</p>
-                </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </a>
-
-            <!-- Tool 4c: SafeTea Pulse -->
-            <a href="/pulse.html" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(231,76,60,0.08),rgba(231,76,60,0.02));border:1px solid rgba(231,76,60,0.18);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(231,76,60,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(231,76,60,0.18)'">
-                <div style="min-width:48px;height:48px;background:rgba(231,76,60,0.14);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-heartbeat" style="font-size:22px;color:#e74c3c"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">SafeTea Pulse</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Real-time monitoring during active sessions. Detects inactivity, route changes, and missed check-ins.</p>
-                </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </a>
-
-            <!-- Tool 4d: Safety Vault -->
-            <a href="/vault" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(232,160,181,0.08),rgba(155,89,182,0.04));border:1px solid rgba(232,160,181,0.18);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;text-decoration:none" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(232,160,181,0.4)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(232,160,181,0.18)'">
-                <div style="min-width:48px;height:48px;background:rgba(232,160,181,0.14);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-shield-heart" style="font-size:22px;color:#E8A0B5"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Safety Vault <span class="plus-badge">SafeTea+</span></h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Private, encrypted safety journaling. Document what matters — you control what's kept and what's shared.</p>
-                </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </a>
-
-            <!-- Tool 5: Name Watch -->
-            <div onclick="switchTab('hub');setTimeout(function(){switchHubTab('namewatch')},100)" style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(46,204,113,0.08),rgba(46,204,113,0.02));border:1px solid rgba(46,204,113,0.15);border-radius:14px;padding:18px 20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)';this.style.borderColor='rgba(46,204,113,0.35)'" onmouseout="this.style.transform='none';this.style.borderColor='rgba(46,204,113,0.15)'">
-                <div style="min-width:48px;height:48px;background:rgba(46,204,113,0.12);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="fas fa-eye" style="font-size:22px;color:#2ecc71"></i></div>
-                <div style="flex:1">
-                    <h4 style="color:#fff;font-size:15px;font-weight:600;margin-bottom:4px">Name Watch</h4>
-                    <p style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">Monitor names across SafeTea posts. Get alerts when someone you're watching is mentioned.</p>
-                </div>
-                <i class="fas fa-chevron-right" style="color:#8080A0;font-size:14px"></i>
-            </div>
-
-            <!-- Privacy footer -->
-            <div style="text-align:center;padding:20px 0;margin-top:12px">
-                <p style="color:#8080A0;font-size:12px"><i class="fas fa-lock" style="margin-right:4px"></i> All tools are private. Your data is never shared.</p>
+            <div class="tools-footer">
+                <i class="fas fa-shield-alt"></i>
+                <p>All tools are designed with your privacy in mind. No data is shared without your explicit consent.</p>
             </div>
         </div>
     </div>
@@ -3706,6 +3789,26 @@
         if (tab === 'community' && typeof loadCommunityRooms === 'function') {
             loadCommunityRooms();
         }
+        // Populate Safety Vault stats on Tools tab (free users will 403 — stays "—")
+        if (tab === 'alerts' && typeof loadVaultStats === 'function') {
+            loadVaultStats();
+        }
+    }
+
+    function loadVaultStats() {
+        var token = localStorage.getItem('safetea_token');
+        if (!token) return;
+        fetch('/api/vault/stats', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(function(r) { if (!r.ok) return null; return r.json(); })
+            .then(function(d) {
+                if (!d) return;
+                var setIf = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+                setIf('tools-vault-entries', String(d.entries != null ? d.entries : '—'));
+                setIf('tools-vault-photos', String(d.photos != null ? d.photos : '—'));
+                setIf('tools-vault-audio', String(d.audio != null ? d.audio : '—'));
+                setIf('tools-vault-guardian', d.guardian || '—');
+            })
+            .catch(function() { /* stays as placeholder */ });
     }
 
     // ============ HUB SUB-TAB SWITCHING ============

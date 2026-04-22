@@ -312,6 +312,27 @@
       return 'document';
     }
 
+    // Mobile file pickers (iOS camera roll, some Android galleries) return
+    // files with an empty file.type for certain formats — JPG from camera,
+    // HEIC, M4A recordings, MOV screen captures. Fall back to the filename
+    // extension so our server-side MIME allow-list sees something real.
+    function inferMimeFromName(name, fallback) {
+      if (!name) return fallback || '';
+      var ext = String(name).toLowerCase().split('.').pop();
+      var map = {
+        jpg: 'image/jpeg', jpeg: 'image/jpeg',
+        png: 'image/png',
+        heic: 'image/heic', heif: 'image/heif',
+        webp: 'image/webp',
+        gif: 'image/gif',
+        pdf: 'application/pdf',
+        m4a: 'audio/m4a', mp3: 'audio/mpeg', wav: 'audio/wav',
+        aac: 'audio/aac', ogg: 'audio/ogg', webm: 'audio/webm',
+        mp4: 'video/mp4', mov: 'video/quicktime', m4v: 'video/x-m4v',
+      };
+      return map[ext] || fallback || '';
+    }
+
     function humanSize(bytes) {
       if (!bytes || bytes < 1024) return (bytes || 0) + ' B';
       if (bytes < 1048576) return Math.round(bytes / 1024) + ' KB';
@@ -537,7 +558,11 @@
         toast('File is larger than 25 MB.');
         return;
       }
-      var entryType = entryTypeFromMime(file.type);
+      // Resolve MIME type, falling back to extension-based inference for
+      // mobile pickers that leave file.type blank. Belt-and-braces against
+      // "Content-Type not allowed" on obviously-valid files.
+      var resolvedMime = file.type || inferMimeFromName(file.name, '');
+      var entryType = entryTypeFromMime(resolvedMime);
       var attachBtn = document.getElementById('attach-btn');
       uploadInFlight = true;
       if (attachBtn) attachBtn.disabled = true;
@@ -574,17 +599,51 @@
         }
         var safeName = (file.name || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
         var pathname = 'vault/' + folderId + '/' + Date.now() + '-' + safeName;
-        await blobUpload(pathname, file, {
-          access: 'public',
-          handleUploadUrl: '/api/vault/files/upload',
-          clientPayload: JSON.stringify({
-            folder_id: parseInt(folderId, 10),
-            entry_id: entryId,
-            filename: file.name,
-            mime_type: file.type,
-            byte_size: file.size,
-          }),
+        var clientPayloadStr = JSON.stringify({
+          folder_id: parseInt(folderId, 10),
+          entry_id: entryId,
+          filename: file.name,
+          mime_type: resolvedMime,
+          byte_size: file.size,
         });
+        try {
+          await blobUpload(pathname, file, {
+            access: 'public',
+            handleUploadUrl: '/api/vault/files/upload',
+            clientPayload: clientPayloadStr,
+          });
+        } catch (blobErr) {
+          // @vercel/blob/client hides the server's actual 4xx reason behind
+          // a generic "failed to receive (client) token" message. If that's
+          // what we got, probe the endpoint ourselves with the same payload
+          // shape and surface the real error from our server.
+          var msg = (blobErr && blobErr.message) || '';
+          if (/failed to receive.*token/i.test(msg)) {
+            try {
+              var probe = await fetch('/api/vault/files/upload', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({
+                  type: 'blob.generate-client-token',
+                  payload: {
+                    pathname: pathname,
+                    callbackUrl: window.location.origin + '/api/vault/files/upload',
+                    clientPayload: clientPayloadStr,
+                    multipart: false,
+                  },
+                }),
+              });
+              if (!probe.ok) {
+                var j = {};
+                try { j = await probe.json(); } catch (_) {}
+                throw new Error((j && j.error) ? j.error : ('Upload rejected (HTTP ' + probe.status + ')'));
+              }
+            } catch (probeErr) {
+              throw probeErr;
+            }
+          }
+          throw blobErr;
+        }
 
         // Step 3 — the server's onUploadCompleted hook has now written
         // vault_files + audit log. Refresh the timeline to pull the row.

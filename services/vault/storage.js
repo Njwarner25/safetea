@@ -59,7 +59,14 @@ async function removeBlob(url) {
  */
 async function handleClientUpload(req, res, config) {
   requireToken();
-  const body = req.body; // Vercel already JSON-parses
+  // Vercel plain functions (/api/*.js, not Next.js pages/api) do NOT
+  // auto-parse JSON bodies. The caller must pass a parsed body in
+  // config.body — typically from api/_utils/auth's parseBody(req).
+  // We still fall back to req.body so Next.js-style callers keep working.
+  const body = (config && config.body != null) ? config.body : req.body;
+  if (body == null) {
+    throw new Error('handleClientUpload: request body is empty — pass config.body from parseBody(req)');
+  }
   const jsonResponse = await blobClient.handleUpload({
     body,
     request: req,

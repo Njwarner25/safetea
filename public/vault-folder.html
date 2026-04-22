@@ -670,12 +670,22 @@
         headers: headers(),
         body: JSON.stringify({ entry_id: parseInt(entryId, 10) })
       })
-        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, data: j }; }); })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); })
         .then(function (r) {
-          // Silent — the summary will appear on the next timeline refresh.
-          if (r.ok) reloadEntries();
+          // Always refresh the timeline so the spinner clears — the entry's
+          // ai_status on the server has moved to one of {processed, skipped,
+          // error} by this point. Without this the UI stays on 'pending'
+          // forever on 500/timeout paths.
+          reloadEntries();
+          if (!r.ok) console.warn('[vault organize] failed:', r.status, r.data);
         })
-        .catch(function () { /* swallow; original entry is unaffected */ });
+        .catch(function (err) {
+          // Fetch itself failed (network/timeout). Reload anyway — the
+          // server's pending-marker is stale at this point and the entry
+          // will render without the spinner.
+          console.warn('[vault organize] network error:', err && err.message);
+          reloadEntries();
+        });
     }
 
     window.expandEntry = function (id, btn) {

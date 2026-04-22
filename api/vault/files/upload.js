@@ -104,13 +104,17 @@ module.exports = async function handler(req, res) {
         if (folder.legal_hold) throw new Error('Folder is under legal hold');
 
         // Optional entry check (the file can be attached to an existing
-        // entry or orphaned until slice 5 wires a join).
+        // entry or orphaned until slice 5 wires a join). pg returns bigint
+        // columns as strings by default; folderId here is a JS number from
+        // parseInt above. Coerce both to String() for the ownership check.
         if (entryId !== null) {
           const entry = await getOne(
             'SELECT id, folder_id FROM vault_entries WHERE id = $1',
             [entryId]
           );
-          if (!entry || entry.folder_id !== folderId) throw new Error('Entry not found in this folder');
+          if (!entry || String(entry.folder_id) !== String(folderId)) {
+            throw new Error('Entry not found in this folder');
+          }
         }
 
         return {

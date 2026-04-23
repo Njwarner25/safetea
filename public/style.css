@@ -117,6 +117,16 @@ h3 { font-size: 1.15rem; }
   filter: drop-shadow(0 0 40px rgba(232, 160, 181, 0.3)) drop-shadow(0 0 80px rgba(232, 160, 181, 0.1));
 }
 .hero h1 { margin-bottom: 24px; }
+.hero-slogan {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  color: var(--pink);
+  margin-bottom: 20px;
+  max-width: 480px;
+  letter-spacing: 0.3px;
+}
 .hero-subtitle {
   color: var(--text-muted); font-size: 1.15rem;
   line-height: 1.7; margin-bottom: 16px; max-width: 480px;
@@ -354,6 +364,7 @@ h3 { font-size: 1.15rem; }
 @media (max-width: 768px) {
   .hero { padding: 120px 0 80px; }
   .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 48px; }
+  .hero-slogan { margin: 0 auto 16px; text-align: center; font-size: 1.25rem; }
   .hero-subtitle { margin: 0 auto 16px; }
   .hero-trust { margin-bottom: 32px; }
   .hero-cta { justify-content: center; }

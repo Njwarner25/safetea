@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-title" content="SafeTea">
   <meta name="application-name" content="SafeTea">
   <meta name="format-detection" content="telephone=no">
-  <title>SafeTea™ — Verified Safety for Women | getsafetea.app</title>
-  <meta name="description" content="SafeTea™ is the women's safety app built on verified identity. Every user is a real, verified human. No AI-generated photos. No stock images. Veteran-founded.">
+  <title>SafeTea™ — Stay connected, stay safe.</title>
+  <meta name="description" content="Stay connected, stay safe. SafeTea™ is the women's safety app built on verified identity. Every user is a real, verified human. No AI-generated photos. No stock images. Veteran-founded.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <meta name="screenshot-prevention" content="true">
@@ -470,6 +470,7 @@
   "alternateName": ["SafeTea App", "SafeTea™"],
   "url": "https://getsafetea.app",
   "logo": "https://getsafetea.app/logo.png",
+  "slogan": "Stay connected, stay safe.",
   "description": "SafeTea is the women's safety app built on verified identity. Every user is a real, verified human — no AI-generated photos, no stock images. Veteran-founded. Trademark-protected.",
   "foundingDate": "2026",
   "address": {
@@ -535,7 +536,8 @@
   "@id": "https://getsafetea.app/#website",
   "url": "https://getsafetea.app",
   "name": "SafeTea",
-  "description": "The women's safety app built on verified identity.",
+  "alternateName": "Stay connected, stay safe.",
+  "description": "Stay connected, stay safe. The women's safety app built on verified identity.",
   "publisher": {
     "@id": "https://getsafetea.app/#organization"
   },
@@ -586,6 +588,7 @@
         Personal safety platform
       </div>
       <h1>SafeTea™. Verified humans.<br><span class="text-pink">Real safety.</span></h1>
+      <p class="hero-slogan">Stay connected, stay safe.</p>
       <p class="hero-subtitle">The women's safety app built on verified identity.</p>
       <p class="hero-trust">Every user is a verified human. Real images, not AI.</p>
       <div class="hero-cta">
@@ -967,7 +970,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
 </section>
 <script>
 (function(){
-  fetch('https://www.getsafetea.app/api/cities')
+  fetch('/api/cities')
     .then(function(r){return r.json()})
     .then(function(cities){
       var grid=document.getElementById('cities-grid');
@@ -992,7 +995,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
     });
 
   // Load requested/waitlist cities
-  fetch('https://www.getsafetea.app/api/cities/requested')
+  fetch('/api/cities/requested')
     .then(function(r){return r.json()})
     .then(function(data){
       var container=document.getElementById('requested-cities-landing');

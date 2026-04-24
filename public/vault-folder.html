@@ -627,11 +627,37 @@
           // check Authorization header first, then ?jwt=, then
           // clientPayload.jwt.
           var handleUploadUrl = '/api/vault/files/upload?jwt=' + encodeURIComponent(token || '');
-          await blobUpload(pathname, file, {
+          // blobUpload returns { url, downloadUrl, pathname, ... }
+          // once the PUT to Blob storage completes. Vercel's async
+          // onUploadCompleted callback is unreliable — it's often
+          // delayed or silently dropped. We commit the vault_files
+          // row ourselves right after.
+          var blobResult = await blobUpload(pathname, file, {
             access: 'public',
             handleUploadUrl: handleUploadUrl,
             clientPayload: clientPayloadStr,
           });
+
+          // Client-driven commit — the reliable path.
+          setProgress('Saving to vault…', true);
+          var commitResp = await fetch('/api/vault/files/commit', {
+            method: 'POST',
+            headers: headers(),
+            body: JSON.stringify({
+              folder_id: parseInt(folderId, 10),
+              entry_id: entryId,
+              blob_url: blobResult && blobResult.url,
+              pathname: blobResult && blobResult.pathname,
+              filename: file.name,
+              mime_type: resolvedMime,
+              byte_size: file.size,
+            }),
+          });
+          if (!commitResp.ok) {
+            var cj = {};
+            try { cj = await commitResp.json(); } catch (_) {}
+            throw new Error((cj && cj.error) || 'Could not save file to vault');
+          }
         } catch (blobErr) {
           // @vercel/blob/client hides the server's actual 4xx reason behind
           // generic messages like "failed to receive token" / "failed to

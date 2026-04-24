@@ -206,6 +206,7 @@
         { "source": "/api/area-alerts/preferences", "destination": "/api/area-alerts/preferences" },
         { "source": "/api/area-alerts/safe-zone", "destination": "/api/area-alerts/safe-zone" },
         { "source": "/api/area-alerts/dismiss", "destination": "/api/area-alerts/dismiss" },
+        { "source": "/api/vault/files/commit", "destination": "/api/vault/files/commit" },
         { "source": "/api/vault/admin/break-glass", "destination": "/api/vault/admin/break-glass" },
         { "source": "/api/vault/admin/legal-hold", "destination": "/api/vault/admin/legal-hold" },
         { "source": "/api/vault/integration-settings", "destination": "/api/vault/integration-settings" },

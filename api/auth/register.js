@@ -3,6 +3,7 @@ const { getOne, run } = require('../_utils/db');
 const { generateToken, cors, parseBody } = require('../_utils/auth');
 const { sendWelcomeEmail } = require('../../services/email');
 const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
+const { getClientIp, getUserAgent, getDeviceHash } = require('../_utils/client-info');
 
 module.exports = async function handler(req, res) {
     cors(res, req);
@@ -14,6 +15,26 @@ module.exports = async function handler(req, res) {
           const limited = await checkRateLimit(getClientIP(req), 'register', 5, 3600);
           if (limited) {
               return res.status(429).json({ error: 'Too many registration attempts. Please try again later.' });
+          }
+
+          // IP / device fingerprint for ban enforcement + audit trail.
+          const regIp = getClientIp(req);
+          const regUa = getUserAgent(req);
+          const regDeviceHash = getDeviceHash(req);
+
+          // Ban check — if this IP or device is banned, silently reject
+          // with a generic error so the blocked party doesn't know why.
+          if (regIp) {
+            try {
+              const ipBan = await getOne('SELECT id FROM banned_ips WHERE ip = $1', [regIp]);
+              if (ipBan) return res.status(403).json({ error: 'Registration unavailable from this network.' });
+            } catch (_) { /* table may not exist yet on older deploys */ }
+          }
+          if (regDeviceHash) {
+            try {
+              const devBan = await getOne('SELECT id FROM banned_user_agents WHERE device_hash = $1', [regDeviceHash]);
+              if (devBan) return res.status(403).json({ error: 'Registration unavailable from this device.' });
+            } catch (_) { /* table may not exist yet on older deploys */ }
           }
 
           const body = await parseBody(req);
@@ -33,10 +54,20 @@ module.exports = async function handler(req, res) {
           }
 
       const password_hash = await bcrypt.hash(password, 10);
-          const result = await run(
+          // Persist IP/UA/device at registration. Use try/catch so a
+          // missing column on an older deploy doesn't block signup.
+          try {
+            await run(
+                  'INSERT INTO users (email, password_hash, display_name, city, registration_ip, registration_user_agent, registration_device_hash) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+                  [email.toLowerCase(), password_hash, display_name, city || null, regIp, regUa, regDeviceHash]
+                );
+          } catch (_) {
+            // Fallback for deploys before the migrate-ban-system ran
+            await run(
                   'INSERT INTO users (email, password_hash, display_name, city) VALUES ($1, $2, $3, $4) RETURNING id',
                   [email.toLowerCase(), password_hash, display_name, city || null]
                 );
+          }
 
       const user = await getOne('SELECT id, email, display_name, role, city FROM users WHERE email = $1', [email.toLowerCase()]);
           const token = generateToken(user);

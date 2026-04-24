@@ -34,7 +34,8 @@
         { "path": "/api/cron/run-ai-tasks", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" },
         { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" },
-        { "path": "/api/cron/vault-access-expire", "schedule": "*/15 * * * *" }
+        { "path": "/api/cron/vault-access-expire", "schedule": "*/15 * * * *" },
+        { "path": "/api/cron/rival-watch", "schedule": "0 */6 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -195,6 +196,8 @@
         { "source": "/api/admin/suspicious-signups", "destination": "/api/admin/suspicious-signups" },
         { "source": "/api/admin/ban-by-user", "destination": "/api/admin/ban-by-user" },
         { "source": "/api/migrate-ban-system", "destination": "/api/migrate-ban-system" },
+        { "source": "/api/migrate-rival-watch", "destination": "/api/migrate-rival-watch" },
+        { "source": "/api/cron/rival-watch", "destination": "/api/cron/rival-watch" },
         { "source": "/api/vault/admin/break-glass", "destination": "/api/vault/admin/break-glass" },
         { "source": "/api/vault/admin/legal-hold", "destination": "/api/vault/admin/legal-hold" },
         { "source": "/api/vault/integration-settings", "destination": "/api/vault/integration-settings" },

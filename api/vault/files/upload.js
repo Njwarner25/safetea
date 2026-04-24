@@ -44,18 +44,49 @@ const { isPlusUser } = require('../../../services/vault/gating');
  * tokenPayload we later send to Blob storage.
  */
 async function authFromClientPayload(clientPayload) {
+  let payload = {};
   try {
-    const payload = typeof clientPayload === 'string'
+    payload = typeof clientPayload === 'string'
       ? JSON.parse(clientPayload)
       : (clientPayload || {});
-    if (!payload.jwt || !process.env.JWT_SECRET) return null;
-    const decoded = jwt.verify(payload.jwt, process.env.JWT_SECRET);
-    if (!decoded || !decoded.id) return null;
-    return await getOne(
+  } catch (e) {
+    console.warn('[vault/upload authFromClientPayload] parse failed:', e && e.message,
+      'clientPayload_type=', typeof clientPayload,
+      'clientPayload_preview=', typeof clientPayload === 'string' ? clientPayload.slice(0, 200) : String(clientPayload).slice(0, 200)
+    );
+    return null;
+  }
+  const hasJwt = !!payload.jwt;
+  const hasSecret = !!process.env.JWT_SECRET;
+  if (!hasJwt || !hasSecret) {
+    console.warn('[vault/upload authFromClientPayload] skip:',
+      'has_jwt=', hasJwt,
+      'has_secret=', hasSecret,
+      'payload_keys=', Object.keys(payload || {}).join(',')
+    );
+    return null;
+  }
+  let decoded;
+  try {
+    decoded = jwt.verify(payload.jwt, process.env.JWT_SECRET);
+  } catch (e) {
+    console.warn('[vault/upload authFromClientPayload] verify failed:', e && e.message);
+    return null;
+  }
+  if (!decoded || !decoded.id) {
+    console.warn('[vault/upload authFromClientPayload] decoded missing id:', JSON.stringify(decoded).slice(0, 200));
+    return null;
+  }
+  try {
+    const u = await getOne(
       'SELECT id, email, display_name, role, city, subscription_tier FROM users WHERE id = $1',
       [decoded.id]
     );
-  } catch (_) {
+    if (!u) console.warn('[vault/upload authFromClientPayload] user row not found for id=', decoded.id);
+    else console.log('[vault/upload authFromClientPayload] ok — recovered user', u.id, u.email);
+    return u;
+  } catch (e) {
+    console.warn('[vault/upload authFromClientPayload] db lookup failed:', e && e.message);
     return null;
   }
 }

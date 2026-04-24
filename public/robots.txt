@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /debug-sms
+Disallow: /mod
+Disallow: /vault
+Disallow: /vault-folder
+Disallow: /vault-contacts
+Disallow: /vault-request
+Disallow: /vault-shared
+
+Sitemap: https://getsafetea.app/sitemap.xml

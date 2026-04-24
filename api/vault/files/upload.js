@@ -130,7 +130,7 @@ module.exports = async function handler(req, res) {
   // (Vercel Blob CDN doesn't send our session token). That's fine;
   // callback authenticity is proved by the x-vercel-signature header
   // that handleUpload verifies, not by our JWT.
-  const user = await authenticate(req);
+  let user = await authenticate(req);
 
   // Normalize body shape once so handleUpload + our logging see the same thing.
   const body = await readBodyAsObject(req);

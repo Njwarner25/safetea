@@ -43,52 +43,52 @@ const { isPlusUser } = require('../../../services/vault/gating');
  * only travels over HTTPS to our server — not included in the
  * tokenPayload we later send to Blob storage.
  */
+async function authFromToken(rawToken, source) {
+  if (!rawToken || !process.env.JWT_SECRET) return null;
+  let decoded;
+  try {
+    decoded = jwt.verify(rawToken, process.env.JWT_SECRET);
+  } catch (e) {
+    console.warn('[vault/upload auth ' + source + '] verify failed:', e && e.message);
+    return null;
+  }
+  if (!decoded || !decoded.id) return null;
+  try {
+    const u = await getOne(
+      'SELECT id, email, display_name, role, city, subscription_tier FROM users WHERE id = $1',
+      [decoded.id]
+    );
+    if (!u) console.warn('[vault/upload auth ' + source + '] user row not found for id=', decoded.id);
+    else console.log('[vault/upload auth ' + source + '] ok — recovered user', u.id);
+    return u;
+  } catch (e) {
+    console.warn('[vault/upload auth ' + source + '] db lookup failed:', e && e.message);
+    return null;
+  }
+}
+
 async function authFromClientPayload(clientPayload) {
   let payload = {};
   try {
     payload = typeof clientPayload === 'string'
       ? JSON.parse(clientPayload)
       : (clientPayload || {});
-  } catch (e) {
-    console.warn('[vault/upload authFromClientPayload] parse failed:', e && e.message,
-      'clientPayload_type=', typeof clientPayload,
-      'clientPayload_preview=', typeof clientPayload === 'string' ? clientPayload.slice(0, 200) : String(clientPayload).slice(0, 200)
-    );
+  } catch (_) {
     return null;
   }
-  const hasJwt = !!payload.jwt;
-  const hasSecret = !!process.env.JWT_SECRET;
-  if (!hasJwt || !hasSecret) {
-    console.warn('[vault/upload authFromClientPayload] skip:',
-      'has_jwt=', hasJwt,
-      'has_secret=', hasSecret,
-      'payload_keys=', Object.keys(payload || {}).join(',')
-    );
+  if (!payload.jwt) {
+    console.warn('[vault/upload authFromClientPayload] no jwt in clientPayload; keys=', Object.keys(payload || {}).join(','));
     return null;
   }
-  let decoded;
+  return authFromToken(payload.jwt, 'clientPayload');
+}
+
+function authFromQuery(req) {
   try {
-    decoded = jwt.verify(payload.jwt, process.env.JWT_SECRET);
-  } catch (e) {
-    console.warn('[vault/upload authFromClientPayload] verify failed:', e && e.message);
-    return null;
-  }
-  if (!decoded || !decoded.id) {
-    console.warn('[vault/upload authFromClientPayload] decoded missing id:', JSON.stringify(decoded).slice(0, 200));
-    return null;
-  }
-  try {
-    const u = await getOne(
-      'SELECT id, email, display_name, role, city, subscription_tier FROM users WHERE id = $1',
-      [decoded.id]
-    );
-    if (!u) console.warn('[vault/upload authFromClientPayload] user row not found for id=', decoded.id);
-    else console.log('[vault/upload authFromClientPayload] ok — recovered user', u.id, u.email);
-    return u;
-  } catch (e) {
-    console.warn('[vault/upload authFromClientPayload] db lookup failed:', e && e.message);
-    return null;
-  }
+    const q = req && req.query ? req.query : null;
+    if (!q || !q.jwt) return null;
+    return authFromToken(String(q.jwt), 'query');
+  } catch (_) { return null; }
 }
 
 const ALLOWED_MIME = new Set([
@@ -162,6 +162,12 @@ module.exports = async function handler(req, res) {
   // callback authenticity is proved by the x-vercel-signature header
   // that handleUpload verifies, not by our JWT.
   let user = await authenticate(req);
+  // Fallback #1: URL query param (?jwt=...). @vercel/blob/client's
+  // upload() preserves query strings on handleUploadUrl, so this is
+  // the most reliable path when Authorization headers get stripped.
+  if (!user) {
+    user = await authFromQuery(req);
+  }
 
   // Normalize body shape once so handleUpload + our logging see the same thing.
   const body = await readBodyAsObject(req);

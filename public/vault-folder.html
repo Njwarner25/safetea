@@ -621,9 +621,15 @@
           byte_size: file.size,
         });
         try {
+          // Belt-and-braces auth: JWT is passed both in clientPayload
+          // (see below) and as ?jwt=... on the handleUploadUrl. The
+          // Vercel Blob client library forwards both. Server-side we
+          // check Authorization header first, then ?jwt=, then
+          // clientPayload.jwt.
+          var handleUploadUrl = '/api/vault/files/upload?jwt=' + encodeURIComponent(token || '');
           await blobUpload(pathname, file, {
             access: 'public',
-            handleUploadUrl: '/api/vault/files/upload',
+            handleUploadUrl: handleUploadUrl,
             clientPayload: clientPayloadStr,
           });
         } catch (blobErr) {

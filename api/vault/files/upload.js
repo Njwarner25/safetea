@@ -26,12 +26,39 @@
 
 'use strict';
 
+const jwt = require('jsonwebtoken');
 const { authenticate, cors } = require('../../_utils/auth');
 const { getOne, run } = require('../../_utils/db');
 const { encryptField, unwrapFolderKey, fileChecksum } = require('../../../services/vault/encryption');
 const storage = require('../../../services/vault/storage');
 const audit = require('../../../services/vault/audit');
 const { isPlusUser } = require('../../../services/vault/gating');
+
+/**
+ * Fallback auth: @vercel/blob/client's upload() does not forward
+ * custom Authorization headers, so the caller passes the JWT inside
+ * clientPayload as { jwt: '...', folder_id, ... }. If the main
+ * authenticate(req) returned null but the clientPayload carries a
+ * valid JWT, recover the user from it. Token is short-lived (7d) and
+ * only travels over HTTPS to our server — not included in the
+ * tokenPayload we later send to Blob storage.
+ */
+async function authFromClientPayload(clientPayload) {
+  try {
+    const payload = typeof clientPayload === 'string'
+      ? JSON.parse(clientPayload)
+      : (clientPayload || {});
+    if (!payload.jwt || !process.env.JWT_SECRET) return null;
+    const decoded = jwt.verify(payload.jwt, process.env.JWT_SECRET);
+    if (!decoded || !decoded.id) return null;
+    return await getOne(
+      'SELECT id, email, display_name, role, city, subscription_tier FROM users WHERE id = $1',
+      [decoded.id]
+    );
+  } catch (_) {
+    return null;
+  }
+}
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -125,6 +152,13 @@ module.exports = async function handler(req, res) {
       // Fires ONLY on the token-gen leg (owner-initiated upload).
       onBeforeGenerateToken: async function (pathname, clientPayload) {
         // ---- ALL auth + validation lives here ----
+        // Recover user from clientPayload.jwt if Authorization header
+        // was missing (the Vercel Blob client library doesn't forward
+        // headers). Only effective for the initial leg — tokenPayload
+        // we send out below does NOT include the jwt.
+        if (!user) {
+          user = await authFromClientPayload(clientPayload);
+        }
         if (!user) {
           throw new Error('Unauthorized: sign in to upload');
         }
@@ -140,6 +174,9 @@ module.exports = async function handler(req, res) {
             ? JSON.parse(clientPayload)
             : (clientPayload || {});
         } catch (_) {}
+        // Remove the JWT before passing payload fields further — it
+        // doesn't belong in any persisted metadata.
+        if (payload && payload.jwt) delete payload.jwt;
 
         const folderId = parseInt(payload.folder_id, 10);
         const entryId = payload.entry_id != null ? parseInt(payload.entry_id, 10) : null;

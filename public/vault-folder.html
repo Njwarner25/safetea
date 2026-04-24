@@ -608,7 +608,12 @@
         }
         var safeName = (file.name || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
         var pathname = 'vault/' + folderId + '/' + Date.now() + '-' + safeName;
+        // Note: @vercel/blob/client's upload() does NOT forward custom
+        // Authorization headers to handleUploadUrl. Pass the JWT through
+        // clientPayload so the server can authenticate the token-gen leg.
+        // Server strips jwt before persisting anything.
         var clientPayloadStr = JSON.stringify({
+          jwt: token,
           folder_id: parseInt(folderId, 10),
           entry_id: entryId,
           filename: file.name,

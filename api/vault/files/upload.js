@@ -62,9 +62,39 @@ module.exports = async function handler(req, res) {
   // Both legs of the handshake (token-issue + blob.upload-completed callback)
   // need the parsed body, so do it once up front.
   let parsedBody = {};
-  try { parsedBody = (await parseBody(req)) || {}; } catch (_) { parsedBody = {}; }
-  const isCompletion = !!(parsedBody && parsedBody.type === 'blob.upload-completed');
-  if (!user && !isCompletion) return res.status(401).json({ error: 'Unauthorized' });
+  let parseBodyError = null;
+  try { parsedBody = (await parseBody(req)) || {}; } catch (e) { parseBodyError = e && e.message; parsedBody = {}; }
+  const bodyType = parsedBody && typeof parsedBody === 'object' ? parsedBody.type : null;
+  // Vercel Blob callbacks have a payload with blob.url and tokenPayload —
+  // use that as a structural fallback if the version changes the literal
+  // 'blob.upload-completed' string on us.
+  const hasCompletionShape = !!(
+    parsedBody && parsedBody.payload &&
+    parsedBody.payload.blob &&
+    typeof parsedBody.payload.blob.url === 'string'
+  );
+  const isCompletion = bodyType === 'blob.upload-completed' || hasCompletionShape;
+  const isTokenGen = bodyType === 'blob.generate-client-token';
+
+  // Verbose diagnostic log so we can see in Vercel runtime logs which leg
+  // of the handshake each request is, and whether auth was present. Do
+  // NOT log the Bearer token or the full body (privacy).
+  console.log('[vault/upload]',
+    'method=', req.method,
+    'has_auth=', !!(req.headers && req.headers.authorization),
+    'content_type=', (req.headers && req.headers['content-type']) || '(none)',
+    'body_type=', bodyType || '(missing)',
+    'body_keys=', parsedBody ? Object.keys(parsedBody).join(',') : '(none)',
+    'parse_err=', parseBodyError || 'none',
+    'user_id=', user ? user.id : '(null)',
+    'is_token_gen=', isTokenGen,
+    'is_completion=', isCompletion
+  );
+
+  if (!user && !isCompletion) {
+    console.warn('[vault/upload] 401 — no user + not a blob completion callback. body_type=', bodyType);
+    return res.status(401).json({ error: 'Unauthorized', debug: { body_type: bodyType, has_auth: !!(req.headers && req.headers.authorization) } });
+  }
   // Only gate the owner-initiated leg; blob completion callbacks are internal.
   if (user && !isCompletion && blockIfNotPlus(user, res)) return;
 

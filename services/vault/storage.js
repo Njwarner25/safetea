@@ -74,7 +74,11 @@ async function handleClientUpload(req, res, config) {
       return config.onBeforeGenerateToken(pathname, clientPayload);
     },
     onUploadCompleted: async function (event) {
-      await config.onUploadCompleted(event.blob, event.tokenPayload);
+      // Pass the whole event through so the caller can use whatever
+      // shape the @vercel/blob library decides on. Legacy callers that
+      // expected (blob, tokenPayload) can still read event.blob /
+      // event.tokenPayload.
+      await config.onUploadCompleted(event);
     },
   });
   return jsonResponse;

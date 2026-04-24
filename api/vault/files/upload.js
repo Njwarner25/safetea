@@ -48,6 +48,34 @@ const ALLOWED_MIME = new Set([
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB per file (V1)
 
+/**
+ * Vercel plain functions sometimes give us req.body as a Buffer, a
+ * string, a pre-parsed object, or nothing (raw stream). Handle all.
+ * Returns the raw JSON string for logging + re-parsing.
+ */
+async function readRawBody(req) {
+  if (!req) return '';
+  if (req.body != null) {
+    if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
+    if (typeof req.body === 'string') return req.body;
+    if (typeof req.body === 'object') {
+      try { return JSON.stringify(req.body); } catch (_) { return ''; }
+    }
+  }
+  // Stream read fallback
+  return await new Promise(function (resolve) {
+    let data = '';
+    let done = false;
+    const finish = function () { if (done) return; done = true; resolve(data); };
+    try {
+      req.on('data', function (chunk) { data += chunk; });
+      req.on('end', finish);
+      req.on('error', finish);
+    } catch (_) { return finish(); }
+    setTimeout(finish, 5000);
+  });
+}
+
 module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -58,33 +86,48 @@ module.exports = async function handler(req, res) {
   // we trust it by virtue of the handshake tokenPayload we signed in
   // onBeforeGenerateToken.
   const user = await authenticate(req);
-  // Parse the JSON body ourselves — Vercel plain functions don't do it for us.
-  // Both legs of the handshake (token-issue + blob.upload-completed callback)
-  // need the parsed body, so do it once up front.
+  // Read the body robustly. parseBody() sometimes returns {} under
+  // Vercel's runtime when req.body is already a Buffer or when the
+  // stream has been partially consumed. Here we try every known shape
+  // and also keep the raw string so we can log it + pass it through
+  // to handleUpload unchanged.
+  const raw = await readRawBody(req);
   let parsedBody = {};
   let parseBodyError = null;
-  try { parsedBody = (await parseBody(req)) || {}; } catch (e) { parseBodyError = e && e.message; parsedBody = {}; }
+  if (raw && raw.length) {
+    try { parsedBody = JSON.parse(raw); } catch (e) { parseBodyError = e && e.message; parsedBody = {}; }
+  }
   const bodyType = parsedBody && typeof parsedBody === 'object' ? parsedBody.type : null;
-  // Vercel Blob callbacks have a payload with blob.url and tokenPayload —
-  // use that as a structural fallback if the version changes the literal
-  // 'blob.upload-completed' string on us.
+  // Vercel Blob callbacks have a payload with blob.url — use that as a
+  // structural fallback in case the literal type string differs.
   const hasCompletionShape = !!(
     parsedBody && parsedBody.payload &&
     parsedBody.payload.blob &&
     typeof parsedBody.payload.blob.url === 'string'
   );
-  const isCompletion = bodyType === 'blob.upload-completed' || hasCompletionShape;
-  const isTokenGen = bodyType === 'blob.generate-client-token';
+  // Some versions send the callback without nesting — also check top-level blob.url
+  const hasFlatCompletionShape = !!(
+    parsedBody && parsedBody.blob && typeof parsedBody.blob.url === 'string'
+  );
+  const isCompletion = bodyType === 'blob.upload-completed'
+    || /upload-completed|completed/i.test(bodyType || '')
+    || hasCompletionShape
+    || hasFlatCompletionShape;
+  const isTokenGen = bodyType === 'blob.generate-client-token'
+    || /generate-client-token/i.test(bodyType || '');
 
-  // Verbose diagnostic log so we can see in Vercel runtime logs which leg
-  // of the handshake each request is, and whether auth was present. Do
-  // NOT log the Bearer token or the full body (privacy).
+  // Verbose diagnostic log — include raw body (truncated) so we can see
+  // exactly what Vercel Blob sends on the callback leg.
+  const rawPreview = raw ? String(raw).slice(0, 500) : '(empty)';
   console.log('[vault/upload]',
     'method=', req.method,
     'has_auth=', !!(req.headers && req.headers.authorization),
     'content_type=', (req.headers && req.headers['content-type']) || '(none)',
+    'content_length=', (req.headers && req.headers['content-length']) || '(none)',
     'body_type=', bodyType || '(missing)',
-    'body_keys=', parsedBody ? Object.keys(parsedBody).join(',') : '(none)',
+    'body_keys=', parsedBody && typeof parsedBody === 'object' ? Object.keys(parsedBody).join(',') : '(none)',
+    'raw_len=', raw ? raw.length : 0,
+    'raw_preview=', rawPreview,
     'parse_err=', parseBodyError || 'none',
     'user_id=', user ? user.id : '(null)',
     'is_token_gen=', isTokenGen,
@@ -92,8 +135,11 @@ module.exports = async function handler(req, res) {
   );
 
   if (!user && !isCompletion) {
-    console.warn('[vault/upload] 401 — no user + not a blob completion callback. body_type=', bodyType);
-    return res.status(401).json({ error: 'Unauthorized', debug: { body_type: bodyType, has_auth: !!(req.headers && req.headers.authorization) } });
+    console.warn('[vault/upload] 401 — no user + not a blob completion callback. body_type=', bodyType, 'raw_preview=', rawPreview);
+    return res.status(401).json({
+      error: 'Unauthorized',
+      debug: { body_type: bodyType, has_auth: !!(req.headers && req.headers.authorization), body_keys: parsedBody && typeof parsedBody === 'object' ? Object.keys(parsedBody) : [] }
+    });
   }
   // Only gate the owner-initiated leg; blob completion callbacks are internal.
   if (user && !isCompletion && blockIfNotPlus(user, res)) return;

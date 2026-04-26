@@ -632,10 +632,57 @@
           // onUploadCompleted callback is unreliable — it's often
           // delayed or silently dropped. We commit the vault_files
           // row ourselves right after.
-          var blobResult = await blobUpload(pathname, file, {
-            access: 'public',
-            handleUploadUrl: handleUploadUrl,
-            clientPayload: clientPayloadStr,
+          //
+          // Wrap the call with: (1) onUploadProgress for percent
+          // feedback in the toast/banner, (2) a 120-second total
+          // timeout, (3) a 30-second no-progress watchdog that aborts
+          // if no bytes flow for 30s. Without these the UI hangs
+          // forever when the library's PUT stalls.
+          var lastProgressAt = Date.now();
+          var sentBytes = 0;
+          var totalBytes = file.size || 0;
+          var STALL_MS = 30000;
+          var HARD_TIMEOUT_MS = 120000;
+          var stallTimer = null;
+          var hardTimer = null;
+          var aborted = false;
+
+          var blobResult = await new Promise(function (resolve, reject) {
+            function fail(reason) {
+              if (aborted) return;
+              aborted = true;
+              if (stallTimer) clearInterval(stallTimer);
+              if (hardTimer) clearTimeout(hardTimer);
+              reject(new Error(reason));
+            }
+            stallTimer = setInterval(function () {
+              if (Date.now() - lastProgressAt > STALL_MS) {
+                fail('Upload stalled — no progress for 30 seconds. Check your connection and retry.');
+              }
+            }, 5000);
+            hardTimer = setTimeout(function () {
+              fail('Upload timed out after 2 minutes. Check your connection and retry.');
+            }, HARD_TIMEOUT_MS);
+
+            blobUpload(pathname, file, {
+              access: 'public',
+              handleUploadUrl: handleUploadUrl,
+              clientPayload: clientPayloadStr,
+              onUploadProgress: function (e) {
+                if (aborted) return;
+                lastProgressAt = Date.now();
+                sentBytes = (e && (e.loaded != null ? e.loaded : e.uploaded)) || sentBytes;
+                var pct = totalBytes > 0 ? Math.min(99, Math.round((sentBytes / totalBytes) * 100)) : 0;
+                setProgress('Uploading ' + file.name + '… ' + pct + '%', true);
+              },
+            }).then(function (out) {
+              if (aborted) return;
+              if (stallTimer) clearInterval(stallTimer);
+              if (hardTimer) clearTimeout(hardTimer);
+              resolve(out);
+            }).catch(function (err) {
+              fail((err && err.message) || 'Upload failed');
+            });
           });
 
           // Client-driven commit — the reliable path.

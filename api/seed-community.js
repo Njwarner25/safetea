@@ -44,21 +44,16 @@ module.exports = async function handler(req, res) {
       results.accounts_deleted++;
     }
 
-    // ─── SEED ACCOUNTS (first name + last initial format) ───
-    const ACCOUNTS = [
-      { name: 'Ashley M.', color: '#E8A0B5' },
-      { name: 'Brianna T.', color: '#A0C4E8' },
-      { name: 'Chloe R.', color: '#C4E8A0' },
-      { name: 'Destiny K.', color: '#E8C4A0' },
-      { name: 'Elise W.', color: '#C4A0E8' },
-      { name: 'Faith J.', color: '#A0E8C4' },
-      { name: 'Grace L.', color: '#E8A0C4' },
-      { name: 'Harper S.', color: '#A0E8E8' },
-      { name: 'Imani D.', color: '#D4A0E8' },
-      { name: 'Jordan P.', color: '#E8D4A0' },
-      { name: 'Kayla N.', color: '#A0D4E8' },
-      { name: 'Luna V.', color: '#E8A0D4' }
-    ];
+    // ─── SEED ACCOUNTS — single curator persona, replicated per slot ───
+    // All seed posts display as "SafeTea Stories" (the transparent curator identity).
+    // We keep 12 distinct DB rows to preserve existing rotation logic and avoid breaking
+    // historical FKs from a previous seeding scheme. They all share display name + color
+    // so the front-end shows them as one curator account, paired with the is_curated badge.
+    const CURATOR_NAME = 'SafeTea Stories';
+    const CURATOR_COLOR = '#E8A0B5';
+    const ACCOUNTS = Array.from({ length: 12 }, function(_, i) {
+      return { name: CURATOR_NAME, color: CURATOR_COLOR, slot: i };
+    });
 
     // ─── TEA TALK TEMPLATES (user-provided + variations) ───
     const TEA_TALK_TEMPLATES = [
@@ -133,30 +128,31 @@ module.exports = async function handler(req, res) {
       // Create seed accounts (reuse across cities)
       const accountMap = {};
       for (const acct of ACCOUNTS) {
-        const slug = acct.name.toLowerCase().replace(/[^a-z]/g, '');
-        const email = slug + '.' + cityName.toLowerCase().replace(/\s/g, '') + '@seed.safetea.local';
+        // Email slug uses slot index, not display name, so all 12 curator slots are unique rows
+        // even though they share the public-facing display name "SafeTea Stories".
+        const email = 'curator' + acct.slot + '.' + cityName.toLowerCase().replace(/\s/g, '') + '@seed.safetea.local';
         const user = await getOne(
           `INSERT INTO users (email, password_hash, display_name, city, avatar_initial, avatar_color, avatar_type, is_verified, identity_verified, age_verified, gender_verified)
-           VALUES ($1, $2, $3, $4, $5, $6, 'initial', true, true, true, true) RETURNING id`,
-          [email, 'seed-account-no-login', acct.name, cityName, acct.name[0].toUpperCase(), acct.color]
+           VALUES ($1, $2, $3, $4, $5, $6, 'initial', true, true, true, true)
+           ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name, avatar_color = EXCLUDED.avatar_color, avatar_initial = EXCLUDED.avatar_initial
+           RETURNING id`,
+          [email, 'seed-account-no-login', acct.name, cityName, 'S', acct.color]
         );
-        accountMap[acct.name] = user.id;
+        accountMap[acct.slot] = user.id;
         results.accounts_created++;
       }
 
-      const accountNames = Object.keys(accountMap);
+      const accountSlots = Object.keys(accountMap);
       const userIds = Object.values(accountMap);
 
-      // Pick posts for this city — 4-5 tea talk + 4-5 good guys
-      // Rotate through templates with city-specific offset to avoid identical feeds
+      // Rotate templates across cities so feeds aren't identical
       const cityIdx = CITIES.indexOf(cityName);
       const teaPosts = [];
-      const goodPosts = [];
 
       for (let i = 0; i < 5; i++) {
         const tIdx = (cityIdx * 3 + i) % TEA_TALK_TEMPLATES.length;
         teaPosts.push({
-          author: accountNames[i % accountNames.length],
+          authorSlot: accountSlots[i % accountSlots.length],
           category: 'tea-talk',
           body: TEA_TALK_TEMPLATES[tIdx]
         });
@@ -173,7 +169,7 @@ module.exports = async function handler(req, res) {
 
       for (let i = 0; i < allPosts.length; i++) {
         const post = allPosts[i];
-        const userId = accountMap[post.author];
+        const userId = accountMap[post.authorSlot];
         if (!userId) continue;
 
         // Spread posts: oldest = 7 days ago, newest = 4 hours ago
@@ -184,8 +180,8 @@ module.exports = async function handler(req, res) {
 
         const postTitle = post.body.length > 60 ? post.body.substring(0, 57) + '...' : post.body;
         const newPost = await getOne(
-          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, $4, $5, 'community', $6) RETURNING id`,
+          `INSERT INTO posts (user_id, title, body, category, city, feed, is_curated, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', true, $6) RETURNING id`,
           [userId, postTitle, post.body, post.category, cityName, postDate.toISOString()]
         );
         postIds.push({ id: newPost.id, category: post.category });

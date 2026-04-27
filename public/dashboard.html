@@ -4524,6 +4524,8 @@
         var userBumped = post.user_bumped === true || post.user_bumped === 't';
         var trendingBadge = bumpCount >= 5 ? ' <span style="font-size:10px;color:#f39c12;font-weight:600">TRENDING</span>' : '';
         var boostedBadge = (post.author_tier === 'plus' || post.author_tier === 'pro' || post.author_tier === 'premium') ? ' <span style="display:inline-flex;align-items:center;gap:2px;font-size:9px;color:#9b59b6;font-weight:600;background:rgba(155,89,182,0.12);padding:1px 6px;border-radius:8px;margin-left:4px"><i class="fas fa-bolt" style="font-size:8px"></i> BOOSTED</span>' : '';
+        var isCurated = post.is_curated === true || post.is_curated === 't';
+        var curatedBadge = isCurated ? ' <span title="Curated example post — used to set conversation tone, not from a real community member" style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#E8A0B5;font-weight:700;background:rgba(232,160,181,0.12);padding:2px 7px;border-radius:8px;margin-left:4px;letter-spacing:0.3px"><i class="fas fa-thumbtack" style="font-size:8px"></i> CURATED BY SAFETEA</span>' : '';
         var deprioritized = dislikeCount >= 5 && dislikeCount > likeCount * 2;
         // Check if current user owns this post
         var currentUser = null;
@@ -4534,7 +4536,7 @@
             '<div class="community-post-header">' +
                 '<div class="community-post-avatar" style="background:' + avatarColor + '">' + initial + '</div>' +
                 '<div class="community-post-meta">' +
-                    '<span class="community-post-author">' + escapeHtml(authorName) + (typeof getPlusBadgeHtml === 'function' ? getPlusBadgeHtml(post.author_tier) : '') + boostedBadge + trendingBadge + '</span>' +
+                    '<span class="community-post-author">' + escapeHtml(authorName) + (typeof getPlusBadgeHtml === 'function' ? getPlusBadgeHtml(post.author_tier) : '') + boostedBadge + curatedBadge + trendingBadge + '</span>' +
                     '<div class="community-post-time">' + timeAgo + cityTag + neighborhood + '</div>' +
                 '</div>' +
                 '<div style="position:relative" id="cmenu-anchor-' + post.id + '">' +

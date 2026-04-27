@@ -162,10 +162,11 @@ module.exports = async function handler(req, res) {
         // Generate a short title from the body
         const title = body.length > 60 ? body.substring(0, 57) + '...' : body;
 
-        // Insert post
+        // Insert post — always marked is_curated=true since this cron only writes via seed
+        // accounts. Front-end shows the "Curated by SafeTea" badge for these.
         await run(
-          `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, $4, $5, 'community', NOW())`,
+          `INSERT INTO posts (user_id, title, body, category, city, feed, is_curated, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', true, NOW())`,
           [account.id, title, body, category, cityName]
         );
 

@@ -240,6 +240,21 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false`; } catch(e) {}
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP`; } catch(e) {}
 
+        // Curated content flag — distinguishes SafeTea-seeded posts from real user posts.
+        // Front-end shows a "Curated by SafeTea" badge when true. Required for honest cold-start
+        // seeding (Option B in marketing plan): we seed posts to set conversational tone, but
+        // never present them as posts from real community members.
+        try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_curated BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_posts_is_curated ON posts(is_curated) WHERE is_curated = true`; } catch(e) {}
+
+        // Backfill: any existing post authored by a seed account is curated.
+        try { await sql`UPDATE posts SET is_curated = true WHERE is_curated = false AND user_id IN (SELECT id FROM users WHERE email LIKE '%@seed.safetea.local')`; } catch(e) {}
+
+        // Backfill: rename all seed accounts to a single curator persona for the front-end.
+        // The accounts themselves remain separate rows (preserves FK history), but they share a
+        // public display name so the feed reads as one transparent curator instead of 12 fake users.
+        try { await sql`UPDATE users SET display_name = 'SafeTea Stories', avatar_color = '#E8A0B5', avatar_initial = 'S' WHERE email LIKE '%@seed.safetea.local'`; } catch(e) {}
+
         // Indexes for moderation
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}

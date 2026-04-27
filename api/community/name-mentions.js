@@ -30,7 +30,8 @@ module.exports = async function handler(req, res) {
       `SELECT p.id, p.content, p.category, p.created_at,
               u.display_name AS author_name,
               UPPER(LEFT(u.display_name, 1)) AS author_initial,
-              p.city
+              p.city,
+              COALESCE(p.is_curated, false) AS is_curated
        FROM posts p
        JOIN users u ON p.user_id = u.id
        WHERE p.city ILIKE $1
@@ -50,6 +51,7 @@ module.exports = async function handler(req, res) {
       city: p.city,
       category: p.category || 'tea-talk',
       content: p.content,
+      isCurated: p.is_curated === true || p.is_curated === 't',
       imageUrl: null,
       likesCount: 0,
       commentsCount: 0,

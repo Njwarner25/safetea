@@ -50,6 +50,7 @@ module.exports = async function handler(req, res) {
       posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
                 p.feed, p.image_url, p.created_at, p.hidden,
+                COALESCE(p.is_curated, false) AS is_curated,
                 COALESCE(p.bump_count, 0) AS bump_count,
                 COALESCE(p.dislike_count, 0) AS dislike_count,
                 p.last_bumped_at,
@@ -88,6 +89,7 @@ module.exports = async function handler(req, res) {
       posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body, p.category, p.city,
                 p.feed, p.image_url, p.created_at, p.hidden,
+                COALESCE(p.is_curated, false) AS is_curated,
                 0 AS bump_count, 0 AS dislike_count, NULL AS last_bumped_at,
                 u.display_name AS author_name,
                 u.custom_display_name AS author_custom_name,

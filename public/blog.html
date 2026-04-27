@@ -448,6 +448,9 @@
             var article = articles.find(function(a) { return a.id === id; });
             if (!article) return;
 
+            // Markdown-sourced articles render as standalone static pages — navigate.
+            if (article.staticUrl) { window.location.href = article.staticUrl; return; }
+
             var container = document.getElementById('blog-article-content');
             container.innerHTML =
                 '<div class="blog-article-header">' +
@@ -482,6 +485,42 @@
             var found = articles.find(function(a) { return a.id === articleId; });
             if (found) openArticle(articleId);
         }
+
+        // Pull markdown-sourced articles from the blog manifest (built by scripts/build-blog.js).
+        // These appear alongside the inline ones; clicking them navigates to a static page.
+        function tagClassFor(category) {
+            var c = (category || '').toLowerCase();
+            if (c.indexOf('safety') !== -1) return 'tag-safety';
+            if (c.indexOf('feature') !== -1) return 'tag-tips';
+            if (c.indexOf('opinion') !== -1) return 'tag-opinion';
+            return 'tag-tips';
+        }
+        fetch('/blog/index.json', { cache: 'no-cache' })
+            .then(function(r) { return r.ok ? r.json() : []; })
+            .then(function(manifest) {
+                if (!Array.isArray(manifest) || manifest.length === 0) return;
+                var seen = {};
+                articles.forEach(function(a) { seen[a.id] = true; });
+                manifest.forEach(function(m) {
+                    if (seen[m.slug]) return;
+                    articles.push({
+                        id: m.slug,
+                        category: (m.category || '').toLowerCase().indexOf('safety') !== -1 ? 'safety' : 'tips',
+                        tag: m.category || 'Tips',
+                        tagClass: tagClassFor(m.category),
+                        title: m.title,
+                        excerpt: m.description || '',
+                        image: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80',
+                        author: m.author || 'SafeTea Team',
+                        date: m.date ? new Date(m.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+                        readTime: (m.readMin || 5) + ' min read',
+                        body: '',
+                        staticUrl: m.url
+                    });
+                });
+                renderArticles(currentCategory);
+            })
+            .catch(function() { /* manifest missing on first deploy is fine */ });
     })();
     </script>
 </body>

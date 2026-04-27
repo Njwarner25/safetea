@@ -1,6 +1,6 @@
 # SafeTea TikTok / Reels — 30 Launch Scripts
 
-**Account:** @safetea.app
+**Account:** @safetea_official (handle locked until May 17, 2026 — `@safetea.app` was unavailable)
 **Voice:** smart, protective, calm — never fearmongering
 **Aspect ratio:** 9:16
 **End CTA on every video:** `safetea.app — link in bio`

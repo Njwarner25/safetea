@@ -22,15 +22,28 @@ module.exports = async function handler(req, res) {
 
         // IP / device ban check — deny before we leak whether an email
         // exists. Admins are exempt so a self-inflicted ban doesn't
-        // lock staff out.
+        // lock staff out. Each non-admin rejection writes a row to
+        // banned_signup_attempts so the nightly digest can email the
+        // admin.
+        async function logBlockedLogin(emailAttempt, reason) {
+          try {
+            await run(
+              `INSERT INTO banned_signup_attempts (ip, device_hash, user_agent, attempted_email, action, blocked_reason)
+               VALUES ($1, $2, $3, $4, 'login', $5)`,
+              [loginIp, loginDeviceHash, loginUa, emailAttempt, reason]
+            );
+          } catch (_) { /* table may not exist yet on older deploys */ }
+        }
         if (loginIp) {
           try {
             const ipBan = await getOne('SELECT id FROM banned_ips WHERE ip = $1', [loginIp]);
             if (ipBan) {
               // Still let admins through — check email before returning.
               const b = await parseBody(req);
-              const adm = b && b.email ? await getOne('SELECT role FROM users WHERE email = $1', [String(b.email).toLowerCase()]) : null;
+              const emailLower = b && b.email ? String(b.email).toLowerCase() : null;
+              const adm = emailLower ? await getOne('SELECT role FROM users WHERE email = $1', [emailLower]) : null;
               if (!adm || adm.role !== 'admin') {
+                await logBlockedLogin(emailLower, 'banned_ip');
                 return res.status(403).json({ error: 'Sign-in unavailable from this network.' });
               }
             }
@@ -41,8 +54,10 @@ module.exports = async function handler(req, res) {
             const devBan = await getOne('SELECT id FROM banned_user_agents WHERE device_hash = $1', [loginDeviceHash]);
             if (devBan) {
               const b = await parseBody(req);
-              const adm = b && b.email ? await getOne('SELECT role FROM users WHERE email = $1', [String(b.email).toLowerCase()]) : null;
+              const emailLower = b && b.email ? String(b.email).toLowerCase() : null;
+              const adm = emailLower ? await getOne('SELECT role FROM users WHERE email = $1', [emailLower]) : null;
               if (!adm || adm.role !== 'admin') {
+                await logBlockedLogin(emailLower, 'banned_device');
                 return res.status(403).json({ error: 'Sign-in unavailable from this device.' });
               }
             }

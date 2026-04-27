@@ -293,6 +293,11 @@
                             <option value="4-6">Yellow (4-6)</option>
                             <option value="1-3">Red (1-3)</option>
                         </select>
+                        <select class="mod-filter" id="filter-curated" onchange="loadModerationPosts()">
+                            <option value="">All Posts</option>
+                            <option value="real">Real users only</option>
+                            <option value="curated">Curated only</option>
+                        </select>
                     </div>
                     <div class="mod-actions">
                         <button class="btn btn-approve" onclick="bulkApprove()"><i class="fas fa-check-double"></i> Auto-approve all 7+ <span class="sidebar-badge" style="background:rgba(46,204,113,0.2);color:#2ecc71;margin-left:4px">AI</span></button>
@@ -806,10 +811,13 @@
             else if (scoreRange === '4-6') { minScore = 4; maxScore = 6; }
             else if (scoreRange === '1-3') { minScore = 1; maxScore = 3; }
 
+            const curatedFilter = document.getElementById('filter-curated').value;
+
             let url = `${API_BASE}/admin/posts?page=${currentPage}&limit=20`;
             if (rec) url += `&recommendation=${rec}`;
             if (minScore > 0) url += `&min_score=${minScore}`;
             if (maxScore < 10) url += `&max_score=${maxScore}`;
+            if (curatedFilter) url += `&curated=${curatedFilter}`;
 
             try {
                 const res = await fetch(url, { headers: authHeaders() });
@@ -878,6 +886,7 @@
                             </div>
                         </div>
                         <div class="post-card-badges">
+                            ${post.is_curated ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#E8A0B5;font-weight:700;background:rgba(232,160,181,0.12);padding:2px 8px;border-radius:6px;letter-spacing:0.3px"><i class="fas fa-thumbtack" style="font-size:9px"></i> CURATED</span>' : ''}
                             ${post.is_flagged ? '<span class="flagged-indicator"><i class="fas fa-flag"></i> Flagged</span>' : ''}
                             <span class="ai-score ${color}"><i class="fas fa-brain"></i> ${scoreText}</span>
                             ${recLabel(post.ai_recommendation)}

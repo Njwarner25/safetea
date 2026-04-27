@@ -17,6 +17,8 @@ module.exports = async function handler(req, res) {
     const recommendation = req.query.recommendation || '';
     const minScore = parseInt(req.query.min_score) || 0;
     const maxScore = parseInt(req.query.max_score) || 10;
+    // 'curated' | 'real' | '' (any). Filters by the is_curated boolean.
+    const curatedFilter = (req.query.curated || '').toLowerCase();
 
     try {
       let whereClause = 'WHERE 1=1';
@@ -41,6 +43,12 @@ module.exports = async function handler(req, res) {
         paramIndex++;
       }
 
+      if (curatedFilter === 'curated') {
+        whereClause += ` AND COALESCE(p.is_curated, false) = true`;
+      } else if (curatedFilter === 'real') {
+        whereClause += ` AND COALESCE(p.is_curated, false) = false`;
+      }
+
       const countResult = await getOne(
         `SELECT COUNT(*) as count FROM posts p ${whereClause}`,
         params
@@ -49,6 +57,7 @@ module.exports = async function handler(req, res) {
       const posts = await getMany(
         `SELECT p.id, p.user_id, p.title, p.body as content, p.category, p.city, p.feed,
                 p.likes, p.hidden, p.is_flagged, p.created_at,
+                COALESCE(p.is_curated, false) AS is_curated,
                 p.ai_credibility_score, p.ai_flags, p.ai_recommendation,
                 p.ai_reasoning, p.ai_analyzed_at,
                 u.email, u.display_name, u.avatar_initial, u.avatar_color, u.role as user_role

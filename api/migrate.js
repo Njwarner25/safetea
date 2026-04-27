@@ -255,6 +255,12 @@ module.exports = async function handler(req, res) {
         // public display name so the feed reads as one transparent curator instead of 12 fake users.
         try { await sql`UPDATE users SET display_name = 'SafeTea Stories', avatar_color = '#E8A0B5', avatar_initial = 'S' WHERE email LIKE '%@seed.safetea.local'`; } catch(e) {}
 
+        // Sticky graduation flag for the seed taper. Once a city's organic activity crosses the
+        // taper threshold, the daily seeder flips this true so we never restart curation if
+        // activity dips below the threshold later. Manual reset: UPDATE cities SET is_graduated=false.
+        try { await sql`ALTER TABLE cities ADD COLUMN IF NOT EXISTS is_graduated BOOLEAN DEFAULT false`; } catch(e) {}
+        try { await sql`ALTER TABLE cities ADD COLUMN IF NOT EXISTS graduated_at TIMESTAMP`; } catch(e) {}
+
         // Indexes for moderation
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}

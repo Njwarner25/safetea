@@ -119,7 +119,17 @@ module.exports = async function handler(req, res) {
     const citiesToSeed = pickRandom(CITIES, 2 + Math.floor(Math.random() * 2));
 
     for (const cityName of citiesToSeed) {
-      // Auto-taper: skip cities with enough real organic activity
+      // Sticky graduation: if a city was already promoted past the taper, skip immediately.
+      const cityRow = await getOne(
+        `SELECT id, COALESCE(is_graduated, false) AS is_graduated FROM cities WHERE name = $1`,
+        [cityName]
+      );
+      if (cityRow && cityRow.is_graduated) {
+        results.skipped.push({ city: cityName, reason: 'graduated' });
+        continue;
+      }
+
+      // Auto-taper: skip cities with enough real organic activity (and flip the sticky flag).
       if (taperThreshold > 0) {
         const realActivity = await getOne(
           `SELECT COUNT(*) AS count FROM posts
@@ -132,7 +142,13 @@ module.exports = async function handler(req, res) {
         );
         const realCount = parseInt(realActivity && realActivity.count, 10) || 0;
         if (realCount >= taperThreshold) {
-          results.skipped.push({ city: cityName, reason: 'auto-taper', real_posts_7d: realCount, threshold: taperThreshold });
+          // First time tripping — graduate the city so we never re-seed it automatically.
+          if (cityRow && cityRow.id) {
+            try {
+              await run(`UPDATE cities SET is_graduated = true, graduated_at = NOW() WHERE id = $1`, [cityRow.id]);
+            } catch (e) { /* column may not exist yet on cold migrations */ }
+          }
+          results.skipped.push({ city: cityName, reason: 'auto-taper', real_posts_7d: realCount, threshold: taperThreshold, graduated: true });
           continue;
         }
       }

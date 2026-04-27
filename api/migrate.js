@@ -261,6 +261,21 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE cities ADD COLUMN IF NOT EXISTS is_graduated BOOLEAN DEFAULT false`; } catch(e) {}
         try { await sql`ALTER TABLE cities ADD COLUMN IF NOT EXISTS graduated_at TIMESTAMP`; } catch(e) {}
 
+        // Scheduled email queue. Used by the activation sequence (D+1, D+3, D+7, D+14)
+        // and the iOS waitlist nurture. Cron at /api/cron/send-scheduled-emails picks up
+        // rows where scheduled_for <= NOW() and sent_at IS NULL.
+        await sql`CREATE TABLE IF NOT EXISTS scheduled_emails (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            email_type VARCHAR(64) NOT NULL,
+            scheduled_for TIMESTAMP NOT NULL,
+            sent_at TIMESTAMP,
+            skipped_reason VARCHAR(64),
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_emails_due ON scheduled_emails(scheduled_for) WHERE sent_at IS NULL AND skipped_reason IS NULL`; } catch(e) {}
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id, email_type)`; } catch(e) {}
+
         // Indexes for moderation
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}

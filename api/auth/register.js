@@ -97,6 +97,19 @@ module.exports = async function handler(req, res) {
         console.error('[Register] Welcome email failed:', err.message);
       });
 
+      // Enqueue activation sequence: D+1, D+3, D+7, D+14
+      // Cron at /api/cron/send-scheduled-emails dispatches them.
+      run(
+        `INSERT INTO scheduled_emails (user_id, email_type, scheduled_for) VALUES
+          ($1, 'activation_day1',  NOW() + INTERVAL '1 day'),
+          ($1, 'activation_day3',  NOW() + INTERVAL '3 days'),
+          ($1, 'activation_day7',  NOW() + INTERVAL '7 days'),
+          ($1, 'activation_day14', NOW() + INTERVAL '14 days')`,
+        [user.id]
+      ).catch(function(err) {
+        console.error('[Register] Enqueue activation sequence failed:', err.message);
+      });
+
       return res.status(201).json({
               token,
               user: {

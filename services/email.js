@@ -58,7 +58,7 @@ function wrapHtml(content) {
     </div>
     <div style="text-align:center;margin-top:24px;color:#666;font-size:12px;">
       <p style="margin:0;">&copy; 2026 SafeTea. All rights reserved.</p>
-      <p style="margin:8px 0 0;">Date smarter. Stay safer.</p>
+      <p style="margin:8px 0 0;">Stay connected, stay safe.</p>
     </div>
   </div>
 </body>
@@ -363,6 +363,95 @@ function sendSafeConfirmationEmail(to, displayName) {
   });
 }
 
+// ─── Activation sequence emails (sent on a delayed schedule by cron) ───
+// Triggered from /api/cron/send-scheduled-emails.js. The scheduled_emails table
+// owns the timing; these functions just render and dispatch. Suppression for users
+// who already completed the milestone happens in the cron handler, not here.
+
+function sendActivationDay1Email(to, displayName) {
+  var name = displayName || 'there';
+  return sendEmail({
+    to,
+    subject: 'The one feature most members try first',
+    html: wrapHtml(
+      '<h2 style="color:#fff;font-size:20px;margin:0 0 16px;">Try Name Watch</h2>' +
+      '<p>Hi ' + name + ',</p>' +
+      '<p>If you only try one thing in SafeTea this week, make it Name Watch.</p>' +
+      '<p>You privately save the first name (or full name, or initials) of someone you\'re talking to. Whenever a woman in your city posts about that name in the community feed, you get an alert. No one sees your watch list. No one but you knows you saved a name.</p>' +
+      '<p>It\'s how members find out, before the first date, whether their match has come up before.</p>' +
+      '<p>Most members save their first name in under a minute.</p>' +
+      '<div style="text-align:center;margin:24px 0;">' +
+        '<a href="https://safetea.app/dashboard.html?tab=hub&sub=namewatch" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Save my first name</a>' +
+      '</div>' +
+      '<p style="color:#8080A0;font-size:13px;">Stay safe,<br>Maya at SafeTea</p>'
+    )
+  });
+}
+
+function sendActivationDay3Email(to, displayName) {
+  var name = displayName || 'there';
+  return sendEmail({
+    to,
+    subject: 'Have you posted in your city yet?',
+    html: wrapHtml(
+      '<h2 style="color:#fff;font-size:20px;margin:0 0 16px;">Your story might be exactly what someone needs</h2>' +
+      '<p>Hi ' + name + ',</p>' +
+      '<p>The strongest part of SafeTea isn\'t the tech — it\'s what women share with each other.</p>' +
+      '<p>If you\'ve had a dating experience worth flagging — a red flag you spotted, a guy who lied about being single, a profile that turned out to be fake — your post could be the warning another woman needed.</p>' +
+      '<ul style="padding-left:20px;margin:12px 0;color:#F0D0C0;">' +
+        '<li>You post under a pseudonym. Your real name never appears.</li>' +
+        '<li>Posts are moderated before they go live.</li>' +
+        '<li>You can delete a post any time.</li>' +
+      '</ul>' +
+      '<p>You don\'t have to write a novel. A few honest sentences are enough.</p>' +
+      '<div style="text-align:center;margin:24px 0;">' +
+        '<a href="https://safetea.app/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Share an experience</a>' +
+      '</div>' +
+      '<p style="color:#8080A0;font-size:13px;">Stay safe,<br>Maya</p>'
+    )
+  });
+}
+
+function sendActivationDay7Email(to, displayName) {
+  var name = displayName || 'there';
+  return sendEmail({
+    to,
+    subject: 'Going on a date this weekend? Try Check-In.',
+    html: wrapHtml(
+      '<h2 style="color:#fff;font-size:20px;margin:0 0 16px;">A safer way to leave the house Friday night</h2>' +
+      '<p>Hi ' + name + ',</p>' +
+      '<p>Quick one for the weekend.</p>' +
+      '<p>SafeTea Check-In lets you share a date plan — where you\'ll be, when you should be home, and one trusted contact — without giving up your live location to a dating app or a social network. If you don\'t check in safe by your set time, your contact gets notified.</p>' +
+      '<p>It\'s the version of "text me when you get home" that actually works, because it doesn\'t depend on you remembering to text.</p>' +
+      '<p>Set one up in about 90 seconds and forget about it until Saturday morning.</p>' +
+      '<div style="text-align:center;margin:24px 0;">' +
+        '<a href="https://safetea.app/dashboard.html?tab=safelink" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Set up a Check-In</a>' +
+      '</div>' +
+      '<p style="color:#8080A0;font-size:13px;">Stay safe,<br>Maya</p>'
+    )
+  });
+}
+
+function sendActivationDay14Email(to, displayName) {
+  var name = displayName || 'there';
+  return sendEmail({
+    to,
+    subject: 'Two weeks in — what\'s working for you?',
+    html: wrapHtml(
+      '<h2 style="color:#fff;font-size:20px;margin:0 0 16px;">A small ask</h2>' +
+      '<p>Hi ' + name + ',</p>' +
+      '<p>You\'ve been on SafeTea for two weeks. I\'d love to know how it\'s going.</p>' +
+      '<p>If you have 30 seconds, hit reply and tell me one thing — a feature you\'ve used, a moment SafeTea was helpful, or something you wish worked differently. I read every reply personally, and the next features we build come from these notes.</p>' +
+      '<p>If you haven\'t tried the community feed in your city yet, that\'s the place where most members say SafeTea finally clicked for them. Worth one scroll.</p>' +
+      '<p>Either way, thank you for being here.</p>' +
+      '<div style="text-align:center;margin:24px 0;">' +
+        '<a href="https://safetea.app/dashboard.html?tab=hub" style="display:inline-block;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">Open my city feed</a>' +
+      '</div>' +
+      '<p style="color:#8080A0;font-size:13px;">Stay safe,<br>Maya</p>'
+    )
+  });
+}
+
 module.exports = {
   sendEmail,
   wrapHtml,
@@ -375,5 +464,9 @@ module.exports = {
   sendWeeklyModReportEmail,
   sendVerificationRequestEmail,
   sendEmergencyReportEmail,
-  sendSafeConfirmationEmail
+  sendSafeConfirmationEmail,
+  sendActivationDay1Email,
+  sendActivationDay3Email,
+  sendActivationDay7Email,
+  sendActivationDay14Email
 };

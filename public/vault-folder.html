@@ -670,10 +670,23 @@
               clientPayload: clientPayloadStr,
               onUploadProgress: function (e) {
                 if (aborted) return;
-                lastProgressAt = Date.now();
-                sentBytes = (e && (e.loaded != null ? e.loaded : e.uploaded)) || sentBytes;
+                // Only count this as progress if bytes actually advanced.
+                // Some HTTP clients fire keep-alive ticks with no byte
+                // movement — those would keep the watchdog asleep forever
+                // and the user would see the percent freeze indefinitely.
+                var newLoaded = (e && (e.loaded != null ? e.loaded : e.uploaded)) || 0;
+                if (newLoaded > sentBytes) {
+                  sentBytes = newLoaded;
+                  lastProgressAt = Date.now();
+                }
                 var pct = totalBytes > 0 ? Math.min(99, Math.round((sentBytes / totalBytes) * 100)) : 0;
-                setProgress('Uploading ' + file.name + '… ' + pct + '%', true);
+                // At 99% the PUT body is fully sent and we're waiting on
+                // Vercel Blob's commit response — surface that distinctly
+                // so the user knows the spinner isn't dead.
+                var label = pct >= 99
+                  ? 'Finalizing ' + file.name + '…'
+                  : 'Uploading ' + file.name + '… ' + pct + '%';
+                setProgress(label, true);
               },
             }).then(function (out) {
               if (aborted) return;

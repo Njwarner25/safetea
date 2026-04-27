@@ -22,23 +22,43 @@ module.exports = async function handler(req, res) {
           const regUa = getUserAgent(req);
           const regDeviceHash = getDeviceHash(req);
 
+          // Body parsed early so we can capture the attempted email
+          // for the audit row even on a banned-IP rejection.
+          const body = await parseBody(req);
+          const { email, password, display_name, city } = body || {};
+          const attemptedEmail = typeof email === 'string' ? email.toLowerCase() : null;
+
           // Ban check — if this IP or device is banned, silently reject
           // with a generic error so the blocked party doesn't know why.
+          // Each rejection writes a row to banned_signup_attempts so the
+          // nightly digest can email the admin.
+          async function logBlocked(reason) {
+            try {
+              await run(
+                `INSERT INTO banned_signup_attempts (ip, device_hash, user_agent, attempted_email, action, blocked_reason)
+                 VALUES ($1, $2, $3, $4, 'register', $5)`,
+                [regIp, regDeviceHash, regUa, attemptedEmail, reason]
+              );
+            } catch (_) { /* table may not exist yet on older deploys */ }
+          }
           if (regIp) {
             try {
               const ipBan = await getOne('SELECT id FROM banned_ips WHERE ip = $1', [regIp]);
-              if (ipBan) return res.status(403).json({ error: 'Registration unavailable from this network.' });
+              if (ipBan) {
+                await logBlocked('banned_ip');
+                return res.status(403).json({ error: 'Registration unavailable from this network.' });
+              }
             } catch (_) { /* table may not exist yet on older deploys */ }
           }
           if (regDeviceHash) {
             try {
               const devBan = await getOne('SELECT id FROM banned_user_agents WHERE device_hash = $1', [regDeviceHash]);
-              if (devBan) return res.status(403).json({ error: 'Registration unavailable from this device.' });
+              if (devBan) {
+                await logBlocked('banned_device');
+                return res.status(403).json({ error: 'Registration unavailable from this device.' });
+              }
             } catch (_) { /* table may not exist yet on older deploys */ }
           }
-
-          const body = await parseBody(req);
-          const { email, password, display_name, city } = body;
 
       if (!email || !password || !display_name) {
               return res.status(400).json({ error: 'Email, password, and display name are required' });

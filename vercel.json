@@ -35,7 +35,8 @@
         { "path": "/api/cron/expire-photo-posts", "schedule": "0 3 * * *" },
         { "path": "/api/cron/seed-daily", "schedule": "0 13,16,19,22,1,4 * * *" },
         { "path": "/api/cron/vault-access-expire", "schedule": "*/15 * * * *" },
-        { "path": "/api/cron/rival-watch", "schedule": "0 */6 * * *" }
+        { "path": "/api/cron/rival-watch", "schedule": "0 */6 * * *" },
+        { "path": "/api/cron/ban-attempts-digest", "schedule": "0 8 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/redflag", "destination": "/api/screening/redflag" },
@@ -195,7 +196,10 @@
         { "source": "/api/admin/wipe-non-admin-users", "destination": "/api/admin/wipe-non-admin-users" },
         { "source": "/api/admin/suspicious-signups", "destination": "/api/admin/suspicious-signups" },
         { "source": "/api/admin/ban-by-user", "destination": "/api/admin/ban-by-user" },
+        { "source": "/api/admin/ban-and-purge", "destination": "/api/admin/ban-and-purge" },
         { "source": "/api/migrate-ban-system", "destination": "/api/migrate-ban-system" },
+        { "source": "/api/migrate-ban-attempts", "destination": "/api/migrate-ban-attempts" },
+        { "source": "/api/cron/ban-attempts-digest", "destination": "/api/cron/ban-attempts-digest" },
         { "source": "/api/migrate-rival-watch", "destination": "/api/migrate-rival-watch" },
         { "source": "/api/cron/rival-watch", "destination": "/api/cron/rival-watch" },
         { "source": "/api/migrate-trial", "destination": "/api/migrate-trial" },

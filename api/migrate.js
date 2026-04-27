@@ -276,6 +276,21 @@ module.exports = async function handler(req, res) {
         try { await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_emails_due ON scheduled_emails(scheduled_for) WHERE sent_at IS NULL AND skipped_reason IS NULL`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_scheduled_emails_user ON scheduled_emails(user_id, email_type)`; } catch(e) {}
 
+        // Brand-mention log. Used by /api/cron/monitor-brand-mentions to deduplicate items
+        // we've already surfaced to admins, so the daily digest never repeats a thread.
+        await sql`CREATE TABLE IF NOT EXISTS brand_mentions (
+            id SERIAL PRIMARY KEY,
+            source VARCHAR(32) NOT NULL,
+            external_id VARCHAR(256) NOT NULL,
+            url TEXT NOT NULL,
+            title TEXT,
+            snippet TEXT,
+            posted_at TIMESTAMP,
+            seen_at TIMESTAMP DEFAULT NOW(),
+            UNIQUE(source, external_id)
+        )`;
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_brand_mentions_seen ON brand_mentions(seen_at DESC)`; } catch(e) {}
+
         // Indexes for moderation
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}

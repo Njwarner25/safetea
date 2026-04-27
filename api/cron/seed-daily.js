@@ -106,13 +106,37 @@ module.exports = async function handler(req, res) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const results = { posts: [], errors: [] };
+  const results = { posts: [], skipped: [], errors: [] };
+
+  // Auto-taper: stop seeding a city once real (non-curated) activity reaches this threshold.
+  // Default 20 real posts in the last 7 days = a city with healthy organic activity.
+  // Tunable via env var; set to 0 to disable taper entirely.
+  const TAPER_THRESHOLD = parseInt(process.env.SEED_TAPER_THRESHOLD, 10);
+  const taperThreshold = Number.isFinite(TAPER_THRESHOLD) ? TAPER_THRESHOLD : 20;
 
   try {
     // Pick 2-3 random cities for this run
     const citiesToSeed = pickRandom(CITIES, 2 + Math.floor(Math.random() * 2));
 
     for (const cityName of citiesToSeed) {
+      // Auto-taper: skip cities with enough real organic activity
+      if (taperThreshold > 0) {
+        const realActivity = await getOne(
+          `SELECT COUNT(*) AS count FROM posts
+           WHERE city = $1
+             AND COALESCE(is_curated, false) = false
+             AND COALESCE(hidden, false) = false
+             AND COALESCE(is_deleted, false) = false
+             AND created_at > NOW() - INTERVAL '7 days'`,
+          [cityName]
+        );
+        const realCount = parseInt(realActivity && realActivity.count, 10) || 0;
+        if (realCount >= taperThreshold) {
+          results.skipped.push({ city: cityName, reason: 'auto-taper', real_posts_7d: realCount, threshold: taperThreshold });
+          continue;
+        }
+      }
+
       // Find a random seed account in this city
       const seedAccount = await getOne(
         `SELECT id, display_name FROM users WHERE email LIKE $1 AND city = $2 ORDER BY RANDOM() LIMIT 1`,
@@ -174,7 +198,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    console.log('[SeedDaily] Seeded', results.posts.length, 'posts across', citiesToSeed.join(', '));
+    console.log('[SeedDaily] Seeded', results.posts.length, 'posts;', results.skipped.length, 'cities tapered;', results.errors.length, 'errors');
     return res.status(200).json({ success: true, ...results });
   } catch (err) {
     console.error('[SeedDaily] Error:', err);

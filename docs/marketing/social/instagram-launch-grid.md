@@ -1,4 +1,4 @@
-# Instagram Launch Grid — @safetea.app
+# Instagram Launch Grid — @safe_teaapp
 
 **Format:** First 12 feed posts arranged as a 3×4 grid, designed to be read top-to-bottom-left-to-right by a new visitor scrolling the profile. Each post stands alone but the grid as a whole tells the brand story: *we exist, here's why, here's what we do, here's how to start*.
 

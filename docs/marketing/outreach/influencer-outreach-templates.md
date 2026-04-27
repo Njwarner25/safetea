@@ -219,7 +219,7 @@ Your series on how trauma responses show up in early dating — the "fawn versus
 - **DO use your own voice** — your audience came for you, not for our brand voice.
 - **DO redact any real-world examples** — names, photos, screenshots with identifying info, all blurred or replaced.
 - **DO send us the script for review** before publishing — 48-hour turnaround, light-touch feedback only on brand-safety items.
-- **DO tag @safetea.app** in the post and on-screen so we can repost.
+- **DO tag the right handle for the platform** in the post and on-screen so we can repost: @safe_teaapp on Instagram, @safetea_official on TikTok.
 - **DO let your audience know SafeTea is web-first** — "no app needed, just open it in your browser."
 
 ### DON'T

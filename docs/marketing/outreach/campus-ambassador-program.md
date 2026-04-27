@@ -14,7 +14,7 @@ The SafeTea Campus Ambassadors are a small, paid cohort of student leaders — p
 
 - Host **one campus activation per month** (tabling at the student union, a women's-center co-event, a Greek-life chapter visit, or a dorm-floor tea night). SafeTea provides the kit; ambassadors run the room.
 - Distribute SafeTea materials across **5 high-traffic campus locations** per term — women's center, student health, library bulletin boards, Greek-row houses, and the rec center. Posters and QR flyers are pre-designed.
-- **Publish 2 organic social posts per month** (Instagram Story or TikTok) about a real dating-safety topic, tagging @safetea.app. No scripted ad copy; ambassadors keep their voice.
+- **Publish 2 organic social posts per month** (Instagram Story or TikTok) about a real dating-safety topic, tagging @safe_teaapp on Instagram and @safetea_official on TikTok. No scripted ad copy; ambassadors keep their voice.
 - Recruit and onboard **at least one campus partner org per semester** — sorority chapter, women's-center programming office, RA training coordinator, or a survivor advocacy group.
 - Submit a short **monthly check-in** (Loom or Google Form): what worked, what didn't, signup count, and any safety concerns surfaced on campus.
 

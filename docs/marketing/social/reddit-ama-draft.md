@@ -32,7 +32,7 @@ Notes on the title:
 r/IAmA requires verification photos that prove the AMA host is who they claim to be. Plan:
 
 1. **Primary verification photo:** founder holding a handwritten sign with today's date, "Reddit AMA — r/IAmA," and their Reddit username, photographed alongside a laptop showing the SafeTea admin dashboard. Sent to r/IAmA mods *privately* via mod mail before the AMA goes live. Mods confirm with a stickied comment.
-2. **Public proof for skeptics:** a tweet/post from the verified @safetea.app social account at the start of the AMA pointing readers to the AMA URL. This proves the company is endorsing the AMA host as the actual founder.
+2. **Public proof for skeptics:** a post from the verified @safe_teaapp (Instagram) and @safetea_official (TikTok) social accounts at the start of the AMA pointing readers to the AMA URL. This proves the company is endorsing the AMA host as the actual founder.
 3. **Optional secondary:** screenshot of the founder's name on the SafeTea team page at safetea.app/about (must match the name on the handwritten sign).
 
 **Privacy considerations:** the founder is a public figure for SafeTea, so first name + last initial in the AMA is acceptable. Do not require any other team member to be visible. Do not show users, user data, or any AWDTSG-adjacent content in the verification photo.

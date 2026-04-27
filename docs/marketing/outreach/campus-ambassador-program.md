@@ -102,7 +102,7 @@ We expect 1 ambassador at most schools and 2 at NYU and UT Austin given size and
 ## 7. Activation Tactics
 
 ### Poster designs (3 variants, all tested by the design team)
-1. **"Date smarter. Stay safer."** — minimal type-driven poster, large QR, illustrated avatar. The default.
+1. **"Stay connected, stay safe."** — minimal type-driven poster, large QR, illustrated avatar. The default.
 2. **"Before the second date."** — copy block listing 5 things SafeTea helps with (community vetting, red-flag library, anonymous notes). For women's-center bulletin boards.
 3. **"For us, by us."** — founder-voice poster with the line "built by women who got tired of warning each other in DMs." For Greek houses and women-in-STEM spaces.
 

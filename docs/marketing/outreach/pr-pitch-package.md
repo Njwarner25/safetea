@@ -136,7 +136,7 @@ SafeTea is the privacy-first dating safety platform. Women anonymously share exp
 
 **100 words:**
 
-SafeTea is the privacy-first dating safety platform — the purpose-built successor to the AWDTSG movement. Women share experiences about people they're dating using pseudonyms only, with illustrated avatars in place of photos. Reports are structured, professionally moderated, and protected by architecture rather than policy: SafeTea cannot dox anyone because it never collects the data that would make doxxing possible. Founded by <<INSERT-FOUNDER-FULL-NAME>> and women-led across the team, SafeTea is web-first and runs in any browser at safetea.app, with active communities in <<VERIFY-CITY-COUNT>> cities. The mission: date smarter, stay safer.
+SafeTea is the privacy-first dating safety platform — the purpose-built successor to the AWDTSG movement. Women share experiences about people they're dating using pseudonyms only, with illustrated avatars in place of photos. Reports are structured, professionally moderated, and protected by architecture rather than policy: SafeTea cannot dox anyone because it never collects the data that would make doxxing possible. Founded by <<INSERT-FOUNDER-FULL-NAME>> and women-led across the team, SafeTea is web-first and runs in any browser at safetea.app, with active communities in <<VERIFY-CITY-COUNT>> cities. The mission: stay connected, stay safe.
 
 **200 words:**
 
@@ -144,7 +144,7 @@ SafeTea is the privacy-first dating safety platform built as the purpose-built s
 
 SafeTea pairs pseudonyms-only reporting and illustrated avatars (no real names, no real photos, anywhere on the platform) with structured posts, professional human moderation augmented by AI classification, and a legal framework designed to protect both reporters and the community. Privacy is the architecture, not a setting. The platform cannot dox anyone because it never collects the data that would make doxxing possible.
 
-Founded by <<INSERT-FOUNDER-FULL-NAME>> after a close friend was stalked by a man no public record had warned her about, SafeTea is women-led across leadership and engineering. The product is web-first — runs in any browser, no app store required — and active in <<VERIFY-CITY-COUNT>> cities. The mission is simple: date smarter, stay safer. Learn more at safetea.app.
+Founded by <<INSERT-FOUNDER-FULL-NAME>> after a close friend was stalked by a man no public record had warned her about, SafeTea is women-led across leadership and engineering. The product is web-first — runs in any browser, no app store required — and active in <<VERIFY-CITY-COUNT>> cities. The mission is simple: stay connected, stay safe. Learn more at safetea.app.
 
 ---
 

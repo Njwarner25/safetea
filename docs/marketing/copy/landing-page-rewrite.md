@@ -3,7 +3,7 @@
 **Purpose:** Drop-in replacement for `public/index.html` hero, CTAs, and key supporting blocks. Removes App Store download CTAs (iOS approval pending) and reframes SafeTea as a browser-native, privacy-first dating safety community. Android via Google Play is acceptable to feature; iOS routes to PWA "Add to Home Screen" or to a soft waitlist.
 
 **Brand voice:** Smart, protective, calm. Not fearmongering. Treat users as adults.
-**Anchor tagline (used sparingly):** *Date smarter. Stay safer.*
+**Anchor tagline (used sparingly):** *Stay connected, stay safe.*
 
 ---
 
@@ -18,7 +18,7 @@
 > **The dating safety community that doesn't live on Facebook.**
 
 **Variant C — empowerment frame**
-> **Date smarter. Stay safer. No download required.**
+> **Stay connected, stay safe. No download required.**
 
 **Pick:** Variant A. It leads with the user's job-to-be-done ("dating safety"), removes the friction objection ("right in your browser") in the same line, and works for cold traffic that has never heard of AWDTSG. Variants B and C assume more category awareness; we'll move to one of them once we have brand recognition.
 

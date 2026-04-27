@@ -31,8 +31,8 @@ Row 1 = arrival / brand intro. Row 2 = the problem. Row 3 = the practical value.
 **Visual concept:** Off-white square. Centered serif text. Small teal SafeTea wordmark beneath. Nothing else. The visual quietness is the statement.
 
 **On-image text:**
-> Date smarter.
-> Stay safer.
+> Stay connected,
+> stay safe.
 
 **Caption:**
 > We're SafeTea. We're a privacy-first community for safer dating — pseudonyms only, no real names, no real photos, illustrated avatars. Built by women who got tired of safety information disappearing every time a Facebook group got deleted.

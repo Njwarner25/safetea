@@ -196,7 +196,7 @@ Your series on how trauma responses show up in early dating — the "fawn versus
 **Useful one-liners creators can borrow:**
 
 - "AWDTSG proved we needed this. SafeTea is what it should have been from the start."
-- "Date smarter, stay safer."
+- "Stay connected, stay safe."
 - "The platform that can't dox you because it never had your name."
 - "Built by women who got tired of waiting for the dating apps to fix this."
 

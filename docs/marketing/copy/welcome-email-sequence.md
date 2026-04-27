@@ -175,5 +175,5 @@ Maya
 - **Voice consistency:** Maya signs all five emails. If we use a different real name, swap globally — never alternate senders inside the sequence.
 - **Anti-fearmongering check:** No email mentions assault, attack, or graphic harm. The frame is "smarter dating," not "the world is dangerous."
 - **No App Store CTAs.** Email 1 is the only place we mention install paths, and only as an option.
-- **Tagline use:** Used once, in Email 1's CTA flow, implicitly. We avoid repeating "Date smarter. Stay safer." across every email — it loses meaning when overused.
+- **Tagline use:** Used once, in Email 1's CTA flow, implicitly. We avoid repeating "Stay connected, stay safe." across every email — it loses meaning when overused.
 - **Stat claims:** None used in this sequence. If the team wants social-proof numbers, gate behind `<<VERIFY: …>>` before adding.

@@ -13,9 +13,16 @@ module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const user = await authenticate(req);
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
+  // Allow CRON_SECRET as alternative to admin auth (for CLI/API access)
+  const CRON_SECRET = process.env.CRON_SECRET;
+  const authHeader = req.headers.authorization;
+  const isCronAuth = CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`;
+
+  if (!isCronAuth) {
+    const user = await authenticate(req);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
   }
 
   // ========== GET: List all org codes ==========

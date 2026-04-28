@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeTea — Cross-Post Composer (Admin)</title>
+  <link rel="icon" href="/favicon-32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #1A1A2E; color: #F0D0C0; min-height: 100vh; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
+    h1 { font-size: 22px; color: #fff; margin: 0 0 8px; font-weight: 800; }
+    .sub { color: #8080A0; font-size: 14px; margin: 0 0 28px; }
+    .panel { background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+    label { display: block; color: #fff; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+    input[type=text], input[type=url], input[type=datetime-local], textarea {
+      width: 100%; background: #1A1A2E; border: 1px solid rgba(255,255,255,0.1); color: #F0D0C0;
+      border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit;
+      margin-bottom: 16px;
+    }
+    textarea { min-height: 140px; resize: vertical; line-height: 1.55; }
+    .platforms { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .platform-chip { padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(232,160,181,0.3); background: transparent; color: #E8A0B5; font-size: 13px; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .platform-chip.active { background: rgba(232,160,181,0.15); border-color: #E8A0B5; }
+    .btn { background: linear-gradient(135deg,#E8A0B5,#D4768E); color: #fff; padding: 12px 24px; border: 0; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .meta-row { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+    .meta-row > div { flex: 1; min-width: 200px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.4px; }
+    .b-pending  { background: rgba(243,156,18,0.12); color: #f39c12; }
+    .b-queued   { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .b-simulated{ background: rgba(155,89,182,0.12); color: #B48CD2; }
+    .b-failed   { background: rgba(231,76,60,0.12); color: #e74c3c; }
+    .row { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .row:last-child { border-bottom: 0; }
+    .muted { color: #8080A0; font-size: 12px; }
+    .alert { padding: 12px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
+    .alert.warn { background: rgba(243,156,18,0.1); color: #f39c12; border: 1px solid rgba(243,156,18,0.25); }
+    .alert.ok { background: rgba(46,204,113,0.1); color: #2ecc71; border: 1px solid rgba(46,204,113,0.25); }
+    .alert.err { background: rgba(231,76,60,0.1); color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
+    a { color: #E8A0B5; }
+    code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+    .charcount { font-size: 11px; color: #8080A0; text-align: right; margin: -12px 0 14px; }
+    .charcount.warn { color: #f39c12; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Cross-post composer</h1>
+    <p class="sub">Queue a post to TikTok, Instagram, and Threads in one go via Buffer. Setup guide: <code>docs/SOCIAL_CROSS_POSTING_SETUP.md</code>.</p>
+
+    <div id="status-area"></div>
+
+    <div class="panel">
+      <div class="platforms" id="platforms">
+        <span class="muted">Loading platforms…</span>
+      </div>
+
+      <label for="caption">Caption (and hashtags)</label>
+      <textarea id="caption" maxlength="2200" placeholder="Stay connected, stay safe. The dating-safety community without the doxxing risk. #datingsafety #awdtsg #womenswellness"></textarea>
+      <div class="charcount" id="charcount">0 / 2200</div>
+
+      <div class="meta-row">
+        <div>
+          <label for="media-url">Media URL (image or video, public)</label>
+          <input id="media-url" type="url" placeholder="https://...">
+        </div>
+        <div>
+          <label for="scheduled">Schedule for (leave blank = post now)</label>
+          <input id="scheduled" type="datetime-local">
+        </div>
+      </div>
+
+      <button class="btn" id="submit">Queue post</button>
+    </div>
+
+    <div class="panel">
+      <h2 style="font-size:16px;color:#fff;margin:0 0 14px;font-weight:700;">Recent attempts</h2>
+      <div id="history"><span class="muted">Loading…</span></div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    function token() { return localStorage.getItem('safetea_token') || ''; }
+    function authHeaders() { return { 'Authorization': 'Bearer ' + token(), 'Content-Type': 'application/json' }; }
+
+    function showAlert(level, html) {
+      var area = document.getElementById('status-area');
+      area.innerHTML = '<div class="alert ' + level + '">' + html + '</div>';
+    }
+
+    function escapeHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    var availableProfiles = [];
+    var selectedProfileIds = new Set();
+    var selectedServices = new Set();
+
+    async function loadProfiles() {
+      try {
+        var res = await fetch('/api/admin/cross-post-profiles', { headers: authHeaders() });
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            showAlert('err', 'You need to be logged in as an admin to use this page.');
+          }
+          throw new Error('HTTP ' + res.status);
+        }
+        var data = await res.json();
+        var list = document.getElementById('platforms');
+        if (!data.configured) {
+          list.innerHTML = '<span class="muted">Buffer not configured — composer runs in simulated mode (records but does not send). See <code>docs/SOCIAL_CROSS_POSTING_SETUP.md</code> to enable live posting.</span>';
+          showAlert('warn', 'Simulated mode: anything you queue is logged in <code>social_posts</code> but not sent. Add <code>BUFFER_ACCESS_TOKEN</code> in Vercel env to go live.');
+          return;
+        }
+        availableProfiles = data.profiles || [];
+        if (!availableProfiles.length) {
+          list.innerHTML = '<span class="muted">No platforms connected in Buffer yet. Connect TikTok and Instagram in your Buffer dashboard.</span>';
+          return;
+        }
+        list.innerHTML = availableProfiles.map(function (p) {
+          return '<span class="platform-chip" data-id="' + p.id + '" data-service="' + p.service + '">' +
+                 escapeHtml(p.service) + ' · ' + escapeHtml(p.username) + '</span>';
+        }).join('');
+        list.querySelectorAll('.platform-chip').forEach(function (el) {
+          el.addEventListener('click', function () {
+            var id = el.getAttribute('data-id');
+            var service = el.getAttribute('data-service');
+            if (selectedProfileIds.has(id)) {
+              selectedProfileIds.delete(id);
+              selectedServices.delete(service);
+              el.classList.remove('active');
+            } else {
+              selectedProfileIds.add(id);
+              selectedServices.add(service);
+              el.classList.add('active');
+            }
+          });
+        });
+      } catch (err) {
+        document.getElementById('platforms').innerHTML = '<span class="muted">Failed to load platforms.</span>';
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        var res = await fetch('/api/admin/cross-post?limit=20', { headers: authHeaders() });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        var list = document.getElementById('history');
+        if (!data.posts || !data.posts.length) {
+          list.innerHTML = '<span class="muted">No posts yet.</span>';
+          return;
+        }
+        list.innerHTML = data.posts.map(function (p) {
+          var when = new Date(p.created_at).toLocaleString();
+          var caption = (p.caption || '').slice(0, 140) + (p.caption && p.caption.length > 140 ? '…' : '');
+          var bClass = 'b-' + (p.status || 'pending');
+          var error = p.error ? '<div class="muted" style="color:#e74c3c;margin-top:4px">' + escapeHtml(p.error) + '</div>' : '';
+          var sched = p.scheduled_for ? '<span class="muted"> · scheduled ' + new Date(p.scheduled_for).toLocaleString() + '</span>' : '';
+          return '<div class="row">' +
+            '<span class="badge ' + bClass + '">' + (p.status || 'pending').toUpperCase() + '</span> ' +
+            '<span class="muted">' + when + '</span>' + sched +
+            '<div style="margin-top:6px">' + escapeHtml(caption) + '</div>' +
+            error +
+          '</div>';
+        }).join('');
+      } catch (err) {
+        document.getElementById('history').innerHTML = '<span class="muted">Failed to load history.</span>';
+      }
+    }
+
+    document.getElementById('caption').addEventListener('input', function (e) {
+      var n = e.target.value.length;
+      var el = document.getElementById('charcount');
+      el.textContent = n + ' / 2200';
+      el.classList.toggle('warn', n > 2000);
+    });
+
+    document.getElementById('submit').addEventListener('click', async function () {
+      var btn = this;
+      var caption = document.getElementById('caption').value.trim();
+      var mediaUrl = document.getElementById('media-url').value.trim();
+      var scheduledRaw = document.getElementById('scheduled').value;
+      var scheduledFor = scheduledRaw ? new Date(scheduledRaw).toISOString() : null;
+
+      if (!caption) { showAlert('err', 'Caption required.'); return; }
+      if (caption.length > 2200) { showAlert('err', 'Caption over 2,200 chars.'); return; }
+
+      var body = {
+        caption: caption,
+        mediaUrl: mediaUrl || null,
+        scheduledFor: scheduledFor,
+        profileIds: Array.from(selectedProfileIds),
+        platforms: Array.from(selectedServices)
+      };
+
+      btn.disabled = true; btn.textContent = 'Queueing…';
+      try {
+        var res = await fetch('/api/admin/cross-post', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body)
+        });
+        var data = await res.json();
+        if (!res.ok) {
+          showAlert('err', 'Failed: ' + escapeHtml(data.error || ('HTTP ' + res.status)));
+        } else if (data.status === 'simulated') {
+          showAlert('warn', 'Recorded in simulated mode (post id ' + data.id + '). Add BUFFER_ACCESS_TOKEN to send for real.');
+          document.getElementById('caption').value = '';
+          document.getElementById('charcount').textContent = '0 / 2200';
+        } else {
+          showAlert('ok', 'Queued (id ' + data.id + ', status ' + data.status + ').');
+          document.getElementById('caption').value = '';
+          document.getElementById('charcount').textContent = '0 / 2200';
+        }
+        loadHistory();
+      } catch (err) {
+        showAlert('err', 'Network error: ' + escapeHtml(err.message));
+      } finally {
+        btn.disabled = false; btn.textContent = 'Queue post';
+      }
+    });
+
+    loadProfiles();
+    loadHistory();
+  </script>
+</body>
+</html>

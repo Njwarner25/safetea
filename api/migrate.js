@@ -291,6 +291,23 @@ module.exports = async function handler(req, res) {
         )`;
         try { await sql`CREATE INDEX IF NOT EXISTS idx_brand_mentions_seen ON brand_mentions(seen_at DESC)`; } catch(e) {}
 
+        // Social cross-posting log. Used by the admin compose endpoint and the Buffer
+        // client (services/buffer-client.js). One row per cross-post attempt, success
+        // or fail, so admins can audit the queue without leaving SafeTea.
+        await sql`CREATE TABLE IF NOT EXISTS social_posts (
+            id SERIAL PRIMARY KEY,
+            admin_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            caption TEXT NOT NULL,
+            media_url TEXT,
+            platforms TEXT[] NOT NULL DEFAULT '{}',
+            scheduled_for TIMESTAMP,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            buffer_response JSONB,
+            error TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )`;
+        try { await sql`CREATE INDEX IF NOT EXISTS idx_social_posts_status ON social_posts(status, created_at DESC)`; } catch(e) {}
+
         // Indexes for moderation
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_post ON post_reports(post_id)`; } catch(e) {}
         try { await sql`CREATE INDEX IF NOT EXISTS idx_post_reports_user ON post_reports(reported_user_id)`; } catch(e) {}

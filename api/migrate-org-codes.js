@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
       CREATE TABLE IF NOT EXISTS org_code_redemptions (
         id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
         org_code_id TEXT NOT NULL REFERENCES org_access_codes(id),
-        user_id TEXT NOT NULL REFERENCES users(id),
+        user_id TEXT NOT NULL,
         redeemed_at TIMESTAMPTZ DEFAULT NOW(),
         access_expires_at TIMESTAMPTZ NOT NULL,
         UNIQUE(org_code_id, user_id)
@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
     // Add org_code_id to users table for quick lookups
     await run(`
       ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS org_code_id TEXT REFERENCES org_access_codes(id);
+      ADD COLUMN IF NOT EXISTS org_code_id TEXT;
     `);
 
     // Add org_access_expires_at to users table

@@ -89,6 +89,11 @@ module.exports = async function handler(req, res) {
                 );
           }
 
+      // Stamp verification deadline — 90 days from registration
+      try {
+        await run('UPDATE users SET verification_deadline = NOW() + INTERVAL \'90 days\' WHERE email = $1', [email.toLowerCase()]);
+      } catch (_) { /* column may not exist on older deploys */ }
+
       const user = await getOne('SELECT id, email, display_name, role, city FROM users WHERE email = $1', [email.toLowerCase()]);
           const token = generateToken(user);
 

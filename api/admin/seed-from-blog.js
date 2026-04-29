@@ -233,11 +233,26 @@ module.exports = async function handler(req, res) {
 
         const title = body.length > 60 ? body.substring(0, 57) + '…' : body;
 
-        await run(
+        const newPost = await getOne(
           `INSERT INTO posts (user_id, title, body, category, city, feed, created_at)
-           VALUES ($1, $2, $3, 'tea-talk', $4, 'community', NOW())`,
+           VALUES ($1, $2, $3, 'tea-talk', $4, 'community', NOW()) RETURNING id`,
           [account.id, title, body, cityName]
         );
+
+        // Add 3-6 seed likes so the post ranks in the feed (sorted by engagement)
+        if (newPost && newPost.id) {
+          const likers = await getMany(
+            `SELECT id FROM users WHERE email LIKE '%@seed.safetea.local' AND city = $1 AND id != $2 ORDER BY RANDOM() LIMIT 6`,
+            [cityName, account.id]
+          ).catch(function() { return []; });
+          const likeCount = 3 + Math.floor(Math.random() * 4);
+          for (let li = 0; li < Math.min(likeCount, likers.length); li++) {
+            await run(
+              'INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2) ON CONFLICT (post_id, user_id) DO NOTHING',
+              [newPost.id, likers[li].id]
+            ).catch(function() {});
+          }
+        }
 
         summary.seeded.push({ city: cityName, blog: blog.slug, source, author: account.display_name, preview: body.substring(0, 80) });
       }

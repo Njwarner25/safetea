@@ -18,9 +18,11 @@ module.exports = async function handler(req, res) {
 
     if (!roomId) return res.status(400).json({ error: 'Room ID is required' });
 
-    // Trust score gate
-    if ((user.trust_score || 0) < 80) {
-      return res.status(403).json({ error: 'trust_score_too_low', required: 80 });
+    // Verification gate: must be verified OR within 90-day grace period
+    const verificationDeadline = user.verification_deadline ? new Date(user.verification_deadline) : null;
+    const withinGracePeriod = user.identity_verified || !verificationDeadline || verificationDeadline > new Date();
+    if (!withinGracePeriod) {
+      return res.status(403).json({ error: 'verification_required', message: 'Your 90-day verification window has ended. Please verify your identity to access rooms.' });
     }
 
     // Verify membership (invite-only)

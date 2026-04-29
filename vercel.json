@@ -2,6 +2,22 @@
     "cleanUrls": true,
     "headers": [
         {
+            "source": "/vault-folder.html",
+            "headers": [
+                { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+                { "key": "Pragma", "value": "no-cache" },
+                { "key": "Expires", "value": "0" }
+            ]
+        },
+        {
+            "source": "/vault.html",
+            "headers": [
+                { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+                { "key": "Pragma", "value": "no-cache" },
+                { "key": "Expires", "value": "0" }
+            ]
+        },
+        {
             "source": "/(.*)",
             "headers": [
                 { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
@@ -100,6 +116,8 @@
         { "source": "/api/migrate-org-codes", "destination": "/api/migrate-org-codes" },
         { "source": "/api/org-code/redeem", "destination": "/api/org-code/redeem" },
         { "source": "/api/org-code/validate", "destination": "/api/org-code/validate" },
-        { "source": "/api/admin/org-codes", "destination": "/api/admin/org-codes" }
+        { "source": "/api/admin/org-codes", "destination": "/api/admin/org-codes" },
+        { "source": "/api/admin/seed-from-blog", "destination": "/api/admin/seed-from-blog" },
+        { "source": "/api/migrate-verification-deadline", "destination": "/api/migrate-verification-deadline" }
     ]
 }

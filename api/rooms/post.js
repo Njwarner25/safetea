@@ -38,21 +38,13 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Verification gate: must be identity-verified to post in rooms
-      if (!user.identity_verified) {
+      // Verification gate: must be identity-verified OR within 90-day grace period
+      const verificationDeadline = user.verification_deadline ? new Date(user.verification_deadline) : null;
+      const withinGracePeriod = user.identity_verified || !verificationDeadline || verificationDeadline > new Date();
+      if (!withinGracePeriod) {
         return res.status(403).json({
           error: 'verification_required',
-          message: 'You must complete identity verification before posting in rooms. Go to Settings > Verify Identity to get started.'
-        });
-      }
-
-      // Trust score gate: require >= 80
-      if ((user.trust_score || 0) < 80) {
-        return res.status(403).json({
-          error: 'trust_score_too_low',
-          trust_score: user.trust_score || 0,
-          required: 80,
-          message: 'Complete verification steps to unlock room posting. Verify your identity and link social media accounts to get access.'
+          message: 'Your 90-day verification window has ended. Go to Settings > Verify Identity to continue posting in rooms.'
         });
       }
 

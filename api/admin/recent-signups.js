@@ -39,16 +39,18 @@ module.exports = async function handler(req, res) {
   const days  = Math.min(90,  Math.max(1, parseInt(req.query.days)  || 7));
 
   try {
+    // Compute cutoff in JS — avoids fragile interval-cast SQL syntax across pg drivers
+    const cutoff = new Date(Date.now() - days * 86400000).toISOString();
     const rows = await getMany(
       `SELECT id, display_name, email, city, registration_ip, created_at,
               identity_verified, phone_verified, age_verified, gender_verified,
               didit_verified, trust_score, role, banned, subscription_tier
        FROM users
-       WHERE created_at >= NOW() - ($1 || ' days')::interval
+       WHERE created_at >= $1
          AND COALESCE(email, '') NOT LIKE '%@seed.safetea.local'
        ORDER BY created_at DESC
        LIMIT $2`,
-      [String(days), limit]
+      [cutoff, limit]
     );
 
     const signups = rows.map(function(r) {

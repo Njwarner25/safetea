@@ -6,6 +6,52 @@
 
     var TOKEN_KEY = 'safetea_token';
     var USER_KEY = 'safetea_user';
+    // Bump in lockstep with /api/version. The server's reported version is
+    // compared against this client constant; if newer, we show the
+    // "Update available" banner.
+    var SAFETEA_CLIENT_VERSION = '2026.04.30.1';
+    var VERSION_DISMISS_KEY = 'safetea_update_dismissed';
+
+    // Poll /api/version once on load and again every 10 minutes. If the
+    // server's version is newer, render a non-intrusive banner.
+    function checkForUpdate() {
+        fetch('/api/version', { cache: 'no-store' })
+            .then(function (r) { return r.json(); })
+            .catch(function () { return null; })
+            .then(function (data) {
+                if (!data || !data.version) return;
+                if (data.version === SAFETEA_CLIENT_VERSION) return;
+                // Newer server version. Don't re-prompt within the same session
+                // if the user already dismissed this exact version.
+                var dismissed = sessionStorage.getItem(VERSION_DISMISS_KEY);
+                if (dismissed === data.version) return;
+                renderUpdateBanner(data.version);
+            });
+    }
+
+    function renderUpdateBanner(serverVersion) {
+        if (document.getElementById('safetea-update-banner')) return;
+        var banner = document.createElement('div');
+        banner.id = 'safetea-update-banner';
+        banner.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom,0);left:0;right:0;z-index:10000;background:linear-gradient(135deg,#E8A0B5,#9b59b6);color:#1A1A2E;padding:12px 16px;display:flex;align-items:center;gap:12px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;box-shadow:0 -4px 12px rgba(0,0,0,0.3)';
+        banner.innerHTML =
+            '<i class="fas fa-arrow-circle-up" style="font-size:18px"></i>' +
+            '<div style="flex:1"><div style="font-weight:700">Update available</div><div style="font-size:11px;font-weight:500;opacity:0.85">Refresh to get the latest SafeTea features</div></div>' +
+            '<button id="safetea-update-now" style="background:#1A1A2E;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit">Refresh</button>' +
+            '<button id="safetea-update-later" aria-label="Dismiss" style="background:transparent;border:none;color:#1A1A2E;font-size:18px;cursor:pointer;padding:4px 8px">&times;</button>';
+        document.body.appendChild(banner);
+        document.getElementById('safetea-update-now').onclick = function () {
+            try { window.location.reload(true); } catch (_) { window.location.reload(); }
+        };
+        document.getElementById('safetea-update-later').onclick = function () {
+            sessionStorage.setItem(VERSION_DISMISS_KEY, serverVersion);
+            banner.remove();
+        };
+    }
+
+    // Kick off after first paint, then every 10 min while the app is open
+    setTimeout(checkForUpdate, 3000);
+    setInterval(checkForUpdate, 10 * 60 * 1000);
 
     // Platform detection for IAP
     window.isCapacitorNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());

@@ -1,6 +1,7 @@
 const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
 const { checkForFullNames } = require('../_utils/check-fullname');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -38,14 +39,10 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Verification gate: must be identity-verified OR within 90-day grace period
-      const verificationDeadline = user.verification_deadline ? new Date(user.verification_deadline) : null;
-      const withinGracePeriod = user.identity_verified || !verificationDeadline || verificationDeadline > new Date();
-      if (!withinGracePeriod) {
-        return res.status(403).json({
-          error: 'verification_required',
-          message: 'Your 90-day verification window has ended. Go to Settings > Verify Identity to continue posting in rooms.'
-        });
+      // Trust Level gate — Level 3+ (Trusted User) to create posts
+      const trust = await getTrustLevel(user);
+      if (!trust.permissions.canCreatePost) {
+        return res.status(403).json(gateResponse('canCreatePost', trust));
       }
 
       // Verify membership (rooms are invite-only)

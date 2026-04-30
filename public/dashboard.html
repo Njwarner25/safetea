@@ -3354,24 +3354,32 @@
 
             <!-- Identity Verification Section -->
             <div class="profile-form" id="verification-card" style="margin-bottom:24px">
-                <h3><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> Trust Score & Verification</h3>
-                <p style="color:#8080A0;font-size:13px;margin-bottom:16px">Complete verification steps to build your trust score and unlock city chat (70+ required).</p>
+                <h3><i class="fas fa-shield-alt" style="color:#E8A0B5"></i> SafeTea Trust Level</h3>
 
-                <!-- Trust Score Bar -->
-                <div id="dash-trust-score" style="display:none;margin-bottom:20px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                        <span style="color:#8080A0;font-size:12px;font-weight:600">TRUST SCORE</span>
-                        <span id="dash-trust-value" style="font-size:18px;font-weight:700;color:#E8A0B5">0</span>
+                <!-- Trust Level Badge + Progress -->
+                <div id="trust-level-card" style="margin-bottom:20px;padding:16px;border-radius:12px;background:linear-gradient(135deg,rgba(232,160,181,0.12),rgba(155,89,182,0.06));border:1px solid rgba(232,160,181,0.18)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+                        <div>
+                            <div style="color:#8080A0;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">Your Trust Level</div>
+                            <div id="trust-level-badge" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;background:#22223A;color:#E8A0B5;font-weight:700;font-size:14px">
+                                <i class="fas fa-circle-notch fa-spin"></i> <span>Loading…</span>
+                            </div>
+                        </div>
+                        <div id="trust-level-num" style="font-size:32px;font-weight:800;color:#E8A0B5;line-height:1">—</div>
                     </div>
-                    <div style="background:rgba(255,255,255,0.06);border-radius:6px;height:8px;overflow:hidden">
-                        <div id="dash-trust-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#e74c3c,#f39c12,#2ecc71);width:0%;transition:width 0.6s ease"></div>
+                    <div id="trust-progress-wrap" style="display:none">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                            <span id="trust-progress-label" style="color:#fff;font-size:12px;font-weight:600">Next: —</span>
+                            <span id="trust-progress-count" style="color:#8080A0;font-size:11px">0 of 0</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;overflow:hidden">
+                            <div id="trust-progress-bar" style="height:100%;border-radius:6px;background:linear-gradient(90deg,#E8A0B5,#9b59b6);width:0%;transition:width 0.6s ease"></div>
+                        </div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;margin-top:4px">
-                        <span style="color:#555;font-size:10px">0</span>
-                        <span style="color:#555;font-size:10px">70 = City Chat</span>
-                        <span style="color:#555;font-size:10px">100</span>
-                    </div>
+                    <div id="trust-fully-verified" style="display:none;color:#2ecc71;font-size:13px;font-weight:600;text-align:center;padding:8px"><i class="fas fa-check-circle"></i> You're Fully Verified — full access unlocked.</div>
                 </div>
+
+                <p style="color:#8080A0;font-size:13px;margin-bottom:16px;line-height:1.5">SafeTea uses layered verification to keep community spaces safer while still allowing new users to explore.</p>
 
                 <div id="verification-steps">
                     <div class="verify-step" id="verify-step-age" onclick="window.location.href='/verify.html?step=age'" style="cursor:pointer">

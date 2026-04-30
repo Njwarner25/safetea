@@ -1,5 +1,6 @@
 const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -28,9 +29,10 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'You cannot report your own post' });
     }
 
-    // Trust score gate + membership
-    if ((user.trust_score || 0) < 80) {
-      return res.status(403).json({ error: 'trust_score_too_low', required: 80 });
+    // Trust Level gate — Level 1+ to report
+    const trust = await getTrustLevel(user);
+    if (!trust.permissions.canReport) {
+      return res.status(403).json(gateResponse('canReport', trust));
     }
     const membership = await getOne(
       `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,

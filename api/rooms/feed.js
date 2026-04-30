@@ -1,5 +1,6 @@
 const { cors, authenticate } = require('../_utils/auth');
 const { getOne, getMany } = require('../_utils/db');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -18,25 +19,26 @@ module.exports = async function handler(req, res) {
 
     if (!roomId) return res.status(400).json({ error: 'Room ID is required' });
 
-    // Verification gate: must be verified OR within 90-day grace period
-    const verificationDeadline = user.verification_deadline ? new Date(user.verification_deadline) : null;
-    const withinGracePeriod = user.identity_verified || !verificationDeadline || verificationDeadline > new Date();
-    if (!withinGracePeriod) {
-      return res.status(403).json({ error: 'verification_required', message: 'Your 90-day verification window has ended. Please verify your identity to access rooms.' });
-    }
+    // Trust Level gate — Level 1+ (phone verified) to read room posts.
+    // Level 0 visitors get a stripped preview (last 5 posts, body truncated).
+    const trust = await getTrustLevel(user);
+    const isAdmin = user.role === 'admin' || user.role === 'moderator';
+    const previewMode = !trust.permissions.canReadPosts && !isAdmin;
 
     // Verify membership (invite-only)
     const membership = await getOne(
       `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
       [roomId, user.id]
     );
-    const isAdmin = user.role === 'admin' || user.role === 'moderator';
     if (!membership && !isAdmin) {
       return res.status(403).json({ error: 'You need an invite code to join this room.' });
     }
 
+    // Visitor preview mode: cap to 5 most-recent posts
+    const effectiveLimit = previewMode ? Math.min(limit, 5) : limit;
+
     let typeFilter = '';
-    const params = [roomId, user.id, limit, offset];
+    const params = [roomId, user.id, effectiveLimit, offset];
     // Good Guys removed 2026-04 — only tea_talk type is valid going forward
     if (type === 'tea_talk') {
       typeFilter = `AND p.type = $5`;
@@ -60,7 +62,16 @@ module.exports = async function handler(req, res) {
       params
     );
 
-    return res.status(200).json({ posts });
+    // In preview mode, truncate post bodies + strip images (visitors get a teaser only)
+    const finalPosts = previewMode
+      ? posts.map(function(p) { return Object.assign({}, p, { body: (p.body || '').substring(0, 140) + (p.body && p.body.length > 140 ? '…' : ''), image_data: null, _preview: true }); })
+      : posts;
+
+    return res.status(200).json({
+      posts: finalPosts,
+      trust: { level: trust.level, label: trust.label, preview_mode: previewMode },
+      upgrade: previewMode ? gateResponse('canReadPosts', trust) : null
+    });
   } catch (err) {
     console.error('Room feed error:', err);
     return res.status(500).json({ error: 'Internal server error' });

@@ -260,6 +260,18 @@
                     </div>
                 </div>
                 <div class="card">
+                    <h3 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                        <span><i class="fas fa-user-plus"></i> Recent Signups</span>
+                        <select id="recent-signups-days" onchange="loadRecentSignups()" style="background:#1A1A2E;color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 10px;font-size:12px">
+                            <option value="1">Last 24h</option>
+                            <option value="7" selected>Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </h3>
+                    <div id="recent-signups-list" style="max-height:520px;overflow-y:auto"><div style="color:#8080A0;text-align:center;padding:20px;font-size:13px">Loading…</div></div>
+                </div>
+                <div class="card">
                     <h3><i class="fas fa-shield-alt"></i> Trust Score Distribution</h3>
                     <div id="trust-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
                         <div><span style="font-size:12px;color:#8080A0">Avg Score</span><div style="font-size:22px;font-weight:700;color:#E8A0B5" id="stat-trust-avg">&mdash;</div></div>
@@ -789,9 +801,69 @@
                     document.getElementById('stat-trust-med').textContent = data.trustScore.medium || 0;
                     document.getElementById('stat-trust-high').textContent = data.trustScore.high || 0;
                 }
+                loadRecentSignups();
             } catch (err) {
                 console.error('Failed to load overview:', err);
             }
+        }
+
+        async function loadRecentSignups() {
+            const list = document.getElementById('recent-signups-list');
+            if (!list) return;
+            const days = (document.getElementById('recent-signups-days') || {}).value || 7;
+            try {
+                const res = await fetch(API_BASE + '/admin/recent-signups?limit=100&days=' + days, { headers: authHeaders() });
+                if (!res.ok) {
+                    list.innerHTML = '<div style="color:#e74c3c;text-align:center;padding:20px;font-size:13px">Failed to load signups</div>';
+                    return;
+                }
+                const data = await res.json();
+                if (!data.signups || data.signups.length === 0) {
+                    list.innerHTML = '<div style="color:#8080A0;text-align:center;padding:20px;font-size:13px">No signups in this window</div>';
+                    return;
+                }
+                const rows = data.signups.map(function(s) {
+                    const when = new Date(s.created_at);
+                    const ago = timeAgo(when);
+                    const checks = [];
+                    if (s.verified.phone)    checks.push('<span title="Phone verified" style="color:#3498db">P</span>');
+                    if (s.verified.age)      checks.push('<span title="Age verified" style="color:#9b59b6">A</span>');
+                    if (s.verified.identity) checks.push('<span title="Selfie+liveness" style="color:#9b59b6">S</span>');
+                    if (s.verified.gender)   checks.push('<span title="Gender verified" style="color:#E8A0B5">G</span>');
+                    if (s.verified.didit)    checks.push('<span title="Government ID" style="color:#2ecc71">D</span>');
+                    const tierBadge = s.subscription_tier !== 'free'
+                        ? '<span style="background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;text-transform:uppercase;font-weight:700;margin-left:6px">' + s.subscription_tier + '</span>' : '';
+                    const banBadge = s.banned ? '<span style="background:#e74c3c;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;text-transform:uppercase;font-weight:700;margin-left:6px">BANNED</span>' : '';
+                    return '<div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;align-items:center">' +
+                        '<div style="width:32px;height:32px;border-radius:50%;background:#E8A0B5;color:#1A1A2E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">' + (s.display_name ? s.display_name[0].toUpperCase() : '?') + '</div>' +
+                        '<div style="min-width:0">' +
+                            '<div style="color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.display_name || '(no name)') + tierBadge + banBadge + '</div>' +
+                            '<div style="color:#8080A0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                                escapeHtml(s.email_masked || '—') +
+                                (s.city ? '  ·  ' + escapeHtml(s.city) : '') +
+                                (s.registration_ip ? '  ·  ' + escapeHtml(s.registration_ip) : '') +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="text-align:right">' +
+                            '<div style="color:#8080A0;font-size:11px">' + ago + '</div>' +
+                            '<div style="font-size:10px;letter-spacing:2px;font-weight:700;margin-top:2px">' + (checks.join('') || '<span style="color:#555">—</span>') + '</div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                const header = '<div style="color:#8080A0;font-size:11px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:4px">Showing ' + data.signups.length + ' signups · Verification: <span style="color:#3498db">P</span>=phone <span style="color:#9b59b6">A</span>=age <span style="color:#9b59b6">S</span>=selfie <span style="color:#E8A0B5">G</span>=gender <span style="color:#2ecc71">D</span>=gov ID</div>';
+                list.innerHTML = header + rows;
+            } catch (err) {
+                console.error('Failed to load recent signups:', err);
+                list.innerHTML = '<div style="color:#e74c3c;text-align:center;padding:20px;font-size:13px">Error loading</div>';
+            }
+        }
+
+        function timeAgo(date) {
+            const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (sec < 60) return sec + 's ago';
+            if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+            if (sec < 86400) return Math.floor(sec / 3600) + 'h ago';
+            return Math.floor(sec / 86400) + 'd ago';
         }
 
         // ===== CONTENT MODERATION =====

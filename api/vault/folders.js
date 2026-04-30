@@ -35,6 +35,11 @@ const MAX_COUNTDOWN_HOURS = 168; // 7 days
 
 module.exports = async function handler(req, res) {
   cors(res, req);
+  // Authenticated, owner-private data — never let the browser/CDN cache this.
+  // Empty 304 responses from a stale cache were rendering as
+  // "Could not load your Vault: Unexpected end of JSON input".
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const user = await authenticate(req);

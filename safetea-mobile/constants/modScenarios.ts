@@ -44,10 +44,10 @@ export const MOD_APPLICATION_SCENARIOS: ModScenario[] = [
   },
   {
     id: 'sc5',
-    title: 'Criminal Record Sharing',
-    description: 'A user posts a screenshot of public court records showing a conviction, with the person\'s full name and photo.',
+    title: 'Unverified Serious Allegation',
+    description: 'A user posts a serious allegation against a named individual with no context, no firsthand account, and no community corroboration.',
     correctAction: 'escalate',
-    explanation: 'While court records are public, sharing them requires FCRA compliance review. Escalate to senior moderator for legal review.',
+    explanation: 'Serious allegations against named individuals carry significant defamation risk and require senior moderator review before they remain public.',
     difficulty: 'hard',
   },
 ];

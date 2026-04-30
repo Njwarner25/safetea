@@ -44,7 +44,6 @@ safetea-mobile/
 - Avatar selection (no photo uploads)
 - 5-step moderator approval process
 - City-based communities (200-vote threshold)
-- FCRA-compliant safety tools
 - Community alerts & AMBER alerts
 - Anonymous posting option
 

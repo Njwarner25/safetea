@@ -41,7 +41,6 @@
     ],
     "rewrites": [
         { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
-        { "source": "/api/screening/background", "destination": "/api/screening/background" },
         { "source": "/api/dates/checkout", "destination": "/api/dates/checkout" },
         { "source": "/api/dates/checkin", "destination": "/api/dates/checkin" },
         { "source": "/api/dates/status", "destination": "/api/dates/status" },

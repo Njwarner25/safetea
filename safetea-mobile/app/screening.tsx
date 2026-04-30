@@ -35,18 +35,18 @@ function buildFlags(data: any): { redFlags: RedFlag[]; greenFlags: GreenFlag[]; 
     score -= 15;
   }
 
-  if (data?.criminal_records || data?.criminalRecords) {
-    const records = data.criminal_records || data.criminalRecords;
-    if (Array.isArray(records) && records.length > 0) {
-      redFlags.push({ id: 'rf-criminal', label: 'Criminal records found', severity: 'high', description: `Found ${records.length} criminal record(s) associated with this name.` });
+  if (data?.serious_concerns || data?.seriousConcerns) {
+    const concerns = data.serious_concerns || data.seriousConcerns;
+    if (Array.isArray(concerns) && concerns.length > 0) {
+      redFlags.push({ id: 'rf-serious', label: 'Serious red flag', severity: 'high', description: `Profile language contains ${concerns.length} serious safety concern(s).` });
       score -= 30;
     } else {
-      greenFlags.push({ id: 'gf-nocriminal', label: 'No criminal records', description: 'No criminal records found for this name.' });
+      greenFlags.push({ id: 'gf-noserious', label: 'No serious concerns', description: 'No serious red flags detected in profile language.' });
     }
   }
 
-  if (data?.sex_offender || data?.sexOffender) {
-    redFlags.push({ id: 'rf-so', label: 'Sex offender registry match', severity: 'high', description: 'Name matches a sex offender registry entry.' });
+  if (data?.safety_alert || data?.safetyAlert) {
+    redFlags.push({ id: 'rf-alert', label: 'Caution flag', severity: 'high', description: 'Profile language matches a known safety concern pattern.' });
     score -= 40;
   }
 

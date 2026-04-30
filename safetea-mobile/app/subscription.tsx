@@ -38,7 +38,7 @@ const PLANS = [
       'SafeWalk date sharing',
       'Name Watch \u2014 get alerted when someone you know is posted about',
       'Unlimited AI Profile Screening',
-      'Background check credits (3/month)',
+      'Advanced safety tools',
       'Safety map premium',
       'Scam database access',
       'Priority support',

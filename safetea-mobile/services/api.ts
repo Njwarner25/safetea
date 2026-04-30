@@ -48,13 +48,6 @@ class ApiClient {
   }
 
   // Auth
-  async login(email: string, password: string) {
-    return this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-  }
-
   async sendVerificationCode(phone: string) {
     return this.request('/auth/send-code', {
       method: 'POST',
@@ -88,14 +81,6 @@ class ApiClient {
     });
   }
 
-  // Report
-  async reportPost(postId: string, reason: string, details?: string) {
-    return this.request('/posts/report', {
-      method: 'POST',
-      body: JSON.stringify({ post_id: postId, reason, details }),
-    });
-  }
-
   // Cities
   async getCities() {
     return this.request('/cities');
@@ -122,185 +107,37 @@ class ApiClient {
     return this.request('/search?q=' + encodeURIComponent(query) + '&city=' + cityId);
   }
 
-  // Subscription
-  async subscribe(priceId: string) {
-    return this.request('/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({ priceId }),
-    });
+  // Tether
+  async createTether(data: { session_name: string; distance_threshold_ft: number; night_mode_enabled: boolean; emergency_escalation_enabled: boolean }) {
+    return this.request('/tether/create', { method: 'POST', body: JSON.stringify(data) });
   }
 
-  // Background Check
-  async backgroundCheck(fullName: string, city?: string, state?: string, age?: number) {
-    return this.request<any>('/screening/background', {
-      method: 'POST',
-      body: JSON.stringify({ fullName, city, state, age }),
-    });
+  async joinTether(data: { join_code?: string; qr_token?: string; current_lat: number; current_lng: number }) {
+    return this.request('/tether/join', { method: 'POST', body: JSON.stringify(data) });
   }
 
-  // Community Name Mentions
-  async getNameMentions(fullName: string, city: string, state?: string) {
-    const params = new URLSearchParams({ fullName, city });
-    if (state) params.set('state', state);
-    return this.request<any>('/community/name-mentions?' + params.toString());
+  async lockTether(sessionId: number) {
+    return this.request('/tether/lock', { method: 'POST', body: JSON.stringify({ session_id: sessionId }) });
   }
 
-  // Crime Alerts
-  async getAreaAlerts(lat: number, lon: number, radius: number = 2, days: number = 30) {
-    return this.request('/alerts/area?lat=' + lat + '&lon=' + lon + '&radius=' + radius + '&days=' + days + '&limit=20');
+  async updateTetherLocation(sessionId: number, lat: number, lng: number) {
+    return this.request('/tether/location', { method: 'POST', body: JSON.stringify({ session_id: sessionId, lat, lng }) });
   }
 
-  // Identity Verification
-  async getIdentityChallenge() {
-    return this.request<{ challenge_id: string; instruction: string }>('/auth/verify/identity');
+  async respondTether(sessionId: number, response: string) {
+    return this.request('/tether/respond', { method: 'POST', body: JSON.stringify({ session_id: sessionId, response }) });
   }
 
-  async submitIdentityVerification(selfie: string, challengeId: string) {
-    return this.request<any>('/auth/verify/identity', {
-      method: 'POST',
-      body: JSON.stringify({ selfie, challenge_id: challengeId }),
-    });
+  async pingTetherMember(sessionId: number, targetUserId: string) {
+    return this.request('/tether/ping', { method: 'POST', body: JSON.stringify({ session_id: sessionId, target_user_id: targetUserId }) });
   }
 
-  async getVerificationStatus() {
-    return this.request<any>('/auth/verify/status');
+  async endTether(sessionId: number) {
+    return this.request('/tether/end', { method: 'POST', body: JSON.stringify({ session_id: sessionId }) });
   }
 
-  // Sex Offender Check
-  async sexOffenderCheck(fullName: string, state?: string, city?: string, cityId?: string) {
-    return this.request<any>('/screening/sex-offender', {
-      method: 'POST',
-      body: JSON.stringify({ fullName, state, city, cityId }),
-    });
-  }
-
-  // AI Profile Screening (catfish detection)
-  async screenProfile(profileName: string, platform: string) {
-    return this.request<any>('/screening/catfish', {
-      method: 'POST',
-      body: JSON.stringify({ profileName, platform }),
-    });
-  }
-
-  // SafeWalk — Date Checkout (start session)
-  async dateCheckout(data: { dateName: string; venue: string; address?: string; transportation?: string; estimatedReturn?: string; contacts: { name: string; phone: string }[] }) {
-    return this.request<any>('/dates/checkout', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // SafeWalk — SafeTea check-in (safe return)
-  async dateCheckin(checkoutId: string, safetyRating?: number, notes?: string) {
-    return this.request<any>('/dates/checkin', {
-      method: 'POST',
-      body: JSON.stringify({ checkoutId, safetyRating, notes }),
-    });
-  }
-
-  // SafeWalk — Share trip details with contacts
-  async shareDateDetails(checkoutId: string, contacts: { name: string; phone: string }[]) {
-    return this.request<any>('/dates/share', {
-      method: 'POST',
-      body: JSON.stringify({ checkoutId, contacts }),
-    });
-  }
-
-  // SafeWalk — Panic alert
-  async panicAlert(checkoutId: string) {
-    return this.request<any>('/dates/report', {
-      method: 'POST',
-      body: JSON.stringify({ checkoutId, method: 'sms', emergency: true }),
-    });
-  }
-
-  // Moderator — Submit application
-  async submitModApplication(motivation: string) {
-    return this.request<any>('/admin/moderators', {
-      method: 'POST',
-      body: JSON.stringify({ motivation }),
-    });
-  }
-
-  // Moderator — Get queue
-  async getModQueueItems() {
-    return this.request<any>('/admin/posts');
-  }
-
-  // Moderator — Take action on post
-  async moderatePostAction(postId: string, action: string, reason?: string) {
-    return this.request<any>('/admin/posts/' + postId + '/moderate', {
-      method: 'POST',
-      body: JSON.stringify({ action, reason }),
-    });
-  }
-
-  // SOS — Emergency alert
-  async sosAlert(type: string, latitude?: number, longitude?: number) {
-    return this.request<any>('/dates/sos', {
-      method: 'POST',
-      body: JSON.stringify({ type, latitude, longitude }),
-    });
-  }
-
-  // Fake Call — AI script generation
-  async generateFakeCallScript(callerName: string, context: string) {
-    return this.request<{ script: string }>('/dates/fake-call-script', {
-      method: 'POST',
-      body: JSON.stringify({ callerName, context }),
-    });
-  }
-
-  // Fake Call — Voice synthesis
-  async synthesizeFakeCallVoice(script: string, persona?: string) {
-    return this.request<{ audio: string }>('/dates/fake-call-voice', {
-      method: 'POST',
-      body: JSON.stringify({ script, persona }),
-    });
-  }
-
-  // Push Notifications
-  async registerPushToken(token: string, platform: string) {
-    return this.request('/notifications/register', {
-      method: 'POST',
-      body: JSON.stringify({ token, platform }),
-    });
-  }
-
-  // Name Watch
-  async getWatchedNames() {
-    return this.request<any>('/namewatch');
-  }
-
-  async addWatchedName(name: string) {
-    return this.request<any>('/namewatch', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    });
-  }
-
-  async deleteWatchedName(id: number) {
-    return this.request<any>('/namewatch?id=' + id, {
-      method: 'DELETE',
-    });
-  }
-
-  async getNameWatchUnread() {
-    return this.request<any>('/namewatch/unread');
-  }
-
-  async markAllNameWatchRead() {
-    return this.request<any>('/namewatch/read-all', {
-      method: 'POST',
-    });
-  }
-
-  // Scam database — fetch entries from community reports
-  async getScamReports(category?: string, search?: string) {
-    const params = new URLSearchParams();
-    if (category && category !== 'all') params.set('category', category);
-    if (search) params.set('q', search);
-    return this.request<any>('/community?type=scam&' + params.toString());
+  async getTetherStatus(sessionId: number) {
+    return this.request('/tether/status?session_id=' + sessionId);
   }
 }
 

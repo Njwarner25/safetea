@@ -3,14 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../constants/colors';
-import { useScreenshotPrevention } from '../utils/useScreenshotPrevention';
-import PulseAreYouOkayPrompt from '../components/pulse/PulseAreYouOkayPrompt';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  useScreenshotPrevention();
-
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
@@ -55,70 +51,12 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="screening"
+          name="tether"
           options={{
-            headerShown: true,
-            headerTitle: 'AI Profile Screening',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="safety-map"
-          options={{
-            headerShown: true,
-            headerTitle: 'Community Safety Map',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="scam-database"
-          options={{
-            headerShown: true,
-            headerTitle: 'Scam Database',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="subscription"
-          options={{
-            headerShown: true,
-            headerTitle: 'Subscription',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="safewalk"
-          options={{
-            headerShown: true,
-            headerTitle: 'SafeWalk',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="name-watch"
-          options={{
-            headerShown: true,
-            headerTitle: 'Name Watch',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
-          }}
-        />
-        <Stack.Screen
-          name="pulse"
-          options={{
-            headerShown: true,
-            headerTitle: 'SafeTea Pulse',
-            headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
+            headerShown: false,
           }}
         />
       </Stack>
-      <PulseAreYouOkayPrompt />
     </>
   );
 }

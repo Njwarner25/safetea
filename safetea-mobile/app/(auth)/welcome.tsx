@@ -26,8 +26,8 @@ export default function WelcomeScreen() {
         <View style={styles.featureRow}>
           <Text style={styles.featureIcon}>🔍</Text>
           <View style={styles.featureText}>
-            <Text style={styles.featureTitle}>Background Check Tools</Text>
-            <Text style={styles.featureDesc}>Access public safety records (FCRA compliant)</Text>
+            <Text style={styles.featureTitle}>Safety Resources</Text>
+            <Text style={styles.featureDesc}>Community safety tools and hotlines</Text>
           </View>
         </View>
         <View style={styles.featureRow}>

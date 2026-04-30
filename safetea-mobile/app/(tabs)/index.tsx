@@ -29,7 +29,7 @@ const DID_YOU_KNOW_FACTS = [
   '72% of all murder-suicides involve an intimate partner; 94% of the victims are female.',
   'Only 1 in 5 teens who have been in a physically abusive relationship tell someone about it.',
   'Most dating violence goes unreported — SafeTea is here to change that.',
-  'Background checks can reveal criminal histories that dating profiles hide. Stay informed, stay safe.',
+  'SafeTea empowers communities to look out for each other. Stay connected, stay safe.',
 ];
 
 const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }[] = [

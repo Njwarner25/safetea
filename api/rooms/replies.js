@@ -1,5 +1,6 @@
 const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -16,17 +17,23 @@ module.exports = async function handler(req, res) {
   const post = await getOne('SELECT room_id FROM room_posts WHERE id = $1', [postId]);
   if (!post) return res.status(404).json({ error: 'Post not found' });
 
-  // Trust score gate + membership
-  if ((user.trust_score || 0) < 80) {
-    return res.status(403).json({ error: 'trust_score_too_low', required: 80 });
-  }
+  // Trust Level gate — Level 1+ to read, Level 2+ to reply, Level 1+ to delete own
+  const trust = await getTrustLevel(user);
+  const isGlobalAdmin = user.role === 'admin' || user.role === 'moderator';
   const membership = await getOne(
     `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,
     [post.room_id, user.id]
   );
-  const isGlobalAdmin = user.role === 'admin' || user.role === 'moderator';
   if (!membership && !isGlobalAdmin) {
     return res.status(403).json({ error: 'You need an invite code to join this room.' });
+  }
+
+  // Method-specific trust checks
+  if (req.method === 'GET' && !trust.permissions.canReadPosts && !isGlobalAdmin) {
+    return res.status(403).json(gateResponse('canReadPosts', trust));
+  }
+  if (req.method === 'POST' && !trust.permissions.canComment && !isGlobalAdmin) {
+    return res.status(403).json(gateResponse('canComment', trust));
   }
 
   // GET — list replies

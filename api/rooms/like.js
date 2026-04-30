@@ -1,5 +1,6 @@
 const { cors, authenticate, parseBody } = require('../_utils/auth');
 const { getOne, run } = require('../_utils/db');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -21,9 +22,10 @@ module.exports = async function handler(req, res) {
     const post = await getOne('SELECT room_id FROM room_posts WHERE id = $1', [postId]);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    // Trust score gate + membership
-    if ((user.trust_score || 0) < 80) {
-      return res.status(403).json({ error: 'trust_score_too_low', required: 80 });
+    // Trust Level gate — Level 1+ to react
+    const trust = await getTrustLevel(user);
+    if (!trust.permissions.canReact) {
+      return res.status(403).json(gateResponse('canReact', trust));
     }
     const membership = await getOne(
       `SELECT id FROM room_memberships WHERE room_id = $1 AND user_id = $2 AND status = 'approved'`,

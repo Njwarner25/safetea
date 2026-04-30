@@ -2,6 +2,7 @@ const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { checkForFullNames } = require('../_utils/check-fullname');
 const { enforceCityChatAccess } = require('../_utils/gender-gate');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 const { sendNameWatchMatchEmail } = require('../../services/email');
 const { sendPushNotification } = require('../../services/push');
 
@@ -26,21 +27,10 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // Verification gate: must be identity-verified to post
-  if (!user.identity_verified) {
-    return res.status(403).json({
-      error: 'verification_required',
-      message: 'You must complete identity verification before posting. Go to Settings > Verify Identity to get started.'
-    });
-  }
-
-  // Trust score gate: require score >= 80 to post in city chat
-  if ((user.trust_score || 0) < 80) {
-    return res.status(403).json({
-      error: 'trust_score_too_low',
-      required: 80,
-      message: 'Complete verification steps to unlock city chat. Verify your identity and link social media accounts to get access.'
-    });
+  // Trust Level gate — Level 3+ (Trusted User) to create city chat posts
+  const trust = await getTrustLevel(user);
+  if (!trust.permissions.canCreatePost) {
+    return res.status(403).json(gateResponse('canCreatePost', trust));
   }
 
   // Gender gate: city chat is a women-only space

@@ -265,65 +265,137 @@
     }
 
     // ============ VERIFICATION STATUS ============
+    // Trust Level color/icon by tier — used by badge + upgrade prompts
+    var TRUST_LEVEL_STYLES = {
+        0: { color: '#8080A0', bg: 'rgba(128,128,160,0.18)', icon: 'fa-eye' },
+        1: { color: '#3498db', bg: 'rgba(52,152,219,0.18)',  icon: 'fa-mobile-alt' },
+        2: { color: '#9b59b6', bg: 'rgba(155,89,182,0.18)',  icon: 'fa-user-check' },
+        3: { color: '#E8A0B5', bg: 'rgba(232,160,181,0.18)', icon: 'fa-shield-alt' },
+        4: { color: '#2ecc71', bg: 'rgba(46,204,113,0.18)',  icon: 'fa-check-circle' }
+    };
+
+    // Cache the latest trust profile so other parts of the app can ask "what level am I?"
+    window.__safetea_trust = null;
+
     function loadVerificationStatus() {
-        fetch('/api/auth/verify/status', { headers: { 'Authorization': 'Bearer ' + getToken() } })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.steps) {
-                    updateVerifyStep('age', data.steps.age);
-                    updateVerifyStep('identity', data.steps.identity);
-                    updateVerifyStep('gender', data.steps.gender);
-                    updateVerifyStep('didit', data.steps.didit);
-                    updateVerifyStep('phone', data.steps.phone);
-                }
+        // Two parallel fetches: legacy verify status (for individual step rows) + new trust profile
+        var token = getToken();
+        var headers = { 'Authorization': 'Bearer ' + token };
 
-                // Social media status
-                var socialStatus = document.getElementById('verify-social-status');
-                var socialStep = document.getElementById('verify-step-social');
-                var socialIcon = socialStep ? socialStep.querySelector('.verify-icon') : null;
-                if (socialStatus) {
-                    // We don't have social count from status endpoint, show generic
-                    socialStatus.textContent = 'Link accounts on verify page';
-                    socialStatus.style.color = '#8080A0';
-                }
+        Promise.all([
+            fetch('/api/auth/verify/status', { headers: headers }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+            fetch('/api/users/trust',         { headers: headers }).then(function(r) { return r.json(); }).catch(function() { return null; })
+        ]).then(function(results) {
+            var data = results[0];
+            var trust = results[1];
 
-                // Trust score display
-                var trustEl = document.getElementById('dash-trust-score');
-                var trustVal = document.getElementById('dash-trust-value');
-                var trustBar = document.getElementById('dash-trust-bar');
-                if (trustEl && typeof data.trustScore !== 'undefined') {
-                    trustEl.style.display = 'block';
-                    var score = data.trustScore || 0;
-                    if (trustVal) {
-                        trustVal.textContent = score;
-                        trustVal.style.color = score >= 70 ? '#2ecc71' : score >= 40 ? '#f1c40f' : '#e74c3c';
-                    }
-                    if (trustBar) trustBar.style.width = Math.min(100, score) + '%';
-                }
+            // Cache trust profile globally
+            if (trust && typeof trust.level !== 'undefined') window.__safetea_trust = trust;
 
-                var banner = document.getElementById('verification-banner');
-                if (banner && data.verified && data.diditVerified) {
-                    banner.style.display = 'block';
-                    banner.style.background = 'rgba(46,204,113,0.15)';
-                    banner.style.color = '#2ecc71';
-                    banner.innerHTML = '<i class="fas fa-check-circle"></i> Fully Verified';
-                }
+            // Render checklist rows from legacy status endpoint (it has per-step detail)
+            if (data && data.steps) {
+                updateVerifyStep('age',      data.steps.age);
+                updateVerifyStep('identity', data.steps.identity);
+                updateVerifyStep('gender',   data.steps.gender);
+                updateVerifyStep('didit',    data.steps.didit);
+                updateVerifyStep('phone',    data.steps.phone);
+            }
 
-                // Show verify identity button if age is done but identity isn't
-                var identBtn = document.getElementById('btn-verify-identity');
-                if (identBtn && data.nextStep === 'identity') {
-                    identBtn.style.display = 'inline-block';
+            // Social row — use trust.checks.social_connected as truth
+            var socialStatus = document.getElementById('verify-social-status');
+            var socialStep   = document.getElementById('verify-step-social');
+            var socialIcon   = socialStep ? socialStep.querySelector('.verify-icon') : null;
+            if (socialStatus) {
+                if (trust && trust.checks && trust.checks.social_connected) {
+                    socialStatus.textContent = 'Verified'; socialStatus.style.color = '#2ecc71';
+                    if (socialIcon) { socialIcon.style.background = 'rgba(46,204,113,0.15)'; socialIcon.style.color = '#2ecc71'; }
+                } else {
+                    socialStatus.textContent = 'Link accounts on verify page'; socialStatus.style.color = '#8080A0';
                 }
-            })
-            .catch(function() {
-                setVerifyStatus('age', 'Unable to check');
-                setVerifyStatus('identity', 'Unable to check');
-                setVerifyStatus('gender', 'Unable to check');
-                setVerifyStatus('didit', 'Unable to check');
-                setVerifyStatus('phone', 'Unable to check');
-                setVerifyStatus('social', 'Unable to check');
-            });
+            }
+
+            // Render Trust Level badge + progress bar
+            renderTrustLevelCard(trust);
+
+            // Show verify identity button if age is done but identity isn't
+            var identBtn = document.getElementById('btn-verify-identity');
+            if (identBtn && data && data.nextStep === 'identity') {
+                identBtn.style.display = 'inline-block';
+            }
+        }).catch(function() {
+            setVerifyStatus('age', 'Unable to check');
+            setVerifyStatus('identity', 'Unable to check');
+            setVerifyStatus('gender', 'Unable to check');
+            setVerifyStatus('didit', 'Unable to check');
+            setVerifyStatus('phone', 'Unable to check');
+            setVerifyStatus('social', 'Unable to check');
+        });
     }
+
+    function renderTrustLevelCard(trust) {
+        if (!trust || typeof trust.level === 'undefined') return;
+        var style = TRUST_LEVEL_STYLES[trust.level] || TRUST_LEVEL_STYLES[0];
+
+        var badge = document.getElementById('trust-level-badge');
+        if (badge) {
+            badge.innerHTML = '<i class="fas ' + style.icon + '"></i> <span>' + trust.label + '</span>';
+            badge.style.background = style.bg;
+            badge.style.color = style.color;
+        }
+
+        var num = document.getElementById('trust-level-num');
+        if (num) { num.textContent = 'L' + trust.level; num.style.color = style.color; }
+
+        var progressWrap = document.getElementById('trust-progress-wrap');
+        var fullyEl = document.getElementById('trust-fully-verified');
+
+        if (trust.progress) {
+            if (progressWrap) progressWrap.style.display = 'block';
+            if (fullyEl) fullyEl.style.display = 'none';
+            var label = document.getElementById('trust-progress-label');
+            var count = document.getElementById('trust-progress-count');
+            var bar   = document.getElementById('trust-progress-bar');
+            if (label) label.textContent = 'Next: ' + trust.progress.next_label;
+            if (count) count.textContent = trust.progress.completed + ' of ' + trust.progress.total + ' checks';
+            if (bar) {
+                var pct = trust.progress.total > 0 ? Math.round((trust.progress.completed / trust.progress.total) * 100) : 0;
+                bar.style.width = pct + '%';
+            }
+        } else {
+            // Level 4 — fully verified
+            if (progressWrap) progressWrap.style.display = 'none';
+            if (fullyEl) fullyEl.style.display = 'block';
+        }
+    }
+
+    // Friendly upgrade prompt — shown when a 403 trust_level_insufficient response comes back
+    window.showTrustUpgradePrompt = function(payload) {
+        if (!payload) return;
+        var msg = payload.required_message || 'Verify more to unlock this action.';
+        var nextLabel = payload.progress && payload.progress.next_label ? payload.progress.next_label : null;
+
+        var existing = document.getElementById('trust-upgrade-modal');
+        if (existing) existing.remove();
+        var modal = document.createElement('div');
+        modal.id = 'trust-upgrade-modal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+        modal.innerHTML =
+            '<div style="background:#22223A;border:1px solid rgba(232,160,181,0.25);border-radius:14px;max-width:380px;width:100%;padding:24px;color:#fff;font-family:Inter,sans-serif">' +
+                '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
+                    '<i class="fas fa-shield-alt" style="color:#E8A0B5;font-size:20px"></i>' +
+                    '<strong style="font-size:16px">Unlock with verification</strong>' +
+                '</div>' +
+                '<p style="color:#cfd0e0;font-size:14px;line-height:1.5;margin-bottom:8px">' + msg + '</p>' +
+                (nextLabel ? '<p style="color:#8080A0;font-size:12px;margin-bottom:18px">Next level: <strong style="color:#E8A0B5">' + nextLabel + '</strong></p>' : '') +
+                '<p style="color:#666;font-size:11px;line-height:1.4;margin-bottom:18px;font-style:italic">SafeTea uses layered verification to keep community spaces safer while still allowing new users to explore.</p>' +
+                '<div style="display:flex;gap:8px">' +
+                    '<button onclick="document.getElementById(\'trust-upgrade-modal\').remove()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#cfd0e0;padding:10px;border-radius:8px;font-weight:600;cursor:pointer">Maybe later</button>' +
+                    '<a href="/verify" style="flex:1;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border:none;color:#fff;padding:10px;border-radius:8px;font-weight:600;text-align:center;text-decoration:none">Verify now</a>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    };
 
     function updateVerifyStep(step, info) {
         var statusEl = document.getElementById('verify-' + step + '-status');
@@ -2425,6 +2497,15 @@
             }
             var ct = res.headers.get('content-type') || '';
             if (ct.indexOf('application/json') === -1) return null;
+            // Surface friendly trust-level prompt on 403 trust gate responses
+            if (res.status === 403) {
+                return res.json().then(function(body) {
+                    if (body && body.error === 'trust_level_insufficient' && typeof window.showTrustUpgradePrompt === 'function') {
+                        window.showTrustUpgradePrompt(body);
+                    }
+                    return body;
+                });
+            }
             return res.json();
         });
     }

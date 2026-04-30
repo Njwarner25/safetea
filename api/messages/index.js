@@ -1,5 +1,6 @@
 const { authenticate, cors } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
+const { getTrustLevel, gateResponse } = require('../_utils/trust-level');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -77,6 +78,12 @@ module.exports = async function handler(req, res) {
 
     if (parseInt(recipient_id) === user.id) {
       return res.status(400).json({ error: 'Cannot message yourself' });
+    }
+
+    // Trust Level gate — Level 3+ (Trusted User) to send DMs
+    const trust = await getTrustLevel(user);
+    if (!trust.permissions.canDM) {
+      return res.status(403).json(gateResponse('canDM', trust));
     }
 
     try {

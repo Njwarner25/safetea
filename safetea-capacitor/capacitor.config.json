@@ -1,0 +1,59 @@
+{
+  "appId": "app.getsafetea",
+  "appName": "SafeTea",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://getsafetea.app",
+    "cleartext": false,
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "allowNavigation": [
+      "getsafetea.app",
+      "*.getsafetea.app",
+      "*.vercel.app",
+      "*.railway.app",
+      "verify.didit.me",
+      "*.didit.me"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false,
+    "scrollEnabled": true
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#1A1A2E",
+    "useLegacyBridge": false,
+    "adjustMarginsForEdgeToEdge": "force"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#1A1A2E",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1A1A2E",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "Geolocation": {
+      "permissions": ["location"]
+    }
+  }
+}

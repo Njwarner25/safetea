@@ -119,6 +119,7 @@
         { "source": "/api/admin/org-codes", "destination": "/api/admin/org-codes" },
         { "source": "/api/admin/seed-from-blog", "destination": "/api/admin/seed-from-blog" },
         { "source": "/api/migrate-verification-deadline", "destination": "/api/migrate-verification-deadline" },
-        { "source": "/api/users/trust", "destination": "/api/users/trust" }
+        { "source": "/api/users/trust", "destination": "/api/users/trust" },
+        { "source": "/api/admin/recent-signups", "destination": "/api/admin/recent-signups" }
     ]
 }

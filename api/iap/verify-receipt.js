@@ -39,9 +39,21 @@ module.exports = async function handler(req, res) {
       let tier = 'free';
       let plan = null;
 
-      if (productId === 'app.getsafetea.plus.monthly' || productId === 'app.getsafetea.plus.annual') {
+      // Accept both legacy SafeTea product IDs and the LinkHer product IDs
+      // (iOS rebrand to LinkHer per App Store Guideline 4.3).
+      const PLUS_PRODUCTS = new Set([
+        'app.getsafetea.plus.monthly',
+        'app.getsafetea.plus.annual',
+        'linkher_plus_monthly',
+        'linkher_plus_yearly',
+      ]);
+      const ANNUAL_PRODUCTS = new Set([
+        'app.getsafetea.plus.annual',
+        'linkher_plus_yearly',
+      ]);
+      if (PLUS_PRODUCTS.has(productId)) {
         tier = 'plus';
-        plan = productId.includes('annual') ? 'annual' : 'monthly';
+        plan = ANNUAL_PRODUCTS.has(productId) ? 'annual' : 'monthly';
       }
 
       // Update user tier in database

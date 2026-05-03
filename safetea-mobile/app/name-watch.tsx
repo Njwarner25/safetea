@@ -1,13 +1,24 @@
 import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Modal, Alert } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
 import { useAuthStore } from '../store/authStore';
 import { useNameWatchStore } from '../store/nameWatchStore';
+import { isProfileBuildingAllowed } from '../utils/platform';
 
 export default function NameWatchScreen() {
   const user = useAuthStore((s) => s.user);
   const { watchedNames, matches, addEntry, removeEntry } = useNameWatchStore();
+
+  // Apple Guideline 5.1.1(viii): no profile-building features on iOS.
+  useEffect(() => {
+    if (!isProfileBuildingAllowed()) {
+      router.replace('/');
+    }
+  }, []);
+  if (!isProfileBuildingAllowed()) {
+    return <View style={styles.container} />;
+  }
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -19,13 +30,13 @@ export default function NameWatchScreen() {
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>Name Watch is a SafeTea+ Feature</Text>
+          <Text style={styles.gateTitle}>Name Watch is a {APP_NAME_PLUS} Feature</Text>
           <Text style={styles.gateDesc}>
             Save names and initials of people you're dating or concerned about. Get alerted
             when they're posted about in your city's community.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
-            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
+            <Text style={styles.upgradeBtnText}>Upgrade to {APP_NAME_PLUS}</Text>
           </Pressable>
         </View>
       </View>

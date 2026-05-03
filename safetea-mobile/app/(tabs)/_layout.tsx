@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Image } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Colors } from '../../constants/colors';
+import { Colors, APP_NAME } from '../../constants/colors';
 
 export default function TabLayout() {
   return (
@@ -39,7 +39,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Community',
-          headerTitle: 'SafeTea Community',
+          headerTitle: `${APP_NAME} Community`,
           tabBarIcon: ({ color, size }) => <FontAwesome5 name="comments" size={size || 22} color={color} />,
         }}
       />
@@ -61,7 +61,7 @@ export default function TabLayout() {
         name="alerts"
         options={{
           title: 'Tools',
-          headerTitle: 'SafeTea Tools',
+          headerTitle: `${APP_NAME} Tools`,
           tabBarIcon: ({ color, size }) => <FontAwesome5 name="toolbox" size={size || 22} color={color} />,
         }}
       />

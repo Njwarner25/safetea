@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME, APP_NAME_PLUS } from '../../constants/colors';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
 
@@ -37,7 +37,7 @@ export default function ModApplyScreen() {
           <Text style={styles.successIcon}>✅</Text>
           <Text style={styles.title}>Application Submitted</Text>
           <Text style={styles.desc}>
-            Thank you for your interest in moderating SafeTea! Our team will review your application and reach out within a few days.
+            Thank you for your interest in moderating {APP_NAME}! Our team will review your application and reach out within a few days.
           </Text>
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <Text style={styles.backBtnText}>Back to App</Text>
@@ -50,7 +50,7 @@ export default function ModApplyScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>Become a Moderator</Text>
-      <Text style={styles.subheading}>Help keep SafeTea safe for everyone</Text>
+      <Text style={styles.subheading}>Help keep {APP_NAME} safe for everyone</Text>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>What Moderators Do</Text>
@@ -62,9 +62,9 @@ export default function ModApplyScreen() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Perks</Text>
-        <Text style={styles.bulletItem}>  - All SafeTea+ features unlocked for free</Text>
+        <Text style={styles.bulletItem}>  - All {APP_NAME_PLUS} features unlocked for free</Text>
         <Text style={styles.bulletItem}>  - Special moderator badge on your profile</Text>
-        <Text style={styles.bulletItem}>  - Direct line to the SafeTea team</Text>
+        <Text style={styles.bulletItem}>  - Direct line to the {APP_NAME} team</Text>
       </View>
 
       <View style={styles.card}>

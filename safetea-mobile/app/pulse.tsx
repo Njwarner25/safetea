@@ -6,6 +6,7 @@ import {
   FontSize,
   FontWeight,
   BorderRadius,
+  APP_NAME,
 } from '../constants/colors';
 import { usePulseStore } from '../store/pulseStore';
 import PulseStatusBadge from '../components/pulse/PulseStatusBadge';
@@ -22,7 +23,7 @@ export default function PulseScreen() {
         <View style={styles.heroIcon}>
           <FontAwesome5 name="heartbeat" size={28} color={Colors.danger} />
         </View>
-        <Text style={styles.title}>SafeTea Pulse</Text>
+        <Text style={styles.title}>{APP_NAME} Pulse</Text>
         <Text style={styles.subtitle}>
           Real-time safety awareness during active sessions. Pulse watches for
           inactivity, route changes, and missed check-ins — and alerts your
@@ -37,7 +38,7 @@ export default function PulseScreen() {
       <PulseSessionToggle
         value={globalEnabled}
         onValueChange={setGlobalEnabled}
-        label="Enable SafeTea Pulse"
+        label={`Enable ${APP_NAME} Pulse`}
         description="Monitor for anomalies during every active safety session."
       />
 
@@ -72,7 +73,7 @@ export default function PulseScreen() {
       </View>
 
       <Text style={styles.footer}>
-        Pulse activates automatically when you start a SafeTea Check-In session.
+        Pulse activates automatically when you start a {APP_NAME} Check-In session.
       </Text>
     </ScrollView>
   );

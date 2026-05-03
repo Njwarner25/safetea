@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
 import { Stack } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useThemeColors } from '../constants/useThemeColors';
-import { FontSize, Spacing, BorderRadius } from '../constants/colors';
+import { FontSize, Spacing, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
 
 export default function VaultScreen() {
   const colors = useThemeColors();
@@ -23,7 +23,7 @@ export default function VaultScreen() {
 
         <View style={[styles.plusPill, { backgroundColor: colors.coralMuted }]}>
           <FontAwesome5 name="crown" size={10} color={colors.coral} style={{ marginRight: 6 }} />
-          <Text style={[styles.plusPillText, { color: colors.coral }]}>SafeTea+ feature</Text>
+          <Text style={[styles.plusPillText, { color: colors.coral }]}>{APP_NAME_PLUS} feature</Text>
         </View>
 
         <Text style={[styles.title, { color: colors.textPrimary }]}>Safety Vault</Text>
@@ -54,7 +54,7 @@ export default function VaultScreen() {
         </Pressable>
 
         <Text style={[styles.priceNote, { color: colors.textMuted }]}>
-          Included with SafeTea+ · $7.99/month or $66.99/year
+          Included with {APP_NAME_PLUS} · $7.99/month or $66.99/year
         </Text>
       </View>
     </>

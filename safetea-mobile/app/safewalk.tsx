@@ -2,7 +2,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, FlatList, Alert, Activity
 import { useState } from 'react';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
-import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
 import { useSafeWalkStore } from '../store/safeWalkStore';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
@@ -30,12 +30,12 @@ export default function SafeWalkScreen() {
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>SafeWalk is a SafeTea+ Feature</Text>
+          <Text style={styles.gateTitle}>SafeWalk is a {APP_NAME_PLUS} Feature</Text>
           <Text style={styles.gateDesc}>
-            Share your plans with trusted contacts and get check-in reminders. Upgrade to SafeTea+ to unlock.
+            Share your plans with trusted contacts and get check-in reminders. Upgrade to {APP_NAME_PLUS} to unlock.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
-            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
+            <Text style={styles.upgradeBtnText}>Upgrade to {APP_NAME_PLUS}</Text>
           </Pressable>
         </View>
       </View>

@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useState, useEffect, useCallback } from 'react';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../../constants/colors';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
 
@@ -32,7 +32,7 @@ export default function ModDashboardScreen() {
           <Text style={styles.lockIcon}>🔒</Text>
           <Text style={styles.title}>Moderator Access Required</Text>
           <Text style={styles.desc}>
-            This area is restricted to SafeTea moderators. If you're interested in helping keep the community safe, you can apply to become a moderator.
+            This area is restricted to {APP_NAME} moderators. If you're interested in helping keep the community safe, you can apply to become a moderator.
           </Text>
           <Pressable style={styles.applyBtn} onPress={() => router.push('/mod/apply')}>
             <Text style={styles.applyBtnText}>Apply to Moderate</Text>

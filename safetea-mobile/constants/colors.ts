@@ -1,6 +1,12 @@
-// SafeTea Design Tokens — aligned with web app CSS variables
-// Dark palette (existing, default)
-export const DarkColors = {
+// SafeTea / LinkHer Design Tokens
+// iOS builds = LinkHer (sister app, App Store rebrand)
+// Android + web = SafeTea
+import { Platform } from 'react-native';
+
+const isIOS = Platform.OS === 'ios';
+
+// SafeTea Dark (Android + web default)
+const SafeTeaDark = {
   background: '#1A1A2E',
   surface: '#22223A',
   surfaceLight: '#22223A',
@@ -60,8 +66,8 @@ export const DarkColors = {
   sosHighlightBorder: 'rgba(231, 76, 60, 0.15)',
 };
 
-// Light palette
-export const LightColors = {
+// SafeTea Light (Android + web default)
+const SafeTeaLight = {
   background: '#F8F6F3',
   surface: '#FFFFFF',
   surfaceLight: '#FFFFFF',
@@ -121,8 +127,135 @@ export const LightColors = {
   sosHighlightBorder: 'rgba(192, 57, 43, 0.12)',
 };
 
-// Backward-compatible export — dark is default
+// LinkHer Dark (iOS)
+const LinkHerDark = {
+  background: '#0D0B1A',
+  surface: '#1A1730',
+  surfaceLight: '#1A1730',
+  surfaceDark: '#0A0815',
+  surfaceHover: '#241F40',
+
+  coral: '#E84393',
+  coralLight: '#F06AB0',
+  coralDark: '#C850C0',
+  coralMuted: 'rgba(232, 67, 147, 0.15)',
+  pink: '#E84393',
+  pinkMuted: 'rgba(232, 67, 147, 0.15)',
+  pinkGlow: 'rgba(232, 67, 147, 0.18)',
+  purple: '#A855F7',
+  purpleMuted: 'rgba(168, 85, 247, 0.15)',
+
+  textPrimary: '#FFFFFF',
+  textSecondary: '#E0D5F0',
+  textMuted: '#7B6F8E',
+  textInverse: '#0D0B1A',
+
+  success: '#2ecc71',
+  successMuted: 'rgba(46, 204, 113, 0.15)',
+  warning: '#f1c40f',
+  warningMuted: 'rgba(241, 196, 15, 0.15)',
+  danger: '#e74c3c',
+  dangerMuted: 'rgba(231, 76, 60, 0.15)',
+  info: '#3498db',
+  infoMuted: 'rgba(52, 152, 219, 0.15)',
+
+  trustVerified: '#2ecc71',
+  trustPending: '#f1c40f',
+  trustNew: '#7B6F8E',
+
+  border: 'rgba(255, 255, 255, 0.06)',
+  borderLight: 'rgba(255, 255, 255, 0.12)',
+  borderFocus: '#E84393',
+
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+
+  gradientPrimary: ['#E84393', '#C850C0'] as const,
+  gradientPink: ['#E84393', '#A855F7'] as const,
+  gradientDark: ['#0D0B1A', '#1A1730'] as const,
+  gradientCard: ['rgba(26, 23, 48, 0.8)', 'rgba(13, 11, 26, 0.6)'] as const,
+
+  vault: '#C9A84C',
+  vaultMuted: 'rgba(201, 168, 76, 0.12)',
+  vaultBorder: 'rgba(201, 168, 76, 0.2)',
+  vaultGradientStart: 'rgba(201, 168, 76, 0.18)',
+  vaultGradientEnd: 'rgba(201, 168, 76, 0.05)',
+
+  sosBannerStart: 'rgba(232, 67, 147, 0.25)',
+  sosBannerEnd: 'rgba(168, 85, 247, 0.18)',
+  sosBannerBorder: 'rgba(232, 67, 147, 0.2)',
+  sosHighlightBg: 'rgba(232, 67, 147, 0.12)',
+  sosHighlightBorder: 'rgba(232, 67, 147, 0.18)',
+};
+
+// LinkHer Light (iOS)
+const LinkHerLight = {
+  background: '#FAF7FC',
+  surface: '#FFFFFF',
+  surfaceLight: '#FFFFFF',
+  surfaceDark: '#F0EAF5',
+  surfaceHover: '#F5EFF8',
+
+  coral: '#C0297A',
+  coralLight: '#E84393',
+  coralDark: '#9C2A99',
+  coralMuted: 'rgba(192, 41, 122, 0.10)',
+  pink: '#C0297A',
+  pinkMuted: 'rgba(192, 41, 122, 0.10)',
+  pinkGlow: 'rgba(192, 41, 122, 0.08)',
+  purple: '#8B3FD9',
+  purpleMuted: 'rgba(139, 63, 217, 0.10)',
+
+  textPrimary: '#1A1730',
+  textSecondary: '#3D2F4F',
+  textMuted: '#7B6F8E',
+  textInverse: '#FFFFFF',
+
+  success: '#27AE60',
+  successMuted: 'rgba(39, 174, 96, 0.10)',
+  warning: '#D4A017',
+  warningMuted: 'rgba(212, 160, 23, 0.10)',
+  danger: '#C0392B',
+  dangerMuted: 'rgba(192, 57, 43, 0.10)',
+  info: '#2980B9',
+  infoMuted: 'rgba(41, 128, 185, 0.10)',
+
+  trustVerified: '#27AE60',
+  trustPending: '#D4A017',
+  trustNew: '#7B6F8E',
+
+  border: 'rgba(0, 0, 0, 0.08)',
+  borderLight: 'rgba(0, 0, 0, 0.05)',
+  borderFocus: '#C0297A',
+
+  overlay: 'rgba(0, 0, 0, 0.3)',
+  overlayLight: 'rgba(0, 0, 0, 0.15)',
+
+  gradientPrimary: ['#C0297A', '#9C2A99'] as const,
+  gradientPink: ['#C0297A', '#8B3FD9'] as const,
+  gradientDark: ['#FAF7FC', '#FFFFFF'] as const,
+  gradientCard: ['rgba(255, 255, 255, 0.9)', 'rgba(250, 247, 252, 0.7)'] as const,
+
+  vault: '#A08930',
+  vaultMuted: 'rgba(160, 137, 48, 0.08)',
+  vaultBorder: 'rgba(160, 137, 48, 0.2)',
+  vaultGradientStart: 'rgba(160, 137, 48, 0.12)',
+  vaultGradientEnd: 'rgba(160, 137, 48, 0.03)',
+
+  sosBannerStart: 'rgba(192, 41, 122, 0.12)',
+  sosBannerEnd: 'rgba(139, 63, 217, 0.08)',
+  sosBannerBorder: 'rgba(192, 41, 122, 0.15)',
+  sosHighlightBg: 'rgba(192, 41, 122, 0.08)',
+  sosHighlightBorder: 'rgba(192, 41, 122, 0.12)',
+};
+
+export const DarkColors = isIOS ? LinkHerDark : SafeTeaDark;
+export const LightColors = isIOS ? LinkHerLight : SafeTeaLight;
 export const Colors = DarkColors;
+
+export const APP_NAME = isIOS ? 'LinkHer' : 'SafeTea';
+export const APP_NAME_PLUS = isIOS ? 'LinkHer+' : 'SafeTea+';
+export const APP_TAGLINE = isIOS ? 'Stay Connected. Stay Safe.' : 'Personal Safety';
 
 export const Spacing = {
   xs: 4,

@@ -5,6 +5,7 @@ import {
   FontSize,
   FontWeight,
   Spacing,
+  APP_NAME,
 } from '../../constants/colors';
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
 export default function PulseSessionToggle({
   value,
   onValueChange,
-  label = 'Use SafeTea Pulse for this session',
+  label = `Use ${APP_NAME} Pulse for this session`,
   description = 'Monitors for inactivity, route changes, and missed check-ins.',
 }: Props) {
   return (

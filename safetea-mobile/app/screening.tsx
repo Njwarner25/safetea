@@ -1,7 +1,7 @@
 import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
 import { useScreeningStore, ScreeningResult, TeaScoreLevel, RedFlag, GreenFlag } from '../store/screeningStore';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
@@ -73,12 +73,12 @@ export default function ScreeningScreen() {
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>AI Screening is a SafeTea+ Feature</Text>
+          <Text style={styles.gateTitle}>AI Screening is a {APP_NAME_PLUS} Feature</Text>
           <Text style={styles.gateDesc}>
-            Scan dating profiles for red flags with our AI-powered screening tool. Upgrade to SafeTea+ to unlock.
+            Scan dating profiles for red flags with our AI-powered screening tool. Upgrade to {APP_NAME_PLUS} to unlock.
           </Text>
           <Pressable style={styles.upgradeBtn} onPress={() => router.push('/subscription')}>
-            <Text style={styles.upgradeBtnText}>Upgrade to SafeTea+</Text>
+            <Text style={styles.upgradeBtnText}>Upgrade to {APP_NAME_PLUS}</Text>
           </Pressable>
         </View>
       </View>

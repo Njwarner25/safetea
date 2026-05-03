@@ -2,7 +2,7 @@ import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl } from 'rea
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../../constants/colors';
 import { usePostStore, PostCategory, Post } from '../../store/postStore';
 import { useCityStore } from '../../store/cityStore';
 import { getAvatarById } from '../../constants/avatars';
@@ -28,8 +28,8 @@ const DID_YOU_KNOW_FACTS = [
   'Dating abuse is most common among women aged 16-24.',
   '72% of all murder-suicides involve an intimate partner; 94% of the victims are female.',
   'Only 1 in 5 teens who have been in a physically abusive relationship tell someone about it.',
-  'Most dating violence goes unreported — SafeTea is here to change that.',
-  'SafeTea empowers communities to look out for each other. Stay connected, stay safe.',
+  `Most dating violence goes unreported — ${APP_NAME} is here to change that.`,
+  `${APP_NAME} empowers communities to look out for each other. Stay connected, stay safe.`,
 ];
 
 const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }[] = [

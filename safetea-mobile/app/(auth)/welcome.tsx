@@ -1,13 +1,13 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../../constants/colors';
 
 export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.heroSection}>
         <Text style={styles.emoji}>🍵</Text>
-        <Text style={styles.title}>SafeTea</Text>
+        <Text style={styles.title}>{APP_NAME}</Text>
         <Text style={styles.subtitle}>Privacy-First Dating Transparency</Text>
         <Text style={styles.description}>
           Share experiences. Protect your community.{' '}

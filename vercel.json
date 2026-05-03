@@ -120,6 +120,9 @@
         { "source": "/api/migrate-verification-deadline", "destination": "/api/migrate-verification-deadline" },
         { "source": "/api/users/trust", "destination": "/api/users/trust" },
         { "source": "/api/admin/recent-signups", "destination": "/api/admin/recent-signups" },
-        { "source": "/api/version", "destination": "/api/version" }
+        { "source": "/api/version", "destination": "/api/version" },
+        { "source": "/api/iap/verify-receipt", "destination": "/api/iap/verify-receipt" },
+        { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
+        { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" }
     ]
 }

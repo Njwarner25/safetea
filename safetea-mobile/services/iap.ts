@@ -2,14 +2,16 @@
 // Android continues using Stripe via the existing services/api.ts subscribe flow.
 //
 // Product IDs MUST match what's configured in App Store Connect under the
-// "LinkHer+" subscription group.
+// "LinkHer+" subscription group. The IDs themselves stay namespaced under
+// safetea.plus.* (the App Store Connect product IDs already exist with that
+// naming and can't be renamed after creation).
 import { Platform } from 'react-native';
 import * as RNIap from 'react-native-iap';
 import { api } from './api';
 
 export const IOS_PRODUCT_IDS = [
-  'linkher_plus_monthly',
-  'linkher_plus_yearly',
+  'safetea.plus.monthly',
+  'safetea.plus.yearly',
 ] as const;
 
 export type IOSProductId = (typeof IOS_PRODUCT_IDS)[number];

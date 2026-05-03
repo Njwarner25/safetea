@@ -34,7 +34,7 @@
       "ios": {
         "appleId": "njwarner25@gmail.com",
         "ascAppId": "6761035751",
-        "appleTeamId": "TEAM_ID_HERE"
+        "appleTeamId": "DZ3NZHNLHX"
       },
       "android": {
         "serviceAccountKeyPath": "./google-services.json",

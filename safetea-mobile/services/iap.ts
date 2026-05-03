@@ -64,17 +64,18 @@ export async function getProducts(): Promise<IAPProduct[]> {
   if (!isIOS()) return [];
   await initIAP();
   try {
-    const subs = await RNIap.getSubscriptions({ skus: [...IOS_PRODUCT_IDS] });
+    const subs = await RNIap.fetchProducts({ skus: [...IOS_PRODUCT_IDS], type: 'subs' });
+    if (!subs) return [];
     return subs.map((s: any) => ({
-      productId: s.productId,
-      title: s.title || s.productId,
+      productId: s.productId ?? s.id,
+      title: s.title || s.productId || s.id,
       description: s.description || '',
-      localizedPrice: s.localizedPrice || s.price || '',
-      price: String(s.price || ''),
-      currency: s.currency || 'USD',
+      localizedPrice: s.localizedPrice || s.displayPrice || s.price || '',
+      price: String(s.price ?? ''),
+      currency: s.currency || s.currencyCode || 'USD',
     }));
   } catch (err) {
-    console.warn('[iap] getSubscriptions failed', err);
+    console.warn('[iap] fetchProducts failed', err);
     return [];
   }
 }
@@ -89,7 +90,10 @@ export async function purchaseSubscription(productId: IOSProductId): Promise<voi
     throw new Error('IAP is iOS-only');
   }
   await initIAP();
-  await RNIap.requestSubscription({ sku: productId });
+  await RNIap.requestPurchase({
+    request: { ios: { sku: productId } },
+    type: 'subs',
+  });
 }
 
 /**
@@ -101,10 +105,12 @@ export async function restorePurchases(): Promise<RNIap.Purchase[]> {
   await initIAP();
   try {
     const purchases = await RNIap.getAvailablePurchases();
-    for (const p of purchases) {
-      const receipt = (p as any).transactionReceipt;
+    if (purchases.length > 0) {
+      // The legacy app receipt covers all transactions on the device, so we
+      // fetch it once and let the backend pick the latest active subscription.
+      const receipt = await RNIap.getReceiptIOS();
       if (receipt) {
-        await verifyReceiptWithBackend(receipt, p.productId);
+        await verifyReceiptWithBackend(receipt, purchases[0].productId);
       }
     }
     return purchases;
@@ -131,12 +137,15 @@ export function setupPurchaseListener(handlers: PurchaseHandlers = {}) {
   purchaseErrorSub?.remove();
 
   purchaseUpdateSub = RNIap.purchaseUpdatedListener(async (purchase: RNIap.Purchase) => {
-    const receipt = (purchase as any).transactionReceipt;
-    if (!receipt) {
-      handlers.onError?.('Purchase succeeded but receipt was missing.');
-      return;
-    }
     try {
+      // StoreKit 2 doesn't expose a transactionReceipt field on the purchase;
+      // pull the legacy app receipt (base64) which the backend's verifyReceipt
+      // call expects.
+      const receipt = await RNIap.getReceiptIOS();
+      if (!receipt) {
+        handlers.onError?.('Purchase succeeded but receipt was missing.');
+        return;
+      }
       const result = await verifyReceiptWithBackend(receipt, purchase.productId);
       if (result.ok) {
         await RNIap.finishTransaction({ purchase, isConsumable: false });
@@ -150,7 +159,7 @@ export function setupPurchaseListener(handlers: PurchaseHandlers = {}) {
   });
 
   purchaseErrorSub = RNIap.purchaseErrorListener((err: RNIap.PurchaseError) => {
-    if (err.code === 'E_USER_CANCELLED') return;
+    if (err.code === RNIap.ErrorCode.UserCancelled) return;
     handlers.onError?.(err.message || 'Purchase failed.');
   });
 

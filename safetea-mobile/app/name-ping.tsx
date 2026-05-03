@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
 import { useAuthStore } from '../store/authStore';
-import { useNameWatchStore } from '../store/nameWatchStore';
+import { useNamePingStore } from '../store/namePingStore';
 import { isProfileBuildingAllowed } from '../utils/platform';
 
-export default function NameWatchScreen() {
+export default function NamePingScreen() {
   const user = useAuthStore((s) => s.user);
-  const { watchedNames, matches, addEntry, removeEntry } = useNameWatchStore();
+  const { watchedNames, matches, addEntry, removeEntry } = useNamePingStore();
 
   // Apple Guideline 5.1.1(viii): no profile-building features on iOS.
   useEffect(() => {
@@ -24,13 +24,12 @@ export default function NameWatchScreen() {
   const [nameInput, setNameInput] = useState('');
   const [initialsInput, setInitialsInput] = useState('');
 
-  // SafeTea+ tier gate (accepts 'plus' or legacy 'pro')
   if (user?.tier !== 'plus' && user?.tier !== 'pro') {
     return (
       <View style={styles.container}>
         <View style={styles.gateCard}>
           <Text style={styles.gateIcon}>🔒</Text>
-          <Text style={styles.gateTitle}>Name Watch is a {APP_NAME_PLUS} Feature</Text>
+          <Text style={styles.gateTitle}>Name Ping is a {APP_NAME_PLUS} Feature</Text>
           <Text style={styles.gateDesc}>
             Save names and initials of people you're dating or concerned about. Get alerted
             when they're posted about in your city's community.
@@ -73,24 +72,24 @@ export default function NameWatchScreen() {
           <View>
             {/* Explainer card */}
             <View style={styles.explainerCard}>
-              <Text style={styles.explainerTitle}>How Name Watch Works</Text>
+              <Text style={styles.explainerTitle}>How Name Ping Works</Text>
               <Text style={styles.explainerText}>
                 Save the names or initials of people you're dating or concerned about.
                 If anyone in your city's community posts about someone matching those
                 names, you'll receive an alert in your Alerts tab.
               </Text>
               <View style={styles.explainerBullets}>
-                <Text style={styles.bulletItem}>{'  \u2022  Add full names, first names, or initials'}</Text>
-                <Text style={styles.bulletItem}>{'  \u2022  Choose which cities to monitor'}</Text>
-                <Text style={styles.bulletItem}>{'  \u2022  Get notified when a match appears'}</Text>
-                <Text style={styles.bulletItem}>{'  \u2022  Your watched names are private \u2014 only you can see them'}</Text>
+                <Text style={styles.bulletItem}>{'  •  Add full names, first names, or initials'}</Text>
+                <Text style={styles.bulletItem}>{'  •  Choose which cities to monitor'}</Text>
+                <Text style={styles.bulletItem}>{'  •  Get notified when a match appears'}</Text>
+                <Text style={styles.bulletItem}>{'  •  Your watched names are private — only you can see them'}</Text>
               </View>
             </View>
 
             {/* Before/After Scenario */}
             <View style={styles.scenarioCard}>
               <View style={styles.scenarioBefore}>
-                <Text style={styles.scenarioLabel}>{'❌  Without Name Watch'}</Text>
+                <Text style={styles.scenarioLabel}>{'❌  Without Name Ping'}</Text>
                 <Text style={styles.scenarioTitle}>The frustration of no visibility</Text>
                 <Text style={styles.scenarioText}>
                   You meet someone on a dating app. He seems genuine. You go on a date, but
@@ -105,10 +104,10 @@ export default function NameWatchScreen() {
               <View style={styles.scenarioDivider} />
 
               <View style={styles.scenarioAfter}>
-                <Text style={styles.scenarioLabel}>{'✅  With Name Watch'}</Text>
+                <Text style={styles.scenarioLabel}>{'✅  With Name Ping'}</Text>
                 <Text style={styles.scenarioTitle}>Informed decisions, every time</Text>
                 <Text style={styles.scenarioText}>
-                  You meet someone on a dating app. You add his name to Name Watch. Within
+                  You meet someone on a dating app. You add his name to Name Ping. Within
                   hours, you get an alert: 3 members from your city have posted about him
                   — describing the exact same behavior. You read their experiences, make an
                   informed choice, and cancel the date. Crisis averted before it started.

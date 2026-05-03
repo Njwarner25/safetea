@@ -1,5 +1,5 @@
 // Platform detection helpers used to gate features that violate App Store
-// guidelines. iOS hides Name Watch and Background Check (Guideline 5.1.1(viii)
+// guidelines. iOS hides Name Ping and Background Check (Guideline 5.1.1(viii)
 // — collecting public-source data to build individual profiles).
 import { Platform } from 'react-native';
 

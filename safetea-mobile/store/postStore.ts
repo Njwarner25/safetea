@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useNameAlertStore } from './nameAlertStore';
+import { useNamePingStore } from './namePingStore';
 
 export type PostCategory = 'warning' | 'positive' | 'question' | 'alert';
 export type PostStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
@@ -52,7 +52,7 @@ export const usePostStore = create<PostState>((set, get) => ({
   setPosts: (posts) => set({ posts }),
   addPost: (post) => {
     set((state) => ({ posts: [post, ...state.posts] }));
-    useNameAlertStore.getState().checkPost(post);
+    useNamePingStore.getState().checkPost(post);
   },
   removePost: (id) => set((state) => ({ posts: state.posts.filter(p => p.id !== id) })),
   updatePost: (id, updates) => set((state) => ({

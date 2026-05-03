@@ -131,7 +131,7 @@ class ApiClient {
   }
 
   // Subscription — Apple StoreKit receipt validation (iOS only).
-  // Server re-validates with Apple, then grants the SafeTea+ tier on success.
+  // Server re-validates with Apple, then grants the Plus tier on success.
   // The product ID is derived from the validated receipt server-side, not the client.
   async verifyAppleReceipt(receipt: string, _productId?: string) {
     return this.request<any>('/iap/verify-receipt', {
@@ -269,7 +269,7 @@ class ApiClient {
     });
   }
 
-  // Name Watch (Android-only feature; iOS hides UI per Apple Guideline 5.1.1(viii))
+  // Name Ping (Android-only feature; iOS hides UI per Apple Guideline 5.1.1(viii))
   async getWatchedNames() {
     return this.request<any>('/namewatch');
   }
@@ -287,11 +287,11 @@ class ApiClient {
     });
   }
 
-  async getNameWatchUnread() {
+  async getNamePingUnread() {
     return this.request<any>('/namewatch/unread');
   }
 
-  async markAllNameWatchRead() {
+  async markAllNamePingRead() {
     return this.request<any>('/namewatch/read-all', {
       method: 'POST',
     });

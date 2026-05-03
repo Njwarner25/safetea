@@ -56,7 +56,7 @@ function buildPlans(iosProducts: IAPProduct[]): Plan[] {
         'Multi-city search',
         'Smart alerts & notifications (community)',
         'SafeWalk date sharing',
-        'Name Watch \u2014 get alerted when someone you know is posted about',
+        'Name Ping \u2014 get alerted when someone you know is posted about',
         'Unlimited AI Profile Screening',
         'Advanced safety tools',
         'Safety map premium',

@@ -1,6 +1,6 @@
 import { Post } from '../store/postStore';
 
-export interface NameWatchEntry {
+export interface NamePingEntry {
   id: string;
   userId: string;
   displayName: string;
@@ -11,7 +11,7 @@ export interface NameWatchEntry {
 
 export type MatchType = 'exact' | 'initials' | 'partial';
 
-export interface NameWatchMatch {
+export interface NamePingMatch {
   id: string;
   entryId: string;
   postId: string;
@@ -52,8 +52,8 @@ function escapeRegex(str: string): string {
  * Match a single post against all watched name entries.
  * Returns an array of matches with type and matched term.
  */
-export function matchPost(post: Post, entries: NameWatchEntry[]): NameWatchMatch[] {
-  const matches: NameWatchMatch[] = [];
+export function matchPost(post: Post, entries: NamePingEntry[]): NamePingMatch[] {
+  const matches: NamePingMatch[] = [];
   const text = `${post.title} ${post.content}`.toLowerCase();
 
   for (const entry of entries) {
@@ -109,9 +109,9 @@ function createMatch(
   postId: string,
   matchedTerm: string,
   matchType: MatchType,
-): NameWatchMatch {
+): NamePingMatch {
   return {
-    id: `nwm-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `np-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     entryId,
     postId,
     matchedTerm,

@@ -1,31 +1,31 @@
 import { create } from 'zustand';
 import { Post } from './postStore';
-import { NameAlertEntry, NameAlertMatch, matchPost } from '../utils/nameAlertMatcher';
+import { NamePingEntry, NamePingMatch, matchPost } from '../utils/namePingMatcher';
 
-export type { NameAlertEntry, NameAlertMatch } from '../utils/nameAlertMatcher';
+export type { NamePingEntry, NamePingMatch } from '../utils/namePingMatcher';
 
-interface NameAlertState {
-  watchedNames: NameAlertEntry[];
-  matches: NameAlertMatch[];
+interface NamePingState {
+  watchedNames: NamePingEntry[];
+  matches: NamePingMatch[];
   loading: boolean;
 
   addEntry: (name: string, searchTerms: string[], cityIds?: string[]) => void;
   removeEntry: (id: string) => void;
-  editEntry: (id: string, updates: Partial<Pick<NameAlertEntry, 'displayName' | 'searchTerms' | 'cityIds'>>) => void;
+  editEntry: (id: string, updates: Partial<Pick<NamePingEntry, 'displayName' | 'searchTerms' | 'cityIds'>>) => void;
   checkPost: (post: Post) => void;
   markMatchRead: (id: string) => void;
   getUnreadCount: () => number;
-  getMatchesForEntry: (entryId: string) => NameAlertMatch[];
+  getMatchesForEntry: (entryId: string) => NamePingMatch[];
 }
 
-export const useNameAlertStore = create<NameAlertState>((set, get) => ({
+export const useNamePingStore = create<NamePingState>((set, get) => ({
   watchedNames: [],
   matches: [],
   loading: false,
 
   addEntry: (name, searchTerms, cityIds = []) => {
-    const entry: NameAlertEntry = {
-      id: `nw-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    const entry: NamePingEntry = {
+      id: `np-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       userId: '', // set by caller context
       displayName: name,
       searchTerms,

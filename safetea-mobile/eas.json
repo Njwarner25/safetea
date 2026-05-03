@@ -32,8 +32,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "APPLE_ID_HERE",
-        "ascAppId": "ASC_APP_ID_HERE",
+        "appleId": "njwarner25@gmail.com",
+        "ascAppId": "6761035751",
         "appleTeamId": "TEAM_ID_HERE"
       },
       "android": {

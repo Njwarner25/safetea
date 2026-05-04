@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Linking, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useThemeColors } from '../constants/useThemeColors';
@@ -39,19 +39,21 @@ export default function VaultScreen() {
           <Feature colors={colors} icon="history" text="Full activity-log audit" />
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open Safety Vault on the web"
-          onPress={() => Linking.openURL('https://www.getsafetea.app/vault')}
-          style={({ pressed }) => [
-            styles.ctaButton,
-            { backgroundColor: colors.coral },
-            pressed && { opacity: 0.85 },
-          ]}
-        >
-          <FontAwesome5 name="external-link-alt" size={13} color={colors.textInverse} style={{ marginRight: 8 }} />
-          <Text style={[styles.ctaText, { color: colors.textInverse }]}>Open Vault on the web</Text>
-        </Pressable>
+        {Platform.OS !== 'ios' && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Safety Vault on the web"
+            onPress={() => Linking.openURL('https://www.getsafetea.app/vault')}
+            style={({ pressed }) => [
+              styles.ctaButton,
+              { backgroundColor: colors.coral },
+              pressed && { opacity: 0.85 },
+            ]}
+          >
+            <FontAwesome5 name="external-link-alt" size={13} color={colors.textInverse} style={{ marginRight: 8 }} />
+            <Text style={[styles.ctaText, { color: colors.textInverse }]}>Open Vault on the web</Text>
+          </Pressable>
+        )}
 
         <Text style={[styles.priceNote, { color: colors.textMuted }]}>
           Included with {APP_NAME_PLUS} · $7.99/month or $66.99/year

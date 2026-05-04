@@ -1,7 +1,8 @@
 // Platform-aware Expo config.
 // iOS builds = LinkHer (App Store rebrand, sister app to SafeTea)
 // Android builds = SafeTea
-// Same bundle id (app.getsafetea.mobile), same backend (api.getsafetea.app).
+// Separate iOS bundle id (app.linkher.mobile) per Apple Guideline 4.3 fix;
+// shared backend (api.getsafetea.app).
 //
 // Apple rejected the initial SafeTea iOS submission citing Guideline 4.3 (similar
 // concept to other safety apps). This config rebrands the iOS binary to LinkHer
@@ -79,7 +80,7 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   icon: TOP_LEVEL_ICON,
   userInterfaceStyle: 'dark',
-  scheme: 'safetea',
+  scheme: IS_IOS_BUILD ? 'linkher' : 'safetea',
   splash: {
     image: TOP_LEVEL_SPLASH_IMG,
     resizeMode: 'contain',
@@ -88,7 +89,7 @@ const config: ExpoConfig = {
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: false,
-    bundleIdentifier: 'app.getsafetea.mobile',
+    bundleIdentifier: 'app.linkher.mobile',
     buildNumber: '4',
     infoPlist: IOS_PERMISSIONS,
   },

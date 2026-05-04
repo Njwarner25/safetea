@@ -56,7 +56,7 @@ export default function VaultScreen() {
         )}
 
         <Text style={[styles.priceNote, { color: colors.textMuted }]}>
-          Included with {APP_NAME_PLUS} · $7.99/month or $66.99/year
+          Included with {APP_NAME_PLUS} · {Platform.OS === 'ios' ? '$9.99/month or $59.99/year' : '$7.99/month or $66.99/year'}
         </Text>
       </View>
     </>

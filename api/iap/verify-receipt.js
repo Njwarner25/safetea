@@ -39,17 +39,20 @@ module.exports = async function handler(req, res) {
       let tier = 'free';
       let plan = null;
 
-      // Accept legacy SafeTea product IDs and the new safetea.plus.* IDs used
-      // by the LinkHer iOS rebrand (App Store Guideline 4.3 fix).
+      // Accept legacy SafeTea product IDs and the LinkHer iOS product IDs
+      // (Apple Guideline 4.3 fix — separate iOS bundle/app under linkher.plus.*).
       const PLUS_PRODUCTS = new Set([
         'app.getsafetea.plus.monthly',
         'app.getsafetea.plus.annual',
         'safetea.plus.monthly',
         'safetea.plus.yearly',
+        'linkher.plus.monthly',
+        'linkher.plus.yearly',
       ]);
       const ANNUAL_PRODUCTS = new Set([
         'app.getsafetea.plus.annual',
         'safetea.plus.yearly',
+        'linkher.plus.yearly',
       ]);
       if (PLUS_PRODUCTS.has(productId)) {
         tier = 'plus';

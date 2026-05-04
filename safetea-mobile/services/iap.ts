@@ -2,16 +2,15 @@
 // Android continues using Stripe via the existing services/api.ts subscribe flow.
 //
 // Product IDs MUST match what's configured in App Store Connect under the
-// "LinkHer+" subscription group. The IDs themselves stay namespaced under
-// safetea.plus.* (the App Store Connect product IDs already exist with that
-// naming and can't be renamed after creation).
+// "LinkHer Plus" subscription group (group id 22066294). Monthly is $9.99,
+// yearly is $59.99.
 import { Platform } from 'react-native';
 import * as RNIap from 'react-native-iap';
 import { api } from './api';
 
 export const IOS_PRODUCT_IDS = [
-  'safetea.plus.monthly',
-  'safetea.plus.yearly',
+  'linkher.plus.monthly',
+  'linkher.plus.yearly',
 ] as const;
 
 export type IOSProductId = (typeof IOS_PRODUCT_IDS)[number];

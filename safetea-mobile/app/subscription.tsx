@@ -25,7 +25,7 @@ type Plan = {
 function buildPlans(iosProducts: IAPProduct[]): Plan[] {
   // Default Stripe-priced plan shown on Android + web. On iOS we override the
   // price string with whatever StoreKit returns (Apple requires their pricing).
-  const monthlyApple = iosProducts.find((p) => p.productId === 'safetea.plus.monthly');
+  const monthlyApple = iosProducts.find((p) => p.productId === 'linkher.plus.monthly');
 
   return [
     {
@@ -45,11 +45,11 @@ function buildPlans(iosProducts: IAPProduct[]): Plan[] {
     {
       id: 'plus',
       name: APP_NAME_PLUS,
-      price: isIOS && monthlyApple ? monthlyApple.localizedPrice : '$7.99',
+      price: isIOS ? (monthlyApple?.localizedPrice ?? '$9.99') : '$7.99',
       period: '/month',
       description: 'Full access & maximum protection',
       popular: true,
-      appleProductId: 'safetea.plus.monthly',
+      appleProductId: 'linkher.plus.monthly',
       features: [
         'Everything in Free',
         'Unlimited posts & searches',

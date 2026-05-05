@@ -666,11 +666,16 @@
         <a href="#join" class="btn btn-primary btn-lg">Join Your City</a>
         <a href="#how-it-works" class="btn btn-ghost">Learn how it works</a>
       </div>
-      <div style="display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap">
-        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 18px">
-          <i class="fab fa-apple" style="font-size:20px;color:#fff"></i>
-          <i class="fab fa-android" style="font-size:20px;color:#fff"></i>
-          <span style="color:#C0C0D0;font-size:13px;font-weight:500">Coming to iOS & Android soon</span>
+      <div style="display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap">
+        <a href="https://play.google.com/store/apps/details?id=app.getsafetea.mobile" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(164,198,57,0.3);border-radius:10px;padding:10px 18px;text-decoration:none;transition:border-color 0.2s,transform 0.2s" onmouseover="this.style.borderColor='rgba(164,198,57,0.55)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(164,198,57,0.3)';this.style.transform='translateY(0)'">
+          <i class="fab fa-google-play" style="font-size:18px;color:#A4C639"></i>
+          <span style="color:#F0D0C0;font-size:13px;font-weight:600">SafeTea on Google Play</span>
+          <span style="color:#A4C639;font-size:10px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(164,198,57,0.4);border-radius:100px;padding:2px 7px">LIVE</span>
+        </a>
+        <div style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(232,61,127,0.08),rgba(155,89,182,0.08));border:1px solid rgba(232,61,127,0.25);border-radius:10px;padding:10px 18px">
+          <i class="fab fa-apple" style="font-size:18px;color:#fff"></i>
+          <span style="background:linear-gradient(90deg,#FF6BA8,#9B59B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:13px;font-weight:600">LinkHer for iOS</span>
+          <span style="color:#FF6BA8;font-size:10px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(232,61,127,0.4);border-radius:100px;padding:2px 7px">SOON</span>
         </div>
       </div>
     </div>
@@ -692,6 +697,90 @@
     <span style="color:#8080A0;font-size:12px;font-weight:500;letter-spacing:0.3px">✓ Built in the USA</span>
   </div>
 </div>
+
+<!-- APPS SECTION — One platform, two apps -->
+<style>
+  @media (max-width: 720px) {
+    .apps-grid, .apps-features-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+<section style="padding:120px 0;background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(232,160,181,0.05) 0%,transparent 70%);position:relative">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:64px;max-width:680px;margin-left:auto;margin-right:auto">
+      <div class="hero-badge" style="margin:0 auto 20px;display:inline-flex">
+        <i class="fas fa-mobile-alt"></i>
+        <span>One platform · two apps</span>
+      </div>
+      <h2 style="margin-bottom:16px">One app. Two experiences. <span class="text-pink">Fully connected.</span></h2>
+      <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.6">SafeTea on Android. LinkHer on iOS. Same backend, same community, same mission — built natively for each platform.</p>
+    </div>
+
+    <div class="apps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto">
+
+      <!-- SafeTea / Android card -->
+      <div style="background:linear-gradient(180deg,rgba(232,160,181,0.06),rgba(232,160,181,0.02));border:1px solid rgba(232,160,181,0.2);border-radius:24px;padding:40px 32px;text-align:center;backdrop-filter:blur(8px);position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(232,160,181,0.18),transparent 70%);pointer-events:none"></div>
+        <img src="images/icon-safetea.png" alt="SafeTea app icon" style="width:96px;height:96px;border-radius:22px;margin:0 auto 24px;display:block;box-shadow:0 12px 40px rgba(232,160,181,0.25);position:relative">
+        <h3 style="font-size:1.8rem;margin-bottom:6px;color:var(--text-light);position:relative">SafeTea</h3>
+        <p style="color:var(--pink);font-family:'Playfair Display',serif;font-style:italic;margin-bottom:20px;font-size:1.05rem;position:relative">Stay connected, stay safe.</p>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(164,198,57,0.12);border:1px solid rgba(164,198,57,0.35);border-radius:100px;padding:6px 14px;margin-bottom:24px;position:relative">
+          <span style="width:8px;height:8px;border-radius:50%;background:#A4C639;box-shadow:0 0 8px rgba(164,198,57,0.7)"></span>
+          <span style="color:#A4C639;font-size:11px;font-weight:700;letter-spacing:0.5px">LIVE ON ANDROID</span>
+        </div>
+        <a href="https://play.google.com/store/apps/details?id=app.getsafetea.mobile" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:12px;background:#000;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:12px 20px;text-decoration:none;transition:transform 0.2s,border-color 0.2s;position:relative" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)';this.style.transform='translateY(-1px)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(0)'">
+          <i class="fab fa-google-play" style="font-size:26px;color:#fff"></i>
+          <div style="text-align:left">
+            <div style="color:#bbb;font-size:10px;letter-spacing:0.4px;line-height:1">GET IT ON</div>
+            <div style="color:#fff;font-size:17px;font-weight:600;line-height:1.2">Google Play</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- LinkHer / iOS card -->
+      <div style="background:linear-gradient(180deg,rgba(155,89,182,0.1),rgba(232,61,127,0.05));border:1px solid rgba(155,89,182,0.3);border-radius:24px;padding:40px 32px;text-align:center;backdrop-filter:blur(8px);position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(232,61,127,0.2),transparent 70%);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(155,89,182,0.18),transparent 70%);pointer-events:none"></div>
+        <img src="images/icon-linkher.png" alt="LinkHer app icon" style="width:96px;height:96px;border-radius:22px;margin:0 auto 24px;display:block;box-shadow:0 12px 40px rgba(232,61,127,0.3);position:relative">
+        <h3 style="font-size:1.8rem;margin-bottom:6px;background:linear-gradient(90deg,#FF6BA8,#9B59B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative">LinkHer</h3>
+        <p style="background:linear-gradient(90deg,#FF6BA8,#9B59B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:'Playfair Display',serif;font-style:italic;margin-bottom:20px;font-size:1.05rem;position:relative">Stay connected. Stay safe.</p>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(90deg,rgba(232,61,127,0.15),rgba(155,89,182,0.15));border:1px solid rgba(232,61,127,0.35);border-radius:100px;padding:6px 14px;margin-bottom:24px;position:relative">
+          <span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(90deg,#FF6BA8,#9B59B6);box-shadow:0 0 8px rgba(232,61,127,0.6)"></span>
+          <span style="background:linear-gradient(90deg,#FF6BA8,#9B59B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:11px;font-weight:700;letter-spacing:0.5px">COMING SOON TO iOS</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;background:#000;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:12px 20px;opacity:0.55;cursor:not-allowed;position:relative" title="Coming soon">
+          <i class="fab fa-apple" style="font-size:26px;color:#fff"></i>
+          <div style="text-align:left">
+            <div style="color:#bbb;font-size:10px;letter-spacing:0.4px;line-height:1">DOWNLOAD ON THE</div>
+            <div style="color:#fff;font-size:17px;font-weight:600;line-height:1.2">App Store</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Feature row matching the LinkHer marketing piece -->
+    <div class="apps-features-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:48px auto 0">
+      <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px">
+        <div style="flex-shrink:0;width:44px;height:44px;background:rgba(232,160,181,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <i class="fas fa-shield-alt" style="font-size:18px;color:var(--pink)"></i>
+        </div>
+        <div>
+          <div style="color:var(--pink);font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">SAFETY FIRST</div>
+          <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.5;margin:0">Powerful tools designed to keep you safe.</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:14px;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px">
+        <div style="flex-shrink:0;width:44px;height:44px;background:linear-gradient(135deg,rgba(232,61,127,0.14),rgba(155,89,182,0.14));border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <i class="fas fa-user-friends" style="font-size:18px;color:#FF6BA8"></i>
+        </div>
+        <div>
+          <div style="background:linear-gradient(90deg,#FF6BA8,#9B59B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:4px">TRUSTED CONNECTIONS</div>
+          <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.5;margin:0">Connect with the people who matter most.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- STATS BAR -->
 <section class="stats-bar">
@@ -1131,7 +1220,14 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
       </div>
       <div class="footer-col">
         <h4>Download</h4>
-        <span style="color:var(--text-muted);font-size:0.85rem">Coming to iOS & Android soon</span>
+        <a href="https://play.google.com/store/apps/details?id=app.getsafetea.mobile" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.85rem;text-decoration:none;margin-bottom:8px;transition:color 0.2s" onmouseover="this.style.color='#A4C639'" onmouseout="this.style.color='var(--text-muted)'">
+          <i class="fab fa-google-play" style="font-size:14px"></i>
+          <span>SafeTea on Google Play</span>
+        </a>
+        <span style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.85rem;opacity:0.7">
+          <i class="fab fa-apple" style="font-size:14px"></i>
+          <span>LinkHer for iOS — coming soon</span>
+        </span>
       </div>
     </div>
     <div class="footer-bottom-bar">

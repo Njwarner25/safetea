@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <!-- LinkHer pink-to-purple gradient (heart icon ring + "Her" text + chain) -->
+    <linearGradient id="linkher" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF3D7F"/>
+      <stop offset="100%" stop-color="#7B2FFF"/>
+    </linearGradient>
+    <!-- Coral pink for SafeTea cup -->
+    <linearGradient id="safetea" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFA8B5"/>
+      <stop offset="100%" stop-color="#E8758A"/>
+    </linearGradient>
+    <!-- Soft glow filters -->
+    <filter id="glow"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <!-- ============ LEFT: LinkHer heart icon in a ring ============ -->
+  <g transform="translate(280, 140)">
+    <!-- Outer ring -->
+    <circle cx="0" cy="0" r="85" fill="none" stroke="url(#linkher)" stroke-width="6"/>
+    <!-- Two figure heads (small circles, top) -->
+    <circle cx="-22" cy="-32" r="14" fill="#FF3D7F"/>
+    <circle cx="22" cy="-32" r="14" fill="#9B59B6"/>
+    <!-- Heart shape with two lobes meeting at V (formed from two arcs + V) -->
+    <path d="M -36,-2 C -36,-22 -14,-22 -2,-2 L 0,2 L 2,-2 C 14,-22 36,-22 36,-2 C 36,18 0,42 0,42 C 0,42 -36,18 -36,-2 Z"
+          fill="none" stroke="url(#linkher)" stroke-width="6" stroke-linejoin="round"/>
+    <!-- "Bandage" detail in heart center: a tiny vertical line + small square -->
+    <line x1="0" y1="-2" x2="0" y2="22" stroke="url(#linkher)" stroke-width="3"/>
+    <rect x="-5" y="6" width="10" height="10" fill="#7B2FFF" rx="1"/>
+  </g>
+
+  <!-- ============ CENTER: Chain link separator ============ -->
+  <g transform="translate(440, 140)">
+    <!-- Left ring (purple, vertical oval) -->
+    <ellipse cx="-12" cy="0" rx="11" ry="22" fill="none" stroke="#7B2FFF" stroke-width="4.5"/>
+    <!-- Right ring (magenta, slightly offset to interlock) -->
+    <ellipse cx="12" cy="0" rx="11" ry="22" fill="none" stroke="#FF3D7F" stroke-width="4.5"/>
+  </g>
+
+  <!-- ============ RIGHT: SafeTea coral cup ============ -->
+  <g transform="translate(620, 140)">
+    <!-- Steam wisps (3 curvy lines above the cup) -->
+    <path d="M -28,-110 C -32,-90 -22,-80 -28,-60" fill="none" stroke="url(#safetea)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 0,-110 C 4,-90 -6,-80 0,-60" fill="none" stroke="url(#safetea)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M 28,-110 C 32,-90 22,-80 28,-60" fill="none" stroke="url(#safetea)" stroke-width="5" stroke-linecap="round"/>
+    <!-- Cup body (trapezoidal, rounded bottom) -->
+    <path d="M -65,-50 L 65,-50 L 55,55 Q 50,75 0,75 Q -50,75 -55,55 Z"
+          fill="url(#safetea)"/>
+    <!-- Handle on the right -->
+    <path d="M 65,-30 C 105,-30 105,30 65,30" fill="none" stroke="url(#safetea)" stroke-width="10" stroke-linecap="round"/>
+    <!-- Tea-bag string + heart tag -->
+    <line x1="10" y1="-50" x2="10" y2="-15" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M 4,-15 L 4,5 C 4,9 8,12 10,8 C 12,12 16,9 16,5 L 16,-15 Z" fill="#FFFFFF"/>
+  </g>
+
+  <!-- ============ WORDMARK: LinkHer | SafeTea ============ -->
+  <text x="600" y="290" text-anchor="middle"
+        font-family="'Inter', 'Helvetica Neue', sans-serif"
+        font-weight="800" font-size="56">
+    <tspan fill="#FFFFFF">Link</tspan><tspan fill="url(#linkher)">Her</tspan><tspan fill="#FFFFFF" opacity="0.35"> | </tspan><tspan fill="url(#safetea)" font-style="italic" font-family="'Playfair Display', Georgia, serif">SafeTea</tspan>
+  </text>
+
+  <!-- ============ TAGLINE ============ -->
+  <text x="600" y="345" text-anchor="middle"
+        font-family="'Inter', 'Helvetica Neue', sans-serif"
+        font-weight="700" font-size="22"
+        letter-spacing="6">
+    <tspan fill="#F0E8F0">STAY CONNECTED.</tspan><tspan fill="url(#safetea)"> STAY SAFE.</tspan>
+  </text>
+</svg>

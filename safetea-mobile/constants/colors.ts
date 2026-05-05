@@ -127,28 +127,28 @@ const SafeTeaLight = {
   sosHighlightBorder: 'rgba(192, 57, 43, 0.12)',
 };
 
-// LinkHer Dark (iOS)
+// LinkHer Dark (iOS) — matches UI spec palette
 const LinkHerDark = {
-  background: '#0D0B1A',
-  surface: '#1A1730',
-  surfaceLight: '#1A1730',
-  surfaceDark: '#0A0815',
-  surfaceHover: '#241F40',
+  background: '#121826',
+  surface: '#1A1F2E',
+  surfaceLight: '#222838',
+  surfaceDark: '#0E1220',
+  surfaceHover: '#252B3B',
 
-  coral: '#E84393',
-  coralLight: '#F06AB0',
-  coralDark: '#C850C0',
-  coralMuted: 'rgba(232, 67, 147, 0.15)',
-  pink: '#E84393',
-  pinkMuted: 'rgba(232, 67, 147, 0.15)',
-  pinkGlow: 'rgba(232, 67, 147, 0.18)',
-  purple: '#A855F7',
-  purpleMuted: 'rgba(168, 85, 247, 0.15)',
+  coral: '#FF40BD',
+  coralLight: '#FF6ED0',
+  coralDark: '#E030A0',
+  coralMuted: 'rgba(255, 64, 189, 0.15)',
+  pink: '#FF40BD',
+  pinkMuted: 'rgba(255, 64, 189, 0.15)',
+  pinkGlow: 'rgba(255, 64, 189, 0.18)',
+  purple: '#8A2BE2',
+  purpleMuted: 'rgba(138, 43, 226, 0.15)',
 
   textPrimary: '#FFFFFF',
-  textSecondary: '#E0D5F0',
-  textMuted: '#7B6F8E',
-  textInverse: '#0D0B1A',
+  textSecondary: '#D1D5DB',
+  textMuted: '#9CA3AF',
+  textInverse: '#121826',
 
   success: '#2ecc71',
   successMuted: 'rgba(46, 204, 113, 0.15)',

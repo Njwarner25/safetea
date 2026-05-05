@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Image, Platform } from 'react-native';
+import { View, Image, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors, APP_NAME } from '../../constants/colors';
 
@@ -15,65 +15,82 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
           backgroundColor: Colors.surface,
-          borderTopColor: 'rgba(255,255,255,0.06)',
+          borderTopColor: Colors.border,
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
-          height: 65,
+          height: 70,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
         },
         headerStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: Colors.background,
         },
         headerTintColor: Colors.textPrimary,
         headerTitleStyle: { fontWeight: '700' },
-        headerLeft: () => (
-          <Image
-            source={headerLogo}
-            style={{ width: 32, height: 32, marginLeft: 16, borderRadius: 6 }}
-            resizeMode="contain"
-          />
-        ),
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Community',
-          headerTitle: `${APP_NAME} Community`,
-          tabBarIcon: ({ color, size }) => <FontAwesome5 name="comments" size={size || 22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color, size }) => <FontAwesome5 name="search" size={size || 22} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: 'Post',
-          tabBarIcon: ({ color, size }) => <FontAwesome5 name="plus-circle" size={size || 22} color={color} />,
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="home" size={size || 20} color={color} />,
         }}
       />
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Tools',
-          headerTitle: `${APP_NAME} Tools`,
-          tabBarIcon: ({ color, size }) => <FontAwesome5 name="toolbox" size={size || 22} color={color} />,
+          title: 'Alerts',
+          headerShown: true,
+          headerTitle: 'Alerts',
+          headerStyle: { backgroundColor: Colors.background },
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="bell" size={size || 20} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          title: '',
+          headerShown: true,
+          headerTitle: 'New Post',
+          headerStyle: { backgroundColor: Colors.background },
+          tabBarIcon: () => (
+            <View style={{
+              width: 48, height: 48, borderRadius: 24,
+              backgroundColor: Colors.pink,
+              justifyContent: 'center', alignItems: 'center',
+              marginBottom: 8,
+              shadowColor: Colors.pink,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+            }}>
+              <FontAwesome5 name="plus" size={20} color="#FFF" />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Messages',
+          headerShown: true,
+          headerTitle: 'Messages',
+          headerStyle: { backgroundColor: Colors.background },
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="comment-dots" size={size || 20} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <FontAwesome5 name="user" size={size || 22} color={color} solid />,
+          headerShown: true,
+          headerTitle: 'Profile',
+          headerStyle: { backgroundColor: Colors.background },
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="user" size={size || 20} color={color} solid />,
         }}
       />
     </Tabs>

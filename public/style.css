@@ -1,13 +1,20 @@
 /* ============ RESET & VARIABLES ============ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --navy: #1A1A2E;
-  --navy-light: #22223A;
-  --navy-dark: #141428;
+  /* Background — pulled from the LinkHer/SafeTea logo dark plate */
+  --navy: #0D0B1A;
+  --navy-light: #1A0F2A;
+  --navy-dark: #06040F;
+  /* Existing SafeTea coral pink — still in the logo via the SafeTea cup */
   --pink: #E8A0B5;
   --pink-dark: #D4768E;
   --pink-light: #F2C4D4;
   --pink-glow: rgba(232, 160, 181, 0.15);
+  /* New LinkHer brand accents — pink-to-purple gradient from the heart icon */
+  --magenta: #FF3D7F;
+  --purple: #7B2FFF;
+  --gradient-linkher: linear-gradient(90deg, #FF3D7F, #7B2FFF);
+  --gradient-linkher-soft: linear-gradient(135deg, rgba(255, 61, 127, 0.12), rgba(123, 47, 255, 0.12));
   --text: #F0D0C0;
   --text-light: #F5E0D5;
   --text-muted: #8080A0;

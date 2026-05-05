@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -14,8 +14,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useScreenshotPrevention();
-  const router = useRouter();
-  const segments = useSegments();
   const user = useAuthStore((s) => s.user);
   const [ready, setReady] = useState(false);
 
@@ -23,7 +21,6 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       await api.restoreToken();
-      // If we have a saved token, try to fetch user
       if ((api as any).token) {
         try {
           const res = await api.getMe();
@@ -42,15 +39,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     })();
   }, []);
-
-  // Auth gate: redirect to login if not authenticated
-  useEffect(() => {
-    if (!ready) return;
-    const inAuthGroup = segments[0] === '(auth)';
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/welcome');
-    }
-  }, [user, segments, ready]);
 
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
@@ -74,6 +62,24 @@ export default function RootLayout() {
       endIAP();
     };
   }, []);
+
+  // Auth gate: show auth screens if not logged in
+  if (ready && !user) {
+    return (
+      <>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.background } }}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack>
+        <Redirect href="/(auth)/welcome" />
+      </>
+    );
+  }
+
+  // Not ready yet — splash screen is still showing
+  if (!ready) {
+    return null;
+  }
 
   return (
     <>

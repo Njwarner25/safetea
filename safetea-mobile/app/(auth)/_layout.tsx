@@ -12,12 +12,9 @@ export default function AuthLayout() {
     >
       <Stack.Screen name="welcome" />
       <Stack.Screen name="login" />
-      <Stack.Screen name="verify-phone" />
       <Stack.Screen name="select-city" />
-      <Stack.Screen name="create-pseudonym" />
       <Stack.Screen name="select-avatar" />
       <Stack.Screen name="verify-identity" />
-      <Stack.Screen name="guidelines" />
     </Stack>
   );
 }

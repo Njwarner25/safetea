@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { useNamePingStore } from './namePingStore';
 
-export type PostCategory = 'warning' | 'positive' | 'question' | 'alert';
+export type PostCategory = 'warning' | 'positive' | 'question' | 'alert' | 'tea-talk';
 export type PostStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
 
 export interface Post {

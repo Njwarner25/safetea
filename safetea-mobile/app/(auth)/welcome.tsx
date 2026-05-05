@@ -1,14 +1,22 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME, APP_TAGLINE } from '../../constants/colors';
+
+const heroImage = Platform.OS === 'ios'
+  ? require('../../assets/icon-linkher.png')
+  : null;
 
 export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.heroSection}>
-        <Text style={styles.emoji}>🍵</Text>
+        {heroImage ? (
+          <Image source={heroImage} style={styles.heroLogo} resizeMode="contain" />
+        ) : (
+          <Text style={styles.emoji}>🍵</Text>
+        )}
         <Text style={styles.title}>{APP_NAME}</Text>
-        <Text style={styles.subtitle}>Privacy-First Dating Transparency</Text>
+        <Text style={styles.subtitle}>{APP_TAGLINE}</Text>
         <Text style={styles.description}>
           Share experiences. Protect your community.{' '}
           Stay safe while dating.
@@ -54,6 +62,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background, padding: Spacing.lg, justifyContent: 'space-between' },
   heroSection: { alignItems: 'center', marginTop: 60 },
+  heroLogo: { width: 100, height: 100, marginBottom: Spacing.md, borderRadius: 20 },
   emoji: { fontSize: 64, marginBottom: Spacing.md },
   title: { fontSize: FontSize.display, fontWeight: '700', color: Colors.coral, marginBottom: Spacing.xs },
   subtitle: { fontSize: FontSize.lg, color: Colors.textPrimary, fontWeight: '600', marginBottom: Spacing.sm },

@@ -1,14 +1,17 @@
-import { View, Text, TextInput, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, Alert, ActivityIndicator, Image, Platform } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { api } from '../../services/api';
+import { useCityStore } from '../../store/cityStore';
+import { useAuthStore } from '../../store/authStore';
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const selectedCityId = useCityStore((s) => s.selectedCityId);
 
   const handleSendCode = async () => {
     if (!phone.trim() || phone.trim().length < 10) {
@@ -43,7 +46,28 @@ export default function LoginScreen() {
       if (res.status === 200 && (res.data as any)?.token) {
         const data = res.data as any;
         api.setToken(data.token);
-        router.replace('/(tabs)');
+
+        // Fetch and store user profile
+        try {
+          const meRes = await api.getMe();
+          if (meRes.status === 200 && meRes.data) {
+            const user = (meRes.data as any).user || meRes.data;
+            if (user && (user.tier === 'premium' || user.tier === 'pro')) user.tier = 'plus';
+            if (user?.subscription_tier) {
+              user.tier = (user.subscription_tier === 'premium' || user.subscription_tier === 'pro') ? 'plus' : user.subscription_tier;
+            }
+            useAuthStore.getState().setUser(user);
+          }
+        } catch {
+          // Continue even if getMe fails — user can still use the app
+        }
+
+        // Route: no city → select city, unverified → verify, otherwise → tabs
+        if (!selectedCityId) {
+          router.replace('/(auth)/select-city');
+        } else {
+          router.replace('/(tabs)');
+        }
       } else {
         const msg = (res.data as any)?.error || 'Invalid code. Please try again.';
         Alert.alert('Error', msg);
@@ -62,7 +86,11 @@ export default function LoginScreen() {
       </Pressable>
 
       <View style={styles.content}>
-        <Text style={styles.emoji}>🍵</Text>
+        {Platform.OS === 'ios' ? (
+          <Image source={require('../../assets/icon-linkher.png')} style={styles.loginLogo} resizeMode="contain" />
+        ) : (
+          <Text style={styles.emoji}>🍵</Text>
+        )}
         <Text style={styles.title}>{codeSent ? 'Enter Code' : 'Sign In'}</Text>
         <Text style={styles.subtitle}>
           {codeSent
@@ -134,6 +162,7 @@ const styles = StyleSheet.create({
   backBtn: { marginTop: 50 },
   backText: { color: Colors.textSecondary, fontSize: FontSize.md },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loginLogo: { width: 72, height: 72, marginBottom: Spacing.md, borderRadius: 16 },
   emoji: { fontSize: 48, marginBottom: Spacing.md },
   title: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.xs },
   subtitle: { fontSize: FontSize.sm, color: Colors.textSecondary, textAlign: 'center', marginBottom: Spacing.xl, lineHeight: 20 },

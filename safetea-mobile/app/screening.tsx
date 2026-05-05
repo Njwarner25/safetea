@@ -1,21 +1,23 @@
-import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, FlatList, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS } from '../constants/colors';
-import { useScreeningStore, ScreeningResult, TeaScoreLevel, RedFlag, GreenFlag } from '../store/screeningStore';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME_PLUS, APP_NAME } from '../constants/colors';
+import { useScreeningStore, ScreeningResult, SafetyScoreLevel, RedFlag, GreenFlag } from '../store/screeningStore';
+
+const SCORE_LABEL = Platform.OS === 'ios' ? 'Safety Score' : 'Tea Score';
 import { useAuthStore } from '../store/authStore';
 import { api } from '../services/api';
 
 const PLATFORMS = ['Tinder', 'Hinge', 'Bumble', 'Other'];
 
-const SCORE_COLORS: Record<TeaScoreLevel, string> = {
+const SCORE_COLORS: Record<SafetyScoreLevel, string> = {
   safe: Colors.success,
   caution: Colors.warning,
   warning: '#F97316',
   danger: Colors.danger,
 };
 
-function getScoreLevel(score: number): TeaScoreLevel {
+function getScoreLevel(score: number): SafetyScoreLevel {
   if (score >= 75) return 'safe';
   if (score >= 50) return 'caution';
   if (score >= 25) return 'warning';
@@ -94,7 +96,7 @@ export default function ScreeningScreen() {
       const res = await api.screenProfile(profileName.trim(), platform);
       if (res.status === 200 && res.data) {
         const d = res.data as any;
-        const score = d.catfishScore ?? d.teaScore ?? 50;
+        const score = d.catfishScore ?? d.safetyScore ?? 50;
         const redFlags = (d.redFlags || []).map((f: any, i: number) => ({
           id: 'rf-' + i,
           label: typeof f === 'string' ? f : f.label || f.flag || 'Unknown',
@@ -110,8 +112,8 @@ export default function ScreeningScreen() {
           id: 'scan-' + Date.now(),
           profileName,
           platform,
-          teaScore: score,
-          teaScoreLevel: getScoreLevel(score),
+          safetyScore: score,
+          safetyScoreLevel: getScoreLevel(score),
           redFlags,
           greenFlags,
           scannedAt: new Date().toISOString(),
@@ -182,15 +184,15 @@ export default function ScreeningScreen() {
               <Text style={styles.resultPlatform}>{currentScan.platform}</Text>
 
               <View style={styles.scoreCircle}>
-                <View style={[styles.scoreRing, { borderColor: SCORE_COLORS[currentScan.teaScoreLevel] }]}>
-                  <Text style={[styles.scoreNumber, { color: SCORE_COLORS[currentScan.teaScoreLevel] }]}>
-                    {currentScan.teaScore}
+                <View style={[styles.scoreRing, { borderColor: SCORE_COLORS[currentScan.safetyScoreLevel] }]}>
+                  <Text style={[styles.scoreNumber, { color: SCORE_COLORS[currentScan.safetyScoreLevel] }]}>
+                    {currentScan.safetyScore}
                   </Text>
-                  <Text style={styles.scoreLabel}>Tea Score</Text>
+                  <Text style={styles.scoreLabel}>{SCORE_LABEL}</Text>
                 </View>
               </View>
-              <Text style={[styles.scoreLevelText, { color: SCORE_COLORS[currentScan.teaScoreLevel] }]}>
-                {currentScan.teaScoreLevel.toUpperCase()}
+              <Text style={[styles.scoreLevelText, { color: SCORE_COLORS[currentScan.safetyScoreLevel] }]}>
+                {currentScan.safetyScoreLevel.toUpperCase()}
               </Text>
 
               {currentScan.redFlags.length > 0 && (
@@ -233,8 +235,8 @@ export default function ScreeningScreen() {
                 <View key={item.id} style={styles.historyCard}>
                   <View style={styles.historyHeader}>
                     <Text style={styles.historyName}>{item.profileName}</Text>
-                    <Text style={[styles.historyScore, { color: SCORE_COLORS[item.teaScoreLevel] }]}>
-                      {item.teaScore}
+                    <Text style={[styles.historyScore, { color: SCORE_COLORS[item.safetyScoreLevel] }]}>
+                      {item.safetyScore}
                     </Text>
                   </View>
                   <Text style={styles.historyMeta}>

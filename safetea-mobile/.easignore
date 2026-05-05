@@ -1,0 +1,8 @@
+# EAS Build ignore - reduce upload size
+.git
+node_modules/.cache
+.expo
+dist
+web-build
+*.tsbuildinfo
+AuthKey_*.p8

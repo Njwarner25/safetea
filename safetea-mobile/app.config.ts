@@ -66,9 +66,11 @@ const ANDROID_MIC_PERMISSION =
   'SafeTea uses the microphone for audio features.';
 
 // Top-level name shown in Expo dev client + the build artifact name.
-// Use the iOS brand when EAS is building for iOS so TestFlight + the App Store
-// artifact land as "LinkHer".
-const TOP_LEVEL_NAME = IS_IOS_BUILD ? LINKHER.name : SAFETEA.name;
+// Always use LinkHer for the Xcode target name — the iOS bundle identifier
+// is app.linkher.mobile and the provisioning profile expects target "LinkHer".
+// EAS_BUILD_PLATFORM isn't set during prebuild, so we can't rely on it for
+// the target name. Other fields (icon, splash) still use the platform check.
+const TOP_LEVEL_NAME = 'LinkHer';
 const TOP_LEVEL_ICON = IS_IOS_BUILD ? LINKHER.iconPath : SAFETEA.iconPath;
 const TOP_LEVEL_SPLASH_BG = IS_IOS_BUILD ? LINKHER.splashBg : SAFETEA.splashBg;
 const TOP_LEVEL_SPLASH_IMG = IS_IOS_BUILD ? LINKHER.splashPath : SAFETEA.splashPath;
@@ -76,7 +78,7 @@ const TOP_LEVEL_SPLASH_IMG = IS_IOS_BUILD ? LINKHER.splashPath : SAFETEA.splashP
 const config: ExpoConfig = {
   name: TOP_LEVEL_NAME,
   slug: 'safetea',
-  version: '1.0.2',
+  version: '1.0.5',
   orientation: 'portrait',
   icon: TOP_LEVEL_ICON,
   userInterfaceStyle: 'dark',
@@ -90,7 +92,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'app.linkher.mobile',
-    buildNumber: '4',
+    buildNumber: '8',
     infoPlist: IOS_PERMISSIONS,
   },
   android: {
@@ -109,6 +111,7 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-secure-store',
     'expo-font',
+    'expo-image-picker',
     [
       'expo-camera',
       {
@@ -143,6 +146,9 @@ const config: ExpoConfig = {
     [
       'expo-build-properties',
       {
+        ios: {
+          deploymentTarget: '17.4',
+        },
         android: {
           targetSdkVersion: 35,
           compileSdkVersion: 35,

@@ -85,11 +85,101 @@ export default function ModDashboardScreen() {
     setActionLoading(null);
   };
 
+  const [activeTab, setActiveTab] = useState<'queue' | 'signups' | 'bans' | 'stats'>('queue');
+  const [signups, setSignups] = useState<any[]>([]);
+  const [adminStats, setAdminStats] = useState<any>(null);
+
+  const fetchSignups = useCallback(async () => {
+    try {
+      const res = await api.getRecentSignups();
+      if (res.status === 200 && res.data) {
+        setSignups(Array.isArray(res.data) ? res.data : (res.data as any)?.users || []);
+      }
+    } catch { /* empty */ }
+  }, []);
+
+  const fetchAdminStats = useCallback(async () => {
+    try {
+      const res = await api.getAdminStats();
+      if (res.status === 200 && res.data) setAdminStats(res.data);
+    } catch { /* empty */ }
+  }, []);
+
+  const handleBanUser = (userId: string, pseudonym: string) => {
+    Alert.alert('Ban User', `Are you sure you want to ban ${pseudonym}? This action cannot be easily undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Ban', style: 'destructive', onPress: async () => {
+        try {
+          await api.banUser(userId, 'Banned by moderator');
+          Alert.alert('Banned', `${pseudonym} has been banned.`);
+          fetchSignups();
+        } catch { Alert.alert('Error', 'Failed to ban user.'); }
+      }},
+    ]);
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>Mod Dashboard</Text>
       <Text style={styles.subheading}>Welcome back, {user.pseudonym}</Text>
 
+      <View style={styles.tabRow}>
+        {(['queue', 'signups', 'stats'] as const).map((tab) => (
+          <Pressable
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.tabActive]}
+            onPress={() => {
+              setActiveTab(tab);
+              if (tab === 'signups') fetchSignups();
+              if (tab === 'stats') fetchAdminStats();
+            }}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              {tab === 'queue' ? 'Review' : tab === 'signups' ? 'Signups' : 'Stats'}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {activeTab === 'signups' && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Recent Signups</Text>
+          {signups.length === 0 ? (
+            <Text style={styles.emptyText}>No recent signups.</Text>
+          ) : signups.map((u: any, i: number) => (
+            <View key={u.id || i} style={styles.queueItem}>
+              <Text style={styles.queueTitle}>{u.pseudonym || u.phone || 'User'}</Text>
+              <Text style={styles.queueMeta}>Joined: {u.created_at ? new Date(u.created_at).toLocaleDateString() : 'Unknown'} · Tier: {u.tier || 'free'}</Text>
+              {user.role === 'admin' && (
+                <Pressable style={styles.rejectBtn} onPress={() => handleBanUser(u.id?.toString(), u.pseudonym || 'User')}>
+                  <Text style={styles.rejectBtnText}>Ban</Text>
+                </Pressable>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {activeTab === 'stats' && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Platform Stats</Text>
+          {adminStats ? (
+            <View style={{ gap: Spacing.sm }}>
+              {Object.entries(adminStats).map(([key, val]) => (
+                <View key={key} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={styles.queueMeta}>{key.replace(/_/g, ' ')}</Text>
+                  <Text style={styles.queueTitle}>{String(val)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <ActivityIndicator color={Colors.coral} />
+          )}
+        </View>
+      )}
+
+      {activeTab === 'queue' && (
+      <>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{stats.pending}</Text>
@@ -155,11 +245,18 @@ export default function ModDashboardScreen() {
           ))
         )}
       </View>
+      </>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  tabRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.md, backgroundColor: Colors.surface, borderRadius: BorderRadius.md, padding: Spacing.xs },
+  tab: { flex: 1, paddingVertical: Spacing.sm, borderRadius: BorderRadius.sm, alignItems: 'center' },
+  tabActive: { backgroundColor: Colors.coral },
+  tabText: { fontSize: FontSize.sm, fontWeight: '600', color: Colors.textMuted },
+  tabTextActive: { color: '#FFF' },
   container: { flex: 1, backgroundColor: Colors.background },
   content: { padding: Spacing.md, paddingBottom: Spacing.xxl },
   heading: { fontSize: FontSize.xxl, fontWeight: '800', color: Colors.textPrimary, marginBottom: Spacing.xs },

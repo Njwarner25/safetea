@@ -69,6 +69,11 @@ class ApiClient {
     });
   }
 
+  // Current user
+  async getMe() {
+    return this.request<any>('/auth/me');
+  }
+
   // Posts
   async getPosts(cityId: string, page: number = 1) {
     return this.request('/posts?city=' + cityId + '&page=' + page);
@@ -295,6 +300,173 @@ class ApiClient {
     return this.request<any>('/namewatch/read-all', {
       method: 'POST',
     });
+  }
+
+  // Red Flag / Conversation Scanner
+  // Accepts text, screenshot images (base64), or both
+  async scanConversation(conversationText?: string, textImages?: string[]) {
+    const body: any = {};
+    if (conversationText) body.conversationText = conversationText;
+    if (textImages && textImages.length > 0) body.textImages = textImages;
+    return this.request<any>('/screening/redflag', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  // Photo Verify — sends base64 images directly to verify endpoint
+  async verifyPhotos(images: string[]) {
+    return this.request<any>('/photos/verify', {
+      method: 'POST',
+      body: JSON.stringify({ images }),
+    });
+  }
+
+  // Photo Upload — for posting photos to community
+  async uploadPhoto(base64: string, context: string = 'post', contextId?: string) {
+    return this.request<any>('/photos/upload', {
+      method: 'POST',
+      body: JSON.stringify({ image: base64, context, context_id: contextId }),
+    });
+  }
+
+  // Messages
+  async getConversations() {
+    return this.request<any>('/messages');
+  }
+
+  async getMessages(userId: string) {
+    return this.request<any>('/messages/' + userId);
+  }
+
+  async sendMessage(userId: string, body: string) {
+    return this.request<any>('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ to_user_id: userId, body }),
+    });
+  }
+
+  // Rooms
+  async getMyRooms() {
+    return this.request<any>('/rooms/my-rooms');
+  }
+
+  async getRoomDetails(roomId: string) {
+    return this.request<any>('/rooms/details?room_id=' + roomId);
+  }
+
+  async getRoomFeed(roomId: string) {
+    return this.request<any>('/rooms/feed?room_id=' + roomId);
+  }
+
+  async getRoomMembers(roomId: string) {
+    return this.request<any>('/rooms/members?room_id=' + roomId);
+  }
+
+  async createRoom(data: { name: string; description?: string; is_private?: boolean }) {
+    return this.request<any>('/rooms/create', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async joinRoom(data: { join_code?: string; qr_token?: string }) {
+    return this.request<any>('/rooms/join', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async leaveRoom(roomId: string) {
+    return this.request<any>('/rooms/leave', { method: 'POST', body: JSON.stringify({ room_id: roomId }) });
+  }
+
+  async postInRoom(roomId: string, content: string) {
+    return this.request<any>('/rooms/post', { method: 'POST', body: JSON.stringify({ room_id: roomId, content }) });
+  }
+
+  async replyInRoom(roomId: string, postId: string, content: string) {
+    return this.request<any>('/rooms/replies', { method: 'POST', body: JSON.stringify({ room_id: roomId, post_id: postId, content }) });
+  }
+
+  // Vault
+  async getVaultFolders() {
+    return this.request<any>('/vault/folders');
+  }
+
+  async createVaultFolder(title: string, description?: string) {
+    return this.request<any>('/vault/folders', { method: 'POST', body: JSON.stringify({ title, description }) });
+  }
+
+  async getVaultEntries(folderId: string) {
+    return this.request<any>('/vault/entries?folder_id=' + folderId);
+  }
+
+  async createVaultEntry(data: { folder_id: string; type: string; title: string; content?: string; file_url?: string }) {
+    return this.request<any>('/vault/entries', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async deleteVaultEntry(entryId: string) {
+    return this.request<any>('/vault/entries?entry_id=' + entryId, { method: 'DELETE' });
+  }
+
+  async getVaultContacts() {
+    return this.request<any>('/vault/contacts');
+  }
+
+  async addVaultContact(data: { name: string; phone: string; email?: string; relationship: string }) {
+    return this.request<any>('/vault/contacts', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async removeVaultContact(contactId: string) {
+    return this.request<any>('/vault/contacts?contact_id=' + contactId, { method: 'DELETE' });
+  }
+
+  async getVaultAuditLog() {
+    return this.request<any>('/vault/audit');
+  }
+
+  async triggerVaultRelease(contactId: string) {
+    return this.request<any>('/vault/access-requests', { method: 'POST', body: JSON.stringify({ contact_id: contactId }) });
+  }
+
+  // Post replies
+  async getPostReplies(postId: string) {
+    return this.request<any>('/posts/' + postId + '/replies');
+  }
+
+  async createReply(postId: string, content: string) {
+    return this.request<any>('/posts/' + postId + '/replies', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  // Admin endpoints
+  async getAdminStats() {
+    return this.request<any>('/admin/stats');
+  }
+
+  async getRecentSignups() {
+    return this.request<any>('/admin/recent-signups');
+  }
+
+  async getSuspiciousSignups() {
+    return this.request<any>('/admin/suspicious-signups');
+  }
+
+  async getAITasks() {
+    return this.request<any>('/admin/ai-tasks');
+  }
+
+  async enforceAITask(taskId: string, action: string) {
+    return this.request<any>('/admin/ai-enforce', { method: 'POST', body: JSON.stringify({ task_id: taskId, action }) });
+  }
+
+  async banUser(userId: string, reason: string) {
+    return this.request<any>('/admin/ban', { method: 'POST', body: JSON.stringify({ user_id: userId, reason }) });
+  }
+
+  async warnUser(userId: string, reason: string) {
+    return this.request<any>('/admin/warn', { method: 'POST', body: JSON.stringify({ user_id: userId, reason }) });
+  }
+
+  async getTrustEvents() {
+    return this.request<any>('/admin/trust-events');
   }
 
   // Scam database — fetch entries from community reports

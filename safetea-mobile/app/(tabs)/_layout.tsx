@@ -1,7 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Image } from 'react-native';
+import { Image, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors, APP_NAME } from '../../constants/colors';
+
+const headerLogo = Platform.OS === 'ios'
+  ? require('../../assets/icon-linkher.png')
+  : require('../../assets/logo.png');
 
 export default function TabLayout() {
   return (
@@ -26,10 +30,10 @@ export default function TabLayout() {
         },
         headerTintColor: Colors.textPrimary,
         headerTitleStyle: { fontWeight: '700' },
-        headerRight: () => (
+        headerLeft: () => (
           <Image
-            source={require('../../assets/logo.png')}
-            style={{ width: 32, height: 32, marginRight: 16 }}
+            source={headerLogo}
+            style={{ width: 32, height: 32, marginLeft: 16, borderRadius: 6 }}
             resizeMode="contain"
           />
         ),

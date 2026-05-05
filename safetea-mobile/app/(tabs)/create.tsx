@@ -11,6 +11,7 @@ const CATEGORIES: { key: PostCategory; label: string; icon: string }[] = [
   { key: 'positive', label: 'Positive', icon: '💚' },
   { key: 'question', label: 'Question', icon: '❓' },
   { key: 'alert', label: 'Alert', icon: '🚨' },
+  { key: 'tea-talk', label: 'Safety Chat', icon: '💬' },
 ];
 
 export default function CreatePostScreen() {

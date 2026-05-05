@@ -1,4 +1,4 @@
-import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, Image, ImageBackground, Platform } from 'react-native';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { router } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useCityStore } from '../../store/cityStore';
 import { getAvatarById } from '../../constants/avatars';
 import { truncateText } from '../../utils/validators';
 import { api } from '../../services/api';
+import { getCityMeta } from '../../constants/cityImages';
 import ReportModal from '../../components/ReportModal';
 import PlusBadge from '../../components/PlusBadge';
 
@@ -38,6 +39,7 @@ const FILTER_OPTIONS: { key: PostCategory | 'all'; label: string; icon: string }
   { key: 'positive', label: 'Positive', icon: 'heart' },
   { key: 'question', label: 'Questions', icon: 'question-circle' },
   { key: 'alert', label: 'Alerts', icon: 'exclamation-circle' },
+  { key: 'tea-talk', label: 'Safety Chat', icon: 'comments' },
 ];
 
 const CATEGORY_ICONS: Record<PostCategory, { name: string; color: string }> = {
@@ -45,6 +47,7 @@ const CATEGORY_ICONS: Record<PostCategory, { name: string; color: string }> = {
   positive: { name: 'heart', color: Colors.success },
   question: { name: 'question-circle', color: Colors.info },
   alert: { name: 'exclamation-circle', color: Colors.danger },
+  'tea-talk': { name: 'comments', color: Colors.purple },
 };
 
 function PostCard({ post, onReport }: { post: Post; onReport: (id: string) => void }) {
@@ -152,10 +155,27 @@ export default function FeedScreen() {
   return (
     <View style={styles.container}>
       {city && (
-        <View style={styles.cityHeader}>
-          <FontAwesome5 name="map-marker-alt" size={14} color={Colors.pink} />
-          <Text style={styles.cityName}> {city.name}, {city.state}</Text>
-        </View>
+        <Pressable onPress={() => router.push('/(auth)/select-city')}>
+          {getCityMeta(city.id).image ? (
+            <ImageBackground
+              source={getCityMeta(city.id).image}
+              style={styles.cityBanner}
+              imageStyle={{ opacity: 0.4 }}
+            >
+              <View style={styles.cityBannerOverlay}>
+                <FontAwesome5 name="map-marker-alt" size={16} color={Colors.coral} />
+                <Text style={styles.cityBannerName}>{city.name} Community</Text>
+                <FontAwesome5 name="chevron-down" size={12} color={Colors.textMuted} style={{ marginLeft: 'auto' }} />
+              </View>
+            </ImageBackground>
+          ) : (
+            <View style={styles.cityHeader}>
+              <FontAwesome5 name="map-marker-alt" size={14} color={Colors.pink} />
+              <Text style={styles.cityName}> {city.name}, {city.state}</Text>
+              <FontAwesome5 name="chevron-down" size={12} color={Colors.textMuted} style={{ marginLeft: 'auto' }} />
+            </View>
+          )}
+        </Pressable>
       )}
       <View style={styles.filters}>
         {FILTER_OPTIONS.map(opt => (
@@ -180,7 +200,7 @@ export default function FeedScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.coral} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <FontAwesome5 name="mug-hot" size={48} color={Colors.pink} style={{ marginBottom: Spacing.md }} />
+            <FontAwesome5 name={Platform.OS === 'ios' ? 'shield-alt' : 'mug-hot'} size={48} color={Colors.pink} style={{ marginBottom: Spacing.md }} />
             <Text style={styles.emptyText}>No posts yet</Text>
             <Text style={styles.emptySubtext}>Be the first to share a safety update</Text>
           </View>
@@ -197,6 +217,9 @@ export default function FeedScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  cityBanner: { height: 72, justifyContent: 'flex-end', backgroundColor: Colors.surfaceDark },
+  cityBannerOverlay: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, gap: Spacing.sm, backgroundColor: 'rgba(0,0,0,0.35)' },
+  cityBannerName: { fontSize: FontSize.lg, fontWeight: '700', color: '#FFFFFF' },
   cityHeader: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border },
   cityName: { fontSize: FontSize.md, color: Colors.textPrimary, fontWeight: '600' },
   filters: { flexDirection: 'row', padding: Spacing.sm, gap: Spacing.xs },

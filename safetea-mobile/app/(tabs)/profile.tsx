@@ -32,6 +32,8 @@ export default function ProfileScreen() {
     ...(user.role !== 'member'
       ? [{ icon: 'tachometer-alt', label: 'Mod Dashboard', onPress: () => router.push('/mod/dashboard') }]
       : [{ icon: 'gavel', label: 'Apply to Moderate', onPress: () => router.push('/mod/apply') }]),
+    { icon: 'envelope', label: 'Messages', onPress: () => router.push('/messages') },
+    { icon: 'door-open', label: 'Rooms', onPress: () => router.push('/rooms') },
     { icon: 'crown', label: 'Subscription & Pricing', onPress: () => router.push('/subscription') },
     { icon: 'cog', label: 'Settings' },
     { icon: 'book', label: 'Community Guidelines' },

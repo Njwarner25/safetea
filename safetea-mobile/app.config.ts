@@ -78,7 +78,7 @@ const TOP_LEVEL_SPLASH_IMG = IS_IOS_BUILD ? LINKHER.splashPath : SAFETEA.splashP
 const config: ExpoConfig = {
   name: TOP_LEVEL_NAME,
   slug: 'safetea',
-  version: '1.1.2',
+  version: '1.2.0',
   orientation: 'portrait',
   icon: TOP_LEVEL_ICON,
   userInterfaceStyle: 'dark',
@@ -111,7 +111,12 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-secure-store',
     'expo-font',
-    'expo-image-picker',
+    [
+      'expo-image-picker',
+      {
+        photosPermission: 'LinkHer needs access to your photos to verify dating profile images and scan conversation screenshots.',
+      },
+    ],
     [
       'expo-camera',
       {

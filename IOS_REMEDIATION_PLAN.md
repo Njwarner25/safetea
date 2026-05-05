@@ -385,6 +385,14 @@ For every section in §4 and §5, follow this loop:
 8. Commit with a clear `feat(scope):` or `fix(scope):` message.
 9. Update this MD's checklist as items are completed.
 
+## 7.1 Theming — dark mode only, no light mode
+
+The app is locked to dark mode by design. `app.config.ts:81` sets `userInterfaceStyle: 'dark'`, and `constants/useThemeColors.ts` always returns `DarkColors` (the OS color-scheme detection was removed). When adding new screens:
+
+- Import `Colors` directly from `constants/colors.ts` for static styling, or call `useThemeColors()` if the screen needs to consume the palette via a hook.
+- **Do not** introduce `useColorScheme()` from `react-native`, light-mode toggles, or any conditional palette logic.
+- The `LightColors` / `LinkHerLight` / `SafeTeaLight` exports in `constants/colors.ts` are unused after this change — leave them in place so the file stays diffable, but never import them.
+
 ## 8. Out of scope for this plan
 
 - Changing the URL scheme or bundle id again (already done in commits `b787496`).
@@ -392,6 +400,7 @@ For every section in §4 and §5, follow this loop:
 - Background Check restoration (will not survive App Review).
 - API base URL change from `api.getsafetea.app` to a LinkHer-branded domain (not visible to reviewers under normal review).
 - Building a web admin parity for non-iOS-specific admin needs — this plan covers iOS only.
+- Re-introducing a light/dark-mode toggle (see §7.1 — dark-only is a product decision, not a limitation).
 
 ---
 

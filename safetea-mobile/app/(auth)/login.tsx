@@ -43,33 +43,44 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const res = await api.verifyCode(phone.trim(), code.trim());
-      if (res.status === 200 && (res.data as any)?.token) {
-        const data = res.data as any;
-        api.setToken(data.token);
+      // Backend returns { status, data: { token, user } } — token may be at top level or nested
+      const raw = res.data as any;
+      const token = raw?.token || raw?.data?.token;
+      const userData = raw?.user || raw?.data?.user;
 
-        // Fetch and store user profile
-        try {
-          const meRes = await api.getMe();
-          if (meRes.status === 200 && meRes.data) {
-            const user = (meRes.data as any).user || meRes.data;
-            if (user && (user.tier === 'premium' || user.tier === 'pro')) user.tier = 'plus';
-            if (user?.subscription_tier) {
-              user.tier = (user.subscription_tier === 'premium' || user.subscription_tier === 'pro') ? 'plus' : user.subscription_tier;
-            }
-            useAuthStore.getState().setUser(user);
+      if (res.status === 200 && token) {
+        api.setToken(token);
+
+        // Store user from verify response, or fetch via /auth/me
+        if (userData) {
+          const user = { ...userData };
+          if (user.tier === 'premium' || user.tier === 'pro') user.tier = 'plus';
+          if (user.subscription_tier) {
+            user.tier = (user.subscription_tier === 'premium' || user.subscription_tier === 'pro') ? 'plus' : user.subscription_tier;
           }
-        } catch {
-          // Continue even if getMe fails — user can still use the app
+          useAuthStore.getState().setUser(user);
+        } else {
+          try {
+            const meRes = await api.getMe();
+            if (meRes.status === 200 && meRes.data) {
+              const user = (meRes.data as any).user || meRes.data;
+              if (user && (user.tier === 'premium' || user.tier === 'pro')) user.tier = 'plus';
+              if (user?.subscription_tier) {
+                user.tier = (user.subscription_tier === 'premium' || user.subscription_tier === 'pro') ? 'plus' : user.subscription_tier;
+              }
+              useAuthStore.getState().setUser(user);
+            }
+          } catch { /* continue */ }
         }
 
-        // Route: no city → select city, unverified → verify, otherwise → tabs
+        // Route: no city → select city, otherwise → tabs
         if (!selectedCityId) {
           router.replace('/(auth)/select-city');
         } else {
           router.replace('/(tabs)');
         }
       } else {
-        const msg = (res.data as any)?.error || 'Invalid code. Please try again.';
+        const msg = raw?.error || raw?.data?.error || 'Invalid code. Please try again.';
         Alert.alert('Error', msg);
       }
     } catch {

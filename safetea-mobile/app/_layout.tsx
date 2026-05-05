@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors, APP_NAME_PLUS } from '../constants/colors';
@@ -14,10 +14,43 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useScreenshotPrevention();
+  const router = useRouter();
+  const segments = useSegments();
+  const user = useAuthStore((s) => s.user);
+  const [ready, setReady] = useState(false);
 
+  // Restore token and check auth on launch
   useEffect(() => {
-    api.restoreToken().then(() => SplashScreen.hideAsync());
+    (async () => {
+      await api.restoreToken();
+      // If we have a saved token, try to fetch user
+      if ((api as any).token) {
+        try {
+          const res = await api.getMe();
+          if (res.status === 200 && res.data) {
+            const u = (res.data as any).user || res.data;
+            if (u?.id) {
+              if (u.subscription_tier) {
+                u.tier = (u.subscription_tier === 'premium' || u.subscription_tier === 'pro') ? 'plus' : u.subscription_tier;
+              }
+              useAuthStore.getState().setUser(u);
+            }
+          }
+        } catch { /* token expired or invalid */ }
+      }
+      setReady(true);
+      SplashScreen.hideAsync();
+    })();
   }, []);
+
+  // Auth gate: redirect to login if not authenticated
+  useEffect(() => {
+    if (!ready) return;
+    const inAuthGroup = segments[0] === '(auth)';
+    if (!user && !inAuthGroup) {
+      router.replace('/(auth)/welcome');
+    }
+  }, [user, segments, ready]);
 
   useEffect(() => {
     if (Platform.OS !== 'ios') return;

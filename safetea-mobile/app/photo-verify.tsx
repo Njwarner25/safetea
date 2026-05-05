@@ -32,10 +32,11 @@ export default function PhotoVerifyScreen() {
   const pickImages = async () => {
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.8,
+      quality: 0.3,
       base64: true,
       allowsMultipleSelection: true,
       selectionLimit: 4,
+      exif: false,
     });
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       const picked = pickerResult.assets
@@ -44,7 +45,31 @@ export default function PhotoVerifyScreen() {
       setImages(picked);
       setResult(null);
       setError('');
+      // Auto-analyze immediately after picking
+      analyzeImages(picked);
     }
+  };
+
+  const analyzeImages = async (imgs: { uri: string; base64: string }[]) => {
+    if (imgs.length === 0) return;
+    setAnalyzing(true);
+    setError('');
+    setResult(null);
+    try {
+      const base64Images = imgs.map((img) => `data:image/jpeg;base64,${img.base64}`);
+      const res = await api.verifyPhotos(base64Images);
+      if (res.status === 200 && res.data) {
+        setResult(res.data);
+      } else if (res.status === 429) {
+        const d = res.data as any;
+        setError(d?.message || 'Monthly limit reached.');
+      } else {
+        setError((res.data as any)?.error || (res.data as any)?.message || 'Verification failed.');
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Network error. The image may be too large — try a smaller photo.');
+    }
+    setAnalyzing(false);
   };
 
   const handleAnalyze = async () => {

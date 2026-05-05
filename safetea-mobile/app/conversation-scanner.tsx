@@ -34,10 +34,11 @@ export default function ConversationScannerScreen() {
   const pickScreenshots = async () => {
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      quality: 0.8,
+      quality: 0.3,
       base64: true,
       allowsMultipleSelection: true,
       selectionLimit: 5,
+      exif: false,
     });
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       const picked = pickerResult.assets

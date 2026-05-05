@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors, APP_NAME_PLUS } from '../constants/colors';
+import { api } from '../services/api';
 import { useScreenshotPrevention } from '../utils/useScreenshotPrevention';
 import PulseAreYouOkayPrompt from '../components/pulse/PulseAreYouOkayPrompt';
 import { initIAP, setupPurchaseListener, endIAP } from '../services/iap';
@@ -15,7 +16,7 @@ export default function RootLayout() {
   useScreenshotPrevention();
 
   useEffect(() => {
-    SplashScreen.hideAsync();
+    api.restoreToken().then(() => SplashScreen.hideAsync());
   }, []);
 
   useEffect(() => {

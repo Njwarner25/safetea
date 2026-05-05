@@ -78,7 +78,7 @@ const TOP_LEVEL_SPLASH_IMG = IS_IOS_BUILD ? LINKHER.splashPath : SAFETEA.splashP
 const config: ExpoConfig = {
   name: TOP_LEVEL_NAME,
   slug: 'safetea',
-  version: '1.1.1',
+  version: '1.1.2',
   orientation: 'portrait',
   icon: TOP_LEVEL_ICON,
   userInterfaceStyle: 'dark',

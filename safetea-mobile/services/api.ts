@@ -11,10 +11,27 @@ class ApiClient {
 
   setToken(token: string) {
     this.token = token;
+    // Persist token for app restarts
+    try {
+      const SecureStore = require('expo-secure-store');
+      SecureStore.setItemAsync('auth_token', token).catch(() => {});
+    } catch { /* SecureStore not available */ }
   }
 
   clearToken() {
     this.token = null;
+    try {
+      const SecureStore = require('expo-secure-store');
+      SecureStore.deleteItemAsync('auth_token').catch(() => {});
+    } catch { /* SecureStore not available */ }
+  }
+
+  async restoreToken() {
+    try {
+      const SecureStore = require('expo-secure-store');
+      const saved = await SecureStore.getItemAsync('auth_token');
+      if (saved) this.token = saved;
+    } catch { /* no saved token */ }
   }
 
   private async request<T>(

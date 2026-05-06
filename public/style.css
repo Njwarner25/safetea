@@ -1,11 +1,12 @@
 /* ============ RESET & VARIABLES ============ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  /* Background — matches the dark plate of the LinkHer/SafeTea Rebrand3 logo so
-     the logo image blends into the page with no visible rectangular seam. */
-  --navy: #02011A;
-  --navy-light: #0E0820;
-  --navy-dark: #00000C;
+  /* Background — slightly darker than the original #1A1A2E to feel premium
+     without being pure black. The Rebrand3 logo's bg fades into this via a
+     CSS mask on .logo-img (no need for an exact color match). */
+  --navy: #0A0818;
+  --navy-light: #14102A;
+  --navy-dark: #04030E;
   /* Existing SafeTea coral pink — still in the logo via the SafeTea cup */
   --pink: #E8A0B5;
   --pink-dark: #D4768E;
@@ -65,11 +66,11 @@ h3 { font-size: 1.15rem; }
 /* ============ NAVBAR ============ */
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-  background: rgba(2, 1, 26, 0.9); backdrop-filter: blur(20px);
+  background: rgba(10, 8, 24, 0.9); backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255,255,255,0.04);
   padding: 12px 0;
 }
-.navbar.scrolled { background: rgba(2, 1, 26, 0.98); }
+.navbar.scrolled { background: rgba(10, 8, 24, 0.98); }
 .nav-container {
   max-width: 1140px; margin: 0 auto; padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
@@ -77,8 +78,16 @@ h3 { font-size: 1.15rem; }
 .logo { text-decoration: none; display: flex; align-items: center; }
 .logo-img {
   height: 80px; width: auto;
-  /* No drop-shadow — the new Rebrand3 logo is an opaque rectangle and the
-     filter would draw a visible halo around its rectangular edges. */
+  /* Soft radial mask fades the opaque image edges into the page bg so the
+     dark Rebrand3 plate doesn't need to color-match the navbar exactly. */
+  -webkit-mask-image: radial-gradient(ellipse at center, black 55%, transparent 95%);
+  mask-image: radial-gradient(ellipse at center, black 55%, transparent 95%);
+}
+/* Apply the same edge-fade trick to the larger hero illustration, which is
+   also the opaque Rebrand3 image. */
+.hero-illustration {
+  -webkit-mask-image: radial-gradient(ellipse at center, black 65%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, black 65%, transparent 100%);
 }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {

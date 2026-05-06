@@ -78,35 +78,13 @@ h3 { font-size: 1.15rem; }
 .logo { text-decoration: none; display: flex; align-items: center; }
 .logo-img {
   height: 80px; width: auto;
-  /* Combined treatment to fully hide the unified Rebrand3 logo's rectangular
-     edges:
-     1. mix-blend-mode: screen — dark plate pixels become transparent against
-        the page bg (screen = max(bg, fg) per channel).
-     2. mask-image radial-gradient — fades the very edges to fully transparent
-        so any residual JPEG-compression brightness at the rectangle boundary
-        can't betray the outline.
-     Together these eliminate both the bulk plate and the edge ghost. */
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
-  mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
+  /* Logo PNG now has real alpha transparency around the icon (the dark plate
+     was stripped via Pillow). No blend mode or mask trickery needed — the
+     page bg shows through naturally. */
 }
-.hero-illustration {
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at center, black 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 80% 80% at center, black 55%, transparent 100%);
-}
-.footer-logo {
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
-  mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
-}
-/* Apps-section banner uses the same wide unified marketing graphic — strongest
-   blend treatment since it's the largest occurrence on the page. */
-.brand-banner-blend {
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%);
-  mask-image: radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%);
-}
+/* Hero, footer, banner placements use the same alpha-stripped images, so
+   no blend trickery needed there either — kept selectors empty in case
+   future per-placement sizing tweaks are needed. */
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {
   color: var(--text-muted); text-decoration: none; font-size: 0.9rem;

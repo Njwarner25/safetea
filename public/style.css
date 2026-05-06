@@ -93,13 +93,16 @@ h3 { font-size: 1.15rem; }
 .logo-img {
   height: 80px; width: auto;
   background: transparent;
-  /* Defense-in-depth blend on top of the alpha-stripped PNG: screen drops
-     any residual dark pixels at compression boundaries, and the soft mask
-     feathers the very edges so no rectangular boundary can render. Ellipse
-     (not circle) so it doesn't crop the wide horizontal wordmark. */
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse 90% 95% at center, white 72%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 95% at center, white 72%, transparent 100%);
+  /* No mask — the alpha around the icons + wordmark is already clean, and a
+     mask was clipping the leftmost "L" / rightmost "a" of the wordmark. */
+}
+.footer-logo {
+  height: 60px; width: auto;
+  background: transparent;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 10px rgba(255, 61, 127, 0.25))
+          drop-shadow(0 0 20px rgba(123, 47, 255, 0.15));
+  /* Same alpha-stripped logo as the header, no mask, no wordmark clipping. */
 }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {

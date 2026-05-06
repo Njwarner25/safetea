@@ -78,14 +78,34 @@ h3 { font-size: 1.15rem; }
 .logo { text-decoration: none; display: flex; align-items: center; }
 .logo-img {
   height: 80px; width: auto;
-  /* mix-blend-mode: screen makes dark pixels in the opaque Rebrand3 logo
-     transparent (since screen returns max(bg, logo) per channel). The dark
-     plate disappears against the page bg; only the bright icons + text
-     remain visible. No mask cutoff, no color-match needed. */
+  /* Combined treatment to fully hide the unified Rebrand3 logo's rectangular
+     edges:
+     1. mix-blend-mode: screen — dark plate pixels become transparent against
+        the page bg (screen = max(bg, fg) per channel).
+     2. mask-image radial-gradient — fades the very edges to fully transparent
+        so any residual JPEG-compression brightness at the rectangle boundary
+        can't betray the outline.
+     Together these eliminate both the bulk plate and the edge ghost. */
   mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
 }
 .hero-illustration {
   mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at center, black 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 80% at center, black 55%, transparent 100%);
+}
+.footer-logo {
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 70% at center, black 50%, transparent 100%);
+}
+/* Apps-section banner uses the same wide unified marketing graphic — strongest
+   blend treatment since it's the largest occurrence on the page. */
+.brand-banner-blend {
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%);
+  mask-image: radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%);
 }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {

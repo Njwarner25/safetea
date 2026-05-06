@@ -1,10 +1,11 @@
 /* ============ RESET & VARIABLES ============ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  /* Background — pulled from the LinkHer/SafeTea logo dark plate */
-  --navy: #0D0B1A;
-  --navy-light: #1A0F2A;
-  --navy-dark: #06040F;
+  /* Background — matches the dark plate of the LinkHer/SafeTea Rebrand3 logo so
+     the logo image blends into the page with no visible rectangular seam. */
+  --navy: #02011A;
+  --navy-light: #0E0820;
+  --navy-dark: #00000C;
   /* Existing SafeTea coral pink — still in the logo via the SafeTea cup */
   --pink: #E8A0B5;
   --pink-dark: #D4768E;
@@ -76,7 +77,8 @@ h3 { font-size: 1.15rem; }
 .logo { text-decoration: none; display: flex; align-items: center; }
 .logo-img {
   height: 80px; width: auto;
-  filter: drop-shadow(0 0 20px rgba(232, 160, 181, 0.25)) drop-shadow(0 0 50px rgba(232, 160, 181, 0.08));
+  /* No drop-shadow — the new Rebrand3 logo is an opaque rectangle and the
+     filter would draw a visible halo around its rectangular edges. */
 }
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {

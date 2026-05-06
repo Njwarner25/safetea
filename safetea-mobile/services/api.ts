@@ -1,5 +1,3 @@
-import * as SecureStore from 'expo-secure-store';
-
 const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://getsafetea.app/api';
 
 interface ApiResponse<T> {
@@ -13,19 +11,14 @@ class ApiClient {
 
   setToken(token: string) {
     this.token = token;
-    SecureStore.setItemAsync('auth_token', token).catch(() => {});
   }
 
   clearToken() {
     this.token = null;
-    SecureStore.deleteItemAsync('auth_token').catch(() => {});
   }
 
   async restoreToken() {
-    try {
-      const saved = await SecureStore.getItemAsync('auth_token');
-      if (saved) this.token = saved;
-    } catch { /* no saved token */ }
+    // no-op for now
   }
 
   private async request<T>(

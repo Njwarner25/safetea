@@ -1,3 +1,36 @@
+// Capacitor (Android app) branding override.
+// The website serves the unified LinkHer/SafeTea Rebrand3 logo, but the
+// Android Capacitor wrapper should show SafeTea-only branding. The
+// safetea-mobile RN iOS app handles its own assets natively, so this only
+// fires on Android (Capacitor injects window.Capacitor in the WebView).
+(function () {
+  if (typeof window === 'undefined' || !window.Capacitor) return;
+
+  function applySafeTeaBranding() {
+    document.querySelectorAll('img').forEach(function (img) {
+      var src = img.getAttribute('src') || '';
+      if (/(^|\/)logo\.png(\?|$)/.test(src)) {
+        img.src = src.replace(/logo\.png/, 'logo-safetea.png');
+      } else if (src.indexOf('linkher-safetea-banner') !== -1) {
+        // Hero/banner image is the unified marketing graphic — fall back to
+        // the SafeTea-only SVG illustration on Android.
+        img.src = 'images/hero-illustration.svg';
+      }
+    });
+    document.querySelectorAll('.logo-img, .hero-illustration').forEach(function (el) {
+      // The SafeTea-only logo is not an opaque dark plate, so the screen
+      // blend-mode trick doesn't apply.
+      el.style.mixBlendMode = 'normal';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applySafeTeaBranding);
+  } else {
+    applySafeTeaBranding();
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Scroll Reveal ----

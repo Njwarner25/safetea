@@ -1,6 +1,6 @@
 {
-  "appId": "app.getsafetea",
-  "appName": "SafeTea",
+  "appId": "app.linkher.mobile",
+  "appName": "LinkHer",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
@@ -11,10 +11,7 @@
     "allowNavigation": [
       "getsafetea.app",
       "*.getsafetea.app",
-      "*.vercel.app",
-      "*.railway.app",
-      "verify.didit.me",
-      "*.didit.me"
+      "*.vercel.app"
     ]
   },
   "ios": {
@@ -26,14 +23,13 @@
     "allowMixedContent": false,
     "captureInput": true,
     "webContentsDebuggingEnabled": false,
-    "backgroundColor": "#1A1A2E",
-    "useLegacyBridge": false,
-    "adjustMarginsForEdgeToEdge": "force"
+    "backgroundColor": "#121826",
+    "useLegacyBridge": false
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1500,
-      "backgroundColor": "#1A1A2E",
+      "backgroundColor": "#121826",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
@@ -45,7 +41,7 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#1A1A2E",
+      "backgroundColor": "#121826",
       "overlaysWebView": false
     },
     "Keyboard": {

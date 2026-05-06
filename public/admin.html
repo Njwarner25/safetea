@@ -12,7 +12,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>Admin Dashboard - SafeTea</title>
+    <title>Admin Dashboard - LinkHer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
@@ -207,7 +207,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="admin-sidebar">
         <div class="sidebar-logo">
-            <img src="/logo.png" alt="SafeTea">
+            <img src="/linkher-icon.png" alt="LinkHer">
             <span>safetea</span>
             <span class="sidebar-badge">ADMIN</span>
         </div>
@@ -514,7 +514,7 @@
             <div id="section-watermark" class="section">
                 <div class="card">
                     <h3><i class="fas fa-fingerprint"></i> Steganographic Watermark Decoder</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Upload a screenshot or leaked image to decode the embedded viewer ID. Every photo on SafeTea is invisibly watermarked with the viewer's user ID — if someone screenshots and shares it, this tool traces it back to them.</p>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Upload a screenshot or leaked image to decode the embedded viewer ID. Every photo on LinkHer is invisibly watermarked with the viewer's user ID — if someone screenshots and shares it, this tool traces it back to them.</p>
                     <div id="wm-drop-zone" style="border:2px dashed rgba(232,160,181,0.3);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(232,160,181,0.03)" ondragover="event.preventDefault();this.style.borderColor='#E8A0B5';this.style.background='rgba(232,160,181,0.08)'" ondragleave="this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)'" ondrop="event.preventDefault();this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)';handleWmDrop(event)" onclick="document.getElementById('wm-file-input').click()">
                         <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>
                         <p style="color:#fff;font-weight:600;margin-bottom:4px">Drop an image here or click to upload</p>
@@ -1979,7 +1979,7 @@
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '20px Inter, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('SafeTea Watermark Test — userId=' + testUserId, w / 2, h / 2);
+                ctx.fillText('LinkHer Watermark Test — userId=' + testUserId, w / 2, h / 2);
                 ctx.font = '14px Inter, sans-serif';
                 ctx.fillText('Upload this to the decoder above to verify', w / 2, h / 2 + 30);
 
@@ -2297,7 +2297,7 @@
                 }
 
                 if (!data.viewer && !data.uploader) {
-                    html += '<p style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> No watermark detected. The image may not have been viewed through SafeTea, or the watermark was removed.</p>';
+                    html += '<p style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> No watermark detected. The image may not have been viewed through LinkHer, or the watermark was removed.</p>';
                 }
 
                 if (data.aiResponse && data.aiResponse.notes) {

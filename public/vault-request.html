@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#E8A0B5">
-  <title>Request access — SafeTea</title>
-  <meta name="description" content="SafeTea Vault portal for named trusted contacts.">
+  <title>Request access — LinkHer</title>
+  <meta name="description" content="LinkHer Vault portal for named trusted contacts.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,12 +48,12 @@
 </head>
 <body>
   <div class="container">
-    <div class="brand"><span>SafeTea</span> <span style="color:#8080A0;font-weight:500">&middot; Vault portal</span></div>
+    <div class="brand"><span>LinkHer</span> <span style="color:#8080A0;font-weight:500">&middot; Vault portal</span></div>
 
     <!-- Step 1: identify -->
     <div id="step-identify" class="card">
       <h1>You were named a trusted contact</h1>
-      <p class="sub">Enter the email address the SafeTea member used when they added you. We'll send you a one-time code to continue.</p>
+      <p class="sub">Enter the email address the LinkHer member used when they added you. We'll send you a one-time code to continue.</p>
       <label class="field-label" for="email">Your email</label>
       <input id="email" class="field-input" type="email" placeholder="name@example.com" autocomplete="email">
       <div id="err-identify" class="err" style="display:none"></div>
@@ -100,13 +100,13 @@
     <!-- Stub: approved (slice 9 replaces with real shared folder) -->
     <div id="step-approved" class="card step-hidden">
       <h1>Access was approved</h1>
-      <p class="sub">The shared material is being prepared. When it's ready, you'll receive a separate email from SafeTea with a link to the read-only folder. That link is private to you — do not share it.</p>
+      <p class="sub">The shared material is being prepared. When it's ready, you'll receive a separate email from LinkHer with a link to the read-only folder. That link is private to you — do not share it.</p>
       <p class="sub" style="color:#9474c0">If you don't receive the follow-up email within a few minutes, check your spam folder or reply to the approval email.</p>
     </div>
 
     <div class="footer">
-      <p>This page is for named trusted contacts only. SafeTea does not create accounts for you.</p>
-      <p style="margin-top:6px"><a href="/" style="color:#8080A0">Go to SafeTea home</a></p>
+      <p>This page is for named trusted contacts only. LinkHer does not create accounts for you.</p>
+      <p style="margin-top:6px"><a href="/" style="color:#8080A0">Go to LinkHer home</a></p>
     </div>
   </div>
 
@@ -129,7 +129,7 @@
     // If no token in the URL, the page was opened directly — nothing to do.
     if (!inviteToken) {
       document.getElementById('step-identify').innerHTML =
-        '<h1>This link looks incomplete</h1><p class="sub">Open the SafeTea email you received and tap the link in that email. If you didn\'t receive one, you haven\'t been named a trusted contact yet.</p>';
+        '<h1>This link looks incomplete</h1><p class="sub">Open the LinkHer email you received and tap the link in that email. If you didn\'t receive one, you haven\'t been named a trusted contact yet.</p>';
       return;
     }
 
@@ -208,7 +208,7 @@
           if (!r.ok) throw new Error(r.data && r.data.error || 'Could not load folders');
           state.folders = r.data.folders || [];
           if (!state.folders.length) {
-            errOn(el.errOtp, 'You have not been authorized for any folders yet. Contact the SafeTea member directly.');
+            errOn(el.errOtp, 'You have not been authorized for any folders yet. Contact the LinkHer member directly.');
             return;
           }
           el.folder.innerHTML = state.folders.map(function (f) {

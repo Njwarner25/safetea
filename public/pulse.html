@@ -20,11 +20,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="SafeTea">
-    <meta name="application-name" content="SafeTea">
+    <meta name="apple-mobile-web-app-title" content="LinkHer">
+    <meta name="application-name" content="LinkHer">
     <meta name="format-detection" content="telephone=no">
-    <title>SafeTea Pulse — Real-time safety watch</title>
-    <meta name="description" content="SafeTea Pulse — real-time safety awareness during active sessions. Detects inactivity, route changes, and missed check-ins, and alerts your trusted contact on no response.">
+    <title>LinkHer Pulse — Real-time safety watch</title>
+    <meta name="description" content="LinkHer Pulse — real-time safety awareness during active sessions. Detects inactivity, route changes, and missed check-ins, and alerts your trusted contact on no response.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -147,7 +147,7 @@
         <div class="hero">
             <div class="hero-icon"><i class="fas fa-heartbeat"></i></div>
             <div class="tagline">Real-time safety watch</div>
-            <h1>SafeTea Pulse</h1>
+            <h1>LinkHer Pulse</h1>
             <p>Pulse watches over you while you're walking, on a date, or headed somewhere — and alerts your trusted contact if something seems off.</p>
         </div>
 
@@ -278,7 +278,7 @@
         </div>
 
         <div class="footer-note">
-            <i class="fas fa-shield-alt"></i> Pulse runs locally in your browser or in the SafeTea app. End your session when you're safe.
+            <i class="fas fa-shield-alt"></i> Pulse runs locally in your browser or in the LinkHer app. End your session when you're safe.
         </div>
     </div>
 
@@ -403,8 +403,8 @@
             el.btnStart.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting…';
 
             // Ask for location once up front (mobile-native via bridge, web fallback inside bridge)
-            var geoPromise = (window.SafeTeaNative && window.SafeTeaNative.geo)
-                ? window.SafeTeaNative.geo.current().catch(function () { return null; })
+            var geoPromise = (window.LinkHerNative && window.LinkHerNative.geo)
+                ? window.LinkHerNative.geo.current().catch(function () { return null; })
                 : Promise.resolve(null);
 
             geoPromise.then(function (pos) {
@@ -434,7 +434,7 @@
 
                     if (pos) patchSession({ lastKnownLocation: { latitude: pos.lat, longitude: pos.lng } });
 
-                    if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+                    if (window.LinkHerNative) window.LinkHerNative.haptics.notify('SUCCESS');
                     document.body.dataset.safeteaSessionActive = '1';
 
                     enterActive();
@@ -479,9 +479,9 @@
 
         function firePrompt(anomalyType, message) {
             if (state.promptTimer) return; // already showing
-            var hasBridge = window.SafeTeaNative && window.SafeTeaNative.safetyPrompt;
+            var hasBridge = window.LinkHerNative && window.LinkHerNative.safetyPrompt;
             if (hasBridge) {
-                window.SafeTeaNative.safetyPrompt({
+                window.LinkHerNative.safetyPrompt({
                     message: message,
                     timeoutSec: 30,
                     onOk: function () { handleSafe(anomalyType); },
@@ -495,22 +495,22 @@
         }
 
         function handleSafe(anomalyType) {
-            if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+            if (window.LinkHerNative) window.LinkHerNative.haptics.notify('SUCCESS');
             toast('Checked in · Pulse still watching');
             // Refresh location + move the anchor forward
-            var geo = (window.SafeTeaNative && window.SafeTeaNative.geo) ? window.SafeTeaNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
+            var geo = (window.LinkHerNative && window.LinkHerNative.geo) ? window.LinkHerNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
             geo.then(function (pos) {
                 patchSession(pos ? { lastKnownLocation: { latitude: pos.lat, longitude: pos.lng }, anomalyType: null } : { anomalyType: null });
             });
         }
 
         function handleEscalate(anomalyType, reason) {
-            if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('ERROR');
+            if (window.LinkHerNative) window.LinkHerNative.haptics.notify('ERROR');
             el.statusPill.classList.remove('watching');
             el.statusPill.classList.add('alert');
             el.statusPill.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Alerting contact';
 
-            var geo = (window.SafeTeaNative && window.SafeTeaNative.geo) ? window.SafeTeaNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
+            var geo = (window.LinkHerNative && window.LinkHerNative.geo) ? window.LinkHerNative.geo.current().catch(function(){return null;}) : Promise.resolve(null);
             geo.then(function (pos) {
                 h('POST', '/api/pulse/escalate', {
                     sessionKey: state.sessionKey,
@@ -531,7 +531,7 @@
 
         // Manual check-in
         el.btnCheckin.addEventListener('click', function () {
-            if (window.SafeTeaNative) window.SafeTeaNative.haptics.impact('Light');
+            if (window.LinkHerNative) window.LinkHerNative.haptics.impact('Light');
             handleSafe('manual_checkin');
             state.nextPromptAt = Date.now() + state.checkinIntervalMs;
         });
@@ -543,7 +543,7 @@
                 clearInterval(state.tickTimer);
                 localStorage.removeItem(SESSION_STATE);
                 document.body.dataset.safeteaSessionActive = '0';
-                if (window.SafeTeaNative) window.SafeTeaNative.haptics.notify('SUCCESS');
+                if (window.LinkHerNative) window.LinkHerNative.haptics.notify('SUCCESS');
                 toast('Session ended · Stay safe');
                 setTimeout(function () { window.location.reload(); }, 900);
             });

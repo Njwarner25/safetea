@@ -16,7 +16,7 @@ export default function ProfileScreen() {
         <View style={styles.loginPrompt}>
           <FontAwesome5 name="user-circle" size={60} color={Colors.textMuted} />
           <Text style={styles.loginTitle}>Sign in to {APP_NAME}</Text>
-          <Pressable style={styles.loginBtn} onPress={() => router.push('/(auth)/login')}>
+          <Pressable style={styles.loginBtn} onPress={() => router.replace('/(auth)/welcome')}>
             <Text style={styles.loginBtnText}>Sign In</Text>
           </Pressable>
         </View>

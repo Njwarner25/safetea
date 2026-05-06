@@ -28,8 +28,8 @@ export default function TabLayout() {
         headerTitleStyle: { fontWeight: '700' },
         headerRight: () => (
           <Image
-            source={require('../../assets/logo.png')}
-            style={{ width: 32, height: 32, marginRight: 16 }}
+            source={require('../../assets/logo-linkher.png')}
+            style={{ width: 80, height: 32, marginRight: 16 }}
             resizeMode="contain"
           />
         ),

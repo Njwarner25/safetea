@@ -715,11 +715,10 @@
       <p style="color:var(--text-muted);font-size:1.05rem;line-height:1.6">SafeTea on Android. LinkHer on iOS. Same backend, same community, same mission — built natively for each platform.</p>
     </div>
 
-    <!-- Designer-delivered launch graphic — same asset as the hero illustration. Drop the PNG at public/images/linkher-safetea-banner.png. If missing, the CSS app-cards below render as a fallback. -->
+    <!-- Designer-delivered launch graphic — alpha-stripped PNG so transparent pixels show the page bg naturally. Drop a replacement at public/images/linkher-safetea-banner.png any time. -->
     <img src="images/linkher-safetea-banner.png"
          alt="LinkHer for iOS and SafeTea for Android — Stay Connected. Stay Safe."
-         class="brand-banner-blend"
-         style="max-width:1100px;width:100%;display:block;margin:0 auto 64px;border-radius:24px"
+         style="max-width:1100px;width:100%;display:block;margin:0 auto 64px"
          onerror="this.style.display='none'">
 
     <div class="apps-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto">
@@ -1205,7 +1204,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand-block">
-        <img src="logo.png" alt="LinkHer/SafeTea" class="footer-logo" style="mix-blend-mode:screen">
+        <img src="logo.png" alt="LinkHer/SafeTea" class="footer-logo">
         <p>SafeTea™. Verified humans. Real safety.</p>
       </div>
       <div class="footer-col">

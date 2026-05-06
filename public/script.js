@@ -11,16 +11,13 @@
       var src = img.getAttribute('src') || '';
       if (/(^|\/)logo\.png(\?|$)/.test(src)) {
         img.src = src.replace(/logo\.png/, 'logo-safetea.png');
+        img.style.mixBlendMode = 'normal';
       } else if (src.indexOf('linkher-safetea-banner') !== -1) {
         // Hero/banner image is the unified marketing graphic — fall back to
         // the SafeTea-only SVG illustration on Android.
         img.src = 'images/hero-illustration.svg';
+        img.style.mixBlendMode = 'normal';
       }
-    });
-    document.querySelectorAll('.logo-img, .hero-illustration').forEach(function (el) {
-      // The SafeTea-only logo is not an opaque dark plate, so the screen
-      // blend-mode trick doesn't apply.
-      el.style.mixBlendMode = 'normal';
     });
   }
 

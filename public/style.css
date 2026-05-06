@@ -75,16 +75,32 @@ h3 { font-size: 1.15rem; }
   max-width: 1140px; margin: 0 auto; padding: 0 24px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.logo { text-decoration: none; display: flex; align-items: center; }
+.logo {
+  text-decoration: none; display: flex; align-items: center;
+  /* Wrapper carries the neon glow filter so it spreads from the visible
+     (alpha-shaped) icons and not from the rectangular image bounds. */
+  background: transparent;
+  filter: drop-shadow(0 0 12px rgba(255, 61, 127, 0.35))
+          drop-shadow(0 0 24px rgba(123, 47, 255, 0.18));
+  opacity: 0.96;
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 16px rgba(255, 61, 127, 0.5))
+          drop-shadow(0 0 32px rgba(123, 47, 255, 0.28));
+  opacity: 1;
+}
 .logo-img {
   height: 80px; width: auto;
-  /* Logo PNG now has real alpha transparency around the icon (the dark plate
-     was stripped via Pillow). No blend mode or mask trickery needed — the
-     page bg shows through naturally. */
+  background: transparent;
+  /* Defense-in-depth blend on top of the alpha-stripped PNG: screen drops
+     any residual dark pixels at compression boundaries, and the soft mask
+     feathers the very edges so no rectangular boundary can render. Ellipse
+     (not circle) so it doesn't crop the wide horizontal wordmark. */
+  mix-blend-mode: screen;
+  -webkit-mask-image: radial-gradient(ellipse 90% 95% at center, white 72%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 95% at center, white 72%, transparent 100%);
 }
-/* Hero, footer, banner placements use the same alpha-stripped images, so
-   no blend trickery needed there either — kept selectors empty in case
-   future per-placement sizing tweaks are needed. */
 .nav-links { display: flex; gap: 32px; }
 .nav-links a {
   color: var(--text-muted); text-decoration: none; font-size: 0.9rem;

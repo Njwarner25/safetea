@@ -4,21 +4,40 @@ import { Colors } from '../../constants/colors';
 
 const LINKHER_REBRAND_JS = `
 (function() {
-  // Replace SafeTea text with LinkHer throughout the page
+  var TEACUP_HOT = '☕';           // ☕ U+2615 hot beverage
+  var TEACUP_PLAIN = '🍵';   // 🍵 U+1F375 teacup without handle
+  var LINKHER_LOGO = 'https://getsafetea.app/images/icon-linkher.png';
+
   function rebrand() {
-    // Text replacements
+    // Text replacements: SafeTea -> LinkHer + strip legacy teacup emojis
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     while (walker.nextNode()) {
       var node = walker.currentNode;
-      if (node.nodeValue && node.nodeValue.indexOf('SafeTea') !== -1) {
-        node.nodeValue = node.nodeValue.replace(/SafeTea\\+/g, 'LinkHer+').replace(/SafeTea/g, 'LinkHer');
+      var v = node.nodeValue;
+      if (!v) continue;
+      var nv = v;
+      if (nv.indexOf('SafeTea') !== -1) {
+        nv = nv.replace(/SafeTea\\+/g, 'LinkHer+').replace(/SafeTea/g, 'LinkHer');
       }
+      if (nv.indexOf(TEACUP_HOT) !== -1) {
+        nv = nv.split(TEACUP_HOT).join('');
+      }
+      if (nv.indexOf(TEACUP_PLAIN) !== -1) {
+        nv = nv.split(TEACUP_PLAIN).join('');
+      }
+      if (nv !== v) node.nodeValue = nv;
     }
 
-    // Replace logo images
-    var imgs = document.querySelectorAll('img[src*="logo"], img[alt*="SafeTea"], img[alt*="safetea"]');
+    // Swap SafeTea logo images to LinkHer logo + rewrite alt text
+    var imgs = document.querySelectorAll('img');
     imgs.forEach(function(img) {
-      img.alt = img.alt.replace(/SafeTea/g, 'LinkHer');
+      var rawSrc = img.getAttribute('src') || '';
+      if (/logo\\.png/i.test(rawSrc) && (img.src || '').indexOf('icon-linkher.png') === -1) {
+        img.src = LINKHER_LOGO;
+      }
+      if (img.alt && img.alt.indexOf('SafeTea') !== -1) {
+        img.alt = img.alt.replace(/SafeTea/g, 'LinkHer');
+      }
     });
 
     // Update page title

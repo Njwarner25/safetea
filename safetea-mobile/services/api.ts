@@ -337,6 +337,54 @@ class ApiClient {
   async getTetherStatus(sessionId: number) {
     return this.request('/tether/status?session_id=' + sessionId);
   }
+
+  // AI Companion — settings
+  async getCompanionSettings() {
+    return this.request<{ settings: { companion_name: string; avatar_style: string; theme_color: string; tone: string } | null }>('/ai/settings');
+  }
+
+  async saveCompanionSettings(data: { companion_name: string; avatar_style: string; theme_color: string; tone: string }) {
+    return this.request<{ settings: { companion_name: string; avatar_style: string; theme_color: string; tone: string } }>('/ai/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // AI Companion — chat
+  async getCompanionHistory(limit: number = 50) {
+    return this.request<{ messages: { id: string; role: 'user' | 'assistant'; content: string; created_at: string }[] }>('/ai/chat?limit=' + limit);
+  }
+
+  async sendCompanionMessage(message: string) {
+    return this.request<{ reply: string; message_id: string; created_at: string }>('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  }
+
+  // AI Companion — journal
+  async listJournalEntries(limit: number = 50) {
+    return this.request<{ entries: any[] }>('/ai/journal?limit=' + limit);
+  }
+
+  async createJournalEntry(data: {
+    title?: string;
+    content: string;
+    mood?: string;
+    topic?: string;
+    tags?: string[];
+    is_documentation?: boolean;
+    save_to_vault_folder_id?: number;
+  }) {
+    return this.request<{ entry: any }>('/ai/journal', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteJournalEntry(id: string) {
+    return this.request<any>('/ai/journal?id=' + id, { method: 'DELETE' });
+  }
 }
 
 export const api = new ApiClient();

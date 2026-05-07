@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../../constants/colors';
 import { usePostStore, PostCategory, Post } from '../../store/postStore';
 import { useCityStore } from '../../store/cityStore';
+import { useAiCompanionStore, getThemeById, getAvatarById as getCompanionAvatar } from '../../store/aiCompanionStore';
 import { getAvatarById } from '../../constants/avatars';
 import { truncateText } from '../../utils/validators';
 import { api } from '../../services/api';
@@ -118,6 +119,50 @@ function DidYouKnowCard() {
   );
 }
 
+function CompanionCard() {
+  const { companionName, avatar, theme } = useAiCompanionStore();
+  const themeOpt = getThemeById(theme);
+  const avatarOpt = getCompanionAvatar(avatar);
+
+  function handlePress() {
+    if (companionName) {
+      router.push('/companion');
+    } else {
+      router.push('/companion/onboarding');
+    }
+  }
+
+  return (
+    <Pressable
+      style={[styles.companionCard, { borderColor: themeOpt.primary + '40' }]}
+      onPress={handlePress}
+    >
+      <View style={[styles.companionAvatar, { backgroundColor: themeOpt.primary + '33' }]}>
+        <FontAwesome5 name={avatarOpt.icon} size={20} color={themeOpt.primary} />
+      </View>
+      <View style={styles.companionBody}>
+        <Text style={styles.companionTitle}>{companionName ? companionName : 'AI Companion'}</Text>
+        <Text style={styles.companionSubtitle}>
+          {companionName ? 'Private support, journaling, and safety guidance.' : 'Meet your private AI safety assistant.'}
+        </Text>
+      </View>
+      <View style={[styles.companionCta, { backgroundColor: themeOpt.primary }]}>
+        <Text style={styles.companionCtaText}>{companionName ? 'Open' : 'Set up'}</Text>
+        <FontAwesome5 name="chevron-right" size={10} color={Colors.textInverse} />
+      </View>
+    </Pressable>
+  );
+}
+
+function FeedHeader() {
+  return (
+    <>
+      <CompanionCard />
+      <DidYouKnowCard />
+    </>
+  );
+}
+
 export default function FeedScreen() {
   const { filter, setFilter, getFilteredPosts, setPosts, setLoading } = usePostStore();
   const { getSelectedCity } = useCityStore();
@@ -176,7 +221,7 @@ export default function FeedScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <PostCard post={item} onReport={setReportPostId} />}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={<DidYouKnowCard />}
+        ListHeaderComponent={<FeedHeader />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.coral} />}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -254,4 +299,33 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: Spacing.sm,
   },
+  companionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    gap: Spacing.md,
+  },
+  companionAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  companionBody: { flex: 1 },
+  companionTitle: { fontSize: FontSize.md, fontWeight: '700', color: Colors.textPrimary },
+  companionSubtitle: { fontSize: FontSize.xs, color: Colors.textMuted, marginTop: 2, lineHeight: 16 },
+  companionCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.full,
+  },
+  companionCtaText: { color: Colors.textInverse, fontSize: FontSize.xs, fontWeight: '700' },
 });

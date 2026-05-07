@@ -86,6 +86,10 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen name="companion/index" options={{ headerShown: false }} />
+        <Stack.Screen name="companion/onboarding" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="companion/settings" options={{ headerShown: false }} />
+        <Stack.Screen name="companion/journal" options={{ headerShown: false }} />
       </Stack>
       <PulseAreYouOkayPrompt />
     </>

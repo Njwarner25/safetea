@@ -2,9 +2,8 @@
   "appId": "app.linkher.mobile",
   "appName": "LinkHer",
   "webDir": "www",
-  "bundledWebRuntime": false,
   "server": {
-    "url": "https://getsafetea.app",
+    "url": "https://getsafetea.app/login",
     "cleartext": false,
     "androidScheme": "https",
     "iosScheme": "https",
@@ -28,8 +27,9 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
-      "backgroundColor": "#121826",
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "backgroundColor": "#02011A",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,

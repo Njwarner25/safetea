@@ -508,6 +508,15 @@
                     </div>
                     <div id="delete-user-result" style="margin-top:12px"></div>
                 </div>
+                <div class="card" style="margin-top:16px">
+                    <h3><i class="fas fa-shield-heart" style="color:#E8A0B5"></i> Alessia (AI Companion) Diagnostics</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Verify the OpenAI key is wired and the three required tables exist. If <em>Alessia is not online</em> errors appear in the app, hit <strong>Check Health</strong> first — if any table is missing, hit <strong>Run Migration</strong> to create them.</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-primary" onclick="alessiaHealth()"><i class="fas fa-heart-pulse"></i> Check Health</button>
+                        <button class="btn btn-secondary" onclick="alessiaMigrate()"><i class="fas fa-database"></i> Run Migration</button>
+                    </div>
+                    <div id="alessia-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
+                </div>
             </div>
 
             <!-- WATERMARK DECODER -->
@@ -1558,6 +1567,51 @@
                 document.getElementById('delete-user-email').value = '';
             } catch (err) {
                 resultEl.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        // ===== ALESSIA DIAGNOSTICS =====
+        function renderAlessiaResult(data, kind) {
+            var el = document.getElementById('alessia-result');
+            el.style.display = 'block';
+            var pretty = JSON.stringify(data, null, 2);
+            var badge;
+            if (kind === 'health') {
+                badge = data.ok
+                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> All systems green.</span>'
+                    : '<span style="color:#f1c40f;font-weight:600"><i class="fas fa-triangle-exclamation"></i> ' + escapeHtml(data.notes || 'Something is not configured.') + '</span>';
+            } else {
+                badge = (data.ok || data.success)
+                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Migration applied.</span>'
+                    : '<span style="color:#e74c3c;font-weight:600"><i class="fas fa-times-circle"></i> ' + escapeHtml(data.error || 'Migration failed.') + '</span>';
+            }
+            el.innerHTML = badge + '<pre style="margin-top:10px;font-size:12px;color:#B0B0C8;overflow:auto;max-height:340px">' + escapeHtml(pretty) + '</pre>';
+        }
+        async function alessiaHealth() {
+            var el = document.getElementById('alessia-result');
+            el.style.display = 'block';
+            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Checking…</span>';
+            try {
+                var res = await fetch(API_BASE + '/ai/_health', { headers: authHeaders() });
+                var data = await res.json();
+                renderAlessiaResult(data, 'health');
+            } catch (err) {
+                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+        async function alessiaMigrate() {
+            if (!confirm('Run the AI Companion migration? Idempotent — safe to re-run.')) return;
+            var el = document.getElementById('alessia-result');
+            el.style.display = 'block';
+            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Migrating…</span>';
+            try {
+                var res = await fetch(API_BASE + '/migrate-ai-companion', { headers: authHeaders() });
+                var data = await res.json();
+                renderAlessiaResult(data, 'migrate');
+                // Re-run health check automatically so the user sees a green status after
+                setTimeout(alessiaHealth, 400);
+            } catch (err) {
+                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
             }
         }
 

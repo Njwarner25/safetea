@@ -604,7 +604,7 @@
         // not from the package root. The root is server-only (handleUpload,
         // put, head, del) and would throw "upload is not a function".
         setProgress('Uploading ' + file.name + '…', true);
-        var mod = await import('https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.3/client/+esm');
+        var mod = await import('/js/blob-client.js');
         var blobUpload = mod.upload || (mod.default && mod.default.upload);
         if (typeof blobUpload !== 'function') {
           throw new Error('Blob client upload() not found — check @vercel/blob version');

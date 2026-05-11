@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SafeTea">
+  <meta name="application-name" content="SafeTea">
+  <meta name="format-detection" content="telephone=no">
+  <title>Tether — SafeTea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js" defer></script>
+  <script src="/capacitor-bridge.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0D0D1A; color: #fff; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { max-width: 740px; margin: 0 auto; padding: 24px 20px 160px; }
+
+    .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: #E8A0B5; font-size: 13px; text-decoration: none; font-weight: 500; }
+    .quick-exit { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: #B0B0C8; padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit; }
+    .quick-exit:hover { border-color: rgba(232,160,181,0.4); color: #fff; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .hero { text-align: center; padding: 40px 0 24px; }
+    .hero-icon { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #E8A0B5, #9B59B6); display: inline-flex; align-items: center; justify-content: center; font-size: 30px; color: #fff; margin-bottom: 16px; box-shadow: 0 12px 40px rgba(232,160,181,0.3); }
+    .hero-title { font-size: 28px; font-weight: 800; letter-spacing: -0.3px; }
+    .hero-sub { color: #B0B0C8; font-size: 15px; margin-top: 6px; }
+
+    .big-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 20px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; transition: transform 0.15s, opacity 0.15s; }
+    .big-btn:active { transform: scale(0.98); }
+    .big-btn.primary { background: linear-gradient(135deg, #FF6BA8, #E8A0B5); color: #fff; }
+    .big-btn.secondary { background: rgba(155,89,182,0.12); color: #b27de0; border: 1px solid rgba(155,89,182,0.3); }
+    .big-btn.danger { background: rgba(231,76,60,0.16); color: #ff7a6c; border: 1px solid rgba(231,76,60,0.3); }
+    .big-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+    .btn-stack { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+
+    .explainer-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 18px 20px; margin-top: 28px; }
+    .explainer-title { font-size: 13px; font-weight: 700; color: #E8A0B5; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .explainer-text { font-size: 13px; color: #B0B0C8; line-height: 1.6; }
+
+    .section-card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 22px; margin-top: 18px; }
+    .section-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .section-sub { font-size: 13px; color: #B0B0C8; margin-bottom: 16px; }
+
+    .field { margin-bottom: 18px; }
+    .field-label { display: block; font-size: 12px; font-weight: 700; color: #B0B0C8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+    .field-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 15px; font-family: inherit; }
+    .field-input:focus { outline: none; border-color: rgba(232,160,181,0.5); }
+    .field-input.code { font-size: 24px; font-weight: 700; letter-spacing: 6px; text-align: center; }
+
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #B0B0C8; padding: 9px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .chip.active { background: rgba(232,160,181,0.18); border-color: rgba(232,160,181,0.5); color: #fff; }
+    .chip:hover { border-color: rgba(232,160,181,0.3); }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+    .toggle-row + .toggle-row { border-top: 1px solid rgba(255,255,255,0.06); }
+    .toggle-label { font-size: 14px; font-weight: 600; }
+    .toggle-help { font-size: 12px; color: #8080A0; margin-top: 2px; }
+    .switch { position: relative; width: 44px; height: 26px; background: rgba(255,255,255,0.08); border-radius: 999px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .switch.on { background: linear-gradient(135deg, #FF6BA8, #E8A0B5); }
+    .switch-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .switch.on .switch-knob { transform: translateX(18px); }
+
+    .unit-toggle { display: inline-flex; background: rgba(255,255,255,0.04); border-radius: 999px; padding: 3px; border: 1px solid rgba(255,255,255,0.06); }
+    .unit-toggle button { background: none; border: none; padding: 4px 12px; font-size: 11px; font-weight: 600; color: #8080A0; border-radius: 999px; cursor: pointer; font-family: inherit; }
+    .unit-toggle button.active { background: rgba(232,160,181,0.16); color: #fff; }
+
+    .code-display { background: linear-gradient(135deg, rgba(232,61,127,0.12), rgba(155,89,182,0.12)); border: 1px solid rgba(232,160,181,0.3); border-radius: 14px; padding: 24px; text-align: center; }
+    .code-label { font-size: 12px; font-weight: 700; color: #E8A0B5; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
+    .code-value { font-size: 42px; font-weight: 800; letter-spacing: 10px; color: #fff; font-variant-numeric: tabular-nums; }
+    .code-help { font-size: 12px; color: #B0B0C8; margin-top: 10px; }
+    .copy-row { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+    .copy-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 7px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    .member-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .member-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+    .member-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #FF6BA8, #9B59B6); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .member-meta { flex: 1; min-width: 0; }
+    .member-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-status { font-size: 11px; color: #8080A0; margin-top: 2px; }
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: #2ecc71; vertical-align: middle; }
+    .status-dot.warn { background: #f39c12; }
+    .status-dot.bad { background: #e74c3c; }
+    .status-dot.gone { background: #8080A0; }
+    .member-distance { font-size: 11px; color: #B0B0C8; padding: 4px 9px; background: rgba(255,255,255,0.05); border-radius: 999px; flex-shrink: 0; }
+    .member-distance.over { background: rgba(231,76,60,0.18); color: #ff8074; }
+    .host-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; background: rgba(232,160,181,0.18); color: #E8A0B5; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.6px; margin-left: 6px; }
+
+    .map-container { width: 100%; height: 360px; border-radius: 14px; overflow: hidden; margin-top: 16px; background: #0F0F1E; border: 1px solid rgba(255,255,255,0.06); position: relative; }
+    .map-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: #8080A0; font-size: 13px; text-align: center; padding: 24px; }
+    .map-fallback i { font-size: 24px; }
+
+    .alert-bar { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.4); color: #ff8074; padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+    .alert-bar i { font-size: 16px; }
+    .alert-bar.hidden { display: none; }
+
+    .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .session-name { font-size: 18px; font-weight: 800; }
+    .session-meta { font-size: 12px; color: #8080A0; margin-top: 2px; }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A2E; border: 1px solid rgba(255,255,255,0.1); padding: 11px 18px; border-radius: 999px; font-size: 13px; color: #fff; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-nav">
+      <a href="/dashboard" class="back-link"><i class="fa-solid fa-chevron-left"></i> Dashboard</a>
+      <button class="quick-exit" onclick="window.location.href='/'">Exit</button>
+    </div>
+
+    <!-- IDLE -->
+    <div id="view-idle" class="view active">
+      <div class="hero">
+        <div class="hero-icon"><i class="fa-solid fa-link"></i></div>
+        <div class="hero-title">Tether</div>
+        <div class="hero-sub">Stay connected with your group</div>
+      </div>
+      <div class="btn-stack">
+        <button class="big-btn primary" onclick="goView('config')">
+          <i class="fa-solid fa-plus"></i> Start Tether
+        </button>
+        <button class="big-btn secondary" onclick="goView('join')">
+          <i class="fa-solid fa-right-to-bracket"></i> Join Tether
+        </button>
+      </div>
+      <div class="explainer-card">
+        <div class="explainer-title">How it works</div>
+        <div class="explainer-text">
+          Create a group of 5–10 people on a trip together. Pick a distance — if anyone drifts beyond it,
+          everyone in the group gets notified. See live locations on the map, ping anyone, and end the
+          session when you're all back together.
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG (create flow) -->
+    <div id="view-config" class="view">
+      <div class="header-row">
+        <div>
+          <div class="session-name">New Tether</div>
+          <div class="session-meta">Configure your group session</div>
+        </div>
+        <button class="quick-exit" onclick="goView('idle')">Cancel</button>
+      </div>
+
+      <div class="section-card">
+        <div class="field">
+          <label class="field-label" for="session-name-input">Session name</label>
+          <input id="session-name-input" class="field-input" type="text" maxlength="120" placeholder="e.g., Vegas trip"
+                 autocomplete="off" autocapitalize="words">
+        </div>
+
+        <div class="field">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <label class="field-label" style="margin-bottom:0">Tether distance</label>
+            <div class="unit-toggle">
+              <button id="unit-ft" class="active" onclick="setUnit('ft')">ft</button>
+              <button id="unit-m" onclick="setUnit('m')">m</button>
+            </div>
+          </div>
+          <div class="chip-row" id="threshold-chips">
+            <button class="chip" data-ft="100">100 ft</button>
+            <button class="chip active" data-ft="200">200 ft</button>
+            <button class="chip" data-ft="300">300 ft</button>
+            <button class="chip" data-ft="400">400 ft</button>
+            <button class="chip" data-ft="500">500 ft</button>
+          </div>
+          <div class="explainer-text" style="margin-top:8px">If any member drifts beyond this distance, everyone is notified.</div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Night mode</div>
+            <div class="toggle-help">Tighter check-ins after dark</div>
+          </div>
+          <div id="night-switch" class="switch" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Emergency escalation</div>
+            <div class="toggle-help">Auto-contact emergency services on prolonged separation</div>
+          </div>
+          <div id="esc-switch" class="switch" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div>
+        </div>
+      </div>
+
+      <div class="btn-stack">
+        <button id="create-btn" class="big-btn primary" onclick="createSession()">
+          <i class="fa-solid fa-link"></i> Create Tether
+        </button>
+      </div>
+    </div>
+
+    <!-- JOIN -->
+    <div id="view-join" class="view">
+      <div class="header-row">
+        <div>
+          <div class="session-name">Join Tether</div>
+          <div class="session-meta">Enter the 6-digit code from your host</div>
+        </div>
+        <button class="quick-exit" onclick="goView('idle')">Cancel</button>
+      </div>
+      <div class="section-card">
+        <div class="field">
+          <label class="field-label" for="join-code-input">Join code</label>
+          <input id="join-code-input" class="field-input code" type="tel" inputmode="numeric" maxlength="6" placeholder="000000"
+                 autocomplete="off">
+        </div>
+        <div class="explainer-text">Codes expire 30 minutes after the host creates the session. You'll share your live location with the group only while the tether is active.</div>
+      </div>
+      <div class="btn-stack">
+        <button id="join-btn" class="big-btn primary" onclick="joinSession()">
+          <i class="fa-solid fa-right-to-bracket"></i> Join Tether
+        </button>
+      </div>
+    </div>
+
+    <!-- PENDING (host waiting for members) -->
+    <div id="view-pending" class="view">
+      <div class="header-row">
+        <div>
+          <div class="session-name" id="pending-session-name">Tether</div>
+          <div class="session-meta" id="pending-session-meta">Waiting for members…</div>
+        </div>
+        <button class="quick-exit" onclick="endSession()">End</button>
+      </div>
+
+      <div class="code-display">
+        <div class="code-label">Invite code</div>
+        <div class="code-value" id="pending-code">— — — — — —</div>
+        <div class="code-help">Share this 6-digit code with your group. Expires in 30 minutes.</div>
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyCode()"><i class="fa-regular fa-copy"></i> Copy code</button>
+          <button class="copy-btn" onclick="shareCode()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="header-row" style="margin-bottom:0">
+          <div>
+            <div class="section-title">Members</div>
+            <div class="section-sub" id="pending-member-count">1 joined</div>
+          </div>
+        </div>
+        <div id="pending-member-list" class="member-list"></div>
+      </div>
+
+      <div class="btn-stack">
+        <button id="lock-btn" class="big-btn primary" onclick="lockSession()">
+          <i class="fa-solid fa-lock"></i> Lock &amp; Start Tether
+        </button>
+      </div>
+    </div>
+
+    <!-- ACTIVE -->
+    <div id="view-active" class="view">
+      <div class="header-row">
+        <div>
+          <div class="session-name" id="active-session-name">Tether</div>
+          <div class="session-meta" id="active-session-meta">Active — sharing location</div>
+        </div>
+        <button class="quick-exit" onclick="endSession()">End</button>
+      </div>
+
+      <div id="active-alert" class="alert-bar hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="active-alert-text">Someone has drifted beyond the tether radius.</span>
+      </div>
+
+      <div class="map-container" id="map">
+        <div class="map-fallback" id="map-fallback">
+          <i class="fa-regular fa-map"></i>
+          <div>Map will appear here once Mapbox token is configured.</div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="header-row" style="margin-bottom:0">
+          <div>
+            <div class="section-title">Members</div>
+            <div class="section-sub" id="active-member-count">— members</div>
+          </div>
+        </div>
+        <div id="active-member-list" class="member-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // PASTE YOUR MAPBOX PUBLIC TOKEN HERE (starts with pk.):
+    var MAPBOX_TOKEN = '';
+
+    var TOKEN_KEY = 'safetea_token';
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) { window.location.href = '/login'; return; }
+
+    var state = {
+      view: 'idle',
+      sessionId: null,
+      isHost: false,
+      joinCode: null,
+      thresholdFt: 200,
+      unit: 'ft',
+      nightMode: false,
+      escalation: false,
+      members: [],
+      sessionInfo: null,
+      myLatLng: null,
+      pollHandle: null,
+      locHandle: null,
+      map: null,
+      markers: {},
+      circle: null,
+    };
+
+    function $(id) { return document.getElementById(id); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    }); }
+    function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+    function toast(msg) {
+      var t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 2400);
+    }
+
+    function goView(name) {
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      $('view-' + name).classList.add('active');
+      state.view = name;
+      window.scrollTo(0, 0);
+    }
+    window.goView = goView;
+
+    // === Config form ===
+    document.querySelectorAll('#threshold-chips .chip').forEach(function (c) {
+      c.addEventListener('click', function () {
+        document.querySelectorAll('#threshold-chips .chip').forEach(function (x) { x.classList.remove('active'); });
+        c.classList.add('active');
+        state.thresholdFt = parseInt(c.dataset.ft, 10);
+      });
+    });
+    function setUnit(u) {
+      state.unit = u;
+      $('unit-ft').classList.toggle('active', u === 'ft');
+      $('unit-m').classList.toggle('active', u === 'm');
+      document.querySelectorAll('#threshold-chips .chip').forEach(function (c) {
+        var ft = parseInt(c.dataset.ft, 10);
+        c.textContent = (u === 'ft') ? (ft + ' ft') : (Math.round(ft * 0.3048) + ' m');
+      });
+    }
+    window.setUnit = setUnit;
+    function toggleSwitch(el) {
+      el.classList.toggle('on');
+      if (el.id === 'night-switch') state.nightMode = el.classList.contains('on');
+      if (el.id === 'esc-switch') state.escalation = el.classList.contains('on');
+    }
+    window.toggleSwitch = toggleSwitch;
+
+    function fmtDist(ft) {
+      if (state.unit === 'm') return Math.round(ft * 0.3048) + ' m';
+      return Math.round(ft) + ' ft';
+    }
+
+    // === Geolocation ===
+    function getMyLocation() {
+      return new Promise(function (resolve, reject) {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported by this browser.'));
+        navigator.geolocation.getCurrentPosition(
+          function (pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+          function (err) { reject(new Error('Location permission denied or unavailable.')); },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+        );
+      });
+    }
+
+    // === Create flow ===
+    async function createSession() {
+      var btn = $('create-btn');
+      var name = ($('session-name-input').value || '').trim() || 'Tether Session';
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
+      try {
+        var res = await fetch('/api/tether/create', {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({
+            session_name: name,
+            distance_threshold_ft: state.thresholdFt,
+            night_mode_enabled: state.nightMode,
+            emergency_escalation_enabled: state.escalation,
+          }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || ('Create failed (' + res.status + ')'));
+        state.sessionId = data.session_id || (data.session && data.session.id);
+        state.isHost = true;
+        state.joinCode = data.join_code || data.code;
+        state.sessionInfo = data.session || data;
+        $('pending-code').textContent = formatCode(state.joinCode);
+        $('pending-session-name').textContent = name;
+        $('pending-session-meta').textContent = 'Threshold ' + fmtDist(state.thresholdFt) + ' · waiting for members';
+        goView('pending');
+        startPolling();
+      } catch (e) {
+        toast(e.message || 'Could not create tether');
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-link"></i> Create Tether';
+      }
+    }
+    window.createSession = createSession;
+
+    function formatCode(c) {
+      if (!c) return '— — — — — —';
+      var s = String(c).replace(/\D/g, '');
+      return s.split('').join(' ');
+    }
+
+    // === Join flow ===
+    async function joinSession() {
+      var btn = $('join-btn');
+      var code = ($('join-code-input').value || '').replace(/\D/g, '');
+      if (code.length < 4) { toast('Enter the 6-digit code'); return; }
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Joining…';
+      try {
+        var loc = await getMyLocation();
+        state.myLatLng = loc;
+        var res = await fetch('/api/tether/join', {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ join_code: code, current_lat: loc.lat, current_lng: loc.lng }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || ('Join failed (' + res.status + ')'));
+        state.sessionId = data.session_id || (data.session && data.session.id);
+        state.isHost = false;
+        state.sessionInfo = data.session || data;
+        state.thresholdFt = (state.sessionInfo && state.sessionInfo.distance_threshold_ft) || state.thresholdFt;
+        state.joinCode = code;
+        $('pending-code').textContent = formatCode(code);
+        $('pending-session-name').textContent = (state.sessionInfo && state.sessionInfo.session_name) || 'Tether';
+        $('pending-session-meta').textContent = 'Threshold ' + fmtDist(state.thresholdFt) + ' · waiting for host to lock';
+        $('lock-btn').style.display = 'none';
+        goView('pending');
+        startPolling();
+      } catch (e) {
+        toast(e.message || 'Could not join tether');
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Join Tether';
+      }
+    }
+    window.joinSession = joinSession;
+
+    function copyCode() {
+      if (!state.joinCode) return;
+      navigator.clipboard && navigator.clipboard.writeText(String(state.joinCode))
+        .then(function () { toast('Code copied'); })
+        .catch(function () { toast('Could not copy'); });
+    }
+    window.copyCode = copyCode;
+    function shareCode() {
+      if (!state.joinCode) return;
+      var text = 'Join my Tether on SafeTea — code ' + state.joinCode;
+      if (navigator.share) {
+        navigator.share({ title: 'SafeTea Tether', text: text }).catch(function () {});
+      } else {
+        copyCode();
+      }
+    }
+    window.shareCode = shareCode;
+
+    // === Polling ===
+    async function pollStatus() {
+      if (!state.sessionId) return;
+      try {
+        var res = await fetch('/api/tether/status?session_id=' + encodeURIComponent(state.sessionId), { headers: headers() });
+        if (!res.ok) return;
+        var data = await res.json();
+        state.sessionInfo = data.session || state.sessionInfo;
+        state.members = data.members || [];
+        var status = (state.sessionInfo && state.sessionInfo.status) || 'pending';
+        if (status === 'active' && state.view !== 'active') {
+          goView('active');
+          initMap();
+        }
+        if (status === 'ended') {
+          stopPolling();
+          stopLocationUpdates();
+          toast('Tether ended');
+          setTimeout(function () { goView('idle'); resetState(); }, 1200);
+          return;
+        }
+        renderMembers();
+        if (status === 'active') {
+          updateMapMarkers();
+          checkBreaches();
+        }
+      } catch (e) { /* ignore transient errors */ }
+    }
+    function startPolling() {
+      stopPolling();
+      pollStatus();
+      state.pollHandle = setInterval(pollStatus, 5000);
+    }
+    function stopPolling() {
+      if (state.pollHandle) { clearInterval(state.pollHandle); state.pollHandle = null; }
+    }
+
+    async function sendLocation() {
+      if (!state.sessionId) return;
+      try {
+        var loc = await getMyLocation();
+        state.myLatLng = loc;
+        await fetch('/api/tether/location', {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ session_id: state.sessionId, lat: loc.lat, lng: loc.lng }),
+        });
+      } catch (e) { /* user moving, gps glitch, etc. */ }
+    }
+    function startLocationUpdates() {
+      stopLocationUpdates();
+      sendLocation();
+      state.locHandle = setInterval(sendLocation, 15000);
+    }
+    function stopLocationUpdates() {
+      if (state.locHandle) { clearInterval(state.locHandle); state.locHandle = null; }
+    }
+
+    function renderMembers() {
+      var list = (state.view === 'active') ? $('active-member-list') : $('pending-member-list');
+      var countEl = (state.view === 'active') ? $('active-member-count') : $('pending-member-count');
+      if (!list) return;
+      var hostId = state.sessionInfo && state.sessionInfo.host_user_id;
+      list.innerHTML = state.members.map(function (m) {
+        var initials = String(m.display_name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0,2).join('').toUpperCase() || '?';
+        var isHost = String(m.user_id) === String(hostId);
+        var st = m.status || 'idle';
+        var dot = (st === 'active' ? '' : st === 'separated' ? ' warn' : st === 'offline' ? ' gone' : st === 'ended' ? ' gone' : '');
+        var stLabel = ({active:'Safe', idle:'Idle', separated:'Separated', offline:'Offline', ended:'Ended'})[st] || st;
+        var distHtml = '';
+        if (m.distance_from_host_ft != null) {
+          var over = m.distance_from_host_ft > (state.sessionInfo && state.sessionInfo.distance_threshold_ft || state.thresholdFt);
+          distHtml = '<div class="member-distance' + (over ? ' over' : '') + '">' + fmtDist(m.distance_from_host_ft) + '</div>';
+        }
+        return ''
+          + '<div class="member-row">'
+          +   '<div class="member-avatar">' + esc(initials) + '</div>'
+          +   '<div class="member-meta">'
+          +     '<div class="member-name">' + esc(m.display_name || 'Member') + (isHost ? '<span class="host-badge">host</span>' : '') + '</div>'
+          +     '<div class="member-status"><span class="status-dot' + dot + '"></span>' + esc(stLabel) + '</div>'
+          +   '</div>'
+          +   distHtml
+          + '</div>';
+      }).join('');
+      var n = state.members.length;
+      if (countEl) countEl.textContent = n + ' member' + (n === 1 ? '' : 's');
+    }
+
+    function checkBreaches() {
+      var th = (state.sessionInfo && state.sessionInfo.distance_threshold_ft) || state.thresholdFt;
+      var breached = state.members.filter(function (m) {
+        return m.distance_from_host_ft != null && m.distance_from_host_ft > th;
+      });
+      var alertEl = $('active-alert');
+      if (breached.length) {
+        alertEl.classList.remove('hidden');
+        $('active-alert-text').textContent = breached.map(function (m) { return m.display_name || 'A member'; }).join(', ')
+          + (breached.length === 1 ? ' has' : ' have') + ' drifted beyond the ' + fmtDist(th) + ' tether.';
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
+
+    // === Lock / End ===
+    async function lockSession() {
+      var btn = $('lock-btn');
+      if (!state.sessionId) return;
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Locking…';
+      try {
+        var res = await fetch('/api/tether/lock', {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ session_id: state.sessionId }),
+        });
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || ('Lock failed (' + res.status + ')'));
+        startLocationUpdates();
+        // Polling will flip view to 'active' once status returns 'active'.
+      } catch (e) {
+        toast(e.message || 'Could not lock tether');
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-lock"></i> Lock &amp; Start Tether';
+      }
+    }
+    window.lockSession = lockSession;
+
+    async function endSession() {
+      if (!state.sessionId) { goView('idle'); return; }
+      if (!confirm('End this tether session for everyone?')) return;
+      try {
+        await fetch('/api/tether/end', {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({ session_id: state.sessionId }),
+        });
+      } catch (e) { /* still tear down locally */ }
+      stopPolling(); stopLocationUpdates();
+      resetState();
+      goView('idle');
+    }
+    window.endSession = endSession;
+
+    function resetState() {
+      state.sessionId = null;
+      state.isHost = false;
+      state.joinCode = null;
+      state.members = [];
+      state.sessionInfo = null;
+      state.myLatLng = null;
+      if (state.map) {
+        try { state.map.remove(); } catch (e) {}
+        state.map = null;
+        state.markers = {};
+        state.circle = null;
+        $('map').innerHTML = '<div class="map-fallback" id="map-fallback"><i class="fa-regular fa-map"></i><div>Map will appear here once Mapbox token is configured.</div></div>';
+      }
+    }
+
+    // === Map (active view) ===
+    function initMap() {
+      if (!MAPBOX_TOKEN) {
+        // Fallback message already shown in #map-fallback
+        return;
+      }
+      if (typeof mapboxgl === 'undefined') {
+        // Mapbox script still loading, retry shortly
+        setTimeout(initMap, 400);
+        return;
+      }
+      if (state.map) return;
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      var center = state.myLatLng ? [state.myLatLng.lng, state.myLatLng.lat] : [-98.5795, 39.8283];
+      state.map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: center,
+        zoom: state.myLatLng ? 16 : 3,
+      });
+      state.map.on('load', updateMapMarkers);
+    }
+
+    function updateMapMarkers() {
+      if (!state.map || typeof mapboxgl === 'undefined') return;
+      var seen = {};
+      var hostId = state.sessionInfo && state.sessionInfo.host_user_id;
+      var hostLatLng = null;
+
+      state.members.forEach(function (m) {
+        if (m.last_lat == null || m.last_lng == null) return;
+        seen[m.user_id] = true;
+        var lngLat = [m.last_lng, m.last_lat];
+        if (String(m.user_id) === String(hostId)) hostLatLng = lngLat;
+        var existing = state.markers[m.user_id];
+        if (existing) {
+          existing.setLngLat(lngLat);
+        } else {
+          var el = document.createElement('div');
+          el.style.cssText = 'width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#FF6BA8,#9B59B6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+          var initials = String(m.display_name || '?').trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0,2).join('').toUpperCase() || '?';
+          el.textContent = initials;
+          state.markers[m.user_id] = new mapboxgl.Marker({ element: el })
+            .setLngLat(lngLat)
+            .setPopup(new mapboxgl.Popup({ offset: 18 }).setText(m.display_name || 'Member'))
+            .addTo(state.map);
+        }
+      });
+      Object.keys(state.markers).forEach(function (uid) {
+        if (!seen[uid]) { state.markers[uid].remove(); delete state.markers[uid]; }
+      });
+
+      // Draw the tether radius around the host.
+      if (hostLatLng && state.sessionInfo) {
+        var th = state.sessionInfo.distance_threshold_ft || state.thresholdFt;
+        var meters = th * 0.3048;
+        if (state.map.getSource('tether-radius')) {
+          var src = state.map.getSource('tether-radius');
+          src.setData({ type: 'Feature', geometry: { type: 'Point', coordinates: hostLatLng }, properties: { meters: meters } });
+        } else if (state.map.isStyleLoaded()) {
+          state.map.addSource('tether-radius', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Point', coordinates: hostLatLng }, properties: { meters: meters } } });
+          state.map.addLayer({
+            id: 'tether-radius-fill',
+            type: 'circle',
+            source: 'tether-radius',
+            paint: {
+              'circle-radius': ['interpolate', ['exponential', 2], ['zoom'],
+                0, 0,
+                20, ['/', ['*', ['get','meters'], 2], 0.075]
+              ],
+              'circle-color': '#E8A0B5',
+              'circle-opacity': 0.12,
+              'circle-stroke-color': '#FF6BA8',
+              'circle-stroke-width': 1.5,
+              'circle-stroke-opacity': 0.6,
+            }
+          });
+        }
+        // Fit to host + members
+        var bounds = new mapboxgl.LngLatBounds();
+        state.members.forEach(function (m) {
+          if (m.last_lat != null && m.last_lng != null) bounds.extend([m.last_lng, m.last_lat]);
+        });
+        if (!bounds.isEmpty()) state.map.fitBounds(bounds, { padding: 60, maxZoom: 17, duration: 600 });
+      }
+    }
+
+    // Boot
+    goView('idle');
+  })();
+  </script>
+</body>
+</html>

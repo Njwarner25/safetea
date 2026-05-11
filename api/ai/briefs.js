@@ -20,6 +20,8 @@
 'use strict';
 
 const { authenticate, cors } = require('../_utils/auth');
+const { lookupPlaceType } = require('../../services/safety/osm');
+const { matchPatterns } = require('../../services/safety/crime-patterns');
 
 const CACHE = new Map();              // key -> { at, briefs }
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -113,23 +115,34 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'lat and lng query params are required (valid floats)' });
     }
 
-    const key = bucket(lat) + ',' + bucket(lng) + ',' + (isNaN(localHour) ? '-' : localHour);
+    const dow = (function () {
+        const v = parseInt(url.searchParams.get('dow'), 10);
+        return isNaN(v) ? new Date().getUTCDay() : v;
+    })();
+
+    const key = bucket(lat) + ',' + bucket(lng) + ',' + (isNaN(localHour) ? '-' : localHour) + ',' + dow;
     const cached = CACHE.get(key);
     if (cached && (Date.now() - cached.at) < CACHE_TTL_MS) {
         return res.status(200).json({ briefs: cached.briefs, cached: true });
     }
 
     try {
-        const [nws, community, crime] = await Promise.all([
+        // OSM place flags inform both the pattern matcher and (later) hyperlocal briefs.
+        const flagsPromise = lookupPlaceType(lat, lng);
+        const [nws, community, crime, flags] = await Promise.all([
             fetchNWSAlerts(lat, lng),
             fetchCommunityReports(lat, lng),
             fetchCrimeAdapter(lat, lng),
+            flagsPromise,
         ]);
         const tod = timeOfDayBrief(localHour);
+        const patterns = matchPatterns(flags, localHour, dow);
+
         const briefs = []
             .concat(crime)               // most actionable first
             .concat(community)
             .concat(nws)
+            .concat(patterns)            // statistical context
             .concat(tod ? [tod] : []);
 
         CACHE.set(key, { at: Date.now(), briefs: briefs });

@@ -1592,7 +1592,7 @@
             el.style.display = 'block';
             el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Checking…</span>';
             try {
-                var res = await fetch(API_BASE + '/ai/_health', { headers: authHeaders() });
+                var res = await fetch(API_BASE + '/ai/health', { headers: authHeaders() });
                 var data = await res.json();
                 renderAlessiaResult(data, 'health');
             } catch (err) {

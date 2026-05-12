@@ -23,35 +23,26 @@ const CITY_CONTEXT = {
   'New York': { neighborhoods: ['West Village', 'Williamsburg', 'Upper East Side', 'Astoria', 'Park Slope', 'Harlem'], transit: 'subway', vibe: 'fast-paced, diverse, opinionated' }
 };
 
-// Good Guys removed 2026-04 — tea-talk only going forward
-const CATEGORIES = ['tea-talk'];
+// Pivoted 2026-05-12 — community feed seeds are now safety concerns,
+// not dating-conversation chatter. Category renamed accordingly.
+const CATEGORIES = ['safety-concern'];
 
-// Fallback posts if AI is unavailable — rotating pool so they don't repeat
-const FALLBACK_TEA_TALK = [
-  "Ladies please stop ignoring red flags because he's cute. Cute doesn't equal safe 🚩",
-  "If he gets mad when you say you want to meet in public first... that IS the answer",
-  "Normalize checking in with your girls during a date. It's not paranoid, it's smart 💕",
-  "He unmatched me after I asked to video chat first. The trash took itself out 🗑️",
-  "Reminder: a man who respects you will never make you feel bad for having boundaries",
-  "If his dating profile has zero effort, imagine the relationship 😬",
-  "Stop giving out your address before the third date. I don't care how well it's going",
-  "Went on a date and he was on his phone the entire time. Never again",
-  "If he only texts you after 10pm he's not interested, he's bored",
-  "A guy got upset that I told my friend where I was going. Sir, that's basic safety not a trust issue"
+// Fallback posts if AI is unavailable — rotating pool of location-aware
+// safety concerns. Use {neighborhood} / {transit} placeholders that are
+// substituted in pickFallback() with the city's per-run picks.
+const FALLBACK_SAFETY_CONCERNS = [
+  "Heads up — uptick in reported incidents on the {transit} late-night route through {neighborhood} this week. Ride near the conductor and avoid empty cars after 10 PM.",
+  "Several phone-snatching reports around busy corners in {neighborhood} lately. Keep your phone in a zipped pocket when walking, not in your hand.",
+  "Car break-ins climbing around the {neighborhood} parking areas. Take your bag, charger, and anything visible with you when you park.",
+  "Rideshare impersonation has been a thing in the {neighborhood} entertainment district. Confirm the plate AND the driver's name in the app before getting in.",
+  "Walking home in {neighborhood} after dark? Stick to lit streets, share your live location with someone, or start a Safe Walk session in the app.",
+  "Reminder for tonight: if your gut says something is off, that's data. Leave. You don't owe anyone an explanation for prioritizing your safety.",
+  "Group going out tonight in {neighborhood}? Set a meet-up spot, agree on a no-one-leaves-alone rule, and screenshot each other's locations.",
+  "If a stranger asks for help with something specific in a parking lot or stairwell, that's a known tactic. Stay near other people and call security if needed.",
+  "Pro tip: meeting someone new? Share their name, photo, and your meet location with a friend BEFORE you leave. The Safety Vault makes it fast.",
+  "PSA: in most US cities you can text 911 if you can't make noise. Worth saving your trusted contact as your phone's emergency contact too."
 ];
 
-const FALLBACK_GOOD_GUYS = [
-  "He remembered my coffee order from our first date. It's the small things 🥹",
-  "Shoutout to the man who texted me 'let me know you got home safe' after every single date",
-  "My date held the door, pulled out my chair, and asked genuine questions. Chivalry isn't dead y'all 💚",
-  "He noticed I seemed anxious and said 'we can leave whenever you want, no pressure.' Green flag 🟢",
-  "First date energy check: he suggested a daytime coffee date because he said he wanted me to feel comfortable. More of this please",
-  "This guy sends me a good morning text every day and hasn't missed once in 3 weeks. Consistency matters",
-  "He asked me about my career goals on the first date instead of just complimenting my looks. Yes sir 👏",
-  "My date planned the whole evening AND had a backup plan in case I didn't like the first restaurant. Effort is attractive",
-  "He saw me reach for my wallet and said 'I invited you, I got it.' Then didn't hold it over my head. That's the standard",
-  "Had a date cancel because he was sick and he actually rescheduled for the next day instead of ghosting. Low bar but I'll take it 😅"
-];
 
 function pickRandom(arr, count) {
   var shuffled = arr.slice().sort(function() { return 0.5 - Math.random(); });
@@ -64,7 +55,8 @@ async function generateAIPost(city, category) {
 
   const ctx = CITY_CONTEXT[city];
   const hood = ctx.neighborhoods[Math.floor(Math.random() * ctx.neighborhoods.length)];
-  const catLabel = category === 'tea-talk' ? 'dating red flag warning / safety tip / cautionary story' : 'positive dating experience / good guy shoutout / green flag moment';
+  // Pivoted 2026-05-12: feed is now safety concerns, not dating commentary.
+  const catLabel = 'a calm, location-aware safety concern (transit incident report, area-awareness PSA, parking/rideshare caution, nighttime route reminder, or general situational-safety tip). NEVER frame as dating advice or red-flag-from-a-date — frame as awareness for everyone in the city, regardless of dating status.';
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -140,7 +132,12 @@ module.exports = async function handler(req, res) {
         let source = 'ai';
 
         if (!body) {
-          const pool = category === 'tea-talk' ? FALLBACK_TEA_TALK : FALLBACK_GOOD_GUYS;
+          // Pick a fallback safety concern and substitute the city's neighborhood + transit
+          const ctxFallback = CITY_CONTEXT[cityName] || { neighborhoods: ['downtown'], transit: 'transit' };
+          const hoodFallback = ctxFallback.neighborhoods[Math.floor(Math.random() * ctxFallback.neighborhoods.length)];
+          const pool = FALLBACK_SAFETY_CONCERNS.map(function (t) {
+            return t.replace(/\{neighborhood\}/g, hoodFallback).replace(/\{transit\}/g, ctxFallback.transit);
+          });
           // Pick one that hasn't been recently used in this city (check last 20 posts)
           const recent = await getMany(
             `SELECT body FROM posts WHERE city = $1 AND user_id IN (SELECT id FROM users WHERE email LIKE '%@seed.safetea.local') ORDER BY created_at DESC LIMIT 20`,

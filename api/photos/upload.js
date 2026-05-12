@@ -65,6 +65,8 @@ module.exports = async function handler(req, res) {
         doxxing: 'personal identifying information',
         minor: 'content involving minors',
         hate: 'hate symbols or offensive imagery',
+        dating_profile: 'a dating-app profile screenshot — please only upload your own photos, not someone else\'s profile',
+        third_party_photo: 'a photo of someone else lifted from social media or a dating profile — please only upload photos you took or that you have explicit consent to share',
         other: 'content that violates our guidelines'
       };
       const reasonText = categoryMessages[modResult.category] || categoryMessages.other;

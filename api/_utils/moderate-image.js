@@ -21,7 +21,7 @@ async function moderateImage(base64Image, mediaType) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
+        max_tokens: 240,
         messages: [{
           role: 'user',
           content: [
@@ -37,12 +37,23 @@ async function moderateImage(base64Image, mediaType) {
               type: 'text',
               text: `You are a content moderation AI for a women's safety app called SafeTea. Analyze this image and determine if it should be allowed.
 
-REJECT if: nudity or sexual content, graphic violence, personal identifying documents (IDs, licenses, SSN cards), photos of minors, hate symbols, or content that appears designed to harass or doxx someone (photos of someone's home, car with plates visible, workplace).
+REJECT if any of the following apply:
+- Nudity or sexual content
+- Graphic violence
+- Personal identifying documents (IDs, licenses, SSN cards)
+- Photos of minors
+- Hate symbols
+- Content designed to harass or doxx someone (photos of someone's home, car with plates visible, workplace)
+- DATING APP PROFILE SCREENSHOTS — visible UI of Tinder, Hinge, Bumble, Match, OkCupid, Coffee Meets Bagel, Plenty of Fish, Grindr, Feeld, BLK, etc. (profile cards, swipe buttons, "Like/Pass", chat list, match notifications)
+- THIRD-PARTY SOCIAL MEDIA SCREENSHOTS featuring another person — visible UI of Instagram, Facebook, TikTok, Snapchat, X/Twitter, LinkedIn profile pages of someone other than the uploader
+- A face-only or upper-body PHOTO OF ANOTHER PERSON without clear context that the uploader owns or has consent for the image (i.e., looks like it was taken from someone's social media or dating profile rather than captured in person)
 
-APPROVE if: dating app screenshots, text conversations, restaurant/location photos, selfies, or general safe content.
+APPROVE if: a selfie of the uploader, the uploader's own posed photo, photos of locations / venues / streets, screenshots of TEXT-ONLY messages (no profile photos visible), receipts / tickets, or other clearly safe content the uploader plausibly created themselves.
+
+When in doubt about whether the photo is the uploader's own image vs. lifted from someone else's account, REJECT and use category "third_party_photo".
 
 Respond with JSON only:
-{"approved": true/false, "reason": "brief reason", "category": "safe|nudity|violence|doxxing|minor|hate|other"}`
+{"approved": true/false, "reason": "brief reason", "category": "safe|nudity|violence|doxxing|minor|hate|dating_profile|third_party_photo|other"}`
             }
           ]
         }]

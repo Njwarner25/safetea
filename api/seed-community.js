@@ -60,67 +60,56 @@ module.exports = async function handler(req, res) {
       { name: 'Luna V.', color: '#E8A0D4' }
     ];
 
-    // ─── TEA TALK TEMPLATES (user-provided + variations) ───
-    const TEA_TALK_TEMPLATES = [
-      "Girl, if he won't video chat before the first date that's a red flag. Always verify who you're talking to 🚩",
-      "PSA: never let a first date pick you up from your home. Meet in public, share your location with a friend, and check in with SafeTea 📍",
-      "Went on a date last week and used the Check-In feature — my bestie got the live tracking link and I felt so much safer knowing someone had my back 💕",
-      "Reminder: if someone pressures you to move off the dating app to a private chat too fast, slow down. That's a common tactic 🛑",
-      "If his profile says \"just here for fun\" believe him the first time. Don't convince yourself you'll be the exception",
-      "Pro tip: Google image search their profile pics before the first date. You'd be surprised what comes up 🔍",
-      "He said he was 28 on the app but looked 40 in person. Always FaceTime first ladies, it saves you the Uber fare 😅",
-      "Just a reminder that \"I'm not like other guys\" is actually the most common thing other guys say",
-      "Told him I was sharing my location with a friend and he got weird about it. That told me everything I needed to know 🚩",
-      "If he can't plan a date — like actually pick a place and a time — he's not ready for a relationship. Period.",
-      "Three first dates this month where the guy showed up looking nothing like his photos. I'm exhausted 😭",
-      "Trust the energy, not the words. When something feels off it usually IS off. Your gut is trying to protect you 💫"
+    // ─── SAFETY CONCERN TEMPLATES (replaces dating-conversation seeds) ───
+    // Per operator decision (2026-05-12): community feed seeds are now safety
+    // concerns (location-aware, area-aware, situational) — NOT dating chatter.
+    // Templates use placeholders for city/neighborhood that get filled per-city
+    // in the loop below.
+    const SAFETY_CONCERN_TEMPLATES = [
+      "Heads up — a few of us noticed an uptick in reported incidents on the late-night train route through {neighborhood} this week. If you can, ride near the conductor and avoid empty cars after 10 PM.",
+      "Reminder for everyone in {city}: car break-ins have been creeping up around the {neighborhood} area. Take your bag, phone charger, and anything visible with you when you park.",
+      "PSA for tonight — the {neighborhood} entertainment district gets crowded and rideshare impersonation has been a thing recently. Always confirm the license plate AND the driver's name in the app before getting in.",
+      "Walking home alone after dark in {neighborhood}? Stick to lit streets, share your live location with a trusted contact, and consider starting a Safe Walk session in the app.",
+      "If you're parking in a garage tonight in {city}, scan the area before getting out. Stay on the phone with someone or have your keys ready in your hand. Trust your gut.",
+      "Quick reminder: if your gut says something is off, that's data. Leave. You don't owe anyone an explanation for prioritizing your safety.",
+      "Several reports of harassment near {neighborhood} after midnight in the past few weeks. If you're heading out tonight, plan your ride home before you start drinking.",
+      "Group going out tonight in {city}? Set a meet-up spot, agree on a no-one-leaves-alone rule, and screenshot each other's locations before you split up.",
+      "Fyi — phone-snatching has been reported around busy corners in {neighborhood}. Keep your phone in a zipped pocket when walking, not in your hand.",
+      "If a stranger asks you for help with something specific in a parking lot or stairwell, that's a known tactic. Stay near other people and call security if needed.",
+      "Pro tip: if you're meeting someone for the first time, share their name + photo + your meet location with a friend BEFORE you leave. The Safety Vault makes this fast.",
+      "Reminder that 911 isn't your only option — if you don't want to make noise, you can text 911 in most US cities. Also worth saving your trusted contact as an emergency contact in your phone."
     ];
 
-    // ─── GOOD GUYS TEMPLATES (user-provided + variations) ───
-    const GOOD_GUYS_TEMPLATES = [
-      "Shoutout to the guy who walked me to my car after our coffee date without me even asking. The bar is low but that was sweet 💚",
-      "Had an amazing first date at a public park — he suggested it because he said he wanted me to feel safe. Green flag 🟢",
-      "My date noticed I shared my location with a friend and said 'that's smart, I'm glad you do that.' We need more of this energy 💛",
-      "He texted me when he got home to make sure I got in safe too. Small thing but it meant everything",
-      "Went on a date and he asked what my boundaries were before anything happened. Consent is so attractive honestly 🥹",
-      "This man remembered I mentioned a work deadline and texted me good luck the morning of. It's the little things",
-      "He offered to meet near MY neighborhood so I wouldn't have to travel far at night. Thoughtful kings exist",
-      "My date saw me looking uncomfortable when a group got loud next to us and suggested we move without me saying a word. Awareness is everything 💛",
-      "Positive update: the guy I was nervous about? 4 dates in and he's been nothing but consistent and respectful. Don't give up queens 🤞",
-      "He told me on the first date exactly what he was looking for. No games, no mixed signals. Honesty is so refreshing"
-    ];
-
-    // ─── REPLY TEMPLATES ───
-    const TEA_REPLIES = [
-      "Thank you for posting this!! I almost matched with someone like this",
-      "Ugh I'm so sorry this happened. The streets need to know 🫖",
-      "This is why I love SafeTea. We gotta look out for each other 💕",
-      "Girl I went through the SAME thing. You dodged a bullet 🙏",
-      "Block him on everything and don't look back. You deserve better",
-      "Adding to this — I think I had a similar experience last month",
-      "The audacity of some people honestly. Thanks for the warning sis",
-      "Screenshot and save everything, just in case. Stay safe out there"
-    ];
-
-    const GOOD_REPLIES = [
-      "Okay this actually made me smile. There IS hope 😭",
-      "We love to see it!! Keep us updated!",
-      "His mom raised him RIGHT 👏",
-      "This gives me hope honestly. Happy for you ❤️",
-      "THIS is the content I need. Happy for you queen",
-      "Proof that they DO exist. Don't settle ladies",
-      "The way this made my whole day. Rooting for you two! 🥹"
+    // ─── REPLY TEMPLATES (safety-focused) ───
+    const SAFETY_REPLIES = [
+      "Thank you for posting this. I'll be more aware in that area.",
+      "Saving this for my group chat — appreciate the heads up.",
+      "Confirming this — I had a similar experience near there last week. Stay safe everyone.",
+      "Good reminder. I always forget to share my location and then regret it.",
+      "Adding the Safe Walk session next time I'm out late, hadn't tried it yet.",
+      "Appreciate you looking out for the community. This is exactly what this space is for.",
+      "Going to forward this to my sister, she's in that area a lot."
     ];
 
     const INFO_REPLIES = [
-      "What app was he on?",
-      "What area of the city? Asking for... myself honestly 👀",
-      "How long ago was this? I might have matched with someone similar",
-      "Was this recent? My friend is dating in that area right now"
+      "What time of day was this? Trying to figure out when to avoid that area.",
+      "Was the report on the transit line or near the station?",
+      "Has anyone tried the Tether feature for nights out? Wondering if it works well.",
+      "Do we know if the local PD has been notified? Want to make sure it's on their radar."
     ];
 
-    // ─── CITIES ───
+    // ─── CITIES + per-city neighborhood lists for templating ───
     const CITIES = ['Chicago', 'Dallas', 'Houston', 'Atlanta', 'Miami', 'Los Angeles', 'Philadelphia', 'New York'];
+    const CITY_NEIGHBORHOODS = {
+      'Chicago':      ['Wicker Park', 'Lincoln Park', 'River North', 'Logan Square', 'the Loop', 'Lakeview'],
+      'Dallas':       ['Deep Ellum', 'Uptown', 'Bishop Arts', 'Knox-Henderson', 'Lower Greenville', 'Oak Lawn'],
+      'Houston':      ['Montrose', 'The Heights', 'Midtown', 'EaDo', 'Rice Village', 'Washington Ave'],
+      'Atlanta':      ['Buckhead', 'Midtown', 'Virginia-Highland', 'East Atlanta Village', 'Old Fourth Ward', 'Decatur'],
+      'Miami':        ['Brickell', 'Wynwood', 'South Beach', 'Coconut Grove', 'Coral Gables', 'Little Havana'],
+      'Los Angeles':  ['Silver Lake', 'West Hollywood', 'Santa Monica', 'DTLA', 'Venice', 'Los Feliz'],
+      'Philadelphia': ['Rittenhouse', 'Fishtown', 'Northern Liberties', 'Old City', 'University City', 'East Passyunk'],
+      'New York':     ['West Village', 'Williamsburg', 'Upper East Side', 'Astoria', 'Park Slope', 'Harlem']
+    };
 
     // ─── PROCESS EACH CITY ───
     for (const cityName of CITIES) {
@@ -147,25 +136,27 @@ module.exports = async function handler(req, res) {
       const accountNames = Object.keys(accountMap);
       const userIds = Object.values(accountMap);
 
-      // Pick posts for this city — 4-5 tea talk + 4-5 good guys
-      // Rotate through templates with city-specific offset to avoid identical feeds
+      // Pick posts for this city — 5 safety concerns per city, rotated by city
+      // index so each city's seed feed is unique. Templates use {city} and
+      // {neighborhood} placeholders that get filled in below.
       const cityIdx = CITIES.indexOf(cityName);
-      const teaPosts = [];
-      const goodPosts = [];
+      const cityNeighborhoods = (CITY_NEIGHBORHOODS[cityName] || ['downtown', 'midtown', 'the entertainment district']);
+      const safetyPosts = [];
 
       for (let i = 0; i < 5; i++) {
-        const tIdx = (cityIdx * 3 + i) % TEA_TALK_TEMPLATES.length;
-        teaPosts.push({
+        const tIdx = (cityIdx * 3 + i) % SAFETY_CONCERN_TEMPLATES.length;
+        const neighborhood = cityNeighborhoods[i % cityNeighborhoods.length];
+        const body = SAFETY_CONCERN_TEMPLATES[tIdx]
+          .replace(/\{city\}/g, cityName)
+          .replace(/\{neighborhood\}/g, neighborhood);
+        safetyPosts.push({
           author: accountNames[i % accountNames.length],
-          category: 'tea-talk',
-          body: TEA_TALK_TEMPLATES[tIdx]
+          category: 'safety-concern',
+          body: body
         });
       }
 
-      // Good Guys category removed 2026-04 — tea-talk only going forward.
-      // Legacy GOOD_GUYS_TEMPLATES constants are preserved for historical
-      // migrations but no new posts are seeded with that category.
-      const allPosts = [...teaPosts];
+      const allPosts = safetyPosts;
 
       // Create posts with timestamps spread over last 7 days
       const now = Date.now();
@@ -214,9 +205,7 @@ module.exports = async function handler(req, res) {
 
         for (let r = 0; r < numReplies; r++) {
           const replyUserId = userIds[Math.floor(Math.random() * userIds.length)];
-          const pool = postInfo.category === 'tea-talk'
-            ? [...TEA_REPLIES, ...INFO_REPLIES]
-            : GOOD_REPLIES;
+          const pool = [...SAFETY_REPLIES, ...INFO_REPLIES];
           const replyText = pool[Math.floor(Math.random() * pool.length)];
 
           try {

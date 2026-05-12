@@ -98,7 +98,7 @@ const config: ExpoConfig = {
       backgroundColor: '#1A1A2E',
     },
     package: 'app.getsafetea.mobile',
-    versionCode: 23,
+    versionCode: 26,
   },
   web: {
     favicon: './assets/favicon.png',
@@ -143,6 +143,7 @@ const config: ExpoConfig = {
       'expo-build-properties',
       {
         android: {
+          minSdkVersion: 23,
           targetSdkVersion: 35,
           compileSdkVersion: 35,
         },

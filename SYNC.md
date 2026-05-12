@@ -70,3 +70,13 @@ The PC side is currently:
 - AI Companion migration still pending — user to hit admin diagnostics card.
 - Status: IN_PROGRESS
 - Needs from MAC: none right now. Read this file on your next session.
+
+### [2026-05-11 21:55 CT] PC → MAC | IN_PROGRESS | iap bundle fix + rebuild
+
+- First EAS build `7e03252d-82ba-409d-aff1-d7bcbe5f5edd` ERRORED in the Metro JS bundle phase.
+- Root cause: `react-native-iap@15.2.0` declares `react-native-nitro-modules` as a peer dep; not installed. The static `import * as RNIap from 'react-native-iap'` in `safetea-mobile/services/iap.ts` made Metro try to resolve it for the Android bundle, even though the file's exports are all iOS-only at runtime.
+- Fix: commit `f140bf5` on `feat/android-safety-briefs` converts that to a `Platform.OS === 'ios' ? require(...) : null` so Metro dead-code-eliminates the require for Android. iOS behavior unchanged — same module loaded the same way at runtime.
+- **MAC heads-up**: when iOS next builds, the `import type * as RNIapNS` + lazy require pattern is equivalent at runtime. If you see TypeScript complaints about `RNIap.Purchase`, they're cosmetic and the runtime call still hits `react-native-iap`.
+- Build #2 `ae2117d6-7922-4263-8fb9-37cbd25080ac` is past the bundle phase (state: IN_PROGRESS as of 21:55 CT).
+- Status: IN_PROGRESS
+- Needs from MAC: none. Pull before next iOS build so you pick up the iap.ts change.

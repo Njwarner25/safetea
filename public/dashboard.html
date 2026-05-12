@@ -3544,8 +3544,9 @@
                         <i class="fas fa-exclamation-circle"></i> Your subscription will end on <span id="sub-end-date"></span>
                     </div>
                 </div>
-                <div style="display:flex;gap:12px;margin-top:16px">
-                    <button id="btn-cancel-sub" onclick="cancelSubscription()" style="flex:1;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.2);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(231,76,60,0.15)'" onmouseout="this.style.background='rgba(231,76,60,0.1)'"><i class="fas fa-times-circle"></i> Cancel Subscription</button>
+                <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+                    <a href="/subscription.html" style="flex:1;min-width:160px;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;text-decoration:none;text-align:center;padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.boxShadow='0 4px 15px rgba(232,160,181,0.3)'" onmouseout="this.style.boxShadow='none'"><i class="fas fa-sliders-h"></i> Manage Subscription</a>
+                    <button id="btn-cancel-sub" onclick="cancelSubscription()" style="flex:1;min-width:160px;background:rgba(231,76,60,0.1);color:#e74c3c;border:1px solid rgba(231,76,60,0.2);padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(231,76,60,0.15)'" onmouseout="this.style.background='rgba(231,76,60,0.1)'"><i class="fas fa-times-circle"></i> Cancel Subscription</button>
                 </div>
             </div>
 

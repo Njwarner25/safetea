@@ -60,22 +60,54 @@ module.exports = async function handler(req, res) {
       } catch (_) {}
     }
 
-    // TODO(phase-1 follow-up): reuse the Twilio + SendGrid fan-out from
-    // api/recording/start.js once copy/templates for Pulse are approved.
-    // Left as a record-only stub so client flow can be tested first.
+    // Fan-out SMS to trusted contacts via Twilio. Matches the pattern in
+    // api/dates/sos.js. Email fan-out can be layered in later via SendGrid.
+    let contactsNotified = 0;
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+    const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+
+    if (contacts.length > 0 && twilioSid && twilioAuth && twilioPhone) {
+      const displayName = user.display_name || user.email || 'A SafeTea user';
+      const anomalyLabel = ({
+        movement_anomaly: 'has stopped moving unexpectedly',
+        route_deviation: 'has deviated from their expected route',
+        missed_checkin: 'has missed a scheduled check-in',
+        no_response: 'is not responding to safety prompts',
+      })[anomalyType] || `has triggered a "${anomalyType}" safety alert`;
+
+      const lat = typeof body.latitude === 'number' ? body.latitude : null;
+      const lng = typeof body.longitude === 'number' ? body.longitude : null;
+      const mapsUrl = lat && lng ? ` Last known location: https://maps.google.com/?q=${lat},${lng}.` : '';
+      const shortSms = `SafeTea Pulse alert: ${displayName} ${anomalyLabel} during a Safe Walk.${mapsUrl} Please reach out and check in.`;
+
+      const twilio = require('twilio')(twilioSid, twilioAuth);
+      for (const contact of contacts) {
+        try {
+          await twilio.messages.create({
+            body: shortSms,
+            from: twilioPhone,
+            to: contact.contact_phone,
+          });
+          contactsNotified++;
+        } catch (smsErr) {
+          console.error(`[pulse/escalate] SMS failed to ${contact.contact_phone}:`, smsErr.message);
+        }
+      }
+    }
 
     const row = await getOne(
       `INSERT INTO pulse_escalations
         (session_key, user_id, anomaly_type, payload, contacts_notified)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [sessionKey, user.id, anomalyType, JSON.stringify(body), contacts.length]
+      [sessionKey, user.id, anomalyType, JSON.stringify(body), contactsNotified]
     );
 
     return res.status(200).json({
       escalation: row,
       contactsFound: contacts.length,
-      dispatched: false,
-      note: 'Phase 1 stub — dispatch disabled pending copy approval',
+      contactsNotified: contactsNotified,
+      dispatched: contactsNotified > 0,
     });
   } catch (err) {
     console.error('[pulse/escalate]', err);

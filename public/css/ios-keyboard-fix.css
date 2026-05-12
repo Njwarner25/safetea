@@ -1,0 +1,28 @@
+/* Pairs with /js/ios-keyboard-fix.js. The JS sets --ios-kb-offset on
+ * <html> and toggles .ios-kb-open on <body> whenever the iOS soft
+ * keyboard is open. This CSS:
+ *
+ *   - Adds bottom padding equal to the keyboard height to the body so
+ *     long scrolling content can still reach the last input.
+ *   - Shifts any element with class .compose, .bottom-bar, .input-bar,
+ *     or the attribute [data-kb-shift] up by the keyboard height so
+ *     fixed/sticky compose surfaces stay above the keyboard.
+ *
+ * No-op on non-iOS (the variable stays at 0px).
+ */
+
+body.ios-kb-open {
+  padding-bottom: var(--ios-kb-offset, 0px);
+}
+
+.compose,
+.bottom-bar,
+.input-bar,
+.chat-input-bar,
+.message-compose,
+.fixed-bottom,
+[data-kb-shift] {
+  transform: translateY(calc(-1 * var(--ios-kb-offset, 0px)));
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+}

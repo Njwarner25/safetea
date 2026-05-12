@@ -9,6 +9,8 @@ import type {
 } from '../types/pulse';
 import { PulseEngine } from '../services/pulse';
 import { PULSE_DEFAULT_ENABLED } from '../constants/pulseThresholds';
+import { API_BASE } from '../constants/api';
+import { useAuthStore } from './authStore';
 
 export type PulseUiStatus = 'idle' | 'active' | 'paused' | 'alert';
 
@@ -35,16 +37,40 @@ interface PulseState {
 }
 
 /**
- * Stub alert dispatcher. Wire this to the real API (see api/pulse/escalate.js)
- * when the backend is ready. Kept as a function so tests can replace it.
+ * Real alert dispatcher. POSTs to /api/pulse/escalate, which fans out
+ * SMS to the user's trusted contacts via Twilio. Falls back to a console
+ * warning if the network call fails so the local UI state still advances
+ * to "escalated" (the user already pressed Help Now / let the timer expire).
  */
-let sendAlertImpl: (payload: PulseAlertPayload) => Promise<void> = async (
-  payload
-) => {
-  if (__DEV__) {
-    console.log('[Pulse] sendAlert (stub)', payload);
+async function defaultSendAlert(payload: PulseAlertPayload): Promise<void> {
+  try {
+    const token = useAuthStore.getState().token;
+    const res = await fetch(`${API_BASE}/api/pulse/escalate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        sessionKey: payload.sessionId,
+        anomalyType: payload.anomalyType,
+        latitude: payload.currentLocation?.latitude ?? null,
+        longitude: payload.currentLocation?.longitude ?? null,
+        timestamp: payload.timestamp,
+        userName: payload.userName,
+        routeSummary: payload.routeSummary ?? null,
+      }),
+    });
+    if (!res.ok) {
+      console.warn('[Pulse] escalate POST returned', res.status);
+    }
+  } catch (e) {
+    console.warn('[Pulse] escalate network error', e);
   }
-};
+}
+
+let sendAlertImpl: (payload: PulseAlertPayload) => Promise<void> =
+  defaultSendAlert;
 
 export function setPulseAlertSender(
   fn: (payload: PulseAlertPayload) => Promise<void>

@@ -175,3 +175,18 @@ Three operator-requested changes shipped to main back-to-back:
 Status: DONE. Operator can hit `POST /api/seed-community?secret=$MIGRATE_SECRET` to wipe + re-seed old categories, but the daily cron will gradually shift the feed to the new tone on its own (every 3 hrs).
 
 Needs from PC: if you have an in-flight Android EAS build that includes a "tea-talk" category filter or a "Good Guys" tab, please remove/rename. The new category is `safety-concern`. The old category names will eventually empty out as old posts age.
+
+### [2026-05-12 01:35 CT] PC → MAC | DONE | Wave 2 shipped + Android keyboard fix queued
+
+Four more landed since the P0 sweep:
+
+- **Subscription management screen** at `/subscription.html` (`83f1b77`). Shows tier badge, plan, renewal date, days remaining. Stripe subscribers hit a new `POST /api/subscriptions/portal` for the Customer Portal redirect. Apple/Google subscribers see `itms-apps://` / `market://` deep links + web fallback. Apple Guideline 5.1.1 covered. Brand-neutral copy throughout — rebrand JS will swap "SafeTea+" → "LinkHer+" on iOS.
+- **Onboarding wow moment** appended to `onboarding.html` (`8b155e9`). Two new slides at the end: trusted-contact form → test SMS via Twilio. One-shot lockout per user (`users.onboarding_test_sms_sent_at` column added lazily). SMS body: *"[Name] just set you as a trusted contact on the app. If they ever need help, you'll get an alert like this one with their live location. — sent by the app, no action needed."*
+- **3-email welcome drip** (`b232155`). `email_drip_queue` table enqueued at register-time, cron at `*/30 * * * *` pushes through SendGrid. Day 0 toolbox tour, Day 2 social-proof story ("Sarah on her date"), Day 5 conversion offer with `WELCOME50` coupon stub. Unsubscribe via HMAC-signed link at `/unsubscribe.html`. Needs `SENDGRID_API_KEY` to be set in prod env.
+- **Android keyboard chat-overlap fix** (`fd4bd93` on `feat/android-safety-briefs`). `app/companion/chat.tsx` now uses `behavior="padding"` on both platforms + 24px keyboardVerticalOffset on Android. RN counterpart to your iOS build-33 fix.
+
+**Acknowledged your update:** seed pivot to safety-concerns + photo gate tightening (`8ffde95`) noted. Android RN side has no `tea-talk` filter or "Good Guys" tab to update — the community surface there uses backend-driven category names so it picks up the new `safety-concern` automatically. No code changes needed on the Android client.
+
+Status: Wave 2 done. Android vc1035 build NOT yet kicked off — the only new mobile change is the keyboard fix, so bundling it with the next batch will save EAS credits. Operator can request vc1035 anytime.
+
+Needs from MAC: nothing critical. Two things in your pocket when convenient: (a) push notifications phase 2a from PUSH_NOTIFICATIONS_PLAN.md, (b) confirm build 33 surfaced and admin gate bypass works for the operator.

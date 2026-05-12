@@ -1,9 +1,12 @@
 const { sql } = require('@vercel/postgres');
 const { getOne, getMany, run } = require('./_utils/db');
+const { authenticate } = require('./_utils/auth');
 
 /**
  * Seed community feeds with realistic content.
- * POST /api/seed-community?secret=MIGRATE_SECRET
+ * Auth options:
+ *   - POST /api/seed-community?secret=$MIGRATE_SECRET   (matching x-migrate-secret header also works)
+ *   - POST /api/seed-community   with Authorization: Bearer <admin-user-jwt>
  *
  * Creates seed accounts per city and populates posts, replies, and likes
  * with backdated timestamps spread over 7 days.
@@ -14,9 +17,14 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Auth: migrate-secret OR admin user JWT
   const secret = req.headers['x-migrate-secret'] || req.query.secret;
-  if (secret !== process.env.MIGRATE_SECRET) {
-    return res.status(403).json({ error: 'Forbidden' });
+  const secretOk = secret && secret === process.env.MIGRATE_SECRET;
+  if (!secretOk) {
+    const user = await authenticate(req);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden — requires MIGRATE_SECRET or admin user auth' });
+    }
   }
 
   const results = { accounts_deleted: 0, accounts_created: 0, posts_created: 0, replies_created: 0, likes_created: 0, errors: [] };

@@ -128,3 +128,33 @@ The PC side is currently:
 - During this session the local pbxproj for safetea-capacitor got reset to upstream branch state (lost manual signing config + version bumps + RebrandBridge target wire-up). Restored from memory `feedback_safetea_ios_deploy.md`. Worth committing the safetea-capacitor build config to a long-lived branch to prevent recurrence — or merging it into main after the iOS-only scope rule is revisited.
 - Status: WAITING (on Apple ASC to surface build 33; on user to test admin features post-bypass)
 - Needs from PC: Android KeyboardAvoidingView fix per user spec on next session.
+
+### [2026-05-12 01:08 CT] PC → MAC | DONE | full P0 sweep + AI Companion live + Android vc1034 shipped
+
+Massive PC-side push since 22:25. Punch list:
+
+**AI Companion is LIVE.** Migration ran via `/api/migrate-ai-companion?bypass=…` (commit `57a271b`, reverted in `d5eb18d`). Three tables now exist on prod: `ai_companion_settings`, `ai_chat_messages`, `ai_journal_entries`. `/api/ai/chat` returns 200 since 05:06 UTC. Test the chat on iOS — it should respond now.
+
+**Five show-stoppers from a full code audit, all fixed:**
+1. `api/iap/verify-receipt.js` was writing `tier` instead of `subscription_tier` → no iOS purchase ever unlocked features. Fixed (`f88cb31`).
+2. `api/iap/update-tier.js` was a self-upgrade exploit (any user → `plus`). Now returns 410 Gone (`f88cb31`).
+3. `safetea-mobile/services/api.ts` was POSTing phone code to `/auth/verify` (404). Now `/auth/verify-code` (`23a9062`).
+4. `safetea-mobile/app/safelink.tsx` was a placeholder. Now a real MVP screen: Start/Stop, GPS heartbeat, share link via `navigator.share`, active-session resume (`d4a8f4e`).
+5. `safetea-mobile/store/pulseStore.ts` `sendAlertImpl` was `console.log`. Now POSTs `/api/pulse/escalate`. The escalate endpoint itself was also a `{dispatched:false}` stub → now fan-outs real Twilio SMS with anomaly-aware copy and Google Maps link (`e07554d`).
+
+**Alessia upgraded.** System prompt (`services/ai/companion.js`, commit `af81ab5`) now has full SafeTea toolbox knowledge — SafeLink, Pulse, Tether, Date Check-in, Trigger Alert, Fake Call, Screening, Scam DB, Red Flag Scanner, Vault, Photo Removal, Safety Briefs, Safety Map, Name Watch — grouped by purpose with "best for" hints. Includes match-tool-to-situation examples. She introduces the user to specific tools instead of generic "safety tips".
+
+**`/api/ai/health` is no longer 404.** Vercel hides underscore filenames. Added `api/ai/health.js` as a re-export of `_health.js` + admin.html now hits the new URL (`3e5b10a`).
+
+**95-op schema reconcile shipped.** Production was logging "column does not exist" continuously on `cron/checkin-reminders` (500 every 15min), `cities`, `community`, `trial/status`, `moderation/status`, `auth/verify/status`. New `api/migrate-schema-reconcile.js` (`0b2520a`) ALTERed in 95 columns/indexes across `date_checkouts`, `city_votes`, `cities`, `posts`, `users`, `connected_accounts`. Zero failures. Bypass reverted (`468681c`). Errors should clear within the next 15-min cron window.
+
+**Smaller cleanups in the same push:** `vercel.json` weekly-digest → `weekly-report` (`c9dea8c`), SafeLink public-broadcast trust gate 100→80 (`8366165`), referral CTA card on dashboard (`759213d`), Stripe checkout success deep-links to `safetea://subscription-success` for Android (`8ba3366`).
+
+**Android builds on Desktop:**
+- `safetea-android-2026-05-12-vc1033.aab` (52.5 MB) — minimum to clear Play's "upgrade path broken" hard block.
+- `safetea-android-2026-05-12-vc1034.aab` (52.5 MB) — adds the five show-stopper mobile fixes. Use this one if you can; vc1033 is the fallback.
+
+**Android keyboard fix incoming.** Will land on `feat/android-safety-briefs` shortly — `chat.tsx` currently uses `behavior={Platform.OS === 'ios' ? 'padding' : undefined}` which leaves Android with no behavior. Switching to `'padding'` for both platforms and adding `keyboardVerticalOffset` for Android. Goes in the next Android build (vc1035).
+
+Status: DONE on all the above; the next thing rolling is Wave 2 (subscription mgmt screen, onboarding wow moment, drip email, Sentry).
+Needs from MAC: nothing. Push notifications phase 2a from `PUSH_NOTIFICATIONS_PLAN.md` is still in your column when you're ready.

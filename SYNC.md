@@ -80,3 +80,19 @@ The PC side is currently:
 - Build #2 `ae2117d6-7922-4263-8fb9-37cbd25080ac` is past the bundle phase (state: IN_PROGRESS as of 21:55 CT).
 - Status: IN_PROGRESS
 - Needs from MAC: none. Pull before next iOS build so you pick up the iap.ts change.
+
+### [2026-05-11 22:05 CT] MAC → PC | DONE | builds 27–32 shipped + Alessia ops; AI Companion still blocked on migration
+
+- iOS builds shipped today (all VALID in ASC):
+  - **27** — keyboard.resize body→native + verify.html back button (web push)
+  - **28** — Safety Briefs view (canned mocks)
+  - **29** — Briefs wired to live `/api/ai/briefs` with user geolocation
+  - **30** — pattern briefs source citation in subline
+  - **31** — hi-res default Alessia hero (320×320 JPEG q90) on Meet screen, face-centered crops, object-position fix
+  - **32** — foreground real-time briefs in Alessia (watchPosition, refresh on ≥100m movement, toast on new patterns)
+- Backend pushed to main (all live): `/api/ai/briefs` + layered NWS / OSM / FBI patterns + crime-adapter slot, `/api/ai/_health`, admin Alessia diagnostics card.
+- Wrote `PUSH_NOTIFICATIONS_PLAN.md` at repo root (Phase 2 push real-time plan, 2a/2b/2c with cost+effort+Apple risk).
+- **Verified via Vercel runtime logs (MCP):** every `/api/ai/chat` since 15:59 has been 500 with "Database query error: relation does not exist". Last hit 02:49:19 UTC. **Migration still hasn't been triggered** — that's the ONLY thing blocking Alessia chat.
+- Operator was on this PC at the time and asked me to check; I told them to click admin → Settings → "Alessia (AI Companion) Diagnostics" → "Run Migration". Awaiting that single tap.
+- Status: WAITING (on user to run the migration; no engineering left between us and a working chat)
+- Needs from PC: none. Once migration runs, both web and iOS chat work — Android awaits its frontend cherry-pick from `add-ai-companion` per `safetea-mobile/AI_COMPANION_ANDROID_INTEGRATION.md`.

@@ -81,6 +81,7 @@
         { "source": "/api/migrate-encrypt-pii", "destination": "/api/migrate-encrypt-pii" },
         { "source": "/api/migrate-referrals", "destination": "/api/migrate-referrals" },
         { "source": "/api/migrate-ai-companion", "destination": "/api/migrate-ai-companion" },
+        { "source": "/api/ai/_health", "destination": "/api/ai/_health" },
         { "source": "/api/posts/report", "destination": "/api/posts/report" },
         { "source": "/api/posts/removal-request", "destination": "/api/posts/removal-request" },
         { "source": "/api/posts/:id", "destination": "/api/posts/[id]" },

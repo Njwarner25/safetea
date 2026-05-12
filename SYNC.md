@@ -1,0 +1,72 @@
+# Mac ↔ PC Sync Log
+
+Shared, append-only log used by the two Claude Code sessions working on this repo:
+
+- **PC** (`/c/Users/User/safetea/`, Windows) — Android (`safetea-mobile/`), web (`public/`), backend (`api/`, `services/`), Vercel ops.
+- **MAC** (`Nathaniels-Mac-mini`, macOS) — iOS Capacitor (`safetea-capacitor-ios/`), Xcode, TestFlight, App Store Connect, admin diagnostics tooling.
+
+There is no live channel between sessions. This file IS the channel.
+
+---
+
+## Protocol — read this first every session
+
+1. **On session start**, before any work: `git fetch && git pull origin main` and read this file end-to-end.
+2. **Before touching the other side's surface**, append a `### NEED FROM` entry below and push immediately. Then stop and wait — never edit cross-platform files unilaterally.
+3. **When you finish a meaningful unit of work**, append a `### DONE` entry and push.
+4. **When blocked**, append a `### BLOCKED` entry and push. Other side responds on next session.
+5. **Append only.** Never edit prior entries. If you misspoke, append a correction with a `(corrects: <timestamp>)` note.
+6. **Conflicts:** if `git push` rejects, pull, append your entry below whatever the other side just added, push.
+7. **Always include timestamp + side + summary**. Format:
+
+   ```
+   ### [YYYY-MM-DD HH:MM CT] PC → MAC | DONE | <one-line summary>
+   - Detail
+   - Status: <DONE | IN_PROGRESS | BLOCKED | WAITING>
+   - Needs from other side: <explicit ask or "none">
+   ```
+
+8. **Don't cross the platform line.** PC never edits `safetea-capacitor-ios/` or other iOS-only files. MAC never edits `safetea-mobile/` or Android-only files. Cross-platform files (`api/`, `services/`, `public/`, `vercel.json`, `package.json` at repo root, `SYNC.md`) are either-side but require a `### NEED FROM` ack if the change could surprise the other.
+
+---
+
+## Current Status
+
+| Stream | Owner | Branch | State (as of 2026-05-11 18:55 CT) |
+|---|---|---|---|
+| Android Expo (`safetea-mobile/`) | PC | `feat/android-safety-briefs` | EAS build `7e03252d-82ba-409d-aff1-d7bcbe5f5edd` in flight, versionCode 24 |
+| iOS Capacitor (`safetea-capacitor-ios/`) | MAC | `ios-capacitor-rebrand-config` (last known) | Idle since `MAC_HANDOFF.md` runbook landed |
+| Web / Backend (`public/`, `api/`, `services/`) | Either | `main` | Healthy. Recent: `/api/ai/_health`, Alessia diagnostics card, `/api/migrate-ai-companion` rewrite |
+| AI Companion (Alessia) | Either | `main` | Endpoints deployed but production DB migration NOT YET RUN — see Active Blockers |
+
+## Active Blockers
+
+- **AI Companion DB migration**: `/api/migrate-ai-companion` is wired (route fix shipped in commit `ad57540`) but production tables `ai_companion_settings` / `ai_chat_messages` / `ai_journal_entries` don't exist yet. Both web and mobile chat will 500 until the migration runs. User to trigger via `/admin.html` → Alessia Diagnostics card → "Run Migration" button (it attaches the localStorage JWT; raw URL navigation 403s because `authenticate()` only reads `Authorization: Bearer`, not cookies).
+
+## Brief for next MAC session
+
+The PC side is currently:
+1. Mid-way through an Android Safety Briefs release (EAS build queued, then `eas submit` to Play internal track gated on user approval).
+2. Has shipped backend `vercel.json` route fix for `/api/migrate-ai-companion`.
+3. Created this sync file.
+
+**What MAC should pick up when next active:**
+
+- No immediate iOS task is queued from PC side.
+- If user reports iOS Alessia chat issues post-migration: same backend, same fix — no iOS code changes needed. The Capacitor WebView loads `getsafetea.app` so once migration runs, iOS should work too.
+- Verify the latest `/admin.html` Alessia diagnostics card renders correctly inside the iOS WebView (no LinkHer rebrand JS regressions).
+- If you ship a new TestFlight build, append a `### DONE` entry below with the build number and version so PC knows iOS state.
+
+---
+
+## Log
+
+### [2026-05-11 18:55 CT] PC → MAC | DONE | sync system bootstrapped
+
+- Created `SYNC.md` at repo root with the protocol above.
+- Both sides should now pull/append/push as documented.
+- Android Safety Briefs build is queued on EAS (`7e03252d-82ba-409d-aff1-d7bcbe5f5edd`, versionCode 24, profile production). ETA ~15-20 min.
+- After build is READY, PC will `eas submit --platform android` to Play Store internal track, gated on user explicit approval.
+- AI Companion migration still pending — user to hit admin diagnostics card.
+- Status: IN_PROGRESS
+- Needs from MAC: none right now. Read this file on your next session.

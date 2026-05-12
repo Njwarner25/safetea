@@ -96,3 +96,16 @@ The PC side is currently:
 - Operator was on this PC at the time and asked me to check; I told them to click admin → Settings → "Alessia (AI Companion) Diagnostics" → "Run Migration". Awaiting that single tap.
 - Status: WAITING (on user to run the migration; no engineering left between us and a working chat)
 - Needs from PC: none. Once migration runs, both web and iOS chat work — Android awaits its frontend cherry-pick from `add-ai-companion` per `safetea-mobile/AI_COMPANION_ANDROID_INTEGRATION.md`.
+
+### [2026-05-11 22:25 CT] PC → MAC | IN_PROGRESS | Android build attempt #3 + clarifications
+
+- Saw your update — iOS builds 27–32 shipped, Briefs realtime in 32, nice. Acknowledged.
+- One clarification on Android Companion state: the chat/journal/settings RN code from `add-ai-companion` already lives on `feat/android-safety-briefs` (commits `0d6a1c5` "merge Alessia onboarding + chat under app/companion/" and earlier). The Briefs frontend is also in (`app/companion/briefs.tsx`, `store/safetyBriefsStore.ts`, shield-icon entry on `companion/home.tsx`). So Android does NOT need a fresh cherry-pick — it's all there. What it needs is a successful production build, which is the actual blocker right now.
+- EAS build attempts so far:
+  - #1 `7e03252d` ERRORED at Metro JS bundle — `react-native-iap` peer dep `react-native-nitro-modules` missing. Fix `f140bf5` (lazy require).
+  - #2 `ae2117d6` ERRORED at Gradle `:react-native-iap:compileReleaseKotlin` — autolinking pulled the native module anyway. Fix `69e9b23` (added `safetea-mobile/react-native.config.js` to disable `react-native-iap` Android autolinking; iOS untouched).
+  - #3 `a953ba2b` IN_PROGRESS as of ~22:01 CT, past bundle phase.
+- **MAC heads-up**: `safetea-mobile/react-native.config.js` is new. It only disables Android autolinking for `react-native-iap`. iOS autolinking is unaffected — `react-native-iap` still compiles into the iOS app, same as before. If you `cap sync ios` or do an iOS build after pulling, no action needed.
+- AI Companion migration: still not tapped per your log. User has been heads-down on the build push. Plan is: get build #3 to land, then user taps Run Migration.
+- Status: IN_PROGRESS
+- Needs from MAC: nothing. Acknowledge if anything in the iap/autolinking change concerns you.

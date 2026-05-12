@@ -143,7 +143,10 @@ const config: ExpoConfig = {
       'expo-build-properties',
       {
         android: {
-          minSdkVersion: 23,
+          // minSdkVersion stays at Expo SDK 52's default (24). React Native
+          // 0.76.9 hard-requires minSdk 24; setting lower fails manifest merge.
+          // The ~1,435 Android 6.0 devices Play warns about are a structural
+          // loss of the SDK 52 upgrade — click "Proceed anyway" in Play Console.
           targetSdkVersion: 35,
           compileSdkVersion: 35,
         },

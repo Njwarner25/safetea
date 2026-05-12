@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
 
     try {
         const body = await parseBody(req);
-        const { plan, interval } = body;
+        const { plan, interval, client } = body;
 
         // Support: plus (legacy 'pro' accepted and mapped to 'plus')
         const normalizedPlan = (plan === 'pro') ? 'plus' : plan;
@@ -25,6 +25,23 @@ module.exports = async function handler(req, res) {
         if (normalizedPlan !== 'plus' || !PRICES[priceKey]) {
             return res.status(400).json({ error: 'Invalid plan. Must be "plus".' });
         }
+
+        // Detect mobile callers so we can deep-link back into the native app instead of stranding them on the web dashboard.
+        const ua = String(req.headers['user-agent'] || '');
+        const clientHeader = String(req.headers['x-client'] || req.headers['x-safetea-client'] || '');
+        const isAndroid =
+            (typeof client === 'string' && client.toLowerCase() === 'android') ||
+            /SafeTea-Android/i.test(ua) ||
+            /SafeTea-Android/i.test(clientHeader);
+
+        const webSuccessUrl = APP_URL + '/dashboard.html?tab=profile&upgrade=success';
+        const webCancelUrl = APP_URL + '/dashboard.html?tab=profile';
+        const successUrl = isAndroid
+            ? 'safetea://subscription-success?session_id={CHECKOUT_SESSION_ID}'
+            : webSuccessUrl;
+        const cancelUrl = isAndroid
+            ? 'safetea://subscription-cancelled'
+            : webCancelUrl;
 
         // Get or create Stripe customer
         let customerId = user.stripe_customer_id;
@@ -50,7 +67,8 @@ module.exports = async function handler(req, res) {
                     metadata: { plan: 'plus' }
                 });
                 await run('UPDATE users SET subscription_tier = $1 WHERE id = $2', ['plus', user.id]);
-                return res.status(200).json({ url: APP_URL + '/dashboard.html?tab=profile&upgrade=success' });
+                // In-app plan change has no checkout session, so always return the web confirmation URL even for Android — the Capacitor wrapper handles it.
+                return res.status(200).json({ url: webSuccessUrl });
             }
         }
 
@@ -59,9 +77,9 @@ module.exports = async function handler(req, res) {
             mode: 'subscription',
             payment_method_types: ['card'],
             line_items: [{ price: PRICES[priceKey], quantity: 1 }],
-            metadata: { plan: 'plus', safetea_user_id: String(user.id) },
-            success_url: APP_URL + '/dashboard.html?tab=profile&upgrade=success',
-            cancel_url: APP_URL + '/dashboard.html?tab=profile'
+            metadata: { plan: 'plus', safetea_user_id: String(user.id), client: isAndroid ? 'android' : 'web' },
+            success_url: successUrl,
+            cancel_url: cancelUrl
         });
 
         return res.status(200).json({ url: session.url });

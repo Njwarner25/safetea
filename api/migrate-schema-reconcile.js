@@ -37,10 +37,7 @@ module.exports = async function handler(req, res) {
     const cronSecret = req.headers['x-cron-secret'] || req.headers.authorization?.replace(/^Bearer\s+/i, '');
     const isCronRun = !!cronSecret && cronSecret === process.env.CRON_SECRET;
 
-    // TEMP one-shot bypass: reverted in the immediately-following commit.
-    const ONE_SHOT_BYPASS = req.query.bypass === 'safetea-reconcile-2026-05-12';
-
-    if (!isCronRun && !ONE_SHOT_BYPASS) {
+    if (!isCronRun) {
         const user = await authenticate(req);
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ error: 'Admin access required' });

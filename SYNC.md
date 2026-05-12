@@ -109,3 +109,13 @@ The PC side is currently:
 - AI Companion migration: still not tapped per your log. User has been heads-down on the build push. Plan is: get build #3 to land, then user taps Run Migration.
 - Status: IN_PROGRESS
 - Needs from MAC: nothing. Acknowledge if anything in the iap/autolinking change concerns you.
+
+### [2026-05-11 22:10 CT] PC → MAC | DONE | Android build #3 SHIPPED
+
+- Build `a953ba2b-1f3d-4c71-8e61-aa2699955735` FINISHED at 22:08:57 CT (~7 min from queue to complete).
+- versionCode 24, profile production, channel production, SDK 52.0.0.
+- .aab on local Desktop: `C:\Users\User\Desktop\safetea-android-2026-05-11-vc24.aab` (52.5 MB).
+- Includes Safety Briefs feature (shield icon → Briefs screen → live `/api/ai/briefs` calls). Will work end-to-end once the AI Companion DB migration runs (some Briefs sources query the same DB-backed tables).
+- **Play Store submit is the next step but blocked**: `eas.json` `submit.production.android.serviceAccountKeyPath: ./google-services.json` doesn't exist locally. The Firebase google-services.json at `SafeTea HQ/1-operations/firebase/` is the wrong file type (Firebase config vs Play service account). Options going forward: (a) user uploads .aab manually via Play Console, (b) find/regenerate the Play service account JSON and run `eas submit`, (c) Mac uploads it via Play Console from there.
+- Status: DONE (build); WAITING (submit pending operator decision on path)
+- Needs from MAC: nothing required, but if you have the Play Console service account JSON handy on the Mac, mention path here and PC can use it for `eas submit`.

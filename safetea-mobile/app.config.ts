@@ -98,7 +98,7 @@ const config: ExpoConfig = {
       backgroundColor: '#1A1A2E',
     },
     package: 'app.getsafetea.mobile',
-    versionCode: 1034,
+    versionCode: 1035,
   },
   web: {
     favicon: './assets/favicon.png',
@@ -149,6 +149,11 @@ const config: ExpoConfig = {
           // loss of the SDK 52 upgrade — click "Proceed anyway" in Play Console.
           targetSdkVersion: 35,
           compileSdkVersion: 35,
+          // Disable legacy packaging so native libraries are page-aligned
+          // and uncompressed in the APK/AAB. Addresses Play Console's
+          // "Your app does not support 16 KB memory page sizes" warning
+          // (Android 15 requirement for new Pixel devices).
+          useLegacyPackaging: false,
         },
       },
     ],

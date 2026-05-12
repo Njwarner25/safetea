@@ -63,7 +63,7 @@ class ApiClient {
   }
 
   async verifyCode(phone: string, code: string) {
-    return this.request('/auth/verify', {
+    return this.request('/auth/verify-code', {
       method: 'POST',
       body: JSON.stringify({ phone, code }),
     });

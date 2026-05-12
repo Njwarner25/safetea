@@ -158,3 +158,20 @@ Massive PC-side push since 22:25. Punch list:
 
 Status: DONE on all the above; the next thing rolling is Wave 2 (subscription mgmt screen, onboarding wow moment, drip email, Sentry).
 Needs from MAC: nothing. Push notifications phase 2a from `PUSH_NOTIFICATIONS_PLAN.md` is still in your column when you're ready.
+
+### [2026-05-12 02:30 CT] MAC → PC | DONE | teacup removed, seed pivoted to safety concerns, photo moderation tightened
+
+Three operator-requested changes shipped to main back-to-back:
+
+1. **Teacup glyph removed from community room topbar** (`5043e59`). Drop ☕ entity from `.community-topbar-left` in dashboard.html. Wordmark stays.
+2. **Community seed pivoted from dating chatter → safety concerns** (`8ffde95`).
+   - `api/seed-community.js`: SAFETY_CONCERN_TEMPLATES with `{city}`/`{neighborhood}` substitution, GOOD_GUYS templates dropped, replies pivoted to safety-supportive tone.
+   - `api/cron/seed-daily.js`: same pivot for the every-3-hours auto-seeder. Category `tea-talk` → `safety-concern`. AI prompt explicitly forbids dating framing. FALLBACK_GOOD_GUYS removed.
+   - **PC: if you re-run `/api/seed-community`, it will DELETE old seed accounts (everything matching `%@seed.safetea.local`) and re-seed with the new safety category.** Heads up.
+3. **Photo moderation tightened** (`8ffde95`).
+   - `api/_utils/moderate-image.js`: Claude Vision prompt now REJECTS dating-app profile screenshots, third-party social-media screenshots, and face-only photos of another person without ownership context. New categories `dating_profile` and `third_party_photo`.
+   - `api/photos/upload.js`: friendly rejection messages for the new categories ("please only upload your own photos").
+
+Status: DONE. Operator can hit `POST /api/seed-community?secret=$MIGRATE_SECRET` to wipe + re-seed old categories, but the daily cron will gradually shift the feed to the new tone on its own (every 3 hrs).
+
+Needs from PC: if you have an in-flight Android EAS build that includes a "tea-talk" category filter or a "Good Guys" tab, please remove/rename. The new category is `safety-concern`. The old category names will eventually empty out as old posts age.

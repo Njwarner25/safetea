@@ -56,10 +56,12 @@ module.exports = async function handler(req, res) {
         plan = ANNUAL_PRODUCTS.has(productId) ? 'annual' : 'monthly';
       }
 
-      // Update user tier in database
+      // Update user tier in database. Column is `subscription_tier` everywhere
+      // else (auth/login.js, webhook-stripe.js, all gating). Writing to `tier`
+      // here meant successful TestFlight purchases never unlocked anything.
       await sql`
         UPDATE users
-        SET tier = ${tier},
+        SET subscription_tier = ${tier},
             subscription_platform = 'apple',
             subscription_product_id = ${productId},
             subscription_expires_at = ${validationResult.expiresAt ? new Date(validationResult.expiresAt) : null},

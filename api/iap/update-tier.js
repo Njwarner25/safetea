@@ -1,32 +1,21 @@
-const { authenticate, cors, parseBody } = require('../_utils/auth');
-const { run } = require('../_utils/db');
+// CLOSED: this endpoint previously accepted any authenticated user POSTing
+// `{ tier: 'plus' | 'pro' | 'premium' }` and wrote it directly to the users
+// table with no receipt validation — a five-minute self-upgrade exploit.
+//
+// Subscription tier changes must go through one of:
+//   - api/iap/verify-receipt.js  (iOS — validates against Apple's server)
+//   - api/webhook-stripe.js      (web/Android Stripe webhook)
+//
+// Leaving the route in place but rejecting all calls so no caller silently
+// breaks; once we confirm no client paths hit it, the file can be deleted.
 
-const VALID_TIERS = ['free', 'plus', 'pro', 'premium'];
+const { cors } = require('../_utils/auth');
 
 module.exports = async function handler(req, res) {
   cors(res, req);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const user = await authenticate(req);
-  if (!user) return res.status(401).json({ error: 'Unauthorized' });
-
-  const body = await parseBody(req);
-  const { tier, productId } = body;
-
-  if (!tier || !VALID_TIERS.includes(tier)) {
-    return res.status(400).json({ error: 'Invalid tier' });
-  }
-
-  try {
-    await run(
-      'UPDATE users SET subscription_tier = $1, apple_product_id = $2 WHERE id = $3',
-      [tier, productId || null, user.id]
-    );
-
-    return res.json({ success: true, tier });
-  } catch (err) {
-    console.error('Tier update error:', err);
-    return res.status(500).json({ error: 'Failed to update tier' });
-  }
+  return res.status(410).json({
+    error: 'Endpoint removed',
+    detail: 'Tier changes must come from validated Apple receipts or Stripe webhooks.',
+  });
 };

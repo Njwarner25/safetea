@@ -6,7 +6,14 @@
 // safetea.plus.* (the App Store Connect product IDs already exist with that
 // naming and can't be renamed after creation).
 import { Platform } from 'react-native';
-import * as RNIap from 'react-native-iap';
+import type * as RNIapNS from 'react-native-iap';
+// Lazy-load so Metro can dead-code-eliminate on Android (where every
+// exported function early-returns via isIOS()). Avoids pulling in
+// react-native-iap's peer dep `react-native-nitro-modules` into the
+// Android bundle.
+const RNIap: typeof RNIapNS = (Platform.OS === 'ios'
+  ? require('react-native-iap')
+  : null) as typeof RNIapNS;
 import { api } from './api';
 
 export const IOS_PRODUCT_IDS = [

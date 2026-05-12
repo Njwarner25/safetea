@@ -102,6 +102,46 @@ module.exports = async function handler(req, res) {
         console.error('[Register] Welcome email failed:', err.message);
       });
 
+      // Enqueue the 3-email welcome drip sequence (day 0, day 2, day 5).
+      // Non-blocking — registration succeeds even if the queue insert
+      // fails. The cron handler (api/cron/email-drip.js) picks these
+      // up every 30 minutes and sends via SendGrid.
+      (async function enqueueDrip() {
+        try {
+          await run(`CREATE TABLE IF NOT EXISTS email_drip_queue (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            template VARCHAR(64) NOT NULL,
+            send_at TIMESTAMPTZ NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            error TEXT,
+            sent_at TIMESTAMPTZ,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          )`);
+          await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_email_drip_queue_user_template
+                     ON email_drip_queue (user_id, template)`);
+
+          // Day 0 fires within the next 30-min cron tick (so it lands
+          // immediately after the synchronous welcome email above).
+          // Day 2 and Day 5 are scheduled from NOW().
+          const rows = [
+            { template: 'welcome_tour',     offset: "INTERVAL '0 days'" },
+            { template: 'social_proof',     offset: "INTERVAL '2 days'" },
+            { template: 'conversion_offer', offset: "INTERVAL '5 days'" },
+          ];
+          for (const r of rows) {
+            await run(
+              `INSERT INTO email_drip_queue (user_id, template, send_at)
+               VALUES ($1, $2, NOW() + ${r.offset})
+               ON CONFLICT (user_id, template) DO NOTHING`,
+              [user.id, r.template]
+            );
+          }
+        } catch (e) {
+          console.error('[Register] Drip enqueue failed:', e.message);
+        }
+      })();
+
       return res.status(201).json({
               token,
               user: {

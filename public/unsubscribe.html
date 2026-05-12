@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#E8A0B5">
+  <title>Unsubscribe - SafeTea</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #1A1A2E;
+      color: #F0D0C0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+    .card {
+      max-width: 480px;
+      width: 100%;
+      background: #22223A;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .logo {
+      color: #E8A0B5;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 22px;
+    }
+    h1 {
+      color: #fff;
+      font-size: 22px;
+      margin: 0 0 14px;
+    }
+    p {
+      color: #C8C8E0;
+      font-size: 15px;
+      line-height: 1.55;
+      margin: 0 0 18px;
+    }
+    button {
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      color: #fff;
+      border: 0;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .muted { color: #8080A0; font-size: 13px; margin-top: 22px; }
+    .ok { color: #2ecc71; }
+    .err { color: #e74c3c; }
+    a { color: #E8A0B5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">SafeTea</div>
+    <div id="prompt">
+      <h1>Unsubscribe from emails?</h1>
+      <p>You'll stop getting onboarding and marketing emails from us. Safety-critical messages (check-in reminders, SOS reports, account warnings) will still come through — those aren't optional.</p>
+      <button id="confirm">Unsubscribe</button>
+      <p class="muted">Changed your mind? Just close this tab — nothing happens until you tap the button.</p>
+    </div>
+    <div id="done" style="display:none;">
+      <h1 class="ok">You're unsubscribed.</h1>
+      <p>We won't send any more marketing emails. If you want back in, log in and update your preferences in settings.</p>
+      <p class="muted"><a href="/">Back to SafeTea</a></p>
+    </div>
+    <div id="error" style="display:none;">
+      <h1 class="err">Something went wrong</h1>
+      <p id="errmsg">This unsubscribe link looks invalid or expired. If you keep getting emails you don't want, reply to one and we'll handle it manually.</p>
+      <p class="muted"><a href="mailto:support@getsafetea.app">Email support</a></p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var qs = new URLSearchParams(window.location.search);
+      var u = qs.get('u');
+      var t = qs.get('t');
+      var btn = document.getElementById('confirm');
+      var prompt = document.getElementById('prompt');
+      var done = document.getElementById('done');
+      var errBox = document.getElementById('error');
+      var errMsg = document.getElementById('errmsg');
+
+      if (!u || !t) {
+        prompt.style.display = 'none';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.textContent = 'Working…';
+        fetch('/api/unsubscribe?u=' + encodeURIComponent(u) + '&t=' + encodeURIComponent(t), {
+          method: 'POST'
+        })
+          .then(function (r) {
+            return r.json().then(function (body) { return { ok: r.ok, body: body }; });
+          })
+          .then(function (result) {
+            if (result.ok && result.body && result.body.success) {
+              prompt.style.display = 'none';
+              done.style.display = 'block';
+            } else {
+              prompt.style.display = 'none';
+              if (result.body && result.body.error) {
+                errMsg.textContent = result.body.error;
+              }
+              errBox.style.display = 'block';
+            }
+          })
+          .catch(function () {
+            prompt.style.display = 'none';
+            errBox.style.display = 'block';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

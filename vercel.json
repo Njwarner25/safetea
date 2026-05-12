@@ -34,7 +34,7 @@
             ]
         },
         {
-            "source": "/(index|about|blog|faq|terms|privacy|guidelines|billing-policy|subscribe|join|login|admin|dashboard|photo-removal|red-flag-scanner|redflag|date-status)(\\.html)?",
+            "source": "/(index|about|blog|faq|terms|privacy|guidelines|billing-policy|subscribe|subscription|join|login|admin|dashboard|onboarding|photo-removal|red-flag-scanner|redflag|date-status)(\\.html)?",
             "headers": [
                 { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
                 { "key": "Pragma", "value": "no-cache" },
@@ -61,7 +61,8 @@
         { "path": "/api/cron/checkin-reminders", "schedule": "*/15 * * * *" },
         { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" },
         { "path": "/api/cron/weekly-report", "schedule": "0 18 * * 0" },
-        { "path": "/api/cron/expire-org-access", "schedule": "0 5 * * *" }
+        { "path": "/api/cron/expire-org-access", "schedule": "0 5 * * *" },
+        { "path": "/api/cron/email-drip", "schedule": "*/30 * * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
@@ -139,6 +140,8 @@
         { "source": "/api/migrate-expire-referrals", "destination": "/api/migrate-expire-referrals" },
         { "source": "/api/cron/weekly-report", "destination": "/api/cron/weekly-report" },
         { "source": "/api/cron/expire-org-access", "destination": "/api/cron/expire-org-access" },
+        { "source": "/api/cron/email-drip", "destination": "/api/cron/email-drip" },
+        { "source": "/api/unsubscribe", "destination": "/api/unsubscribe" },
         { "source": "/api/migrate-org-codes", "destination": "/api/migrate-org-codes" },
         { "source": "/api/org-code/redeem", "destination": "/api/org-code/redeem" },
         { "source": "/api/org-code/validate", "destination": "/api/org-code/validate" },
@@ -150,6 +153,7 @@
         { "source": "/api/version", "destination": "/api/version" },
         { "source": "/api/iap/verify-receipt", "destination": "/api/iap/verify-receipt" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
-        { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" }
+        { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },
+        { "source": "/api/onboarding/test-sms", "destination": "/api/onboarding/test-sms" }
     ]
 }

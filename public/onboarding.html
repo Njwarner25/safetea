@@ -34,7 +34,7 @@
 
   .viewport{flex:1;overflow:hidden;position:relative;min-height:0}
   .track{display:flex;height:100%;transition:transform 0.35s cubic-bezier(0.33,0.68,0.35,1)}
-  .slide{flex:0 0 100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 30px;text-align:center}
+  .slide{flex:0 0 100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 30px;text-align:center;overflow-y:auto}
 
   .icon-wrap{width:140px;height:140px;border-radius:40px;display:flex;align-items:center;justify-content:center;margin-bottom:36px;position:relative}
   .icon-wrap::before{content:"";position:absolute;inset:-20px;border-radius:50%;border:1px solid rgba(232,160,181,0.12);pointer-events:none}
@@ -57,9 +57,32 @@
   .s3 .icon-wrap i{color:#f1c40f}
   .s4 .icon-wrap{background:linear-gradient(135deg,rgba(232,160,181,0.22),rgba(242,112,89,0.18))}
   .s4 .icon-wrap i{color:#f27059}
+  .s5 .icon-wrap{background:linear-gradient(135deg,rgba(232,160,181,0.18),rgba(155,89,182,0.1))}
+  .s5 .icon-wrap i{color:#E8A0B5}
+  .s6 .icon-wrap{background:rgba(46,204,113,0.15)}
+  .s6 .icon-wrap i{color:#2ecc71}
 
   /* Slide 4 (trial) extra emphasis */
   .s4 .free-badge{display:inline-block;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:14px;letter-spacing:0.6px;text-transform:uppercase}
+
+  /* Trusted-contact form (slide 5) */
+  .tc-form{width:100%;max-width:380px;margin-top:8px;display:flex;flex-direction:column;gap:12px}
+  .tc-form label{display:block;text-align:left;font-size:12px;color:#8080A0;margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+  .tc-form input{width:100%;background:#141428;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;color:#fff;font-family:'Inter',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s}
+  .tc-form input:focus{border-color:#E8A0B5}
+  .tc-form input::placeholder{color:#5A5A78}
+  .tc-error{display:none;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:#ff8a7a;font-size:13px;padding:10px 12px;border-radius:8px;text-align:left;line-height:1.4}
+  .tc-error.show{display:block}
+  .tc-help{font-size:13px;color:#8080A0;margin-top:4px;line-height:1.45}
+
+  /* Slide 5 trims the icon a touch so the form fits on shorter phones */
+  .s5 .icon-wrap{width:96px;height:96px;border-radius:28px;margin-bottom:18px}
+  .s5 .icon-wrap i{font-size:42px}
+  .s5 h1{font-size:28px;margin-bottom:10px}
+
+  /* Slide 6 (confirmation) — bigger, calmer */
+  .s6 h1{font-size:30px}
+  .s6 .name-pill{display:inline-block;background:rgba(232,160,181,0.15);color:#E8A0B5;font-weight:600;padding:2px 10px;border-radius:8px}
 
   .bottom{flex-shrink:0;padding:0 24px 24px}
   .dots{display:flex;justify-content:center;gap:8px;margin-bottom:22px}
@@ -68,6 +91,7 @@
 
   .primary{display:block;width:100%;background:linear-gradient(135deg,#E8A0B5,#D4768E);color:#fff;border:none;padding:17px;border-radius:14px;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.2px;box-shadow:0 10px 28px rgba(232,160,181,0.25)}
   .primary:active{transform:scale(0.99)}
+  .primary[disabled]{opacity:0.6;cursor:not-allowed;box-shadow:none}
   .secondary{display:block;width:100%;background:transparent;border:none;color:#8080A0;padding:13px;margin-top:8px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer}
   .secondary:hover{color:#fff}
 
@@ -76,6 +100,9 @@
     .icon-wrap i{font-size:48px}
     .slide h1{font-size:28px;margin-bottom:12px}
     .slide p{font-size:14px}
+    .s5 .icon-wrap{width:72px;height:72px;border-radius:22px;margin-bottom:12px}
+    .s5 .icon-wrap i{font-size:32px}
+    .s5 h1{font-size:24px}
   }
 </style>
 </head>
@@ -120,12 +147,36 @@
       <p>Unlock the encrypted Safety Vault, Name Watch, extra photo scans, and priority support — free for 7 days. No card required.</p>
     </section>
 
+    <section class="slide s5">
+      <div class="icon-wrap"><i class="fas fa-user-plus"></i></div>
+      <h1>Who's your most-<span class="pink">trusted person?</span></h1>
+      <p>If something ever goes sideways, this is who gets pinged first. Add them now and we'll send a friendly test message so you both know it works.</p>
+      <form class="tc-form" id="tc-form" autocomplete="off" onsubmit="return submitTrustedContact(event)">
+        <div>
+          <label for="tc-name">Their Name</label>
+          <input id="tc-name" type="text" placeholder="e.g. Sarah" maxlength="80" autocomplete="off" required>
+        </div>
+        <div>
+          <label for="tc-phone">Phone Number</label>
+          <input id="tc-phone" type="tel" placeholder="(555) 123-4567" maxlength="20" inputmode="tel" autocomplete="off" required>
+        </div>
+        <div class="tc-error" id="tc-error"></div>
+        <p class="tc-help">We'll send them one short SMS so they can see exactly what a real alert looks like. That's it — no spam, no follow-ups.</p>
+      </form>
+    </section>
+
+    <section class="slide s6">
+      <div class="icon-wrap"><i class="fas fa-circle-check"></i></div>
+      <h1>Test message sent <span class="pink">to <span class="name-pill" id="tc-confirm-name">your person</span>.</span></h1>
+      <p>This is exactly how a real alert would look — but with your live location attached. You're ready.</p>
+    </section>
+
   </div>
 </div>
 
 <div class="bottom">
   <div class="dots" id="dots">
-    <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
   </div>
   <button class="primary" id="next" type="button" onclick="advance()">Next</button>
   <button class="secondary" id="back" type="button" onclick="goBack()" style="display:none">Back</button>
@@ -134,35 +185,155 @@
 <script>
 (function(){
   'use strict';
-  var LAST = 4;
+  var LAST = 6;             // s0..s6 — last slide is the confirmation screen
+  var TRUSTED_CONTACT = 5;  // slide index for the form
+  var CONFIRMATION   = 6;   // slide index for the success screen
   var index = 0;
   var track = document.getElementById('track');
   var dots = document.querySelectorAll('.dot');
-  var next = document.getElementById('next');
+  var nextBtn = document.getElementById('next');
   var back = document.getElementById('back');
+  var skipBtn = document.getElementById('skip');
+  var errEl = document.getElementById('tc-error');
+
+  function authToken(){
+    try { return localStorage.getItem('safetea_token') || ''; } catch(e) { return ''; }
+  }
 
   function render(){
     track.style.transform = 'translateX(-' + (index * 100) + '%)';
     for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('active', i === index);
-    next.textContent = (index === LAST) ? 'Get Started' : 'Next';
     back.style.display = index === 0 ? 'none' : 'block';
+
+    if (index === TRUSTED_CONTACT) {
+      // If the user isn't signed in yet, skip the trusted-contact step entirely —
+      // it requires a JWT. The form would 401 anyway.
+      if (!authToken()) { finish('no_auth'); return; }
+      nextBtn.textContent = 'Send Test Message';
+      skipBtn.style.display = '';
+    } else if (index === CONFIRMATION) {
+      nextBtn.textContent = 'Go to Dashboard';
+      skipBtn.style.display = 'none';
+    } else if (index === LAST) {
+      nextBtn.textContent = 'Get Started';
+      skipBtn.style.display = '';
+    } else {
+      nextBtn.textContent = 'Next';
+      skipBtn.style.display = '';
+    }
+  }
+
+  function showErr(msg){
+    if (!errEl) return;
+    errEl.textContent = msg;
+    errEl.classList.add('show');
+  }
+  function clearErr(){
+    if (!errEl) return;
+    errEl.textContent = '';
+    errEl.classList.remove('show');
   }
 
   window.advance = function(){
+    if (index === TRUSTED_CONTACT) {
+      // Submit the form via the form-submit handler instead of free-advancing
+      submitTrustedContact();
+      return;
+    }
+    if (index === CONFIRMATION) {
+      finish('confirmation_cta');
+      return;
+    }
     if (index < LAST) { index++; render(); return; }
     finish('primary_cta');
   };
-  window.goBack = function(){ if (index > 0) { index--; render(); } };
+  window.goBack = function(){ if (index > 0) { index--; clearErr(); render(); } };
   window.finish = function(source){
     try { localStorage.setItem('safetea_onboarded', '1'); } catch(e){}
     if (window.gtag) try { gtag('event', 'onboarding_finish', { source: source || 'unknown' }); } catch(e){}
-    window.location.replace('/login');
+    // If the user is signed in, send them straight to the dashboard.
+    // Otherwise fall back to /login (the historical destination).
+    var dest = authToken() ? '/dashboard.html' : '/login';
+    window.location.replace(dest);
   };
 
-  // Touch swipe
+  // ===== Trusted-contact submit flow =====
+  window.submitTrustedContact = function(ev){
+    if (ev && ev.preventDefault) ev.preventDefault();
+    clearErr();
+
+    var nameEl  = document.getElementById('tc-name');
+    var phoneEl = document.getElementById('tc-phone');
+    var name  = (nameEl && nameEl.value || '').trim();
+    var phone = (phoneEl && phoneEl.value || '').trim();
+
+    if (!name)  { showErr('Please enter their name.'); return false; }
+    if (!phone) { showErr('Please enter a phone number.'); return false; }
+    // Loose client-side check — server / Twilio do the strict E.164 validation.
+    var digits = phone.replace(/[^0-9]/g, '');
+    if (digits.length < 10) { showErr('That phone number looks too short.'); return false; }
+
+    var token = authToken();
+    if (!token) { showErr('You need to be signed in to add a contact.'); return false; }
+
+    nextBtn.disabled = true;
+    nextBtn.textContent = 'Sending…';
+
+    var authHeaders = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+
+    // Step 1: save the contact via the existing endpoint (same table the SOS / SafeLink flows read)
+    fetch('/api/recording/contacts', {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ contactName: name, contactPhone: phone })
+    })
+    .then(function(r){ return r.json().then(function(d){ return { status: r.status, body: d }; }); })
+    .then(function(resp){
+      // Treat 409 (already saved) as success — the user owns this number, that's all we need.
+      if (resp.status >= 400 && resp.status !== 409) {
+        var msg = (resp.body && resp.body.error) || 'Could not save that contact.';
+        throw new Error(msg);
+      }
+      // Step 2: fire the test SMS
+      return fetch('/api/onboarding/test-sms', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ contactName: name, contactPhone: phone })
+      });
+    })
+    .then(function(r){ return r.json().then(function(d){ return { status: r.status, body: d }; }); })
+    .then(function(resp){
+      if (resp.status >= 400) {
+        var msg = (resp.body && resp.body.error) || 'Could not send the test message.';
+        throw new Error(msg);
+      }
+      var landedName = (resp.body && resp.body.contactName) || name;
+      var pill = document.getElementById('tc-confirm-name');
+      if (pill) pill.textContent = landedName;
+      if (window.gtag) try { gtag('event', 'onboarding_test_sms_sent'); } catch(e){}
+      // Advance to confirmation
+      index = CONFIRMATION;
+      nextBtn.disabled = false;
+      render();
+    })
+    .catch(function(err){
+      nextBtn.disabled = false;
+      nextBtn.textContent = 'Send Test Message';
+      showErr((err && err.message) || 'Something went wrong. Please try again.');
+    });
+
+    return false;
+  };
+
+  // Touch swipe — but don't swipe-past the trusted-contact slide.
   var startX = null, startY = null, startT = 0, dragging = false;
   track.addEventListener('touchstart', function(e){
     if (!e.touches || !e.touches[0]) return;
+    // Ignore swipes that start inside an input/form on the trusted-contact slide.
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'BUTTON')) {
+      dragging = false; return;
+    }
     startX = e.touches[0].clientX; startY = e.touches[0].clientY; startT = Date.now(); dragging = true;
   }, { passive: true });
   track.addEventListener('touchend', function(e){
@@ -173,14 +344,19 @@
     var dx = endX - startX, dy = endY - startY;
     var dt = Date.now() - startT;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) && dt < 800) {
-      if (dx < 0 && index < LAST) index++;
-      else if (dx > 0 && index > 0) index--;
+      if (dx < 0) {
+        // Don't allow swipe-forward past the form or out of the confirmation
+        if (index < TRUSTED_CONTACT) index++;
+      } else if (dx > 0 && index > 0 && index !== CONFIRMATION) {
+        index--;
+      }
       render();
     }
   }, { passive: true });
 
-  // Keyboard (desktop)
+  // Keyboard (desktop) — disable arrow advance on the form/confirmation so typing doesn't bump slides.
   document.addEventListener('keydown', function(e){
+    if (index === TRUSTED_CONTACT || index === CONFIRMATION) return;
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); advance(); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); goBack(); }
   });

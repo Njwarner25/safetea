@@ -17,15 +17,15 @@ module.exports = async function handler(req, res) {
   const body = await parseBody(req);
   const { latitude, longitude, label, isPublic, broadcastMessage, category } = body;
 
-  // Public broadcasts require maximum trust score (100/100) — anti-stalker gate
+  // Public broadcasts require a high trust score (80/100) — anti-stalker gate
   const wantsPublic = !!isPublic;
   if (wantsPublic) {
     const trustScore = typeof user.trust_score === 'number' ? user.trust_score : 0;
-    if (trustScore < 100) {
+    if (trustScore < 80) {
       return res.status(403).json({
-        error: 'Public SafeLink broadcasts require a perfect trust score (100/100). Complete every verification step in your profile to unlock.',
+        error: 'Public SafeLink broadcasts require a trust score of 80 or higher. Finish the verification steps in your profile to unlock.',
         code: 'trust_score_required',
-        required: 100,
+        required: 80,
         current: trustScore,
       });
     }

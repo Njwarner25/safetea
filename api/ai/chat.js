@@ -23,6 +23,7 @@
 const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { encrypt, decrypt } = require('../_utils/encrypt');
+const { captureException } = require('../_utils/sentry');
 const companion = require('../../services/ai/companion');
 
 const MAX_MESSAGE_LEN = 4000;
@@ -46,6 +47,7 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
         console.error('[ai/chat]', err);
+        captureException(err, { route: 'ai/chat', method: req.method });
         return res.status(500).json({ error: 'Server error' });
     }
 };
@@ -115,6 +117,7 @@ async function handleChat(req, res, user) {
         tokens = result.tokens;
     } catch (err) {
         console.error('[ai/chat] model error', err && err.message);
+        captureException(err, { route: 'ai/chat', subsystem: 'model' });
         return res.status(502).json({ error: 'Companion is unavailable right now. Try again in a moment.' });
     }
 

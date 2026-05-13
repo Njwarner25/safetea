@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken');
 const { getOne } = require('./db');
+const { captureException } = require('./sentry');
 
 // SECURITY: JWT_SECRET must be set in environment — no fallback
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error('CRITICAL: JWT_SECRET environment variable is not set. Auth will fail.');
+  captureException(new Error('JWT_SECRET environment variable is not set'), { source: 'auth.init' });
 }
 
 function generateToken(user) {

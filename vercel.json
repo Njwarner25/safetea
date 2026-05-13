@@ -50,7 +50,7 @@
                 { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
                 { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(self)" },
                 { "key": "X-DNS-Prefetch-Control", "value": "off" },
-                { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com https://api.mapbox.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://api.mapbox.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.googleapis.com https://nominatim.openstreetmap.org https://serpapi.com https://www.openstreetmap.org https://api.mapbox.com https://events.mapbox.com; frame-src https://www.openstreetmap.org https://www.google.com" }
+                { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com https://api.mapbox.com https://browser.sentry-cdn.com https://js.sentry-cdn.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://api.mapbox.com; font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https: data: blob:; connect-src 'self' https://*.googleapis.com https://nominatim.openstreetmap.org https://serpapi.com https://www.openstreetmap.org https://api.mapbox.com https://events.mapbox.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io; frame-src https://www.openstreetmap.org https://www.google.com" }
             ]
         }
     ],
@@ -62,7 +62,8 @@
         { "path": "/api/cron/expire-referrals", "schedule": "0 2 * * *" },
         { "path": "/api/cron/weekly-report", "schedule": "0 18 * * 0" },
         { "path": "/api/cron/expire-org-access", "schedule": "0 5 * * *" },
-        { "path": "/api/cron/email-drip", "schedule": "*/30 * * * *" }
+        { "path": "/api/cron/email-drip", "schedule": "*/30 * * * *" },
+        { "path": "/api/cron/process-deletions", "schedule": "0 4 * * *" }
     ],
     "rewrites": [
         { "source": "/api/screening/catfish", "destination": "/api/screening/catfish" },
@@ -149,6 +150,7 @@
         { "source": "/api/admin/seed-from-blog", "destination": "/api/admin/seed-from-blog" },
         { "source": "/api/migrate-verification-deadline", "destination": "/api/migrate-verification-deadline" },
         { "source": "/api/users/trust", "destination": "/api/users/trust" },
+        { "source": "/api/users/trust-breakdown", "destination": "/api/users/trust-breakdown" },
         { "source": "/api/admin/recent-signups", "destination": "/api/admin/recent-signups" },
         { "source": "/api/version", "destination": "/api/version" },
         { "source": "/api/iap/verify-receipt", "destination": "/api/iap/verify-receipt" },
@@ -156,6 +158,11 @@
         { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },
         { "source": "/api/onboarding/test-sms", "destination": "/api/onboarding/test-sms" },
         { "source": "/api/push/register-token", "destination": "/api/push/register-token" },
-        { "source": "/api/admin/push-test", "destination": "/api/admin/push-test" }
+        { "source": "/api/admin/push-test", "destination": "/api/admin/push-test" },
+        { "source": "/api/sentry-config", "destination": "/api/sentry-config" },
+        { "source": "/api/account/delete", "destination": "/api/account/delete" },
+        { "source": "/api/account/restore", "destination": "/api/account/restore" },
+        { "source": "/api/account/export", "destination": "/api/account/export" },
+        { "source": "/api/cron/process-deletions", "destination": "/api/cron/process-deletions" }
     ]
 }

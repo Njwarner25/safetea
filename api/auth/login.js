@@ -3,6 +3,7 @@ const { getOne, run } = require('../_utils/db');
 const { generateToken, cors, parseBody } = require('../_utils/auth');
 const { checkRateLimit, getClientIP } = require('../../services/rateLimit');
 const { getClientIp, getUserAgent, getDeviceHash } = require('../_utils/client-info');
+const { captureException } = require('../_utils/sentry');
 
 module.exports = async function handler(req, res) {
     cors(res, req);
@@ -107,6 +108,7 @@ module.exports = async function handler(req, res) {
         });
     } catch (error) {
         console.error('Login error:', error.message, error.stack);
+        captureException(error, { route: 'auth/login', method: req.method });
         return res.status(500).json({ error: 'Login failed: ' + error.message });
     }
 };

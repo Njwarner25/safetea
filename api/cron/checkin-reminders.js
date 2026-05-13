@@ -1,5 +1,6 @@
 const { getMany, run } = require('../_utils/db');
 const { sendSafeTeaCheckInReminderEmail } = require('../../services/email');
+const { captureException } = require('../_utils/sentry');
 
 module.exports = async function handler(req, res) {
   // Only allow GET (Vercel cron) or POST
@@ -42,6 +43,7 @@ module.exports = async function handler(req, res) {
           sent++;
         } catch (err) {
           console.error(`[CheckinReminder] Failed for checkout ${checkout.id}:`, err.message);
+          captureException(err, { route: 'cron/checkin-reminders', checkout_id: checkout.id });
         }
       }
     }
@@ -53,6 +55,7 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error('[CheckinReminder] Cron error:', err);
+    captureException(err, { route: 'cron/checkin-reminders' });
     return res.status(500).json({ error: 'Cron failed', details: err.message });
   }
 };

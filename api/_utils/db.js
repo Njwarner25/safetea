@@ -1,4 +1,5 @@
 const { sql } = require('@vercel/postgres');
+const { captureException } = require('./sentry');
 
 async function query(text, params = []) {
     try {
@@ -10,6 +11,12 @@ async function query(text, params = []) {
           if (error.code) console.error('  DB error code:', error.code);
           if (error.severity) console.error('  Severity:', error.severity);
           if (error.routine) console.error('  Routine:', error.routine);
+          captureException(error, {
+              source: 'db.query',
+              code: error.code,
+              severity: error.severity,
+              routine: error.routine,
+          });
 
           // Retry once on connection errors (ECONNRESET, ECONNREFUSED, connection terminated, etc.)
           const retriable = ['ECONNRESET', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT', '57P01', '57P03', '08006', '08001', '08003', '08004'];
@@ -31,6 +38,7 @@ async function query(text, params = []) {
                   return retry;
               } catch (retryErr) {
                   console.error('  Retry also failed:', retryErr.message || retryErr);
+                  captureException(retryErr, { source: 'db.query.retry', code: retryErr.code });
                   throw retryErr;
               }
           }

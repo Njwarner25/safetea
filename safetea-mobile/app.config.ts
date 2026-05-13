@@ -99,6 +99,40 @@ const config: ExpoConfig = {
     },
     package: 'app.getsafetea.mobile',
     versionCode: 1036,
+    // Android share-sheet intent filters are declared TWICE on purpose:
+    //
+    // 1. android.intentFilters below — manifest-merged at native build time,
+    //    explicit declaration of SEND / SEND_MULTIPLE acceptance per
+    //    mime type. This is what makes us show up in the OS share sheet.
+    // 2. expo-share-intent plugin (see plugins[]) — ships a native bridge
+    //    that reads ACTION_SEND's EXTRA_STREAM and exposes the content URI
+    //    to JS via useShareIntent(). Without it, expo-linking's URL event
+    //    listener never sees SEND intents (those don't carry a URL).
+    //
+    // The plugin's androidIntentFilters mirrors the mime list below so
+    // both declarations stay in lock-step; the merged AndroidManifest
+    // will have the union, which is fine (duplicates are coalesced).
+    intentFilters: [
+      {
+        action: 'SEND',
+        category: ['DEFAULT'],
+        data: [
+          { mimeType: 'image/*' },
+          { mimeType: 'video/*' },
+          { mimeType: 'audio/*' },
+          { mimeType: 'application/pdf' },
+          { mimeType: 'text/plain' },
+        ],
+      },
+      {
+        action: 'SEND_MULTIPLE',
+        category: ['DEFAULT'],
+        data: [
+          { mimeType: 'image/*' },
+          { mimeType: 'video/*' },
+        ],
+      },
+    ],
   },
   web: {
     favicon: './assets/favicon.png',
@@ -137,6 +171,21 @@ const config: ExpoConfig = {
       {
         icon: TOP_LEVEL_ICON,
         color: IS_IOS_BUILD ? LINKHER.notificationColor : SAFETEA.notificationColor,
+      },
+    ],
+    // expo-share-intent: ships the native bridge that reads
+    // ACTION_SEND's EXTRA_STREAM on Android and the iOS NSItemProvider
+    // payload (when the iOS Share Extension target ships — that's still
+    // Mac's column; see SYNC.md). Android-only here: iOS is disabled to
+    // avoid clashing with the Capacitor iOS shell on Mac's side.
+    [
+      'expo-share-intent',
+      {
+        disableIOS: true,
+        // Mime patterns must match android.intentFilters above so the
+        // OS only routes mime types we actually accept.
+        androidIntentFilters: ['image/*', 'video/*', '*/*'],
+        androidMultiIntentFilters: ['image/*', 'video/*'],
       },
     ],
     [

@@ -538,15 +538,19 @@
                     <div id="cities-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
                 </div>
                 <div class="card" style="margin-top:16px">
-                    <h3><i class="fas fa-apple-alt" style="color:#FF6BA8"></i> App Store Reviewer Account</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Create or refresh the LinkHer demo account that Apple's App Store reviewer uses to test the app. Sets role <code>admin</code>, tier <code>plus</code>, all verifications true, trust score 100 — bypasses every gate so the reviewer can exercise every feature without going through real verification flows. Idempotent (same email will be upgraded if it exists). Paste the credentials into App Store Connect → My Apps → LinkHer → App Information → Sign-In Required.</p>
+                    <h3><i class="fas fa-apple-alt" style="color:#FF6BA8"></i> LinkHer Admin / Reviewer Accounts</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:14px">Create or refresh a LinkHer-branded full-access account separate from your SafeTea operator login. Sets role <code>admin</code>, tier <code>plus</code>, all verifications true, trust 100. Idempotent — same email will be upgraded if it exists. Use the App Store Reviewer preset for App Store Connect's <em>Sign-In Required</em> field; use the LinkHer Admin preset for ongoing iOS-side admin work.</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+                        <button class="btn btn-ghost" type="button" onclick="useReviewerDefaults()" style="font-size:12px"><i class="fas fa-apple-alt"></i> Use App Store Reviewer defaults</button>
+                        <button class="btn btn-ghost" type="button" onclick="useLinkHerAdminDefaults()" style="font-size:12px"><i class="fas fa-shield-heart"></i> Use LinkHer Admin defaults</button>
+                    </div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-                        <input type="email" class="form-input" id="reviewer-email" placeholder="Reviewer email" value="appstore-reviewer@linkher.app" style="flex:1;min-width:240px">
+                        <input type="email" class="form-input" id="reviewer-email" placeholder="Email" value="appstore-reviewer@linkher.app" style="flex:1;min-width:240px">
                         <input type="text" class="form-input" id="reviewer-password" placeholder="Password (8+ chars)" value="LinkHerReview2026!" style="flex:1;min-width:200px">
                         <input type="text" class="form-input" id="reviewer-name" placeholder="Display name" value="App Store Reviewer" style="flex:1;min-width:200px">
                     </div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="btn btn-primary" onclick="createReviewerAccount()"><i class="fas fa-user-plus"></i> Create / Upgrade Reviewer</button>
+                        <button class="btn btn-primary" onclick="createReviewerAccount()"><i class="fas fa-user-plus"></i> Create / Upgrade Account</button>
                     </div>
                     <div id="reviewer-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
                 </div>
@@ -1702,6 +1706,16 @@
         }
 
         // ===== APP STORE REVIEWER ACCOUNT =====
+        function useReviewerDefaults() {
+            document.getElementById('reviewer-email').value = 'appstore-reviewer@linkher.app';
+            document.getElementById('reviewer-password').value = 'LinkHerReview2026!';
+            document.getElementById('reviewer-name').value = 'App Store Reviewer';
+        }
+        function useLinkHerAdminDefaults() {
+            document.getElementById('reviewer-email').value = 'admin@linkher.app';
+            document.getElementById('reviewer-password').value = 'LinkHerAdmin2026!';
+            document.getElementById('reviewer-name').value = 'LinkHer Admin';
+        }
         async function createReviewerAccount() {
             var email = (document.getElementById('reviewer-email').value || '').trim();
             var password = document.getElementById('reviewer-password').value || '';

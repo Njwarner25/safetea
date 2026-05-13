@@ -7,6 +7,7 @@ import { Colors, APP_NAME_PLUS } from '../constants/colors';
 import { useScreenshotPrevention } from '../utils/useScreenshotPrevention';
 import PulseAreYouOkayPrompt from '../components/pulse/PulseAreYouOkayPrompt';
 import { initIAP, setupPurchaseListener, endIAP } from '../services/iap';
+import { registerPushToken } from '../services/push-registration';
 import { useAuthStore } from '../store/authStore';
 
 SplashScreen.preventAutoHideAsync();
@@ -16,6 +17,23 @@ export default function RootLayout() {
 
   useEffect(() => {
     SplashScreen.hideAsync();
+  }, []);
+
+  // Register the device push token with our backend once auth is restored.
+  // Runs once on app start; the helper itself is idempotent and no-ops if
+  // there's no auth token yet (will try again on the next launch).
+  useEffect(() => {
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      const unsub = useAuthStore.subscribe((state: any) => {
+        if (state.token) {
+          registerPushToken();
+          unsub();
+        }
+      });
+      return unsub;
+    }
+    registerPushToken();
   }, []);
 
   useEffect(() => {

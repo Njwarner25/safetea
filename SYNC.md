@@ -295,3 +295,79 @@ Operator also needs to create the APNs key in Apple Developer Console and set th
 Status: PC side caught up. Waiting on MAC for iOS push wiring + next TestFlight build.
 Needs from MAC: see iOS push wiring spec above. No other dependencies.
 
+
+### [2026-05-12 23:25 CT] PC → MAC | IN_PROGRESS | iOS keyboard upgrade — please apply to Capacitor local pages
+
+Operator reports keyboard still covers chat on iOS — Alessia and likely other surfaces. PC just upgraded `public/js/ios-keyboard-fix.js` to be MORE aggressive: it now auto-detects every `position: fixed` / `position: sticky` element anchored to the lower 40% of the viewport and inline-translates them up by the keyboard height. No CSS class required. That covers every getsafetea.app page loaded inside the iOS WebView.
+
+But `safetea-capacitor/www/alessia.html` is a LOCAL file (preloaded with the Capacitor bundle, not served from the URL). Please patch it directly with the same logic.
+
+**Exact JS to drop into `safetea-capacitor/www/alessia.html`** (replace your build-33 visualViewport listener with this — it's a strict superset; handles the compose bar AND any other fixed-bottom element including the call-to-action footer):
+
+```html
+<script>
+(function() {
+  if (!window.visualViewport) return;
+  var vv = window.visualViewport;
+  var shifted = new Map();
+
+  function findBottomFixed() {
+    var out = [], vh = window.innerHeight;
+    document.querySelectorAll('*').forEach(function(el) {
+      var cs = getComputedStyle(el);
+      if (cs.position !== 'fixed' && cs.position !== 'sticky') return;
+      if (cs.display === 'none' || cs.visibility === 'hidden') return;
+      var r = el.getBoundingClientRect();
+      if (r.bottom < vh * 0.6) return;
+      if (r.height > vh * 0.7) return;
+      out.push(el);
+    });
+    return out;
+  }
+
+  function apply(off) {
+    if (off > 0) {
+      findBottomFixed().forEach(function(el) {
+        if (!shifted.has(el)) shifted.set(el, el.style.transform || '');
+        el.style.transform = (shifted.get(el) ? shifted.get(el) + ' ' : '') + 'translateY(' + (-off) + 'px)';
+        el.style.transition = 'transform 0.15s ease-out';
+      });
+    } else {
+      shifted.forEach(function(t, el) { el.style.transform = t; });
+      shifted.clear();
+    }
+  }
+
+  function update() {
+    var off = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--ios-kb-offset', off + 'px');
+    if (off > 50) document.body.classList.add('ios-kb-open');
+    else document.body.classList.remove('ios-kb-open');
+    apply(off);
+  }
+  vv.addEventListener('resize', update);
+  vv.addEventListener('scroll', update);
+  document.addEventListener('focusin', function(e) {
+    var t = e.target;
+    if (!t || !t.tagName) return;
+    var tag = t.tagName.toLowerCase();
+    if (tag !== 'input' && tag !== 'textarea' && !t.isContentEditable) return;
+    setTimeout(function() { try { t.scrollIntoView({block:'center',behavior:'smooth'}); } catch(_){} }, 250);
+  });
+  document.addEventListener('focusout', function() { setTimeout(update, 100); });
+  setTimeout(update, 0);
+})();
+</script>
+```
+
+Drop at the bottom of `<head>` (or anywhere before `</body>`). Apply to any other local Capacitor pages that take text input (offline fallbacks, signup, settings, etc.).
+
+**Then please cut a new TestFlight build** bundling:
+- Updated `alessia.html` keyboard logic (above)
+- iOS push device-side wiring from my previous SYNC entry (`@capacitor/push-notifications` register + POST `/api/push/register-token`)
+- Anything else you're holding
+
+Operator wants both stores submitted in this cycle. Android vc1036 is on Desktop ready to go (`safetea-android-2026-05-12-vc1036.aab`, 52.5 MB).
+
+Status: PC done. Waiting on MAC for the iOS build.
+Needs from MAC: alessia.html keyboard patch + push device wiring + new TestFlight build.

@@ -154,6 +154,8 @@
         { "source": "/api/iap/verify-receipt", "destination": "/api/iap/verify-receipt" },
         { "source": "/api/iap/validate-receipt", "destination": "/api/iap/validate-receipt" },
         { "source": "/api/iap/update-tier", "destination": "/api/iap/update-tier" },
-        { "source": "/api/onboarding/test-sms", "destination": "/api/onboarding/test-sms" }
+        { "source": "/api/onboarding/test-sms", "destination": "/api/onboarding/test-sms" },
+        { "source": "/api/push/register-token", "destination": "/api/push/register-token" },
+        { "source": "/api/admin/push-test", "destination": "/api/admin/push-test" }
     ]
 }

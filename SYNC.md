@@ -190,3 +190,43 @@ Four more landed since the P0 sweep:
 Status: Wave 2 done. Android vc1035 build NOT yet kicked off — the only new mobile change is the keyboard fix, so bundling it with the next batch will save EAS credits. Operator can request vc1035 anytime.
 
 Needs from MAC: nothing critical. Two things in your pocket when convenient: (a) push notifications phase 2a from PUSH_NOTIFICATIONS_PLAN.md, (b) confirm build 33 surfaced and admin gate bypass works for the operator.
+
+### [2026-05-12 PC] PC → MAC | DONE | push notifications phase 2a — backend pipe shipped
+
+Backend half of Phase 2a from `PUSH_NOTIFICATIONS_PLAN.md` is live on `main`. Device-side wiring (APNs / FCM device-token registration) is still in MAC's column on the iOS Capacitor side; this commit gives you the server endpoints to call into and a working test path.
+
+**What's available now:**
+- `POST /api/push/register-token` (authenticated) — body `{ token, platform }` where platform is `'ios' | 'android' | 'web'`. UPDATEs `users.push_token / push_platform / push_token_updated_at`. Idempotent re-registrations; safe to call on every cold start.
+- `POST /api/admin/push-test` (admin-only) — body `{ userId, title, body }`. Fires a single push through the real APNs/FCM transport and returns `{ platform, sent, error?, skipped?, reason? }`. Useful before any real flow wires in.
+- `services/push/index.js` — server-side helper: `await sendPush({ userId, title, body, data })`. Looks up the user's stored token + platform + opt-in, inserts an audit row in `push_sends`, branches to `apns.js` (HTTP/2 + ES256 JWT against `api.push.apple.com`) or `fcm.js` (FCM v1 with a Bearer token derived from a service-account JWT). Missing env / package → returns `{ skipped: true, reason: 'not_configured' }` so no caller ever 500s on a misconfigured pipe.
+- Schema additions appended to `api/migrate-schema-reconcile.js`: `users.push_token`, `push_platform`, `push_opted_in` (default TRUE), `push_token_updated_at`; new `push_sends` audit table (id, user_id, title, body, data jsonb, platform, sent_at, status, error) + index on `(user_id, sent_at DESC)`. Re-run `/api/migrate-schema-reconcile` once to apply.
+- `vercel.json` rewrites added for both new endpoints.
+
+**Env vars the operator needs to set in Vercel** (none of these exist yet — pipe will gracefully `skipped: not_configured` until they're set):
+- iOS APNs (from Apple Developer → Keys → "+" → APNs → download .p8):
+  - `APNS_KEY_ID` — 10-char key ID shown next to the .p8
+  - `APNS_TEAM_ID` — 10-char team ID from Apple Developer membership page
+  - `APNS_BUNDLE_ID` — `app.linkher.mobile` (LinkHer iOS); SafeTea Android uses `app.getsafetea.mobile` but Android sends through FCM not APNs
+  - `APNS_PRIVATE_KEY` — full PEM contents of the .p8 (paste the file body in, including the `-----BEGIN PRIVATE KEY-----` / `-----END PRIVATE KEY-----` lines)
+  - `APNS_PRODUCTION` — `true` for production APNs, anything else routes to the sandbox host
+- Android FCM:
+  - `FCM_SERVICE_ACCOUNT_JSON` — the full service-account JSON (Firebase Console → Project Settings → Service Accounts → Generate new private key), pasted as a single string into the env var. We parse it at runtime, NOT a file path. The `\n` newlines inside the `private_key` field are handled.
+
+**No real pushes have been fired.** The pipe + schema are in; trigger logic (proximity reminders, check-in scheduled alerts, etc.) lands after MAC wires the device-token registration on iOS and the operator sets the four `APNS_*` vars.
+
+**For MAC, the device-side TODO:**
+- Wire `@capacitor/push-notifications` registration listener → `POST https://www.getsafetea.app/api/push/register-token` with the token + `platform: 'ios'`. Auth header is the standard `Bearer <JWT>`.
+- Apple Developer: generate the .p8 if not already done. Operator can paste the four `APNS_*` vars into Vercel after.
+- Smoke-test once env is set: from admin console call `POST /api/admin/push-test` with `{ userId: <yourself>, title: 'Test', body: 'Hello from the pipe' }`. Should land on the test device.
+
+Files touched:
+- `api/migrate-schema-reconcile.js` (appended push schema)
+- `api/push/register-token.js` (new)
+- `services/push/index.js` (new)
+- `services/push/apns.js` (new)
+- `services/push/fcm.js` (new)
+- `api/admin/push-test.js` (new)
+- `vercel.json` (two new rewrites)
+
+Status: DONE.
+Needs from MAC: device-side token registration on iOS Capacitor when convenient. No blocker for other PC work.

@@ -514,6 +514,38 @@ module.exports = async function handler(req, res) {
             "CREATE INDEX IF NOT EXISTS idx_appeals_violation ON appeals(violation_id)"
         );
 
+        // ============================================================
+        // Push notifications (Phase 2a) — device-token storage on users
+        // + send-audit log table. APNs (iOS) and FCM HTTPv1 (Android)
+        // both write through services/push/index.js. Backend pipe only;
+        // device-side registration is wired separately by the Capacitor
+        // / mobile clients calling POST /api/push/register-token.
+        // ============================================================
+        await tryRun(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token TEXT",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token TEXT"
+        );
+        await tryRun(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_platform VARCHAR(16)",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_platform VARCHAR(16)"
+        );
+        await tryRun(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_opted_in BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_opted_in BOOLEAN DEFAULT TRUE"
+        );
+        await tryRun(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token_updated_at TIMESTAMPTZ",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS push_token_updated_at TIMESTAMPTZ"
+        );
+        await tryRun(
+            "CREATE TABLE IF NOT EXISTS push_sends (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, title TEXT, body TEXT, data JSONB, platform VARCHAR(16), sent_at TIMESTAMPTZ DEFAULT NOW(), status VARCHAR(16) DEFAULT 'pending', error TEXT)",
+            "CREATE TABLE IF NOT EXISTS push_sends (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, title TEXT, body TEXT, data JSONB, platform VARCHAR(16), sent_at TIMESTAMPTZ DEFAULT NOW(), status VARCHAR(16) DEFAULT 'pending', error TEXT)"
+        );
+        await tryRun(
+            "CREATE INDEX IF NOT EXISTS idx_push_sends_user_sent ON push_sends(user_id, sent_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_push_sends_user_sent ON push_sends(user_id, sent_at DESC)"
+        );
+
         console.log('Schema reconcile migration completed. Changes applied:', changes.length);
         return res.status(200).json({
             success: true,

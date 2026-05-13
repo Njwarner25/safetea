@@ -108,6 +108,47 @@ That's the model. Notes on why it works:
 - Never lecture about consequences. Lead with care, not warning.
 - Match the calmer voice of the existing Alessia system prompt — same character.
 
+### Tether integration — "keep her close tonight"
+
+The eye check shouldn't dead-end at a private nudge. If the user is in an active Tether session (group-safety mode with friends), Alessia should be allowed to **discreetly elevate the user's protection level within the group**.
+
+**Scenario:**
+
+1. User runs the eye check at the bar around 11pm.
+2. Score is meaningfully below their baseline.
+3. Alessia gives the calm self-nudge ("you should probably get an Uber, let's get you around your friends, don't fall asleep anywhere unsafe").
+4. Alessia ALSO asks: *"Want me to give your Tether crew a heads-up so they keep close?"*
+5. If the user says yes (or their pre-set preference is "always yes when in Tether"), Alessia broadcasts a soft alert to the rest of the Tether:
+
+   > *"Hey — Sarah did a quick check-in and could use some extra eyes tonight. Try to stay within a couple of paces of her, and if she peels off, ping the group."*
+
+6. Tether mechanics change for that user for the rest of the session:
+   - Proximity threshold drops (e.g. 200ft → 50ft) so any straying triggers a faster prompt.
+   - Host gets a discreet "Alessia flagged Sarah" indicator on the map.
+   - Auto-notify the host if she's been still for more than 10 minutes.
+   - Any breach OR a missed Pulse check-in immediately escalates one level higher than normal.
+
+**User-agency rules** (must stay tight here — this is the line between "protective" and "patronizing"):
+
+- The intoxicated user must consent before the group broadcast. Yes/no on the spot, or pre-set preference in Tether settings.
+- The broadcast never includes the score, never includes the word "drunk" or "impaired." Always frames as "needs extra eyes," "could use closer company."
+- The user can revoke the flag at any time ("I'm good now, drop the alert").
+- The flag auto-expires when the Tether session ends or after 4 hours, whichever first.
+
+**Why this lands well:**
+
+- Turns a private moment into a community safety net without shame.
+- Plays to Tether's existing strength (group proximity awareness) — doesn't require new mechanics, just a new "elevated protection" mode.
+- Friends are already opted into the group session, so the broadcast feels natural, not surveillance.
+- For dating-safety use case: if you go out with friends in a Tether AND meet up with a date later, the friends know to watch you closer if you check yourself and aren't 100%.
+
+**Code-side notes when this v2 ships:**
+
+- Add `tether_sessions.member_protection_level` column — values: `normal` / `elevated` / `escalated`.
+- `tether_members.alessia_flagged_at` timestamp for the auto-expire logic.
+- The broadcast itself goes through the same Twilio/push pipe as existing Tether alerts.
+- Host map UI needs a small "Alessia flagged" indicator (single subtle icon on the avatar, not a flashing warning — preserves the user's dignity).
+
 ### Status
 
 **Stashed.** Revisit when SafeTea+ MRR > $5k/mo and we have proven funnel conversion.

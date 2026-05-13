@@ -63,93 +63,111 @@ module.exports = async function handler(req, res) {
 
   const result = { canonical_count: CANONICAL.length, cities_table: null, city_votes_table: null, errors: [] };
 
+  /**
+   * Name-based UPSERT — checks for an existing row by case-insensitive name
+   * first, UPDATEs it if present (ensures is_active=true + supplemental cols),
+   * INSERTs without a forced id otherwise (DB auto-assigns). Avoids unique-id
+   * AND unique-name constraint collisions that broke the earlier ON CONFLICT
+   * (id) approach.
+   */
+  async function upsertByName(table, nameCol, c, has) {
+    try {
+      const existing = await getOne(`SELECT id FROM ${table} WHERE LOWER(${nameCol}) = LOWER($1) LIMIT 1`, [c.name]);
+      if (existing && existing.id != null) {
+        const sets = [];
+        const vals = [];
+        if (has.state)    { sets.push(`state = $${sets.length + 1}`);    vals.push(c.state); }
+        if (has.slug)     { sets.push(`slug = $${sets.length + 1}`);     vals.push(c.slug); }
+        if (has.isActive) { sets.push(`is_active = true`); }
+        if (sets.length) {
+          vals.push(existing.id);
+          await run(`UPDATE ${table} SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals);
+        }
+        return { action: 'updated', id: existing.id };
+      }
+      // INSERT without id — let the DB assign
+      const cols = [nameCol];
+      const vals = [c.name];
+      if (has.state)     { cols.push('state'); vals.push(c.state); }
+      if (has.slug)      { cols.push('slug');  vals.push(c.slug); }
+      if (has.voteCount) { cols.push('vote_count'); vals.push(100 - CANONICAL.findIndex(x => x.name === c.name)); }
+      else if (has.votes){ cols.push('votes');      vals.push(100 - CANONICAL.findIndex(x => x.name === c.name)); }
+      if (has.isActive)  { cols.push('is_active'); vals.push(true); }
+      const placeholders = vals.map((_, i) => '$' + (i + 1)).join(', ');
+      const ins = await getOne(`INSERT INTO ${table} (${cols.join(', ')}) VALUES (${placeholders}) RETURNING id`, vals);
+      return { action: 'inserted', id: ins && ins.id };
+    } catch (e) {
+      result.errors.push({ table, city: c.name, error: e.message });
+      return { action: 'failed' };
+    }
+  }
+
   try {
     // ── cities table ──
     if (await tableExists('cities')) {
-      const hasIsActive = await columnExists('cities', 'is_active');
-      const hasSlug = await columnExists('cities', 'slug');
-      const hasState = await columnExists('cities', 'state');
-      const inserted = [];
-      const updated = [];
+      const has = {
+        isActive: await columnExists('cities', 'is_active'),
+        slug:     await columnExists('cities', 'slug'),
+        state:    await columnExists('cities', 'state'),
+      };
+      const upserted = [];
+      const keepIds = [];
       for (const c of CANONICAL) {
-        const cols = ['id', 'name'];
-        const vals = [c.id, c.name];
-        if (hasState) { cols.push('state'); vals.push(c.state); }
-        if (hasSlug)  { cols.push('slug');  vals.push(c.slug); }
-        if (hasIsActive) { cols.push('is_active'); vals.push(true); }
-        const placeholders = vals.map((_, i) => '$' + (i + 1)).join(', ');
-        const updateSet = ['name = EXCLUDED.name'];
-        if (hasState) updateSet.push('state = EXCLUDED.state');
-        if (hasSlug)  updateSet.push('slug = EXCLUDED.slug');
-        if (hasIsActive) updateSet.push('is_active = true');
-        try {
-          await run(
-            `INSERT INTO cities (${cols.join(', ')}) VALUES (${placeholders})
-             ON CONFLICT (id) DO UPDATE SET ${updateSet.join(', ')}`,
-            vals
-          );
-          inserted.push(c.name);
-        } catch (e) { result.errors.push({ table: 'cities', city: c.name, error: e.message }); }
+        const r = await upsertByName('cities', 'name', c, has);
+        if (r.action !== 'failed') {
+          upserted.push(c.name);
+          if (r.id != null) keepIds.push(r.id);
+        }
       }
       // Deactivate everything not in the canonical set
       let deactivated = 0;
-      if (hasIsActive) {
+      if (has.isActive && keepIds.length) {
         try {
-          const ids = CANONICAL.map(c => c.id);
+          const placeholders = keepIds.map((_, i) => '$' + (i + 1)).join(', ');
           const r = await run(
-            `UPDATE cities SET is_active = false WHERE id NOT IN (${ids.map((_, i) => '$' + (i + 1)).join(', ')})`,
-            ids
+            `UPDATE cities SET is_active = false WHERE id NOT IN (${placeholders})`,
+            keepIds
           );
           deactivated = (r && r.rowCount) || 0;
         } catch (e) { result.errors.push({ table: 'cities', op: 'deactivate', error: e.message }); }
       }
-      result.cities_table = { upserted: inserted, deactivated_other: deactivated, has_is_active: hasIsActive };
+      result.cities_table = { upserted, deactivated_other: deactivated, has_is_active: has.isActive, kept_ids: keepIds };
     } else {
       result.cities_table = { skipped: 'table not present' };
     }
 
     // ── city_votes table (read by /api/cities.js) ──
     if (await tableExists('city_votes')) {
-      const hasIsActive = await columnExists('city_votes', 'is_active');
       const cityNameCol = (await columnExists('city_votes', 'city_name')) ? 'city_name'
                        : (await columnExists('city_votes', 'city')) ? 'city'
                        : 'name';
-      const hasVoteCount = await columnExists('city_votes', 'vote_count');
-      const hasVotes = await columnExists('city_votes', 'votes');
-      const hasState = await columnExists('city_votes', 'state');
-      const inserted = [];
+      const has = {
+        isActive:  await columnExists('city_votes', 'is_active'),
+        state:     await columnExists('city_votes', 'state'),
+        voteCount: await columnExists('city_votes', 'vote_count'),
+        votes:     await columnExists('city_votes', 'votes'),
+      };
+      const upserted = [];
+      const keepIds = [];
       for (const c of CANONICAL) {
-        const cols = ['id', cityNameCol];
-        const vals = [c.id, c.name];
-        if (hasState) { cols.push('state'); vals.push(c.state); }
-        if (hasVoteCount) { cols.push('vote_count'); vals.push(100 - c.id); }
-        else if (hasVotes) { cols.push('votes'); vals.push(100 - c.id); }
-        if (hasIsActive) { cols.push('is_active'); vals.push(true); }
-        const placeholders = vals.map((_, i) => '$' + (i + 1)).join(', ');
-        const updateSet = [`${cityNameCol} = EXCLUDED.${cityNameCol}`];
-        if (hasState) updateSet.push('state = EXCLUDED.state');
-        if (hasIsActive) updateSet.push('is_active = true');
-        try {
-          await run(
-            `INSERT INTO city_votes (${cols.join(', ')}) VALUES (${placeholders})
-             ON CONFLICT (id) DO UPDATE SET ${updateSet.join(', ')}`,
-            vals
-          );
-          inserted.push(c.name);
-        } catch (e) { result.errors.push({ table: 'city_votes', city: c.name, error: e.message }); }
+        const r = await upsertByName('city_votes', cityNameCol, c, has);
+        if (r.action !== 'failed') {
+          upserted.push(c.name);
+          if (r.id != null) keepIds.push(r.id);
+        }
       }
       let deactivated = 0;
-      if (hasIsActive) {
+      if (has.isActive && keepIds.length) {
         try {
-          const ids = CANONICAL.map(c => c.id);
+          const placeholders = keepIds.map((_, i) => '$' + (i + 1)).join(', ');
           const r = await run(
-            `UPDATE city_votes SET is_active = false WHERE id NOT IN (${ids.map((_, i) => '$' + (i + 1)).join(', ')})`,
-            ids
+            `UPDATE city_votes SET is_active = false WHERE id NOT IN (${placeholders})`,
+            keepIds
           );
           deactivated = (r && r.rowCount) || 0;
         } catch (e) { result.errors.push({ table: 'city_votes', op: 'deactivate', error: e.message }); }
       }
-      result.city_votes_table = { upserted: inserted, deactivated_other: deactivated, has_is_active: hasIsActive, name_column: cityNameCol };
+      result.city_votes_table = { upserted, deactivated_other: deactivated, has_is_active: has.isActive, name_column: cityNameCol, kept_ids: keepIds };
     } else {
       result.city_votes_table = { skipped: 'table not present' };
     }

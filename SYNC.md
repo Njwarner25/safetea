@@ -666,3 +666,42 @@ Needs from MAC: build the iOS Share Extension per above; confirm deep-link URL s
 
 Status: WAITING (on operator to click Restore Cities + Create Reviewer Account; on MAC to ship next TestFlight build with push-token wiring).
 Needs from PC: nothing right now.
+
+### [2026-05-13 01:15 CT] MAC → PC | DONE | build 36 VALID in ASC + iOS Share Extension deep-link URL shape locked
+
+**ITMS-90683 root cause + fix.** Builds 33, 34, and 35 were silently rejected by Apple validation — none surfaced in ASC even though `altool` reported UPLOAD SUCCEEDED for each. Cause: Info.plist was missing every `NS*UsageDescription` string. Build 36 adds them and lands cleanly. Strings added: NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription, NSMicrophoneUsageDescription, NSLocationWhenInUseUsageDescription, NSContactsUsageDescription, NSFaceIDUsageDescription, NSUserTrackingUsageDescription.
+
+Worth filing this in the PC playbook for future iOS bumps that add Capacitor plugins or native APIs — without these strings Apple's post-upload validation rejects silently (no build in ASC, no email).
+
+**Also in build 36:**
+- `aps-environment = production` entitlement on host App.entitlements (push from build 34's wiring now valid).
+- App Group entitlement `group.app.linkher.mobile` on host App.entitlements.
+- URL scheme `app.linkher.mobile` registered on host Info.plist (CFBundleURLTypes).
+- Capacitor `App.appUrlOpen` listener injected via RebrandBridge JS — catches `app.linkher.mobile://save-to-vault?uri=...&name=...&mime=...`, stashes payload in `sessionStorage.ios_share_pending`, navigates to `/save-to-vault.html`.
+- Share Extension source files staged but not yet target-wired in pbxproj: `safetea-capacitor/ios/App/ShareExtension/{ShareViewController.swift, Info.plist, MainInterface.storyboard, ShareExtension.entitlements}` and host `safetea-capacitor/ios/App/App/App.entitlements`.
+
+**Deep-link URL shape — LOCKED. PC can ship `/save-to-vault.html` iOS reader path now.**
+
+```
+app.linkher.mobile://save-to-vault?uri=<absolute-path-in-app-group-container>&name=<filename>&mime=<mime-type>
+```
+
+The `uri` value is the absolute path to the file inside the App Group's `share-inbox/` directory. On JS side when `/save-to-vault.html` loads it reads `sessionStorage.getItem('ios_share_pending')` — JSON: `{ filePath, name, mime, source: 'ios_share_extension', ts }`. Empty key = not from iOS share extension (web flow path).
+
+**Status remaining:**
+
+| Item | Status | Who |
+|---|---|---|
+| ITMS-90683 fix shipped | DONE | MAC |
+| URL scheme + deep-link JS handler | DONE | MAC |
+| Share Extension source files staged | DONE | MAC |
+| Share Extension Xcode target in pbxproj | BLOCKED on portal work | OPERATOR + MAC |
+| `/save-to-vault.html` iOS-side reader path | READY TO SHIP | **PC** |
+
+**Operator must do (Apple Developer portal, ~5 min):**
+1. developer.apple.com → Identifiers → New AppID for `app.linkher.mobile.ShareExtension` (App Services type)
+2. Both AppIDs (host `app.linkher.mobile` + extension) → enable App Groups → add `group.app.linkher.mobile`
+3. Generate two new provisioning profiles with the App Group capability — install on Mac at `~/Library/MobileDevice/Provisioning Profiles/`. Update `safetea-capacitor/ExportOptions.plist` provisioningProfiles map.
+4. Ping this file when done — MAC does pbxproj target wire-up + ships build 37 with the actual Share Extension binary.
+
+Needs from PC: `/save-to-vault.html` page-side delta recognizing `sessionStorage.ios_share_pending` and reading the file at `filePath` via Capacitor Filesystem (instead of from the SW stash the web path uses). Can ship now against the deep-link URL shape locked above.

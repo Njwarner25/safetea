@@ -311,6 +311,104 @@ Daily Alessia check-in earns a streak token. Hit 7 days → unlock a small rewar
 
 ---
 
+---
+
+## Name Alert / Name Watch — keep with guardrails (operator's decision)
+
+**Context (the AWDTSG problem):**
+
+"Are We Dating The Same Guy" Facebook groups have been the subject of high-profile lawsuits (Stewart Lucas Murrey v group operators in 2024, multiple smaller defamation suits since). The core legal claim from plaintiffs: a platform that lets users post unverified accusations against named individuals enables and amplifies defamation, even if no single user is sued.
+
+Section 230 immunity protects platforms from being treated as the publisher of user content, but the recent suits target *individual posters*, the *group admins*, AND increasingly *the platform's design choices* that "facilitate the harm." That last vector is the unsettled legal frontier and the one that's expensive even when the platform eventually wins.
+
+**SafeTea's exposure surface today:**
+
+The Name Alert / Name Watch feature is the highest-risk surface in the product. It does exactly what AWDTSG does, with a smaller user base but the same legal pattern:
+
+- User posts about a named individual in the community feed
+- Other users get notifications about that name being mentioned
+- The named individual has no consent, no notice, no recourse pre-publication
+- The product actively *amplifies* mentions (the alert is the amplification)
+
+The operator already has a `Lovable-IP-Complaint-SafeTea-Dating-LLC.docx` on file from an earlier incident. Future exposure scales linearly with users.
+
+**The operator's decision (2026-05-13):** keep Name Alert / Name Watch as a feature, but tread carefully. The defensive value to users is real — for many people in early-stage dating it's the most concrete reassurance the app offers. The sunset plan below stays in this doc as a contingency *if* legal exposure forces the issue later, but is NOT the active plan.
+
+**Guardrails to layer in BEFORE growth makes the legal exposure linear:**
+
+These are the design choices that reduce defamation risk without removing the feature. Build order roughly easiest → hardest:
+
+1. **Verified-poster-only.** Only users who have completed Didit ID verification can post about named individuals. Eliminates throwaway-account drive-bys, gives any plaintiff a real defendant (which counterintuitively makes them LESS likely to sue the platform — they have someone closer to go after first). Cheap to add: gate `api/community/post.js` on `users.didit_verified`.
+
+2. **Mandatory experience-not-fact framing.** Posts that name a person must be tagged "my experience" via a required UI affordance. The phrase "[Name] is a scammer" should be impossible to publish; "I had a bad experience with [Name]" is. Backend regex pre-screen + a forced template. Reduces the "false statement of fact" element of defamation.
+
+3. **Right-of-response.** If the named individual has a SafeTea account (match on phone number / email / verified profile), they get a notification: *"Someone posted about you. Here's a summary. You can reply, request review, or contest."* That single feature is the strongest legal defense — you can't be "amplifying defamation without recourse" if there IS recourse built in.
+
+4. **No public name surfacing without corroboration.** A single post mentioning a name stays visible only to the poster's local trust network (the same 100-mile city radius the rest of the community uses). A name only triggers cross-city Name Alerts after **two or more independent verified posters** have flagged the same person within 90 days. Higher signal threshold = lower noise = lower legal exposure.
+
+5. **Last-name redaction by default.** First name + last initial only in posts that go to the broader community. Full names visible only when the user *requests* it (private detail unlock, with a logged audit trail of who saw it). Most defamation suits cite "publicly identifiable" — partial redaction breaks that chain.
+
+6. **Specific content rules.** Hard list of disallowed content: no SSNs, no addresses, no phone numbers, no employer names, no allegations of specific crimes (use generic "harmful behavior" categories instead — "manipulative," "dishonest," "made me feel unsafe"). Enforced by the existing moderation pipeline. Spec out at `services/moderation/name-post-rules.js`.
+
+7. **Annual D&O insurance audit.** Get a renewal quote each year that explicitly enumerates this feature. The premium reflects the exposure. If it's still <$5k/yr at 10,000 MAU you're fine. If it crosses $20k+ at any point, that's the trigger for switching to the sunset plan below.
+
+8. **Pre-publication legal review for high-risk posts.** AI classifier (using the existing Claude / OpenAI pipe) flags posts that read as accusations of crime or that name a public figure. Those don't auto-publish — they queue for moderator review. Cost: pennies per post + 1-2 hr/day of moderator time at the early stages.
+
+**Tone for marketing the feature:**
+
+Don't call it "Are We Dating The Same Guy." Don't borrow that language even casually. Call it what it actually is: *"Community memory."* Frame as "people who came before you sharing what they learned." Not "exposing bad guys" — that's the framing that loses in court.
+
+---
+
+**Contingency — if legal exposure forces a sunset:**
+
+**What Name Alert / Name Watch actually serves (the intent):**
+
+1. *"I want to know if someone I'm dating is being talked about."*
+2. *"I want to know if my own name comes up — defensive monitoring."*
+
+Both intents can be served by **lower-risk features that are already in the toolbox**:
+
+- **For intent 1**: the Scam Database (verifiable scam reports, factual claims), Red Flag Scanner (analyzes the user's own message threads — no third-party defamation surface), and Identity Verification on the date themselves (Didit ID check before meeting).
+- **For intent 2**: Vault evidence storage + Photo Removal flow already covers most defensive use cases. Users who want to know about themselves can use Google Alerts, which is the appropriate tool.
+
+**Migration plan (do this gracefully, not abruptly):**
+
+| Phase | Timing | Action |
+|---|---|---|
+| 1. **Stop new growth** | Day 0 | Hide Name Alert from new user onboarding. Existing users can still use it. No public announcement. |
+| 2. **Soft sunset** | Week 4 | Banner on Name Alert screen: "We're refocusing on verified safety tools. Name Alert will be archived in 60 days — try Red Flag Scanner and Scam Database instead." Show migration paths. |
+| 3. **Read-only** | Week 8 | Existing alerts become read-only history; no new alerts can be added. UI redirects to Scam Database. |
+| 4. **Full removal** | Week 12 | Endpoints return 410 Gone. Tables retained for 12 months (legal hold). UI surface gone. |
+
+**What replaces it in the headline tool list:**
+
+The most natural replacement from the stashed v2 ideas is the **Eye-Check + Tether protection broadcast** — different surface entirely, different intent (real-time impairment / situational awareness), no defamation exposure. Plus the Eye Check has the viral capability that Name Alert never had.
+
+Marketing angle for the swap: "We removed the feature that let users talk about people behind their backs. We replaced it with one that helps you take care of yourself and the friends right next to you. That's the bet we want to make."
+
+**Legal next steps before the deprecation goes live:**
+
+1. Confirm with counsel that the sunset itself isn't an admission of past liability. (Probably not — product changes happen.)
+2. Audit what's left in the database when Phase 4 lands. Stored content from past Name Alerts may still need to be retained for a discovery window even after removal.
+3. Update Terms / Privacy Policy to reflect the new scope.
+4. **Get D&O insurance quotes WITH and WITHOUT Name Alert active** before deciding. The premium difference is the dollar value of the legal exposure you're carrying. That number alone may make the decision obvious.
+
+**Honest counterargument worth considering:**
+
+Some users genuinely came to SafeTea *for* the Name Alert. Removing it could trigger churn AND complaints. The defensive answer is the migration timeline above (12 weeks is long enough for users to adjust). The bolder answer is to ship the Eye Check + FaceTime Alessia BEFORE killing Name Alert, so the headline narrative is "added the cooler thing" instead of "removed the controversial thing."
+
+**Sequence the operator might want:**
+
+1. Launch v1 (current build) and get baseline data on Name Alert usage. If usage is already low (<5% of MAU), removal is easy.
+2. Build the Eye Check v2 as the headline feature.
+3. Ship Eye Check + simultaneously announce Name Alert sunset on the SAME release.
+4. Story: "SafeTea is doubling down on verified protection. Here's what's new (Eye Check) and what we're letting go (Name Alert)."
+
+That's the version that turns a defensive retreat into an offensive narrative.
+
+---
+
 ## Status (overall)
 
 Everything in this file is **stashed, not committed**. Capture exists so ideas don't evaporate; build order is determined by the data after launch, not by enthusiasm now.

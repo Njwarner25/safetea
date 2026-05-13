@@ -183,6 +183,58 @@ The result-reveal moment in the app. The 2-second beat between "test complete" a
 
 Invest disproportionately in that 2 seconds.
 
+### The FaceTime-style delivery (this is the killer UX beat)
+
+**Operator's framing:** After the test, Alessia doesn't show up as a chat bubble or a toast. She shows up as a **FaceTime-style incoming call**. Full-screen avatar, call frame, ringtone, "Decline / Answer" buttons. The user "picks up" and Alessia delivers the assessment face-to-face, mixing light humor with a protective core.
+
+**Why this works:**
+
+- Turns a system notification into an emotional event. Notifications are forgettable. Phone calls feel like someone's there.
+- The "video call" framing primes the user to listen instead of swipe-away. You don't ignore a friend calling — you ignore a banner.
+- Visually unique. Every other safety app uses banners and chat bubbles. Nobody does fake-FaceTime. **The screenshot of Alessia's "incoming call" overlay is the single most shareable image this product could produce.**
+- Makes the humor land. A flat text response with a joke reads as snarky. The same line delivered by a warm animated friend on a call reads as care.
+
+**The interaction beat:**
+
+1. User finishes the eye check.
+2. 1-second pause. Screen darkens slightly.
+3. Alessia's avatar slides in, full-screen, with the call-style frame (blurred background, name + "incoming"). Soft ringtone.
+4. User taps "Answer."
+5. Alessia speaks her assessment line in her chosen voice (calm / gentle / encouraging / direct — already in the system prompt). Pre-rendered TTS or live ElevenLabs depending on cost.
+6. Light-hearted opener → protective pivot → concrete next step. Three beats, ~10 seconds total.
+7. End of call shows three buttons: "Call a Lyft," "Tell my Tether crew," "I'm okay — log it." Whichever the user picks fires the corresponding action.
+8. Whole call auto-records to Vault as a date-stamped check-in (evidence + memory).
+
+**Sample Alessia voice lines** (light-hearted opener + protective core):
+
+- *"Hey hon — okay, your eyes are doing a little tour without you tonight. I'm not your mom, but seriously, stay with the girls and let's get you a Lyft, yeah?"*
+- *"Eyes are saying 'one more shot,' brain is saying 'absolutely not.' Listen to the brain. Where are your friends right now?"*
+- *"Babe, those eyes are wobbling like you're about to text your ex. We're going to NOT do that. Hand on phone, friends in sight, Lyft on the way — yes?"*
+- *"You did the check, that's the move. Score's a little soft right now. Doesn't mean disaster, does mean stay close to your people. Want me to ping them?"*
+- (Roofie suspicion / sudden drop) *"Sweetheart — something changed quick and I don't love it. Let's get out of here. I'm calling you a Lyft and pinging [trusted contact] right now unless you tell me no."*
+
+**Tone rules** (locked):
+
+- Light when the situation is light (mild impairment, friends present).
+- Serious when the situation is serious (sharp drop suggesting drug exposure, alone).
+- Humor must always pivot to action — never end on a joke.
+- Use the user's preferred name + casual endearments matching their `tone` preference (gentle/calm = "hon" / "hey"; direct = no endearment).
+- Match Alessia's existing system-prompt rules: never command, always offer; never lecture; preserve agency.
+
+**Build complexity (be honest):**
+
+- The FaceTime visual itself: 1–2 days of UI work. Standard.
+- The animated avatar with lip-sync to the audio: **this is the actual work.** Options ranked by build cost:
+  1. **Pre-rendered video loops** with TTS-generated audio overlaid. Cheapest (~$500 with HeyGen / D-ID for 10–20 line variants). Looks ~80% as good as full lip-sync.
+  2. **Apple Memoji-style 2D rig** with TTS-driven mouth phonemes. Mid-cost. Looks great, fully dynamic.
+  3. **Live ElevenLabs voice + 2D rig.** Best feel, most expensive (~$0.30 per call in voice generation + dev cost). Worth it once paid users are >2k/mo.
+- Voice generation: ElevenLabs has a "warm female friend" voice that nails this brief. ~$0.30 / 2-min audio at their pro tier. Pre-render the 20 most common assessment lines to cache and cut cost to near-zero.
+- Audio playback in app: trivial — Expo `expo-av` already in the project.
+
+**Recommendation: ship v2 with the pre-rendered video loop (option 1) and ElevenLabs-generated audio.** Looks premium, costs almost nothing per call, gets to launch fast. Upgrade to live lip-sync (option 2 or 3) when MRR can support the dev time.
+
+**The recording-to-Vault beat is the second-order viral hook:** users showing their friends "this is what Alessia said to me last night" the next morning. Free word-of-mouth distribution AND emotional connection to the product.
+
 ### Status
 
 **Stashed.** Revisit when SafeTea+ MRR > $5k/mo and we have proven funnel conversion. When you do start, the launch playbook above gets pulled into a separate `docs/LAUNCH_PLAYBOOK_v2.md` and gates the build work — no code until the waitlist + creator outreach is at least planned.

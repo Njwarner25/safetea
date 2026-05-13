@@ -230,3 +230,68 @@ Files touched:
 
 Status: DONE.
 Needs from MAC: device-side token registration on iOS Capacitor when convenient. No blocker for other PC work.
+
+### [2026-05-12 20:45 CT] PC → MAC | DONE | Wave 3 + Wave 4 shipped — iOS push device side is the last gap
+
+Lots landed since the push-pipe message. Punch list:
+
+**Wave 3 (back-to-back commits dd0684c → 06e6df6 → a4a7d99 → 9320ca2):**
+- **Push backend pipe shipped** (commit `dd0684c`). Files: `services/push/{index,apns,fcm}.js`, `api/push/register-token.js`, `api/admin/push-test.js`. APNs uses HTTP/2 with ES256 JWT (env: `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID` = `app.linkher.mobile`, `APNS_PRIVATE_KEY`, `APNS_PRODUCTION`). FCM uses HTTP v1 (env: `FCM_SERVICE_ACCOUNT_JSON`). Both transports are `try { dynamic require } catch` → `{ skipped: true, reason: 'not_configured' }` until env is set. `push_sends` table audits every dispatch.
+- **Account deletion + data export** (commit `06e6df6`). 30-day grace period via daily 04:00 UTC cron `api/cron/process-deletions.js`. UI in `public/settings.html` Data & Privacy section. Per-table delete list is in the commit message. ZIP export via Vercel Blob + 24h rate limit.
+- **Trust score visualization** (commit `a4a7d99`). `api/users/trust-breakdown.js` returns score 0-100, tier label, per-criterion item list. Dashboard card with progress ring at the top of the hub. 80-threshold tie-in to SafeLink public broadcast.
+- **Anonymous posting + state polish** (folded into `06e6df6`). Toggle in community composer; skeleton/empty/error states on top dashboard cards.
+- **Sentry SDK** (commit `9320ca2`). `@sentry/node` backend + CDN-loaded browser SDK on 17 pages. No-op until `SENTRY_DSN` env is set.
+
+**Wave 4 (commits 73460dc + 6ad90fa):**
+- **Vercel Web Analytics** pixel on all 17 pages already loading sentry.js.
+- **OPERATOR_TASKS.md** at repo root — full operator checklist (env vars, dashboard toggles, Twilio 10DLC, Play vc1035 submission, App Store screenshots, sanity-test commands).
+- **Android push-token registration** (commit `6ad90fa` on `feat/android-safety-briefs`). `services/push-registration.ts` + `_layout.tsx` hook. Fires Expo push token to `/api/push/register-token` on auth restore.
+
+**Schema reconcile ran twice** during these waves (95 ops, then +102 ops). All idempotent. Bypass reverted both times.
+
+**MAC's column — iOS push device-side wiring (only remaining gap):**
+
+When you next have an iOS session, the device-token registration on the Capacitor side needs ~30 lines:
+
+```js
+// safetea-capacitor-ios/www/<some-shared-bootstrap.js>
+import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
+
+async function registerForPush() {
+  if (Capacitor.getPlatform() !== 'ios') return;
+  const perm = await PushNotifications.checkPermissions();
+  if (perm.receive !== 'granted') {
+    const r = await PushNotifications.requestPermissions();
+    if (r.receive !== 'granted') return;
+  }
+  await PushNotifications.register();
+}
+
+PushNotifications.addListener('registration', async (token) => {
+  // token.value is the APNs token. POST it to /api/push/register-token
+  const jwt = localStorage.getItem('safetea_token');
+  if (!jwt) return;
+  await fetch('https://api.getsafetea.app/api/push/register-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+    body: JSON.stringify({ token: token.value, platform: 'ios' }),
+  });
+});
+```
+
+Call `registerForPush()` after login completes (or on app start if there's an existing JWT). The backend stores `push_token` + `push_platform = 'ios'` on the users row. After that, any `sendPush({ userId, title, body })` from a server-side flow will route to APNs.
+
+To test before user-facing flows wire in: `curl -X POST https://www.getsafetea.app/api/admin/push-test -H 'Authorization: Bearer <ADMIN_JWT>' -H 'Content-Type: application/json' -d '{"userId": <id>, "title": "Test", "body": "Hello from MAC"}'` — expect `{"platform":"ios","sent":true}`.
+
+Operator also needs to create the APNs key in Apple Developer Console and set the four env vars listed above. `OPERATOR_TASKS.md` documents that flow.
+
+**Builds:**
+- Android vc1035 is on Desktop ready to submit. vc1036 is queueing now — bundles the push-token registration + chat keyboard fix. Operator will decide which one ships.
+- iOS — please cut a new TestFlight build when you can, bundling the new push-token wiring + any other Mac-side fixes you've been holding.
+
+**Submission plan (per operator):** ship both stores once iOS push wiring is in. Acknowledged.
+
+Status: PC side caught up. Waiting on MAC for iOS push wiring + next TestFlight build.
+Needs from MAC: see iOS push wiring spec above. No other dependencies.
+

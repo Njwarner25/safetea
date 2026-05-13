@@ -1,13 +1,13 @@
 const bcrypt = require('bcryptjs');
 const { getOne, run } = require('../_utils/db');
-const { generateToken, cors } = require('../_utils/auth');
+const { generateToken, cors, authenticate } = require('../_utils/auth');
 
 /**
  * POST /api/admin/create-tester
  * Creates a tester account with full access (admin, plus, all verifications, max trust score).
- * Requires MIGRATE_SECRET for auth.
+ * Auth: MIGRATE_SECRET (Authorization: Bearer or ?secret=) OR admin user JWT.
  *
- * Body: { email, password, display_name, city }
+ * Body: { email, password, display_name, city, tier? }
  */
 module.exports = async function handler(req, res) {
   cors(res, req);
@@ -15,11 +15,16 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const secret = process.env.MIGRATE_SECRET;
-  if (!secret) return res.status(500).json({ error: 'MIGRATE_SECRET not configured' });
-
   const authHeader = req.headers.authorization || '';
   const provided = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.query.secret;
-  if (provided !== secret) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Accept either MIGRATE_SECRET match OR an admin user JWT.
+  let isAuthed = !!(secret && provided === secret);
+  if (!isAuthed) {
+    const user = await authenticate(req);
+    if (user && user.role === 'admin') isAuthed = true;
+  }
+  if (!isAuthed) return res.status(401).json({ error: 'Unauthorized — requires MIGRATE_SECRET or admin user JWT' });
 
   let body = req.body;
   if (!body || typeof body === 'string') {

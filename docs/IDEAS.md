@@ -238,3 +238,79 @@ Invest disproportionately in that 2 seconds.
 ### Status
 
 **Stashed.** Revisit when SafeTea+ MRR > $5k/mo and we have proven funnel conversion. When you do start, the launch playbook above gets pulled into a separate `docs/LAUNCH_PLAYBOOK_v2.md` and gates the build work — no code until the waitlist + creator outreach is at least planned.
+
+---
+
+## Voice-activated Safe Word
+
+A spoken phrase fires SafeLink + trusted-contact alerts hands-free. User picks their own phrase during onboarding — something they'd never accidentally say but could mention naturally in conversation. Examples: *"Alessia, my battery's about to die,"* *"I forgot to feed the dog,"* *"It's getting late, isn't it?"*
+
+**Why it matters:** when someone's actively unsafe they often can't reach for their phone openly. A spoken trigger lets them activate a full SOS while looking like they're complaining about something mundane to the person threatening them.
+
+**Build pieces:** background voice listening (iOS `SFSpeechRecognizer` / Android `SpeechRecognizer`) gated to user-chosen phrase only, fires the same Twilio + push fan-out as the existing Pulse escalate path. Battery cost is the real engineering challenge — needs efficient on-device wake-word detection (Picovoice or Apple's keyword spotter) so you're not running full speech-to-text 24/7.
+
+**Demo angle:** TikTok-friendly. Person at fake bar with friend, says the phrase casually, phone screen shows SafeLink activating silently. Three seconds, no music needed. Perfect.
+
+**Risks:** false triggers on common phrases would burn user trust + Twilio credit. The phrase MUST be unique per user, not a one-size phrase. Also: always-on mic raises App Store privacy review questions. Frame as "wake-word only, no audio leaves the device, no audio recorded" and document the on-device wake-word architecture explicitly in App Privacy.
+
+---
+
+## Duress mode (for coercive-control situations)
+
+For users in abusive relationships where an abuser monitors their phone. App shows a "green / safe" check-in to the abuser, while a hidden parallel check-in goes to trusted contacts and law-enforcement contacts if pre-configured.
+
+Two PIN codes during setup: a "normal" PIN that opens the app cleanly, and a "duress" PIN that opens an app that **looks identical** but secretly:
+- Sends a real-time location ping to trusted contacts every 5 minutes
+- Disables the abuser's ability to delete the SafeTea account
+- Logs every screen tap into Vault as evidence (encrypted, abuser can't see)
+- Auto-records a portion of ambient audio if the user holds a specific gesture (volume-down × 3)
+
+**Why it matters:** this is the safety use case that no consumer app currently serves. The market here isn't dating-app safety — it's the 1-in-4 women experiencing domestic abuse. They are the people who need this most and can pay $7.99 for it least, BUT this is the feature that wins partnerships with DV shelters, women's centers, hospitals.
+
+**Risks:** the duress mode must be invisible to the abuser. Any UI hint that "you might have a duress mode" can get the user hurt. Design must be airtight. Probably best built with a domestic-violence advocacy org as a consulting partner.
+
+**Pricing implication:** this is the feature that justifies free-with-grant access. Partner with shelters / advocacy orgs to fund free SafeTea accounts for their clients. B2B-like revenue without B2B sales overhead.
+
+---
+
+## Family Safety Bundle — $14.99 / month, 4 users
+
+A single subscription covers up to 4 users (e.g., a mom + 2 adult daughters + a partner). Each user has their own Vault, Tether sessions, etc., but the billing is unified.
+
+**Why it matters:** the "worried mom" buyer has higher willingness to pay than the individual user. She's paying for peace of mind about her daughters, not for herself. That's a different price elasticity entirely — she'd pay $15 the same way she'd pay $8 because the alternative (worrying about her kid alone in a city) is worth way more.
+
+**Mechanics:** primary subscriber adds family members by phone number. Each gets an invite to install the app. Their Tether sessions can include each other by default ("Mom can see your live location if you start a SafeLink"). Each member opts into what they share.
+
+**ARPU math:** $14.99 / 4 = $3.75/user effective. Lower per-user, but capture rate at the household level is much higher because the decision-maker (mom) is more motivated than the dependent (daughter).
+
+**Build cost:** small. Add `family_subscriptions` table, link `users.family_subscription_id`, gate features on `is_active_in_family || is_active_solo_subscriber`. Stripe webhook handles the family-plan SKU. ~2 days of work.
+
+---
+
+## Panic Typo
+
+A specific typo pattern in ANY text input — say, ten Y's in a row (`yyyyyyyyyy`) — silently triggers a panic alert without showing anything on screen.
+
+**Why it matters:** counter-surveillance for situations where an abuser is reading over the user's shoulder or has remote access to messages. The user can type the trigger in iMessage to a friend, in a Notes app, in the SafeTea community feed, anywhere — and the alert fires without the abuser seeing any UI hint.
+
+**Build:** on iOS, an Accessibility Service listens for the pattern in any active text field. On Android, an `AccessibilityService` accomplishes the same. Both require explicit user opt-in for accessibility permission, which is hard to get but worth it for the at-risk population.
+
+**Combined with Duress Mode**, this becomes a layered counter-surveillance toolkit that nothing else on the market matches.
+
+---
+
+## Safety Streak (engagement gamification)
+
+Daily Alessia check-in earns a streak token. Hit 7 days → unlock a small reward (themed avatar, a discount on the next year of SafeTea+). 30 days → unlock "trusted user" badge.
+
+**Why it matters:** the muscle memory of opening the app every day is the difference between users who panic-install in a moment of fear (and uninstall a month later) and users who treat SafeTea as part of their daily routine (and are still subscribed in year 2).
+
+**Mechanic:** the daily check-in is just opening Alessia and answering a one-tap "how are you" pulse. Takes 5 seconds. The streak counter visible on dashboard. Auto-paused for users who haven't opened the app in 7 days (no shame, just resets).
+
+**Why this isn't gimmicky:** for the safety use case, daily app engagement is itself protective. A user who has the app open daily is a user who will think to use it when something happens. Streak is just the gentle nudge that makes that real.
+
+---
+
+## Status (overall)
+
+Everything in this file is **stashed, not committed**. Capture exists so ideas don't evaporate; build order is determined by the data after launch, not by enthusiasm now.

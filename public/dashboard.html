@@ -1727,6 +1727,101 @@
             50% { opacity: 0.4; }
         }
 
+        /* ===== CARD LOADING / EMPTY / ERROR STATES =====
+           Used by community feed, name watch alerts, vault stats.
+           Skeletons use a subtle shimmer (no spinning icons — iOS WebView safe). */
+        @keyframes st-shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes st-vault-progress {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(280%); }
+        }
+        .st-skel {
+            display: block;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 100%);
+            background-size: 200% 100%;
+            animation: st-shimmer 1.4s linear infinite;
+            margin: 0 0 10px;
+        }
+        [data-theme="light"] .st-skel {
+            background: linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 100%);
+            background-size: 200% 100%;
+        }
+        .st-skel.w-40 { width: 40%; }
+        .st-skel.w-60 { width: 60%; }
+        .st-skel.w-80 { width: 80%; }
+        .st-skel.h-44 { height: 44px; border-radius: 10px; }
+        .st-skel.h-20 { height: 20px; }
+        .st-skel-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        [data-theme="light"] .st-skel-card {
+            background: rgba(0,0,0,0.02);
+            border-color: rgba(0,0,0,0.06);
+        }
+        /* Community feed uses a light card surface; override accordingly */
+        #community-feed .st-skel-card {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        #community-feed .st-skel {
+            background: linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.09) 50%, rgba(0,0,0,0.04) 100%);
+            background-size: 200% 100%;
+        }
+        .st-empty, .st-error {
+            text-align: center;
+            padding: 28px 20px;
+            color: #8080A0;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .st-empty .st-empty-title,
+        .st-error .st-error-title {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #C8C8E0;
+            margin-bottom: 4px;
+        }
+        [data-theme="light"] .st-empty .st-empty-title,
+        [data-theme="light"] .st-error .st-error-title {
+            color: #5f4b57;
+        }
+        #community-feed .st-empty,
+        #community-feed .st-error { color: #999; }
+        #community-feed .st-empty .st-empty-title,
+        #community-feed .st-error .st-error-title { color: #5f4b57; }
+        .st-retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 7px 14px;
+            background: rgba(232,160,181,0.12);
+            border: 1px solid rgba(232,160,181,0.3);
+            color: #E8A0B5;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .st-retry-btn:hover {
+            background: rgba(232,160,181,0.2);
+            border-color: rgba(232,160,181,0.5);
+        }
+
         /* ===== COMPREHENSIVE LIGHT MODE — ALL SECTIONS ===== */
 
         /* --- Global: all dark backgrounds (#22223A, #1A1A2E, #141428) --- */
@@ -2352,6 +2447,14 @@
             </div>
             <textarea id="community-post-text" placeholder="What do you want your city to know?" maxlength="2000" oninput="updatePostCharCount()"></textarea>
             <div style="display:flex;justify-content:space-between;align-items:center;margin:-4px 0 8px"><span id="post-char-count" style="color:#8080A0;font-size:11px">0 / 2,000</span><a href="/guidelines" target="_blank" style="color:#8080A0;font-size:11px;text-decoration:none"><i class="fas fa-book" style="margin-right:4px"></i>Community Guidelines</a></div>
+            <!-- Anonymous post toggle -->
+            <div style="display:flex;align-items:flex-start;gap:10px;margin:6px 0 10px;padding:8px 10px;background:rgba(232,160,181,0.04);border:1px solid rgba(232,160,181,0.12);border-radius:8px">
+                <label for="community-post-anon" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:#5f4b57;font-weight:500;flex-shrink:0;user-select:none">
+                    <input type="checkbox" id="community-post-anon" style="width:14px;height:14px;accent-color:#E8A0B5;cursor:pointer;margin:0">
+                    Post anonymously
+                </label>
+                <span style="font-size:11px;color:#8080A0;line-height:1.4;flex:1">Your username will be hidden. Your post still counts toward your trust score.</span>
+            </div>
             <div class="post-modal-photo-section">
                 <label class="post-modal-photo-btn" for="post-photo-input">
                     <i class="fas fa-camera"></i> Add Photo
@@ -2391,8 +2494,12 @@
             </div>
 
             <!-- Zone 2: Safety Vault (hero card) -->
-            <a href="/vault" class="tools-vault-card" aria-label="Safety Vault. Private encrypted journal.">
+            <a href="/vault" class="tools-vault-card" id="tools-vault-card" aria-label="Safety Vault. Private encrypted journal.">
                 <i class="fas fa-lock tools-vault-watermark" aria-hidden="true"></i>
+                <!-- Thin top progress bar: shown while vault stats load (no spinning icon) -->
+                <div id="tools-vault-progress" style="position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0;overflow:hidden;display:none;background:rgba(232,160,181,0.08)" aria-hidden="true">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:35%;background:linear-gradient(90deg,transparent,#E8A0B5,transparent);animation:st-vault-progress 1.2s linear infinite"></div>
+                </div>
                 <div class="tools-vault-top">
                     <div class="tools-vault-icon"><i class="fas fa-lock"></i></div>
                     <div class="tools-vault-head">
@@ -2405,12 +2512,14 @@
                     <i class="fas fa-chevron-right tools-vault-chev"></i>
                 </div>
                 <div class="tools-vault-sep"></div>
-                <div class="tools-vault-stats">
+                <div class="tools-vault-stats" id="tools-vault-stats">
                     <div class="tools-vault-stat"><span class="tv-stat-emoji">📝</span><span class="tv-stat-val" id="tools-vault-entries">—</span><span class="tv-stat-lbl">Entries</span></div>
                     <div class="tools-vault-stat"><span class="tv-stat-emoji">📷</span><span class="tv-stat-val" id="tools-vault-photos">—</span><span class="tv-stat-lbl">Photos</span></div>
                     <div class="tools-vault-stat"><span class="tv-stat-emoji">🎙️</span><span class="tv-stat-val" id="tools-vault-audio">—</span><span class="tv-stat-lbl">Audio</span></div>
                     <div class="tools-vault-stat"><span class="tv-stat-emoji">🛡️</span><span class="tv-stat-val" id="tools-vault-guardian">—</span><span class="tv-stat-lbl">Guardian</span></div>
                 </div>
+                <!-- Empty/error footer (one line below stats). Refresh button uses stopPropagation to avoid navigating away. -->
+                <div id="tools-vault-status" style="display:none;margin-top:10px;padding:8px 10px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#8080A0;line-height:1.4;text-align:center"></div>
             </a>
 
             <!-- Zone 3: SOS Record & Protect -->
@@ -2558,6 +2667,36 @@
 
             <!-- HUB: OVERVIEW (Home — clean stacked layout) -->
             <div id="hub-overview" class="hub-sub active">
+
+                <!-- ====== YOUR TRUST SCORE ====== -->
+                <div id="trust-score-card" style="display:none;background:#22223A;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px;margin-bottom:20px">
+                    <div style="display:flex;align-items:center;gap:18px;margin-bottom:14px">
+                        <!-- Circular progress (SVG) -->
+                        <div style="position:relative;width:88px;height:88px;flex-shrink:0">
+                            <svg width="88" height="88" viewBox="0 0 88 88" style="transform:rotate(-90deg)">
+                                <circle cx="44" cy="44" r="38" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"></circle>
+                                <circle id="trust-score-ring" cx="44" cy="44" r="38" fill="none" stroke="#E8A0B5" stroke-width="8" stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" style="transition:stroke-dashoffset 0.6s ease, stroke 0.4s ease"></circle>
+                            </svg>
+                            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                                <div id="trust-score-number" style="color:#fff;font-size:24px;font-weight:800;line-height:1">--</div>
+                                <div style="color:#8080A0;font-size:10px;font-weight:500;margin-top:2px">/ 100</div>
+                            </div>
+                        </div>
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                                <h3 style="color:#fff;font-size:16px;font-weight:700;margin:0">Your Trust Score</h3>
+                                <span id="trust-score-tier" style="display:none;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px"></span>
+                            </div>
+                            <p id="trust-score-tagline" style="color:#8080A0;font-size:12px;line-height:1.5;margin:0">At score 80+, your SafeLink broadcasts can be discovered by other users in your city.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item list -->
+                    <div id="trust-score-items" style="display:flex;flex-direction:column;gap:8px"></div>
+
+                    <!-- "Show all" toggle (hidden until rendered) -->
+                    <button id="trust-score-toggle" type="button" style="display:none;margin-top:12px;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#E8A0B5;padding:9px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Show all</button>
+                </div>
 
                 <!-- ====== UPGRADE TO SAFETEA PLUS (hidden for plus users) ====== -->
                 <div id="home-upgrade-card" style="display:none;background:linear-gradient(135deg,#1A1A2E 0%,#22223A 100%);border:1.5px solid rgba(232,160,181,0.25);border-radius:18px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden">
@@ -3904,20 +4043,198 @@
         loadTrialBanner();
     }
 
+    // ============ TRUST SCORE CARD ============
+    // Fetches /api/users/trust-breakdown, renders a circular progress + item list.
+    // Cached in-memory for 5 minutes so re-renders / tab switches don't re-hit the API.
+    var __trustBreakdownCache = { data: null, fetchedAt: 0 };
+    var TRUST_CACHE_TTL_MS = 5 * 60 * 1000;
+    var __trustItemsExpanded = false;
+
+    function tierBadgeStyle(tier) {
+        switch (tier) {
+            case 'Elite':    return 'background:rgba(46,204,113,0.18);color:#2ecc71';
+            case 'Strong':   return 'background:rgba(232,160,181,0.2);color:#E8A0B5';
+            case 'Building': return 'background:rgba(241,196,15,0.18);color:#f1c40f';
+            default:         return 'background:rgba(255,255,255,0.08);color:#8080A0';
+        }
+    }
+
+    function tierRingColor(tier) {
+        switch (tier) {
+            case 'Elite':    return '#2ecc71';
+            case 'Strong':   return '#E8A0B5';
+            case 'Building': return '#f1c40f';
+            default:         return '#8080A0';
+        }
+    }
+
+    function renderTrustItem(item) {
+        var earned = !!item.earned;
+        var icon = earned
+            ? '<i class="fas fa-check-circle" style="color:#2ecc71;font-size:14px"></i>'
+            : '<i class="far fa-circle" style="color:#8080A0;font-size:14px"></i>';
+        var labelColor = earned ? '#F0D0C0' : '#D0D0E0';
+        var pointsHtml = earned
+            ? '<span style="color:#2ecc71;font-size:12px;font-weight:600">+' + item.points + '</span>'
+            : '<span style="color:#8080A0;font-size:12px;font-weight:500">+' + item.points + ' pts</span>';
+        var ctaHtml = '';
+        if (!earned && item.cta && item.cta.href) {
+            var safeHref = String(item.cta.href).replace(/"/g, '&quot;');
+            var safeLabel = String(item.cta.label || 'Unlock').replace(/</g, '&lt;');
+            ctaHtml = '<a href="' + safeHref + '" style="margin-left:8px;background:rgba(232,160,181,0.12);border:1px solid rgba(232,160,181,0.3);color:#E8A0B5;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">' + safeLabel + '</a>';
+        }
+        return (
+            '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#1A1A2E;border:1px solid rgba(255,255,255,0.04);border-radius:10px">' +
+                '<div style="min-width:16px;text-align:center">' + icon + '</div>' +
+                '<div style="flex:1;color:' + labelColor + ';font-size:13px;font-weight:500">' + String(item.label || '').replace(/</g, '&lt;') + '</div>' +
+                pointsHtml +
+                ctaHtml +
+            '</div>'
+        );
+    }
+
+    function renderTrustBreakdown(data) {
+        var card = document.getElementById('trust-score-card');
+        if (!card || !data) return;
+
+        var score = Math.max(0, Math.min(100, parseInt(data.score, 10) || 0));
+        var tier = data.tier_label || 'New';
+
+        var numEl = document.getElementById('trust-score-number');
+        if (numEl) numEl.textContent = String(score);
+
+        var tierEl = document.getElementById('trust-score-tier');
+        if (tierEl) {
+            tierEl.textContent = tier;
+            tierEl.setAttribute('style', 'display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px;' + tierBadgeStyle(tier));
+        }
+
+        var ring = document.getElementById('trust-score-ring');
+        if (ring) {
+            var circumference = 2 * Math.PI * 38;
+            var offset = circumference * (1 - score / 100);
+            ring.setAttribute('stroke-dasharray', String(circumference));
+            ring.setAttribute('stroke-dashoffset', String(offset));
+            ring.setAttribute('stroke', tierRingColor(tier));
+        }
+
+        var tagline = document.getElementById('trust-score-tagline');
+        if (tagline) {
+            if (score >= 80) {
+                tagline.textContent = 'Your SafeLink broadcasts can be discovered by other users in your city.';
+            } else {
+                tagline.textContent = 'At score 80+, your SafeLink broadcasts can be discovered by other users in your city.';
+            }
+        }
+
+        var items = Array.isArray(data.items) ? data.items.slice() : [];
+        var unearned = items.filter(function (it) { return !it.earned; })
+                            .sort(function (a, b) { return (b.points || 0) - (a.points || 0); });
+        var earnedArr = items.filter(function (it) { return !!it.earned; });
+        var topUnearned = unearned.slice(0, 3);
+        var rest = unearned.slice(3).concat(earnedArr);
+
+        var listEl = document.getElementById('trust-score-items');
+        var toggleEl = document.getElementById('trust-score-toggle');
+        if (!listEl || !toggleEl) return;
+
+        var primaryHtml = topUnearned.map(renderTrustItem).join('');
+        var restHtml = rest.map(renderTrustItem).join('');
+
+        function paint() {
+            listEl.innerHTML = primaryHtml + (__trustItemsExpanded ? restHtml : '');
+            if (rest.length > 0) {
+                toggleEl.style.display = 'block';
+                toggleEl.textContent = __trustItemsExpanded ? 'Show less' : ('Show all (' + rest.length + ' more)');
+            } else {
+                toggleEl.style.display = 'none';
+            }
+        }
+
+        if (topUnearned.length === 0) {
+            __trustItemsExpanded = true;
+            listEl.innerHTML = earnedArr.map(renderTrustItem).join('');
+            toggleEl.style.display = 'none';
+        } else {
+            paint();
+            toggleEl.onclick = function () {
+                __trustItemsExpanded = !__trustItemsExpanded;
+                paint();
+            };
+        }
+
+        card.style.display = 'block';
+    }
+
+    function loadTrustBreakdown(forceRefresh) {
+        var token = localStorage.getItem('safetea_token');
+        if (!token) return;
+
+        var now = Date.now();
+        if (!forceRefresh && __trustBreakdownCache.data && (now - __trustBreakdownCache.fetchedAt) < TRUST_CACHE_TTL_MS) {
+            renderTrustBreakdown(__trustBreakdownCache.data);
+            return;
+        }
+
+        fetch('/api/users/trust-breakdown', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (!data) return;
+                __trustBreakdownCache.data = data;
+                __trustBreakdownCache.fetchedAt = Date.now();
+                renderTrustBreakdown(data);
+            })
+            .catch(function () { /* silent — card stays hidden */ });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { loadTrustBreakdown(false); });
+    } else {
+        loadTrustBreakdown(false);
+    }
+
     function loadVaultStats() {
         var token = localStorage.getItem('safetea_token');
         if (!token) return;
+        var progress = document.getElementById('tools-vault-progress');
+        var status = document.getElementById('tools-vault-status');
+        if (progress) progress.style.display = 'block';
+        if (status) { status.style.display = 'none'; status.innerHTML = ''; }
         fetch('/api/vault/stats', { headers: { 'Authorization': 'Bearer ' + token } })
-            .then(function(r) { if (!r.ok) return null; return r.json(); })
+            .then(function(r) {
+                // 403 = not entitled (free tier). Hide progress, leave dashes, no error.
+                if (r.status === 403 || r.status === 401) return { _skip: true };
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(function(d) {
-                if (!d) return;
+                if (progress) progress.style.display = 'none';
+                if (!d || d._skip) return;
                 var setIf = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
                 setIf('tools-vault-entries', String(d.entries != null ? d.entries : '—'));
                 setIf('tools-vault-photos', String(d.photos != null ? d.photos : '—'));
                 setIf('tools-vault-audio', String(d.audio != null ? d.audio : '—'));
                 setIf('tools-vault-guardian', d.guardian || '—');
+                // Empty state — all four metrics are zero/empty
+                var totalEntries = (parseInt(d.entries, 10) || 0) + (parseInt(d.photos, 10) || 0) + (parseInt(d.audio, 10) || 0);
+                if (totalEntries === 0 && status) {
+                    status.innerHTML = '<span style="color:#C8C8E0;font-weight:600">Nothing here yet.</span> Your first entry will show up here.';
+                    status.style.display = 'block';
+                }
             })
-            .catch(function() { /* stays as placeholder */ });
+            .catch(function() {
+                if (progress) progress.style.display = 'none';
+                if (status) {
+                    // Refresh button needs stopPropagation/preventDefault since the parent is an <a>
+                    status.innerHTML = '<span style="color:#C8C8E0;font-weight:600">Couldn’t load this section.</span> Try refreshing. '
+                        + '<button type="button" onclick="event.preventDefault();event.stopPropagation();loadVaultStats()" '
+                        + 'style="margin-left:6px;background:rgba(232,160,181,0.12);border:1px solid rgba(232,160,181,0.3);color:#E8A0B5;border-radius:14px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">'
+                        + '<i class="fas fa-rotate-right" style="font-size:10px;margin-right:3px"></i>Refresh</button>';
+                    status.style.display = 'block';
+                }
+            });
     }
 
     // ============ HUB SUB-TAB SWITCHING ============
@@ -4450,6 +4767,49 @@
         loadCommunityFeed();
     }
 
+    // ============ CARD STATE HELPERS ============
+    // Render a skeleton (loading), empty, or error state into a container.
+    // retryFn is the function to re-call when the user clicks "Refresh".
+    function renderCardSkeleton(container, opts) {
+        if (!container) return;
+        opts = opts || {};
+        var rows = opts.rows || 3;
+        var withAvatar = opts.withAvatar !== false;
+        var html = '';
+        for (var i = 0; i < rows; i++) {
+            html += '<div class="st-skel-card" aria-busy="true" aria-label="Loading">';
+            if (withAvatar) {
+                html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
+                     +    '<span class="st-skel" style="width:40px;height:40px;border-radius:50%;margin:0;flex-shrink:0"></span>'
+                     +    '<div style="flex:1">'
+                     +      '<span class="st-skel w-40" style="height:11px;margin-bottom:6px"></span>'
+                     +      '<span class="st-skel w-60" style="height:9px;margin:0"></span>'
+                     +    '</div>'
+                     +  '</div>';
+            }
+            html += '<span class="st-skel w-80"></span>'
+                 +  '<span class="st-skel w-60"></span>'
+                 +  '<span class="st-skel w-40" style="margin-bottom:0"></span>'
+                 +  '</div>';
+        }
+        container.innerHTML = html;
+    }
+    function renderCardEmpty(container, title, nudge) {
+        if (!container) return;
+        container.innerHTML = '<div class="st-empty">'
+            + '<span class="st-empty-title">' + escapeHtml(title) + '</span>'
+            + (nudge ? escapeHtml(nudge) : '')
+            + '</div>';
+    }
+    function renderCardError(container, retryFnName) {
+        if (!container) return;
+        container.innerHTML = '<div class="st-error">'
+            + '<span class="st-error-title">Couldn’t load this section.</span>'
+            + 'Try refreshing.'
+            + '<div><button type="button" class="st-retry-btn" onclick="' + retryFnName + '()"><i class="fas fa-rotate-right" style="font-size:11px"></i> Refresh</button></div>'
+            + '</div>';
+    }
+
     function loadCommunityFeed() {
         var city = communityState.selectedCity;
         if (!city) return;
@@ -4457,19 +4817,21 @@
         var sortToggle = document.getElementById('feed-sort-toggle');
         if (sortToggle) sortToggle.style.display = 'block';
         var feed = document.getElementById('community-feed');
-        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#E8A0B5;"></i></div>';
+        // Skeleton loading (no spinning icon — iOS WebView safe)
+        renderCardSkeleton(feed, { rows: 3, withAvatar: true });
         var token = localStorage.getItem('safetea_token');
         var url = '/api/community?city=' + encodeURIComponent(city.name) + '&sort=' + feedSortMode;
         // Good Guys category removed 2026-04 — feed is tea-talk only; no category filter needed.
         fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(function(data) {
                 var posts = Array.isArray(data) ? data : (data.posts || []);
                 communityState.posts = posts;
                 if (posts.length === 0) {
-                    feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">' +
-                        '<i class="fas fa-comments" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>' +
-                        'No posts yet in ' + escapeHtml(city.name) + '.<br>Be the first to share!</div>';
+                    renderCardEmpty(feed, 'Nothing here yet.', 'Be the first to post in ' + city.name + '.');
                     return;
                 }
                 feed.innerHTML = posts.map(function(p) { return renderCommunityPost(p); }).join('');
@@ -4502,7 +4864,7 @@
                 }, 3000);
             })
             .catch(function(err) {
-                feed.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">Failed to load posts. Try again.</div>';
+                renderCardError(feed, 'loadCommunityFeed');
                 console.error(err);
             });
     }
@@ -4839,6 +5201,8 @@
         });
         var counter = document.getElementById('post-char-count');
         if (counter) { counter.textContent = '0 / 2,000'; counter.style.color = '#8080A0'; }
+        var anonEl = document.getElementById('community-post-anon');
+        if (anonEl) anonEl.checked = false;
     }
 
     // Resize image to fit within maxW/maxH and compress as JPEG
@@ -4934,7 +5298,9 @@
         btn.textContent = 'Posting...';
         btn.disabled = true;
 
-        var postData = { body: content, category: category, city: city.name };
+        var anonEl = document.getElementById('community-post-anon');
+        var isAnonymous = !!(anonEl && anonEl.checked);
+        var postData = { body: content, category: category, city: city.name, isAnonymous: isAnonymous };
         if (selectedPostTag) postData.tag = selectedPostTag;
         // If there's a photo, include as base64
         if (communityState.postPhotoDataUrl) {
@@ -5454,12 +5820,24 @@
         var token = localStorage.getItem('safetea_token');
         if (!token) return;
 
+        var list = document.getElementById('nw-alerts-list');
+        // Skeleton loading state (compact — 2 rows, no avatar)
+        if (list && typeof renderCardSkeleton === 'function') {
+            renderCardSkeleton(list, { rows: 2, withAvatar: false });
+        }
+
         fetch('/api/namewatch', {
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
         })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(function(data) {
-            if (!data || data.error) return;
+            if (!data || data.error) {
+                if (list && typeof renderCardError === 'function') renderCardError(list, 'loadNameWatchAlerts');
+                return;
+            }
 
             // Count unread
             var unread = 0;
@@ -5470,12 +5848,12 @@
             updateNwBadges(unread);
 
             // Render alerts
-            var list = document.getElementById('nw-alerts-list');
+            list = document.getElementById('nw-alerts-list');
             if (!list) return;
 
             var matches = data.matches || [];
             if (matches.length === 0) {
-                list.innerHTML = '<div style="text-align:center;padding:20px;color:#8080A0;font-size:14px"><i class="fas fa-bell-slash" style="font-size:24px;display:block;margin-bottom:8px;color:#E8A0B5"></i>No Name Watch alerts yet.<br><span style="font-size:12px">Add names in <a href="#" onclick="switchTab(\'hub\');setTimeout(function(){switchHubTab(\'namewatch\')},100);return false" style="color:#E8A0B5">Name Watch</a> to get notified when they\'re mentioned.</span></div>';
+                renderCardEmpty(list, 'Nothing here yet.', 'Add names to watch and you’ll see alerts when they’re mentioned.');
                 var markBtn = document.getElementById('nw-mark-read-btn');
                 if (markBtn) markBtn.style.display = 'none';
                 return;
@@ -5509,6 +5887,8 @@
             list.innerHTML = h;
         })
         .catch(function(err) {
+            var listEl = document.getElementById('nw-alerts-list');
+            if (listEl && typeof renderCardError === 'function') renderCardError(listEl, 'loadNameWatchAlerts');
             console.error('Name Watch alerts error:', err);
         });
     }

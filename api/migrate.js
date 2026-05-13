@@ -80,6 +80,7 @@ module.exports = async function handler(req, res) {
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS feed VARCHAR(50) DEFAULT 'safety'`; } catch(e) {}
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT`; } catch(e) {}
         try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_expires_at TIMESTAMP`; } catch(e) {}
+        try { await sql`ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT false`; } catch(e) {}
 
         // Avatar columns on users table
         try { await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_type VARCHAR(20) DEFAULT 'initial'`; } catch(e) {}

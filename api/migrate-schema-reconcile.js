@@ -222,6 +222,10 @@ module.exports = async function handler(req, res) {
             "ALTER TABLE posts ADD COLUMN IF NOT EXISTS photo_status VARCHAR(20)"
         );
         await tryRun(
+            "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT false",
+            "ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN DEFAULT false"
+        );
+        await tryRun(
             "CREATE INDEX IF NOT EXISTS idx_posts_city_category ON posts(city, category)",
             "CREATE INDEX IF NOT EXISTS idx_posts_city_category ON posts(city, category)"
         );

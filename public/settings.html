@@ -602,6 +602,131 @@
       border-top: 1px solid rgba(255,255,255,0.04);
     }
 
+    /* ===== DATA & PRIVACY (export / delete) ===== */
+    .privacy-card {
+      padding: 18px;
+    }
+    .privacy-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .privacy-card p {
+      font-size: 13px;
+      color: #8080A0;
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+    .privacy-card .btn-secondary {
+      width: 100%;
+      padding: 13px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .privacy-card .btn-secondary:hover {
+      border-color: #E8A0B5;
+    }
+    .privacy-card .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .privacy-card .btn-danger {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      border: 1px solid rgba(231,76,60,0.45);
+      border-radius: 10px;
+      color: #e74c3c;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .privacy-card .btn-danger:hover {
+      background: rgba(231,76,60,0.08);
+    }
+    .privacy-card .btn-danger:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    /* Inline delete confirmation (NOT a JS confirm()). */
+    .delete-confirm-inline {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      background: rgba(231,76,60,0.06);
+      border: 1px solid rgba(231,76,60,0.25);
+      border-radius: 10px;
+    }
+    .delete-confirm-inline.open { display: block; }
+    .delete-confirm-inline label {
+      display: block;
+      font-size: 12px;
+      color: #C0C0D8;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .delete-confirm-inline .help {
+      font-size: 12px;
+      color: #8080A0;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .delete-confirm-inline input {
+      width: 100%;
+      padding: 11px 12px;
+      background: #0D0D1A;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      letter-spacing: 1px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .delete-confirm-inline input:focus {
+      outline: none;
+      border-color: #e74c3c;
+    }
+    .delete-confirm-inline .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .delete-confirm-inline .actions button {
+      flex: 1;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+    }
+    .delete-confirm-inline .btn-cancel {
+      background: #141428;
+      color: #C0C0D8;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .delete-confirm-inline .btn-go {
+      background: #e74c3c;
+      color: #fff;
+    }
+    .delete-confirm-inline .btn-go:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     /* ===== SPINNER ===== */
     .spinner {
       display: inline-block;
@@ -838,6 +963,52 @@
       </div>
     </div>
 
+    <!-- DATA & PRIVACY -->
+    <div class="settings-section">
+      <div class="section-label">Data &amp; Privacy</div>
+
+      <!-- Download my data -->
+      <div class="settings-group">
+        <div class="privacy-card">
+          <h4>Download my data</h4>
+          <p>Get a copy of everything we have about you in a single ZIP. We'll email you a download link.</p>
+          <button class="btn-secondary" id="btn-export-data" onclick="requestDataExport()">
+            <i class="fas fa-file-arrow-down" style="margin-right:6px;"></i> Request data export
+          </button>
+        </div>
+      </div>
+
+      <!-- Delete my account -->
+      <div class="settings-group" style="margin-top:14px;">
+        <div class="privacy-card">
+          <h4 style="color:#e74c3c;">Delete my account</h4>
+          <p>Your account will be marked for deletion and permanently removed after a 30-day grace period.
+             You can restore it any time before then from the email we send you.
+             Any active subscription is canceled right away.</p>
+          <button class="btn-danger" id="btn-open-delete" onclick="openInlineDelete()">
+            <i class="fas fa-trash-can" style="margin-right:6px;"></i> Delete Account
+          </button>
+
+          <!-- Inline confirmation block. NOT a JS confirm() — iOS WebView blocks those. -->
+          <div class="delete-confirm-inline" id="delete-confirm-inline">
+            <label for="delete-confirm-input">Type DELETE to confirm</label>
+            <p class="help">
+              We'll schedule your account for deletion in 30 days. You'll get an email with a link to undo it
+              if you change your mind.
+            </p>
+            <input type="text" id="delete-confirm-input" placeholder="DELETE" autocomplete="off"
+                   autocorrect="off" autocapitalize="characters" spellcheck="false"
+                   oninput="onDeleteInput(this.value)" />
+            <div class="actions">
+              <button type="button" class="btn-cancel" onclick="closeInlineDelete()">Cancel</button>
+              <button type="button" class="btn-go" id="btn-confirm-inline-delete"
+                      onclick="submitInlineDelete()" disabled>Schedule deletion</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- DANGER ZONE -->
     <div class="settings-section">
       <div class="settings-group">
@@ -847,17 +1018,6 @@
             <div class="row-text">
               <div class="label">Log Out</div>
             </div>
-          </div>
-        </div>
-        <div class="settings-row delete-row" onclick="openDeleteModal()">
-          <div class="row-left">
-            <div class="row-icon red"><i class="fas fa-trash-can"></i></div>
-            <div class="row-text">
-              <div class="label">Delete Account</div>
-            </div>
-          </div>
-          <div class="row-right">
-            <i class="fas fa-chevron-right"></i>
           </div>
         </div>
       </div>
@@ -881,8 +1041,8 @@
     </div>
   </div>
 
-  <!-- DELETE ACCOUNT MODAL -->
-  <div class="modal-overlay" id="delete-modal" onclick="if(event.target===this)closeDeleteModal()">
+  <!-- (legacy delete modal removed — replaced by inline confirmation under Data & Privacy) -->
+  <div class="modal-overlay" id="delete-modal" style="display:none;" onclick="if(event.target===this)closeDeleteModal()">
     <div class="modal-sheet">
       <div class="modal-header">
         <h3>Delete Account</h3>
@@ -1070,60 +1230,103 @@
       }
     }
 
-    // ===== DELETE ACCOUNT =====
-    function openDeleteModal() {
-      deleteReason = null;
-      document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
-      document.getElementById('btn-confirm-delete').disabled = true;
-      document.getElementById('delete-modal').classList.add('open');
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('delete-modal').classList.remove('open');
-    }
-
-    function selectReason(reason, el) {
-      deleteReason = reason;
-      document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('btn-confirm-delete').disabled = false;
-    }
-
-    async function confirmDelete() {
-      if (!deleteReason) return;
-
-      const btn = document.getElementById('btn-confirm-delete');
+    // ===== DATA EXPORT =====
+    async function requestDataExport() {
+      const btn = document.getElementById('btn-export-data');
+      const original = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Deleting...';
-
+      btn.innerHTML = '<span class="spinner"></span> Preparing your export...';
       try {
-        const res = await fetch(API_BASE + '/users/account', {
-          method: 'DELETE',
+        const res = await fetch(API_BASE + '/account/export', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + getToken()
           },
-          body: JSON.stringify({ reason: deleteReason })
         });
-
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to delete account');
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          showToast(data.message || 'You can request another export tomorrow.', true);
+          return;
         }
+        if (!res.ok) {
+          throw new Error(data.error || 'Export failed');
+        }
+        showToast("We'll email you a download link shortly.");
+      } catch (err) {
+        showToast(err.message || 'Export failed', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
 
-        // Clear all local data
+    // ===== INLINE DELETE FLOW =====
+    function openInlineDelete() {
+      const box = document.getElementById('delete-confirm-inline');
+      const input = document.getElementById('delete-confirm-input');
+      box.classList.add('open');
+      input.value = '';
+      document.getElementById('btn-confirm-inline-delete').disabled = true;
+      setTimeout(function(){ input.focus(); }, 50);
+    }
+    function closeInlineDelete() {
+      const box = document.getElementById('delete-confirm-inline');
+      box.classList.remove('open');
+      document.getElementById('delete-confirm-input').value = '';
+      document.getElementById('btn-confirm-inline-delete').disabled = true;
+    }
+    function onDeleteInput(val) {
+      // Normalize to uppercase for the comparison so users can type either case.
+      const ok = String(val || '').trim().toUpperCase() === 'DELETE';
+      document.getElementById('btn-confirm-inline-delete').disabled = !ok;
+    }
+    async function submitInlineDelete() {
+      const btn = document.getElementById('btn-confirm-inline-delete');
+      const input = document.getElementById('delete-confirm-input');
+      const val = String(input.value || '').trim().toUpperCase();
+      if (val !== 'DELETE') {
+        showToast('Please type DELETE to confirm', true);
+        return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Scheduling...';
+      try {
+        const res = await fetch(API_BASE + '/account/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + getToken()
+          },
+          // API requires the literal "DELETE" string.
+          body: JSON.stringify({ confirmation: 'DELETE' })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || data.message || 'Failed to delete account');
+        }
+        // Clear all local data — user is logged out client-side. Server
+        // keeps the row around for 30 days for the undo path.
         localStorage.removeItem('safetea_token');
         localStorage.removeItem('safetea_user');
         localStorage.removeItem('safetea_prefs');
-
-        showToast('Account deleted. Goodbye.');
-        setTimeout(() => { window.location.href = '/'; }, 1500);
+        showToast('Account scheduled for deletion. Check your email.');
+        setTimeout(function(){
+          window.location.href = '/login.html?deleted=1';
+        }, 1200);
       } catch (err) {
-        showToast(err.message, true);
+        showToast(err.message || 'Failed to delete account', true);
         btn.disabled = false;
-        btn.textContent = 'Delete My Account';
+        btn.textContent = 'Schedule deletion';
       }
     }
+
+    // ===== legacy stubs (the old modal is hidden but onclick handlers still
+    //       reference these — keep them as no-ops for safety) =====
+    function openDeleteModal() { openInlineDelete(); }
+    function closeDeleteModal() { /* no-op */ }
+    function selectReason() { /* no-op */ }
+    function confirmDelete() { submitInlineDelete(); }
 
     // ===== LOG OUT =====
     function logOut() {

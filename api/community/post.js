@@ -38,6 +38,8 @@ module.exports = async function handler(req, res) {
 
   const body = await parseBody(req);
   const { title, body: postBody, category, city, image } = body;
+  // Accept both snake_case and camelCase from clients (web dashboard sends isAnonymous; mobile sends is_anonymous)
+  const isAnonymous = (body.isAnonymous === true || body.is_anonymous === true);
 
   if (!postBody || postBody.trim().length < 3) {
     return res.status(400).json({ error: 'Post body is required (min 3 characters)' });
@@ -69,12 +71,29 @@ module.exports = async function handler(req, res) {
   try {
     const postTitle = title || postBody.substring(0, 80);
     const imageUrl = image || null;
-    const result = await getOne(
-      `INSERT INTO posts (user_id, title, body, category, city, feed, image_url, created_at)
-       VALUES ($1, $2, $3, $4, $5, 'community', $6, NOW())
-       RETURNING id`,
-      [user.id, postTitle, postBody.trim(), category || 'general', city || user.city || null, imageUrl]
-    );
+    let result;
+    try {
+      // Preferred path: include is_anonymous column (added by migrate-schema-reconcile / migrate.js)
+      result = await getOne(
+        `INSERT INTO posts (user_id, title, body, category, city, feed, image_url, is_anonymous, created_at)
+         VALUES ($1, $2, $3, $4, $5, 'community', $6, $7, NOW())
+         RETURNING id`,
+        [user.id, postTitle, postBody.trim(), category || 'general', city || user.city || null, imageUrl, isAnonymous]
+      );
+    } catch (colErr) {
+      // Fallback when is_anonymous column hasn't been migrated yet — drop the flag and insert without it
+      if (colErr && /is_anonymous/i.test(colErr.message || '')) {
+        console.warn('[Community] is_anonymous column missing; inserting without it. Run /api/migrate to add it.');
+        result = await getOne(
+          `INSERT INTO posts (user_id, title, body, category, city, feed, image_url, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'community', $6, NOW())
+           RETURNING id`,
+          [user.id, postTitle, postBody.trim(), category || 'general', city || user.city || null, imageUrl]
+        );
+      } else {
+        throw colErr;
+      }
+    }
 
     // Check Name Watch matches (non-blocking)
     checkNameWatchMatches(result.id, postBody, city || user.city).catch(function(err) {

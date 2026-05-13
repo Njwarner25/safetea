@@ -480,6 +480,21 @@
       var params = new URLSearchParams(window.location.search);
       var ref = params.get('ref');
       if (ref) localStorage.setItem('safetea_referral_code', ref);
+
+      // Account-scheduled-for-deletion banner. The settings.html redirects
+      // here with ?deleted=1 right after a successful POST /api/account/delete.
+      if (params.get('deleted') === '1') {
+        try {
+          // Clear any stale session so the user sees the login form.
+          localStorage.removeItem('safetea_token');
+          localStorage.removeItem('safetea_user');
+        } catch (_) {}
+        var el = document.getElementById('success-msg');
+        if (el) {
+          el.textContent = 'Your account is scheduled for deletion. Check email to undo within 30 days.';
+          el.style.display = 'block';
+        }
+      }
     })();
 
     function togglePassword(inputId, btn) {

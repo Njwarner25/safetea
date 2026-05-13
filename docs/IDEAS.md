@@ -149,6 +149,40 @@ The eye check shouldn't dead-end at a private nudge. If the user is in an active
 - The broadcast itself goes through the same Twilio/push pipe as existing Tether alerts.
 - Host map UI needs a small "Alessia flagged" indicator (single subtle icon on the avatar, not a flashing warning — preserves the user's dignity).
 
+### Why this has viral capability (operator's read, captured for the launch playbook)
+
+**Demo math:**
+
+- A 15-second TikTok of "test your eyes after drinking" has every ingredient social platforms reward: visual anomaly, before/after comparison, mild taboo, group-friendly, immediately reproducible. The eyes-tracking-something-on-screen visual is genuinely interesting to watch.
+- Three creator niches overlap on this: dating-safety, women's-safety, harm-reduction. Each has separate audiences that don't see each other's content. Three orthogonal organic distribution channels.
+- The Tether broadcast layer ("Sarah needs extra eyes tonight") is its own emotional micro-moment that creators can dramatize — group caring for one of their own. That's the slow-burn second wave of content after the initial test demos.
+- Counter-cultural angle: feels protective, not surveilling. Modern audiences are saturated with "safety tech" that's really tracking — this one is the user choosing to know about themselves.
+
+**Pre-launch playbook (do BEFORE you ship the feature, not after):**
+
+1. **Pick a name.** "Eye check" is descriptive but bland. Brand it. Options to brainstorm: "SafetyVision," "ClearCheck," "TheCheck," "GoSafe," "InFocus." A short branded name shows up better in captions and hashtags. The name should be ownable as a hashtag — search availability matters.
+
+2. **Build a waitlist page** at `/the-check.html` (or whatever the name becomes) the moment you commit to building. Lets you start collecting emails 8–12 weeks before launch. Use the existing email-drip system to nurture the list. **A 5,000-email waitlist on launch day beats a perfect launch with nobody knowing.**
+
+3. **Line up 5–10 creators before launch.** Mid-tier (50k–500k followers) in the three verticals above. Pay them properly — $500–2,000 per video, NOT "exposure." Send each one early access two weeks before public launch so their content drops in the first 72 hours of public availability.
+
+4. **Pre-build the demo format.** A single 15-second TikTok template anyone can recreate: phone selfie cam, follow the dot on screen, score result with the Alessia voice line read aloud. Make the template downloadable. The easier it is to replicate, the more replicates you get.
+
+5. **One concrete launch CTA.** Not "download our app." Specifically: *"Test yourself before driving home this weekend. Send this to a friend who's going out."* Friend-tagging is the only viral mechanic that consistently works.
+
+**Why it might not go viral (be honest about this):**
+
+- App Store / Play Store could refuse to approve the feature if the framing slips toward "sobriety test." Always-warm legal review before each marketing asset, not after.
+- Most "viral" features don't actually go viral. Most launches are silent. Build assuming you'll need paid distribution to seed it, and treat any organic spread as a bonus.
+- The 30-second TikTok attention window means the moment-of-result has to be visually clear. The score number has to LOOK like something — a clean animation, a color, a sound. Not a paragraph of text.
+- If a single user records themselves passing the check, then drives, then crashes — the resulting media coverage could be catastrophic. Liability framing must be airtight in EULA AND every piece of marketing.
+
+**The single most important thing to nail:**
+
+The result-reveal moment in the app. The 2-second beat between "test complete" and Alessia's voice-line. That's the screenshot people share. If that's a beautiful, clean, emotionally-clear moment — with Alessia's soft warm voice and a number that looks meaningful — the feature spreads. If that's a janky modal with raw decimal points, it dies.
+
+Invest disproportionately in that 2 seconds.
+
 ### Status
 
-**Stashed.** Revisit when SafeTea+ MRR > $5k/mo and we have proven funnel conversion.
+**Stashed.** Revisit when SafeTea+ MRR > $5k/mo and we have proven funnel conversion. When you do start, the launch playbook above gets pulled into a separate `docs/LAUNCH_PLAYBOOK_v2.md` and gates the build work — no code until the waitlist + creator outreach is at least planned.

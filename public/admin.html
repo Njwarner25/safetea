@@ -527,6 +527,14 @@
                     </div>
                     <div id="seed-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
                 </div>
+                <div class="card" style="margin-top:16px">
+                    <h3><i class="fas fa-city" style="color:#5CB3F0"></i> Restore City List</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Re-seed the canonical 8 cities into <code>cities</code> + <code>city_votes</code>: Chicago, New York, Los Angeles, Houston, Miami, Atlanta, Dallas, Philadelphia. Deactivates anything else (Austin/Denver/Portland/etc.) so the community city picker shows the right set with matching images. Idempotent — safe to re-run.</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-primary" onclick="restoreCities()"><i class="fas fa-arrows-rotate"></i> Restore Cities</button>
+                    </div>
+                    <div id="cities-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
+                </div>
             </div>
 
             <!-- WATERMARK DECODER -->
@@ -1642,6 +1650,34 @@
                         + 'Posts: ' + escapeHtml(String(data.posts_created ?? 0)) + ' · '
                         + 'Replies: ' + escapeHtml(String(data.replies_created ?? 0)) + ' · '
                         + 'Likes: ' + escapeHtml(String(data.likes_created ?? 0))
+                        + '</div>';
+                }
+                el.innerHTML = summary + '<pre style="margin-top:10px;font-size:12px;color:#7080A0;overflow:auto;max-height:280px">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
+            } catch (err) {
+                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
+            }
+        }
+
+        // ===== RESTORE CITIES =====
+        async function restoreCities() {
+            if (!confirm('Restore the canonical 8-city list and deactivate everything else?\n\nIdempotent — safe to re-run.')) return;
+            var el = document.getElementById('cities-result');
+            el.style.display = 'block';
+            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Restoring cities…</span>';
+            try {
+                var res = await fetch(API_BASE + '/admin/fix-cities', { method: 'POST', headers: authHeaders() });
+                var data = await res.json();
+                if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+                var ok = !!data.ok;
+                var summary = ok
+                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Cities restored.</span>'
+                    : '<span style="color:#f1c40f;font-weight:600"><i class="fas fa-triangle-exclamation"></i> Completed with errors — see JSON below.</span>';
+                var ct = data.cities_table || {};
+                var cv = data.city_votes_table || {};
+                if (ct.upserted || cv.upserted) {
+                    summary += '<div style="margin-top:8px;font-size:13px;color:#B0B0C8">'
+                        + 'cities: ' + (ct.upserted ? ct.upserted.length + ' upserted, ' + (ct.deactivated_other || 0) + ' deactivated' : 'skipped') + ' · '
+                        + 'city_votes: ' + (cv.upserted ? cv.upserted.length + ' upserted, ' + (cv.deactivated_other || 0) + ' deactivated' : 'skipped')
                         + '</div>';
                 }
                 el.innerHTML = summary + '<pre style="margin-top:10px;font-size:12px;color:#7080A0;overflow:auto;max-height:280px">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';

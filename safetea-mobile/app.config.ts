@@ -98,7 +98,7 @@ const config: ExpoConfig = {
       backgroundColor: '#1A1A2E',
     },
     package: 'app.getsafetea.mobile',
-    versionCode: 1035,
+    versionCode: 1036,
   },
   web: {
     favicon: './assets/favicon.png',

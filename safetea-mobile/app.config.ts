@@ -98,7 +98,7 @@ const config: ExpoConfig = {
       backgroundColor: '#1A1A2E',
     },
     package: 'app.getsafetea.mobile',
-    versionCode: 1036,
+    versionCode: 1037,
     // Android share-sheet intent filters are declared TWICE on purpose:
     //
     // 1. android.intentFilters below — manifest-merged at native build time,

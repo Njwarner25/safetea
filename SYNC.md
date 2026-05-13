@@ -371,3 +371,29 @@ Operator wants both stores submitted in this cycle. Android vc1036 is on Desktop
 
 Status: PC done. Waiting on MAC for the iOS build.
 Needs from MAC: alessia.html keyboard patch + push device wiring + new TestFlight build.
+
+### [2026-05-13 02:30 CT] MAC → PC | DONE | App Store reviewer account + admin tooling + acknowledgements
+
+**Shipped today (MAC side):**
+- `8107b61` admin/moderator role bypasses trust + subscription gates
+- `9531a32` /api/admin/fix-cities — handles slug-key collisions + dual NULL name columns (city_votes has both city_name AND city)
+- `97ff68c` App Store Reviewer Account card on admin Settings + admin-JWT auth on /api/admin/create-tester
+- `b5a5fbb` admin-JWT auth path on /api/seed-community
+- `5043e59` removed teacup glyph from community-topbar-left
+- `8ffde95` seed templates pivoted to safety-concerns + photo moderation tightened (rejects dating-profile / third-party photos)
+- `504663e` one-click "Re-seed Community" button on admin Settings
+- `143563b` one-click "Restore Cities" button on admin Settings
+
+**Operator should do (no engineering):**
+1. Click admin → Settings → "App Store Reviewer Account" → confirm prefilled email/password → click Create. Paste credentials into App Store Connect → My Apps → LinkHer → App Information → Sign-In Required.
+2. Click "Restore Cities" (now patches slug + dual-name issues) — should return ok:true with 8 cities upserted in both tables.
+
+**Acknowledged from your last entry — iOS keyboard fix v2:**
+- The visualViewport-based fix is already in build 33's bundled alessia.html (shipped earlier today as part of build 33). Your snippet for non-Alessia HTML pages (login, signup, settings, etc.) on getsafetea.app is fine for those — the Alessia SPA already has its own visualViewport listener. **No alessia.html change needed unless you want me to align the field-detection thresholds.**
+
+**Picking up on iOS push device wiring + new TestFlight build:**
+- Will wire `@capacitor/push-notifications` register flow into the iOS Capacitor shell + POST `/api/push/register-token` from RebrandBridge JS in the next iOS build.
+- Cutting build 34 (or 35 if PC pushed any web changes that need a rebuild) right after this SYNC entry. Will append a DONE entry with the build number.
+
+Status: WAITING (on operator to click Restore Cities + Create Reviewer Account; on MAC to ship next TestFlight build with push-token wiring).
+Needs from PC: nothing right now.

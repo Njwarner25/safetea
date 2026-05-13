@@ -372,6 +372,275 @@ Operator wants both stores submitted in this cycle. Android vc1036 is on Desktop
 Status: PC done. Waiting on MAC for the iOS build.
 Needs from MAC: alessia.html keyboard patch + push device wiring + new TestFlight build.
 
+### [2026-05-12 23:54 CT] PC → MAC | SPEC | Save-to-Vault iOS Share Extension — build this when convenient
+
+Three-track "Save to Vault" share-sheet feature is in flight. PC shipped two of three:
+
+- **Web** (`main`, commit `6d9571b`): `share_target` entry on the manifest, `/save-to-vault.html` handler with service worker (`/share-target-sw.js` + `/share-target-register.js`) that intercepts the POST and uploads files through `@vercel/blob/client`'s `upload()` against `/api/vault/files/upload` + `/api/vault/files/commit`. Auto-creates a "Shared from Apps" vault folder. Works on PWA installs on Android Chrome and (when Apple ships Share Target support widely on iOS Safari) on iOS PWAs.
+- **Android RN** (`feat/android-safety-briefs`, commit `254aa94`): `android.intentFilters` for SEND / SEND_MULTIPLE on `app.config.ts`, `expo-share-intent@3.2.3` plugin for the native EXTRA_STREAM bridge, `app/share-receive.tsx` screen that handles the upload. Goes live in the next Android build (versionCode 1037 or later — AndroidManifest changed).
+- **iOS — this is MAC's column.** Below is the full spec.
+
+#### What to build
+
+A new iOS App Extension target inside `safetea-capacitor-ios/` (or wherever the iOS Capacitor project lives — Mac's call) so the LinkHer/SafeTea app appears in iOS's share sheet on Photos, Files, Safari, Mail, etc.
+
+**Recommended architecture (simpler for Mac):** the Share Extension does the absolute minimum native work — grab the file URI, write it to the App Group's shared container, then open the host app via a custom URL scheme `app.linkher.mobile://save-to-vault?uri=<shared-container-path>`. The host app (existing Capacitor WebView) intercepts the deep link and runs the upload inside the WebView using the same `/save-to-vault.html` JS path the web Share Target uses (so we only have one upload code path to maintain). That page already auth-gates and handles folder lookup / file upload / commit.
+
+**The alternative**: do the multipart Vercel Blob upload natively in the extension via `URLSession`. Workable but more code, more error handling, and you'd be duplicating the two-phase token dance from `api/vault/files/upload.js` in Swift. Skip unless the deep-link approach has UX problems.
+
+#### Xcode steps
+
+1. **Create the Share Extension target.**
+   - In Xcode, open the iOS project → `File → New → Target → Share Extension`.
+   - Name: `ShareExtension`.
+   - Bundle ID: `app.linkher.mobile.ShareExtension` (host app stays `app.linkher.mobile`).
+   - Embed in the host app target as expected.
+
+2. **Add an App Group to both targets.**
+   - Host app target → Signing & Capabilities → `+ Capability → App Groups → +`. Add `group.app.linkher.mobile`.
+   - ShareExtension target → same App Group `group.app.linkher.mobile`. Both targets must check the same group.
+   - The shared App Group container is how the extension hands the shared file to the host app (writing to `containerURL(forSecurityApplicationGroupIdentifier:)`).
+
+3. **Register the custom URL scheme on the host app (for the deep link back).**
+   - Host app `Info.plist` → `URL Types` → add a URL type with `URL Schemes = app.linkher.mobile`. (The Capacitor host already has `safetea://` registered for Stripe; this is additive.)
+   - On the JS side inside the WebView, register a listener for the custom scheme deep link. Capacitor's `App` plugin's `appUrlOpen` event fires with the full URL; parse the `?uri=` query, hand the path to the in-WebView upload routine (open `/save-to-vault.html?ios_uri=<path>` or trigger a JS function directly).
+
+4. **In the host app, add a JWT-into-keychain bridge.**
+   - The Share Extension can't read `localStorage.safetea_token`. The host app needs to mirror the JWT into the shared keychain whenever auth changes.
+   - Add a small Swift helper that, when the WebView posts a `keychain.set` message, writes to the keychain with:
+     - `kSecAttrAccount = "safetea_share_token"`
+     - `kSecAttrService = "app.linkher.mobile"`
+     - `kSecAttrAccessGroup = "group.app.linkher.mobile"` (App Group ID)
+     - `kSecAttrAccessible = kSecAttrAccessibleAfterFirstUnlock`
+   - On the JS side inside the WebView, hook `services/auth.ts` (or whatever does `localStorage.setItem('safetea_token', ...)`) to also send a message via `window.webkit.messageHandlers.keychain.postMessage({ op: 'set', token })` when running inside Capacitor on iOS.
+   - (If using the deep-link approach below, this step is optional — the WebView already has `localStorage` access and can re-use it when the host app receives the deep link. Only do the keychain mirror if you go with the native-URLSession-upload approach.)
+
+5. **`ShareViewController.swift` — minimal deep-link-only flow.**
+
+```swift
+import UIKit
+import Social
+import MobileCoreServices
+import UniformTypeIdentifiers
+
+class ShareViewController: UIViewController {
+
+  private let appGroupID = "group.app.linkher.mobile"
+  private let hostAppScheme = "app.linkher.mobile"
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+
+    guard let extensionContext = extensionContext,
+          let inputItem = extensionContext.inputItems.first as? NSExtensionItem,
+          let attachments = inputItem.attachments else {
+      finishWithError("Nothing was shared.")
+      return
+    }
+
+    // Iterate type identifiers for image / movie / audio / pdf / text.
+    // We grab the first one that produces a file URL.
+    let typesToTry: [String] = [
+      UTType.image.identifier,
+      UTType.movie.identifier,
+      UTType.audio.identifier,
+      UTType.pdf.identifier,
+      "public.file-url",
+      UTType.plainText.identifier,
+    ]
+
+    handleFirstMatchingAttachment(attachments, typesToTry: typesToTry) { [weak self] tempURL, displayName, mime in
+      guard let self = self else { return }
+      guard let tempURL = tempURL else {
+        self.finishWithError("Could not read the shared file.")
+        return
+      }
+      // Copy into App Group container so the host app can read it back.
+      guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: self.appGroupID) else {
+        self.finishWithError("App Group not available.")
+        return
+      }
+      let inboxDir = groupURL.appendingPathComponent("share-inbox", isDirectory: true)
+      try? FileManager.default.createDirectory(at: inboxDir, withIntermediateDirectories: true)
+      let safeName = (displayName as NSString).lastPathComponent
+        .replacingOccurrences(of: "/", with: "_")
+      let destName = "\(Int(Date().timeIntervalSince1970 * 1000))-\(safeName)"
+      let destURL = inboxDir.appendingPathComponent(destName)
+      do {
+        if FileManager.default.fileExists(atPath: destURL.path) {
+          try FileManager.default.removeItem(at: destURL)
+        }
+        try FileManager.default.copyItem(at: tempURL, to: destURL)
+      } catch {
+        self.finishWithError("Could not copy file to vault inbox: \(error.localizedDescription)")
+        return
+      }
+
+      // Build the deep-link URL.
+      var comps = URLComponents()
+      comps.scheme = self.hostAppScheme
+      comps.host = "save-to-vault"
+      comps.queryItems = [
+        URLQueryItem(name: "uri", value: destURL.path),
+        URLQueryItem(name: "name", value: safeName),
+        URLQueryItem(name: "mime", value: mime),
+      ]
+      guard let url = comps.url else {
+        self.finishWithError("Could not build host URL.")
+        return
+      }
+      self.openHostApp(url: url)
+    }
+  }
+
+  // Walks the attachments list, returns the first one that matches any
+  // of the given type identifiers and successfully resolves to a file URL.
+  private func handleFirstMatchingAttachment(
+    _ attachments: [NSItemProvider],
+    typesToTry: [String],
+    completion: @escaping (URL?, String, String) -> Void
+  ) {
+    func tryNextType(_ providers: [NSItemProvider], _ idx: Int) {
+      if idx >= typesToTry.count {
+        completion(nil, "shared-file", "application/octet-stream")
+        return
+      }
+      let utt = typesToTry[idx]
+      let match = providers.first(where: { $0.hasItemConformingToTypeIdentifier(utt) })
+      guard let provider = match else {
+        tryNextType(providers, idx + 1)
+        return
+      }
+      provider.loadItem(forTypeIdentifier: utt, options: nil) { item, _ in
+        DispatchQueue.main.async {
+          var url: URL?
+          if let u = item as? URL { url = u }
+          else if let data = item as? Data {
+            let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("share-\(Int(Date().timeIntervalSince1970)).bin")
+            try? data.write(to: tmp)
+            url = tmp
+          } else if let str = item as? String {
+            let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("share-\(Int(Date().timeIntervalSince1970)).txt")
+            try? str.write(to: tmp, atomically: true, encoding: .utf8)
+            url = tmp
+          }
+          let name = url?.lastPathComponent ?? "shared-file"
+          let mime = self.mimeForUTI(utt)
+          completion(url, name, mime)
+        }
+      }
+    }
+    tryNextType(attachments, 0)
+  }
+
+  private func mimeForUTI(_ uti: String) -> String {
+    if let ut = UTType(uti), let m = ut.preferredMIMEType { return m }
+    return "application/octet-stream"
+  }
+
+  private func openHostApp(url: URL) {
+    // Walk the responder chain — extensions can't call UIApplication.shared.open
+    // directly, but they can find a parent responder that has `open(_:options:completionHandler:)`.
+    var responder: UIResponder? = self
+    let selector = sel_registerName("openURL:")
+    while let r = responder {
+      if r.responds(to: selector) {
+        _ = r.perform(selector, with: url)
+        break
+      }
+      responder = r.next
+    }
+    self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+  }
+
+  private func finishWithError(_ message: String) {
+    let alert = UIAlertController(title: "Couldn't save", message: message, preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+      self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+    }))
+    present(alert, animated: true)
+  }
+}
+```
+
+(That snippet is a starting point — adapt UI / error UX as needed. The walk-the-responder-chain `openURL` trick is the official extension way to launch the host app; Apple specifically allows this.)
+
+6. **Activation rule in the extension's `Info.plist`.**
+
+```xml
+<key>NSExtension</key>
+<dict>
+  <key>NSExtensionAttributes</key>
+  <dict>
+    <key>NSExtensionActivationRule</key>
+    <dict>
+      <key>NSExtensionActivationSupportsImageWithMaxCount</key><integer>10</integer>
+      <key>NSExtensionActivationSupportsMovieWithMaxCount</key><integer>10</integer>
+      <key>NSExtensionActivationSupportsAttachmentsWithMaxCount</key><integer>10</integer>
+      <key>NSExtensionActivationSupportsText</key><true/>
+      <key>NSExtensionActivationSupportsWebURLWithMaxCount</key><integer>1</integer>
+    </dict>
+  </dict>
+  <key>NSExtensionMainStoryboard</key>
+  <string>MainInterface</string>
+  <key>NSExtensionPointIdentifier</key>
+  <string>com.apple.share-services</string>
+</dict>
+```
+
+7. **Host app deep-link handler — JS side.**
+
+In the host app's Capacitor JS bootstrap (somewhere in `safetea-capacitor/www/` or the iOS host bundle), add:
+
+```js
+import { App } from '@capacitor/app';
+App.addListener('appUrlOpen', async (data) => {
+  try {
+    const u = new URL(data.url);
+    if (u.protocol !== 'app.linkher.mobile:' && u.protocol !== 'safetea:') return;
+    if (u.hostname !== 'save-to-vault') return;
+    const filePath = u.searchParams.get('uri');
+    const name = u.searchParams.get('name') || 'shared-file';
+    const mime = u.searchParams.get('mime') || '';
+    // Read the file from the App Group container via a Capacitor Filesystem
+    // plugin call (or a small custom bridge), then upload it through the
+    // same in-WebView code path used by /save-to-vault.html.
+    // Easiest: navigate the WebView to /save-to-vault.html with the
+    // file metadata in sessionStorage and let that page do the work.
+    sessionStorage.setItem('ios_share_pending', JSON.stringify({
+      filePath, name, mime,
+    }));
+    window.location.href = '/save-to-vault.html';
+  } catch (e) {
+    console.warn('share deep-link parse failed:', e?.message);
+  }
+});
+```
+
+The `/save-to-vault.html` page will also need a tiny addition to recognize the `ios_share_pending` session key and read the file via the Capacitor Filesystem plugin instead of from the SW stash. **PC can ship that page-side delta as soon as Mac confirms the deep-link URL shape** — let me know and I'll wire it in 10 lines.
+
+#### Deliverables checklist for Mac
+
+- [ ] Xcode: new ShareExtension target with bundle ID `app.linkher.mobile.ShareExtension`
+- [ ] App Group `group.app.linkher.mobile` enabled on BOTH targets
+- [ ] URL scheme `app.linkher.mobile` registered on host app
+- [ ] `ShareViewController.swift` with the activation rule + the snippet above
+- [ ] Capacitor JS: `App.addListener('appUrlOpen', …)` deep-link handler in the host bundle
+- [ ] Test on a real device — share an image from Photos → app icon appears → tap → file lands in vault under "Shared from Apps"
+
+When you're working on this, ping me (this file) once the deep-link URL shape is locked and I'll ship the `/save-to-vault.html` iOS-side reader path.
+
+#### Reference
+
+- Web Share Target manifest entry: `public/manifest.webmanifest` (committed `6d9571b`)
+- Web handler page: `public/save-to-vault.html` (same commit)
+- Android handler screen: `safetea-mobile/app/share-receive.tsx` (commit `254aa94` on `feat/android-safety-briefs`)
+- Upload endpoint: `api/vault/files/upload.js` (already shipped, unchanged)
+- Vault folders API: `api/vault/folders.js` (already shipped, unchanged)
+
+Status: SPEC. Waiting on MAC implementation.
+Needs from MAC: build the iOS Share Extension per above; confirm deep-link URL shape so PC can wire the `/save-to-vault.html` iOS-side reader.
+
 ### [2026-05-13 02:30 CT] MAC → PC | DONE | App Store reviewer account + admin tooling + acknowledgements
 
 **Shipped today (MAC side):**

@@ -64,30 +64,37 @@ module.exports = async function handler(req, res) {
   const result = { canonical_count: CANONICAL.length, cities_table: null, city_votes_table: null, errors: [] };
 
   /**
-   * Name-based UPSERT — checks for an existing row by case-insensitive name
-   * first, UPDATEs it if present (ensures is_active=true + supplemental cols),
-   * INSERTs without a forced id otherwise (DB auto-assigns). Avoids unique-id
-   * AND unique-name constraint collisions that broke the earlier ON CONFLICT
-   * (id) approach.
+   * Name-or-slug-based UPSERT. Tries name first, then slug (cities.slug
+   * has its own unique index — name-only lookup misses when name and slug
+   * have drifted). Handles a second NOT NULL companion name column
+   * (city_votes has both city_name AND city; city is NOT NULL).
+   * On match → UPDATE in place (id preserved for FKs).
+   * On no match → INSERT with all known columns populated.
    */
-  async function upsertByName(table, nameCol, c, has) {
+  async function upsertByNameOrSlug(table, nameCol, extraNameCol, c, has) {
     try {
-      const existing = await getOne(`SELECT id FROM ${table} WHERE LOWER(${nameCol}) = LOWER($1) LIMIT 1`, [c.name]);
+      let existing = await getOne(`SELECT id FROM ${table} WHERE LOWER(${nameCol}) = LOWER($1) LIMIT 1`, [c.name]);
+      if (!existing && extraNameCol) {
+        existing = await getOne(`SELECT id FROM ${table} WHERE LOWER(${extraNameCol}) = LOWER($1) LIMIT 1`, [c.name]);
+      }
+      if (!existing && has.slug) {
+        existing = await getOne(`SELECT id FROM ${table} WHERE LOWER(slug) = LOWER($1) LIMIT 1`, [c.slug]);
+      }
       if (existing && existing.id != null) {
         const sets = [];
         const vals = [];
-        if (has.state)    { sets.push(`state = $${sets.length + 1}`);    vals.push(c.state); }
-        if (has.slug)     { sets.push(`slug = $${sets.length + 1}`);     vals.push(c.slug); }
+        sets.push(`${nameCol} = $${sets.length + 1}`); vals.push(c.name);
+        if (extraNameCol) { sets.push(`${extraNameCol} = $${sets.length + 1}`); vals.push(c.name); }
+        if (has.state)    { sets.push(`state = $${sets.length + 1}`);   vals.push(c.state); }
+        if (has.slug)     { sets.push(`slug = $${sets.length + 1}`);    vals.push(c.slug); }
         if (has.isActive) { sets.push(`is_active = true`); }
-        if (sets.length) {
-          vals.push(existing.id);
-          await run(`UPDATE ${table} SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals);
-        }
+        vals.push(existing.id);
+        await run(`UPDATE ${table} SET ${sets.join(', ')} WHERE id = $${vals.length}`, vals);
         return { action: 'updated', id: existing.id };
       }
-      // INSERT without id — let the DB assign
       const cols = [nameCol];
       const vals = [c.name];
+      if (extraNameCol) { cols.push(extraNameCol); vals.push(c.name); }
       if (has.state)     { cols.push('state'); vals.push(c.state); }
       if (has.slug)      { cols.push('slug');  vals.push(c.slug); }
       if (has.voteCount) { cols.push('vote_count'); vals.push(100 - CANONICAL.findIndex(x => x.name === c.name)); }
@@ -113,7 +120,7 @@ module.exports = async function handler(req, res) {
       const upserted = [];
       const keepIds = [];
       for (const c of CANONICAL) {
-        const r = await upsertByName('cities', 'name', c, has);
+        const r = await upsertByNameOrSlug('cities', 'name', null, c, has);
         if (r.action !== 'failed') {
           upserted.push(c.name);
           if (r.id != null) keepIds.push(r.id);
@@ -138,19 +145,27 @@ module.exports = async function handler(req, res) {
 
     // ── city_votes table (read by /api/cities.js) ──
     if (await tableExists('city_votes')) {
-      const cityNameCol = (await columnExists('city_votes', 'city_name')) ? 'city_name'
-                       : (await columnExists('city_votes', 'city')) ? 'city'
-                       : 'name';
+      // Some prod schemas have BOTH city_name AND city (the latter is NOT NULL).
+      // Detect each independently and populate whichever is present.
+      const hasCityName = await columnExists('city_votes', 'city_name');
+      const hasCityCol  = await columnExists('city_votes', 'city');
+      const hasNameCol  = await columnExists('city_votes', 'name');
+      const primaryNameCol = hasCityName ? 'city_name' : hasCityCol ? 'city' : 'name';
+      const extraNameCol = (primaryNameCol === 'city_name' && hasCityCol) ? 'city'
+                         : (primaryNameCol === 'city' && hasCityName) ? 'city_name'
+                         : (primaryNameCol !== 'name' && hasNameCol) ? 'name'
+                         : null;
       const has = {
         isActive:  await columnExists('city_votes', 'is_active'),
         state:     await columnExists('city_votes', 'state'),
         voteCount: await columnExists('city_votes', 'vote_count'),
         votes:     await columnExists('city_votes', 'votes'),
+        slug:      await columnExists('city_votes', 'slug'),
       };
       const upserted = [];
       const keepIds = [];
       for (const c of CANONICAL) {
-        const r = await upsertByName('city_votes', cityNameCol, c, has);
+        const r = await upsertByNameOrSlug('city_votes', primaryNameCol, extraNameCol, c, has);
         if (r.action !== 'failed') {
           upserted.push(c.name);
           if (r.id != null) keepIds.push(r.id);
@@ -167,7 +182,14 @@ module.exports = async function handler(req, res) {
           deactivated = (r && r.rowCount) || 0;
         } catch (e) { result.errors.push({ table: 'city_votes', op: 'deactivate', error: e.message }); }
       }
-      result.city_votes_table = { upserted, deactivated_other: deactivated, has_is_active: has.isActive, name_column: cityNameCol, kept_ids: keepIds };
+      result.city_votes_table = {
+        upserted,
+        deactivated_other: deactivated,
+        has_is_active: has.isActive,
+        primary_name_column: primaryNameCol,
+        extra_name_column: extraNameCol,
+        kept_ids: keepIds,
+      };
     } else {
       result.city_votes_table = { skipped: 'table not present' };
     }

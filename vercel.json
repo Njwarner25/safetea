@@ -10,6 +10,13 @@
             ]
         },
         {
+            "source": "/share-target-sw.js",
+            "headers": [
+                { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+                { "key": "Service-Worker-Allowed", "value": "/" }
+            ]
+        },
+        {
             "source": "/vault.html",
             "headers": [
                 { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
@@ -34,7 +41,7 @@
             ]
         },
         {
-            "source": "/(index|about|blog|faq|terms|privacy|guidelines|billing-policy|subscribe|subscription|join|login|admin|dashboard|onboarding|photo-removal|red-flag-scanner|redflag|date-status)(\\.html)?",
+            "source": "/(index|about|blog|faq|terms|privacy|guidelines|billing-policy|subscribe|subscription|join|login|admin|dashboard|onboarding|photo-removal|red-flag-scanner|redflag|date-status|save-to-vault)(\\.html)?",
             "headers": [
                 { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
                 { "key": "Pragma", "value": "no-cache" },

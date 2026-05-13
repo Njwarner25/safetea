@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#E8A0B5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Save to Vault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1A1A2E;
+      color: #F0D0C0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      padding-top: max(24px, env(safe-area-inset-top, 24px));
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
+    }
+    .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .topbar img { height: 28px; width: auto; }
+    .topbar h1 { font-size: 16px; font-weight: 600; color: #fff; }
+
+    .card {
+      background: #22223A;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 22px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .card h2 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .card p.subtitle { font-size: 13px; color: #8080A0; margin-bottom: 16px; }
+
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #141428;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .file-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: rgba(232,160,181,0.12);
+      color: #E8A0B5;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .file-meta { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 14px; font-weight: 500; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-size { font-size: 12px; color: #8080A0; margin-top: 2px; }
+    .file-status {
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 999px; flex-shrink: 0;
+    }
+    .file-status.pending { background: rgba(241,196,15,0.15); color: #f1c40f; }
+    .file-status.uploading { background: rgba(52,152,219,0.15); color: #3498db; }
+    .file-status.done { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .file-status.error { background: rgba(231,76,60,0.15); color: #e74c3c; }
+
+    .progress {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #8080A0;
+      margin-top: 16px;
+    }
+    .progress i { color: #E8A0B5; }
+
+    .actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn {
+      flex: 1;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity .15s, transform .15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      color: #fff;
+    }
+    .btn-primary:hover { box-shadow: 0 4px 15px rgba(232,160,181,0.3); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent;
+      color: #8080A0;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+    .empty {
+      text-align: center;
+      color: #8080A0;
+      padding: 20px 0;
+      font-size: 14px;
+    }
+
+    .success-card {
+      text-align: center;
+    }
+    .success-card .checkmark {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(46,204,113,0.15);
+      color: #2ecc71;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 14px;
+    }
+    .error-card .errmark {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(231,76,60,0.15);
+      color: #e74c3c;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin: 0 auto 14px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #555575;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <img src="/apple-touch-icon.png" alt="">
+    <h1>Save to your Vault</h1>
+  </div>
+
+  <div id="card-stage" class="card">
+    <h2 id="stage-title">Preparing your share…</h2>
+    <p class="subtitle" id="stage-subtitle">One moment while we read what you sent.</p>
+    <div id="file-list"></div>
+    <div class="progress" id="progress-row" style="display:none">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      <span id="progress-text">Saving to your vault…</span>
+    </div>
+    <div class="actions" id="actions-row" style="display:none">
+      <button id="btn-primary" class="btn btn-primary"></button>
+      <button id="btn-cancel" class="btn btn-ghost">Cancel</button>
+    </div>
+  </div>
+
+  <div class="footer">Encrypted end-to-end • Only you can read what's in your vault.</div>
+
+  <script src="/share-target-register.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var TOKEN_KEY = 'safetea_token';
+    var STASH_KEY = 'safetea_share_pending';
+    var FOLDER_NAME = 'Shared from Apps';
+
+    function $(id) { return document.getElementById(id); }
+    function fmtSize(n) {
+      if (!n || !Number.isFinite(n)) return '';
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    function iconForMime(mime) {
+      mime = (mime || '').toLowerCase();
+      if (mime.indexOf('image/') === 0) return 'fa-image';
+      if (mime.indexOf('video/') === 0) return 'fa-film';
+      if (mime.indexOf('audio/') === 0) return 'fa-music';
+      if (mime === 'application/pdf') return 'fa-file-pdf';
+      if (mime.indexOf('text/') === 0) return 'fa-file-lines';
+      return 'fa-file';
+    }
+    function inferMimeFromName(name) {
+      var n = (name || '').toLowerCase();
+      var m = n.lastIndexOf('.');
+      if (m < 0) return '';
+      var ext = n.slice(m + 1);
+      var map = {
+        jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+        heic: 'image/heic', heif: 'image/heif', webp: 'image/webp',
+        gif: 'image/gif',
+        mp4: 'video/mp4', mov: 'video/quicktime', m4v: 'video/x-m4v',
+        webm: 'video/webm',
+        mp3: 'audio/mpeg', m4a: 'audio/m4a', wav: 'audio/wav',
+        aac: 'audio/aac', ogg: 'audio/ogg',
+        pdf: 'application/pdf',
+        txt: 'text/plain',
+      };
+      return map[ext] || '';
+    }
+
+    // -------- Step 1: get the shared file(s) from SW or sessionStorage --------
+
+    function getShareIdFromUrl() {
+      try {
+        var u = new URL(location.href);
+        return u.searchParams.get('share_id');
+      } catch (_) { return null; }
+    }
+
+    async function loadSharedFiles() {
+      var id = getShareIdFromUrl();
+      if (id && typeof window.fetchSharedFiles === 'function') {
+        try {
+          var stash = await window.fetchSharedFiles(id);
+          if (stash && stash.files && stash.files.length) return stash;
+        } catch (_) {}
+      }
+      // Fallback: maybe we already stashed in sessionStorage after a
+      // login redirect. We can't restore the actual blob across a
+      // redirect (blobs aren't serializable), so the fallback is just
+      // metadata to show a friendly "please re-share" message.
+      try {
+        var raw = sessionStorage.getItem(STASH_KEY);
+        if (raw) {
+          sessionStorage.removeItem(STASH_KEY);
+          var parsed = JSON.parse(raw);
+          if (parsed && parsed.metaOnly) return { files: [], metaOnly: true, meta: parsed.meta || [] };
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    // -------- Step 2: ensure auth, redirect to login if missing --------
+
+    function getToken() {
+      try { return localStorage.getItem(TOKEN_KEY); } catch (_) { return null; }
+    }
+
+    function bounceToLogin(stashMeta) {
+      try {
+        if (stashMeta) {
+          sessionStorage.setItem(STASH_KEY, JSON.stringify({
+            metaOnly: true, meta: stashMeta,
+          }));
+        }
+      } catch (_) {}
+      var next = '/save-to-vault.html';
+      location.replace('/login.html?next=' + encodeURIComponent(next));
+    }
+
+    // -------- Step 3: find / create the "Shared from Apps" folder --------
+
+    async function authedFetch(path, opts) {
+      var token = getToken();
+      opts = opts || {};
+      opts.headers = Object.assign({}, opts.headers || {}, {
+        'Authorization': 'Bearer ' + (token || ''),
+      });
+      if (opts.body && !(opts.body instanceof FormData) && !opts.headers['Content-Type']) {
+        opts.headers['Content-Type'] = 'application/json';
+      }
+      return fetch(path, opts);
+    }
+
+    async function findOrCreateInboxFolder() {
+      var listResp = await authedFetch('/api/vault/folders');
+      if (listResp.status === 401) throw new Error('401');
+      if (!listResp.ok) {
+        var jx = {};
+        try { jx = await listResp.json(); } catch (_) {}
+        var msg = (jx && jx.error) || 'Could not list folders';
+        var err = new Error(msg);
+        err.upgrade = !!(jx && jx.upgrade);
+        throw err;
+      }
+      var j = await listResp.json();
+      var existing = (j.folders || []).find(function (f) {
+        return (f.title || '').toLowerCase() === FOLDER_NAME.toLowerCase();
+      });
+      if (existing) return existing;
+
+      var createResp = await authedFetch('/api/vault/folders', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: FOLDER_NAME,
+          description: 'Files you save from other apps via the share sheet.',
+        }),
+      });
+      if (!createResp.ok) {
+        var jc = {};
+        try { jc = await createResp.json(); } catch (_) {}
+        var msg2 = (jc && jc.error) || 'Could not create folder';
+        var err2 = new Error(msg2);
+        err2.upgrade = !!(jc && jc.upgrade);
+        throw err2;
+      }
+      var jc2 = await createResp.json();
+      return jc2.folder;
+    }
+
+    // -------- Step 4: upload via @vercel/blob/client --------
+
+    var ALLOWED = new Set([
+      'image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp',
+      'application/pdf',
+      'audio/m4a', 'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/webm',
+      'audio/aac', 'audio/ogg',
+      'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
+    ]);
+    var MAX_BYTES = 25 * 1024 * 1024;
+
+    function entryTypeFromMime(mime) {
+      mime = (mime || '').toLowerCase();
+      if (mime.indexOf('image/') === 0) return 'photo';
+      if (mime.indexOf('video/') === 0) return 'video';
+      if (mime.indexOf('audio/') === 0) return 'audio';
+      if (mime === 'application/pdf') return 'document';
+      return 'note';
+    }
+
+    async function uploadOne(file, folder, token, rowEl) {
+      var resolvedMime = (file.type || '').toLowerCase() || inferMimeFromName(file.name);
+      if (!ALLOWED.has(resolvedMime)) {
+        throw new Error('Files of type ' + (resolvedMime || 'unknown') + ' aren’t supported yet.');
+      }
+      if (file.size > MAX_BYTES) {
+        throw new Error('File is larger than 25 MB.');
+      }
+
+      // Step A: create an entry so the file has a parent.
+      var entryResp = await authedFetch('/api/vault/entries', {
+        method: 'POST',
+        body: JSON.stringify({
+          folder_id: parseInt(folder.id, 10),
+          entry_type: entryTypeFromMime(resolvedMime),
+          content: 'Saved from share sheet',
+        }),
+      });
+      var entryJson = await entryResp.json();
+      if (!entryResp.ok) throw new Error((entryJson && entryJson.error) || 'Could not create entry');
+      var entryId = parseInt(entryJson.entry.id, 10);
+
+      // Step B: load the Vercel Blob client + run the upload.
+      setRowStatus(rowEl, 'uploading', 'Uploading…');
+      var mod = await import('https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.3/client/+esm');
+      var blobUpload = mod.upload || (mod.default && mod.default.upload);
+      if (typeof blobUpload !== 'function') {
+        throw new Error('Blob client upload() not found');
+      }
+      var safeName = (file.name || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_').slice(-120);
+      var pathname = 'vault/' + folder.id + '/' + Date.now() + '-' + safeName;
+      var clientPayloadStr = JSON.stringify({
+        jwt: token,
+        folder_id: parseInt(folder.id, 10),
+        entry_id: entryId,
+        filename: file.name || safeName,
+        mime_type: resolvedMime,
+        byte_size: file.size,
+      });
+      var handleUploadUrl = '/api/vault/files/upload?jwt=' + encodeURIComponent(token || '');
+      var blobResult = await blobUpload(pathname, file, {
+        access: 'public',
+        handleUploadUrl: handleUploadUrl,
+        clientPayload: clientPayloadStr,
+        onUploadProgress: function (e) {
+          var newLoaded = (e && (e.loaded != null ? e.loaded : e.uploaded)) || 0;
+          var total = file.size || 1;
+          var pct = Math.min(99, Math.round((newLoaded / total) * 100));
+          setRowStatus(rowEl, 'uploading', pct >= 99 ? 'Finalizing…' : pct + '%');
+        },
+      });
+
+      // Step C: synchronous commit (don't rely on async onUploadCompleted).
+      var commitResp = await authedFetch('/api/vault/files/commit', {
+        method: 'POST',
+        body: JSON.stringify({
+          folder_id: parseInt(folder.id, 10),
+          entry_id: entryId,
+          blob_url: blobResult && blobResult.url,
+          pathname: blobResult && blobResult.pathname,
+          filename: file.name || safeName,
+          mime_type: resolvedMime,
+          byte_size: file.size,
+        }),
+      });
+      if (!commitResp.ok) {
+        var cj = {};
+        try { cj = await commitResp.json(); } catch (_) {}
+        throw new Error((cj && cj.error) || 'Could not save file to your vault');
+      }
+      setRowStatus(rowEl, 'done', 'Saved');
+    }
+
+    function setRowStatus(rowEl, cls, text) {
+      if (!rowEl) return;
+      var s = rowEl.querySelector('.file-status');
+      if (!s) return;
+      s.className = 'file-status ' + cls;
+      s.textContent = text;
+    }
+
+    function renderFileList(files) {
+      var listEl = $('file-list');
+      listEl.innerHTML = '';
+      if (!files || !files.length) {
+        var empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Nothing was shared.';
+        listEl.appendChild(empty);
+        return [];
+      }
+      var rows = [];
+      files.forEach(function (file) {
+        var row = document.createElement('div');
+        row.className = 'file-row';
+        var icon = document.createElement('div');
+        icon.className = 'file-icon';
+        icon.innerHTML = '<i class="fas ' + iconForMime(file.type || inferMimeFromName(file.name)) + '"></i>';
+        var meta = document.createElement('div');
+        meta.className = 'file-meta';
+        var name = document.createElement('div');
+        name.className = 'file-name';
+        name.textContent = file.name || 'shared-file';
+        var size = document.createElement('div');
+        size.className = 'file-size';
+        size.textContent = fmtSize(file.size);
+        meta.appendChild(name);
+        meta.appendChild(size);
+        var status = document.createElement('div');
+        status.className = 'file-status pending';
+        status.textContent = 'Ready';
+        row.appendChild(icon);
+        row.appendChild(meta);
+        row.appendChild(status);
+        listEl.appendChild(row);
+        rows.push(row);
+      });
+      return rows;
+    }
+
+    function renderEmpty(msg) {
+      $('stage-title').textContent = 'Nothing to save';
+      $('stage-subtitle').textContent = msg || 'We didn’t receive any files from the share sheet.';
+      $('file-list').innerHTML = '';
+      $('progress-row').style.display = 'none';
+      $('actions-row').style.display = 'flex';
+      var primary = $('btn-primary');
+      primary.textContent = 'Open your Vault';
+      primary.disabled = false;
+      primary.onclick = function () { location.href = '/vault.html'; };
+      $('btn-cancel').onclick = function () { window.close(); };
+    }
+
+    function renderError(msg, retryFn) {
+      $('stage-title').textContent = 'Couldn’t save';
+      $('stage-subtitle').textContent = msg || 'Something went wrong saving to your vault.';
+      $('progress-row').style.display = 'none';
+      $('actions-row').style.display = 'flex';
+      var primary = $('btn-primary');
+      primary.textContent = retryFn ? 'Retry' : 'Open your Vault';
+      primary.disabled = false;
+      primary.onclick = retryFn || function () { location.href = '/vault.html'; };
+      $('btn-cancel').onclick = function () { window.close(); };
+    }
+
+    function renderSuccess(savedCount) {
+      var card = $('card-stage');
+      card.classList.add('success-card');
+      card.innerHTML =
+        '<div class="checkmark"><i class="fas fa-check"></i></div>' +
+        '<h2 style="text-align:center">Saved to your Vault.</h2>' +
+        '<p class="subtitle" style="text-align:center;margin-top:6px">' +
+        savedCount + ' ' + (savedCount === 1 ? 'item' : 'items') +
+        ' saved to <strong>Shared from Apps</strong>. Redirecting…</p>' +
+        '<div class="actions" style="margin-top:20px">' +
+        '  <button id="go-vault" class="btn btn-primary">View in Vault</button>' +
+        '</div>';
+      $('go-vault').onclick = function () { location.href = '/vault.html'; };
+      setTimeout(function () { location.href = '/vault.html'; }, 3000);
+    }
+
+    // -------- Main flow --------
+
+    async function main() {
+      var token = getToken();
+      var stash = await loadSharedFiles();
+
+      if (!stash) {
+        renderEmpty(
+          'If you just shared a file from another app, make sure you opened it ' +
+          'through the home screen install.'
+        );
+        return;
+      }
+
+      if (stash.metaOnly) {
+        renderEmpty(
+          'Please go back to the other app and share again — we needed you to ' +
+          'sign in first.'
+        );
+        return;
+      }
+
+      var files = (stash.files || []).filter(function (f) { return f && f.size; });
+      if (!files.length) {
+        renderEmpty('Only text was shared. Pick a file to save it to your vault.');
+        return;
+      }
+
+      // Auth gate: redirect to login if needed.
+      if (!token) {
+        bounceToLogin(files.map(function (f) {
+          return { name: f.name, size: f.size, type: f.type };
+        }));
+        return;
+      }
+
+      $('stage-title').textContent = 'Saving ' + files.length + ' ' +
+        (files.length === 1 ? 'item' : 'items') + ' to your Vault';
+      $('stage-subtitle').textContent = 'We’ll drop ' +
+        (files.length === 1 ? 'it' : 'them') + ' into your "Shared from Apps" folder.';
+      var rows = renderFileList(files);
+      $('progress-row').style.display = 'flex';
+      $('progress-text').textContent = 'Preparing…';
+
+      var folder;
+      try {
+        folder = await findOrCreateInboxFolder();
+      } catch (e) {
+        if (e && e.message === '401') {
+          bounceToLogin(files.map(function (f) {
+            return { name: f.name, size: f.size, type: f.type };
+          }));
+          return;
+        }
+        if (e && e.upgrade) {
+          renderError(
+            'Saving to your vault requires an active subscription. ' +
+            'Upgrade to unlock end-to-end encrypted storage.',
+            function () { location.href = '/subscription.html'; }
+          );
+          return;
+        }
+        renderError(e && e.message ? e.message : 'Could not prepare your vault folder.',
+          function () { location.reload(); });
+        return;
+      }
+
+      $('progress-text').textContent = 'Uploading…';
+      var saved = 0;
+      var firstError = null;
+      for (var i = 0; i < files.length; i++) {
+        try {
+          await uploadOne(files[i], folder, token, rows[i]);
+          saved += 1;
+        } catch (uErr) {
+          console.warn('[save-to-vault] upload failed:', uErr && uErr.message);
+          if (!firstError) firstError = uErr;
+          setRowStatus(rows[i], 'error', 'Failed');
+        }
+      }
+
+      if (saved === 0) {
+        renderError(
+          firstError && firstError.message ? firstError.message : 'No files could be saved.',
+          function () { location.reload(); }
+        );
+        return;
+      }
+
+      renderSuccess(saved);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      main().catch(function (err) {
+        console.error('[save-to-vault] fatal:', err);
+        renderError('Unexpected error: ' + (err && err.message), function () { location.reload(); });
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

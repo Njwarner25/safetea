@@ -10,6 +10,29 @@
   "theme_color": "#E8A0B5",
   "lang": "en-US",
   "categories": ["lifestyle", "social", "safety"],
+  "share_target": {
+    "action": "/save-to-vault.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": [
+            "image/*",
+            "video/*",
+            "audio/*",
+            "application/pdf",
+            "text/plain",
+            "text/*"
+          ]
+        }
+      ]
+    }
+  },
   "icons": [
     { "src": "/favicon-16.png",       "sizes": "16x16",   "type": "image/png" },
     { "src": "/favicon-32.png",       "sizes": "32x32",   "type": "image/png" },

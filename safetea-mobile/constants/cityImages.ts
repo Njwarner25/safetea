@@ -8,6 +8,11 @@ export const CITY_IMAGES: Record<string, { image: ImageSourcePropType; emoji: st
   nyc: { image: require('../assets/cities/newyork.png'), emoji: '🗽', color: '#D4E0F0' },
   chi: { image: require('../assets/cities/chicago.jpg'), emoji: '🏙️', color: '#F0C4D4' },
   hou: { image: require('../assets/cities/houston.jpg'), emoji: '🚀', color: '#E8D4F0' },
+  aus: { image: require('../assets/cities/austin.jpg'), emoji: '🤘', color: '#F0D4E8' },
+  den: { image: require('../assets/cities/denver.jpg'), emoji: '🏔️', color: '#D4E8F0' },
+  por: { image: require('../assets/cities/portland.jpg'), emoji: '🌲', color: '#D4F0D4' },
+  sea: { image: require('../assets/cities/seattle.jpg'), emoji: '☕', color: '#C4D4F0' },
+  nash: { image: require('../assets/cities/nashville.jpg'), emoji: '🎸', color: '#F0D4E0' },
 };
 
 export const CITY_FALLBACK = { emoji: '🏙️', color: '#F0E0E8' };

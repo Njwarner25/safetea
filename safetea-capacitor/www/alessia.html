@@ -198,9 +198,14 @@
       position:fixed;bottom:0;left:0;right:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
       background:rgba(10,5,24,0.85);backdrop-filter:blur(14px);border-top:1px solid rgba(255,107,168,0.15);
       display:flex;gap:10px;align-items:flex-end;
-      transform:translateY(0);transition:transform 0.18s ease;
       z-index:50;
+      /* Keyboard avoidance: position above the keyboard via --kb-h.
+         Using `bottom` (not transform) avoids iOS backdrop-filter compositing
+         glitches and survives iOS's auto-scroll when an input gains focus. */
+      bottom:var(--kb-h, 0px);
+      transition:bottom 0.18s ease, padding-bottom 0.18s ease;
     }
+    body.kb-open .compose{padding-bottom:12px}
     /* Add room above the composer when chat is active so the last message
        isn't hidden behind it. Doubles when the keyboard pushes us up. */
     .messages{padding-bottom:96px}
@@ -595,51 +600,35 @@
       watchId:null,                // navigator.geolocation watch handle
     };
 
-    // === Keyboard avoidance via visualViewport API ===
-    // iOS Safari/WKWebView fires visualViewport.resize when the keyboard appears.
-    // We translate the fixed composer up by the missing height and pad the
-    // messages list so the last message stays scrollable.
+    // Keyboard avoidance: drive a --kb-h CSS variable from visualViewport.
+    // CSS uses it to push the compose bar up and grow messages padding-bottom.
+    // Avoid transforms — they stack with `bottom` and cause WKWebView glitches.
     (function setupKeyboardAvoidance(){
       if(!window.visualViewport) return;
       var vv = window.visualViewport;
-      function update(){
-        var kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-        var compose = document.getElementById('compose');
-        if(kbHeight > 80){
+      function applyKb(px){
+        if(px > 80){
           document.body.classList.add('kb-open');
-          document.body.style.setProperty('--kb-h', kbHeight + 'px');
-          if(compose) compose.style.transform = 'translateY(-' + kbHeight + 'px)';
-          // Scroll active input into view shortly after keyboard animates.
-          setTimeout(function(){
-            var a = document.activeElement;
-            if(a && (a.tagName==='TEXTAREA' || a.tagName==='INPUT')){
-              try{ a.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){}
-            }
-          }, 220);
+          document.body.style.setProperty('--kb-h', px + 'px');
         } else {
           document.body.classList.remove('kb-open');
-          document.body.style.removeProperty('--kb-h');
-          if(compose) compose.style.transform = 'translateY(0)';
+          document.body.style.setProperty('--kb-h', '0px');
         }
+      }
+      function update(){
+        applyKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
       }
       vv.addEventListener('resize', update);
       vv.addEventListener('scroll', update);
 
-      // iOS black-box fix: when keyboard fully dismisses, force a clean reset
+      // iOS WKWebView occasionally leaves a black gap after the keyboard
+      // dismisses. scrollTo(0,0) after blur forces a clean redraw.
       document.addEventListener('focusout', function(){
         setTimeout(function(){
           var kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
           if(kbHeight < 80){
-            document.body.classList.remove('kb-open');
-            document.body.style.removeProperty('--kb-h');
-            var compose = document.getElementById('compose');
-            if(compose) compose.style.transform = 'translateY(0)';
-            // Force layout recalculation to clear the black area
+            applyKb(0);
             window.scrollTo(0, 0);
-            document.documentElement.style.height = 'auto';
-            requestAnimationFrame(function(){
-              document.documentElement.style.height = '';
-            });
           }
         }, 100);
       });

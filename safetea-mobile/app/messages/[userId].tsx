@@ -1,6 +1,7 @@
-import { View, Text, FlatList, StyleSheet, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Keyboard, Platform } from 'react-native';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../constants/colors';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../services/api';
@@ -20,6 +21,14 @@ export default function ChatScreen() {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const insets = useSafeAreaInsets();
+  const [keyboardShown, setKeyboardShown] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setKeyboardShown(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboardShown(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const fetchMessages = useCallback(async () => {
     if (!userId) return;
@@ -62,7 +71,7 @@ export default function ChatScreen() {
   const isMe = (msg: Message) => msg.fromUserId === currentUser?.id;
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
       {loading ? (
         <ActivityIndicator color={Colors.coral} style={{ flex: 1 }} />
       ) : (
@@ -80,8 +89,10 @@ export default function ChatScreen() {
               ) : null}
             </View>
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: Spacing.md }]}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyText}>No messages yet</Text>
@@ -89,7 +100,7 @@ export default function ChatScreen() {
           }
         />
       )}
-      <View style={styles.composer}>
+      <View style={[styles.composer, { paddingBottom: Spacing.sm + (keyboardShown ? 0 : insets.bottom) }]}>
         <TextInput
           style={styles.composerInput}
           placeholder="Type a message..."

@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18050592386"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18050592386');
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#121826">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
+  <meta name="format-detection" content="telephone=no">
+  <title>LinkHer — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/mobile-viewport-lock.css">
+  <script src="/capacitor-bridge.js" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #121826;
+      color: #fff;
+      min-height: 100vh;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 18px 18px 110px;
+    }
+
+    /* ===== Top bar ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 4px 18px;
+    }
+    .topbar-logo { height: 32px; width: auto; }
+    .topbar-title { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .topbar-title span { color: #FF40BD; }
+    .topbar-spacer { flex: 1; }
+    .icon-btn {
+      width: 38px; height: 38px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #1A1F2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; color: #B0B0C8; cursor: pointer; position: relative;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { color: #fff; border-color: rgba(255,64,189,0.4); }
+    .icon-btn .dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #FF40BD; display: none;
+    }
+    .icon-btn.has-badge .dot { display: block; }
+    .avatar {
+      width: 38px; height: 38px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #FF40BD, #8A2BE2);
+      border-radius: 50%; color: #fff; font-weight: 700; font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ===== Greeting ===== */
+    .greeting { padding: 4px 4px 22px; }
+    .greeting .hi {
+      font-size: 22px; font-weight: 700; line-height: 1.25;
+      letter-spacing: -0.4px;
+    }
+    .greeting .sub {
+      font-size: 13px; color: #8080A0; margin-top: 4px;
+    }
+    .greeting .sub i { margin-right: 4px; color: #FF40BD; }
+
+    /* ===== SOS button ===== */
+    .sos-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(231,76,60,0.18), rgba(255,64,189,0.10));
+      border: 1px solid rgba(231,76,60,0.35);
+      border-radius: 20px;
+      padding: 22px 20px;
+      margin-bottom: 22px;
+      overflow: hidden;
+    }
+    .sos-card .pulse-ring {
+      position: absolute; top: 50%; right: 28px; transform: translateY(-50%);
+      width: 88px; height: 88px; border-radius: 50%;
+      background: rgba(231,76,60,0.12);
+      animation: sosPulse 2.4s ease-out infinite;
+      pointer-events: none;
+    }
+    @keyframes sosPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(231,76,60,0.45); transform: translateY(-50%) scale(1); }
+      70%  { box-shadow: 0 0 0 28px rgba(231,76,60,0); transform: translateY(-50%) scale(1.04); }
+      100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); transform: translateY(-50%) scale(1); }
+    }
+    .sos-label {
+      font-size: 11px; font-weight: 700; color: #ff7a6c;
+      text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 8px;
+    }
+    .sos-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .sos-desc { font-size: 13px; color: #B0B0C8; line-height: 1.5; max-width: 380px; margin-bottom: 16px; }
+    .sos-button {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff; border: none; padding: 14px 22px;
+      border-radius: 14px; font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 8px 24px rgba(231,76,60,0.35);
+      transition: transform 0.12s;
+    }
+    .sos-button:hover { transform: translateY(-1px); }
+    .sos-button:disabled { opacity: 0.7; cursor: progress; transform: none; }
+
+    /* ===== Active session banner ===== */
+    .active-banner {
+      display: none; align-items: center; gap: 12px;
+      background: rgba(46,204,113,0.08);
+      border: 1px solid rgba(46,204,113,0.28);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 16px;
+      color: #C8E8D0; font-size: 13px;
+    }
+    .active-banner.visible { display: flex; }
+    .active-banner.danger {
+      background: rgba(231,76,60,0.10);
+      border-color: rgba(231,76,60,0.35);
+      color: #ffd6cf;
+    }
+    .active-banner .live {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #2ecc71; box-shadow: 0 0 0 0 rgba(46,204,113,0.6);
+      animation: livePulse 1.4s infinite;
+    }
+    .active-banner.danger .live { background: #e74c3c; }
+    @keyframes livePulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(1.15); }
+    }
+    .active-banner .body { flex: 1; min-width: 0; }
+    .active-banner .body strong { display: block; color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .active-banner a.cta {
+      color: #fff; font-size: 12px; font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 7px 12px; border-radius: 8px;
+      white-space: nowrap;
+    }
+    .active-banner a.cta:hover { background: rgba(255,255,255,0.10); }
+
+    /* ===== Section title ===== */
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin: 24px 4px 10px;
+    }
+    .section-title {
+      font-size: 11px; font-weight: 700; color: #8080A0;
+      text-transform: uppercase; letter-spacing: 1.2px;
+    }
+    .section-link { font-size: 12px; color: #FF40BD; font-weight: 600; }
+    .section-link i { font-size: 10px; margin-left: 3px; }
+
+    /* ===== Tools grid ===== */
+    .tools-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .tool-card {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: #1A1F2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px; padding: 14px 14px;
+      transition: transform 0.12s, border-color 0.15s;
+      cursor: pointer;
+    }
+    .tool-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,64,189,0.32);
+    }
+    .tool-icon {
+      min-width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,64,189,0.12); color: #FF40BD; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .tool-icon.warm { background: rgba(232,160,181,0.14); color: #E8A0B5; }
+    .tool-icon.violet { background: rgba(155,89,182,0.16); color: #b56bdd; }
+    .tool-icon.green { background: rgba(46,204,113,0.14); color: #2ecc71; }
+    .tool-icon.amber { background: rgba(241,196,15,0.14); color: #f1c40f; }
+    .tool-icon.red { background: rgba(231,76,60,0.14); color: #e74c3c; }
+    .tool-body { min-width: 0; }
+    .tool-name { font-size: 13.5px; font-weight: 700; color: #fff; margin-bottom: 2px; line-height: 1.25; }
+    .tool-desc { font-size: 11.5px; color: #8080A0; line-height: 1.35; }
+
+    /* ===== Area alerts ===== */
+    .alerts-card {
+      background: #1A1F2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 16px 16px 8px;
+    }
+    .alerts-summary {
+      display: flex; gap: 16px; align-items: center;
+      padding: 4px 2px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      margin-bottom: 8px;
+    }
+    .summary-num {
+      font-size: 28px; font-weight: 800; color: #fff;
+      font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.5px;
+    }
+    .summary-meta { font-size: 12px; color: #8080A0; line-height: 1.45; }
+    .summary-meta strong { color: #fff; font-weight: 600; }
+    .summary-meta .dim { color: #555; }
+    .summary-actions { margin-left: auto; }
+    .alert-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px 2px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .alert-row:last-child { border-bottom: none; }
+    .alert-icon {
+      min-width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .alert-icon.high { background: rgba(231,76,60,0.14); }
+    .alert-icon.medium { background: rgba(241,196,15,0.12); }
+    .alert-text { flex: 1; min-width: 0; }
+    .alert-line1 { font-size: 13.5px; color: #fff; font-weight: 600; margin-bottom: 2px; }
+    .alert-line2 { font-size: 12px; color: #8080A0; }
+    .alert-line2 .dot-sep { color: #444; margin: 0 6px; }
+
+    .alerts-empty {
+      text-align: center; padding: 26px 16px;
+      color: #B0B0C8; font-size: 13px;
+    }
+    .alerts-empty i { color: #2ecc71; font-size: 22px; display: block; margin-bottom: 8px; }
+    .alerts-empty .hint { font-size: 12px; color: #8080A0; margin-top: 4px; }
+
+    .alerts-loading, .feed-loading {
+      text-align: center; padding: 30px 16px; color: #8080A0; font-size: 13px;
+    }
+    .alerts-loading i, .feed-loading i {
+      color: #FF40BD; animation: spin 1s linear infinite; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .alerts-error {
+      padding: 16px; text-align: center; color: #8080A0; font-size: 12.5px;
+    }
+
+    /* ===== Community feed ===== */
+    .feed-card {
+      background: #1A1F2E; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 6px 4px;
+    }
+    .feed-post {
+      display: flex; gap: 12px;
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .feed-post:last-child { border-bottom: none; }
+    .feed-avatar {
+      min-width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #FF40BD, #8A2BE2);
+      flex-shrink: 0;
+    }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-meta { font-size: 11.5px; color: #8080A0; margin-bottom: 4px; }
+    .feed-meta strong { color: #fff; font-weight: 600; margin-right: 6px; }
+    .feed-meta .dot-sep { color: #444; margin: 0 5px; }
+    .feed-title {
+      font-size: 14px; color: #fff; font-weight: 600;
+      margin-bottom: 4px; line-height: 1.35;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    }
+    .feed-snippet {
+      font-size: 12.5px; color: #B0B0C8; line-height: 1.5;
+      overflow: hidden; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .feed-stats { display: flex; gap: 14px; margin-top: 8px; font-size: 11.5px; color: #8080A0; }
+    .feed-stats i { margin-right: 4px; color: #555; }
+    .feed-empty { text-align: center; padding: 26px 16px; color: #8080A0; font-size: 13px; }
+    .feed-empty i { color: #FF40BD; font-size: 22px; display: block; margin-bottom: 8px; }
+    .feed-empty .hint { font-size: 12px; color: #555; margin-top: 4px; }
+    .feed-gate {
+      padding: 22px 18px; text-align: center; color: #B0B0C8; font-size: 13px; line-height: 1.55;
+    }
+    .feed-gate i { color: #FF40BD; font-size: 22px; display: block; margin-bottom: 8px; }
+
+    /* ===== Bottom nav ===== */
+    .bottom-nav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+      background: rgba(18,24,38,0.94);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    }
+    .bottom-nav-inner {
+      max-width: 640px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 6px 4px; color: #8080A0; font-size: 10px; font-weight: 600;
+      cursor: pointer; position: relative;
+    }
+    .nav-item i { font-size: 18px; }
+    .nav-item.active { color: #FF40BD; }
+    .nav-item .badge {
+      position: absolute; top: 2px; right: calc(50% - 18px);
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: #e74c3c; color: #fff; border-radius: 9px;
+      font-size: 9.5px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+    .nav-sos {
+      transform: translateY(-12px);
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 20px rgba(231,76,60,0.4);
+      align-self: center; justify-self: center;
+      cursor: pointer;
+    }
+    .nav-sos i { font-size: 18px; }
+    .nav-sos-label {
+      font-size: 9px; font-weight: 700; color: #ff7a6c;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-top: -8px;
+    }
+
+    /* ===== SOS modal ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(8,10,18,0.72);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal {
+      width: 100%; max-width: 420px;
+      background: #1A1F2E; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px; padding: 22px;
+    }
+    .modal h3 {
+      font-size: 18px; font-weight: 800; margin-bottom: 6px; color: #fff;
+    }
+    .modal p {
+      font-size: 13px; color: #B0B0C8; line-height: 1.5; margin-bottom: 14px;
+    }
+    .modal .modal-note {
+      background: rgba(241,196,15,0.06);
+      border: 1px solid rgba(241,196,15,0.18);
+      color: #F0D89A; border-radius: 10px; padding: 10px 12px;
+      font-size: 12px; line-height: 1.5; margin-bottom: 16px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; padding: 13px 16px; border-radius: 12px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      font-family: inherit; border: none;
+    }
+    .btn-cancel {
+      background: transparent; color: #B0B0C8;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-cancel:hover { color: #fff; border-color: rgba(255,255,255,0.22); }
+    .btn-confirm {
+      background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff;
+      box-shadow: 0 6px 18px rgba(231,76,60,0.32);
+    }
+    .btn-confirm:disabled { opacity: 0.7; cursor: progress; }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed; left: 50%; bottom: 90px;
+      transform: translateX(-50%) translateY(20px);
+      background: #22223A; color: #fff;
+      padding: 12px 18px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 300; max-width: 90%;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(46,204,113,0.35); }
+    .toast.error { border-color: rgba(231,76,60,0.4); }
+
+    /* ===== Loader splash ===== */
+    .splash {
+      position: fixed; inset: 0; background: #121826;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500;
+    }
+    .splash i { font-size: 28px; color: #FF40BD; animation: spin 1s linear infinite; }
+  </style>
+</head>
+<body>
+  <div id="splash" class="splash"><i class="fas fa-circle-notch"></i></div>
+
+  <div class="container" id="app" style="display:none">
+    <!-- Top bar -->
+    <div class="topbar">
+      <img class="topbar-logo" src="/linkher-icon.png" alt="LinkHer">
+      <div class="topbar-title">Link<span>Her</span></div>
+      <div class="topbar-spacer"></div>
+      <a href="/city" class="icon-btn" id="messages-btn" title="Tea Talk">
+        <i class="fas fa-comments"></i>
+        <span class="dot"></span>
+      </a>
+      <a href="/settings" class="icon-btn" title="Settings">
+        <i class="fas fa-cog"></i>
+      </a>
+      <a href="/settings" class="avatar" id="avatar">--</a>
+    </div>
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <div class="hi" id="greeting-text">Hi there 👋</div>
+      <div class="sub" id="greeting-sub"><i class="fas fa-shield-heart"></i>You're protected. Tap any tool below.</div>
+    </div>
+
+    <!-- Active session banners -->
+    <div class="active-banner danger" id="banner-recording">
+      <div class="live"></div>
+      <div class="body">
+        <strong>Emergency recording active</strong>
+        Audio + GPS streaming to your trusted contacts.
+      </div>
+      <a class="cta" id="banner-recording-link" href="/recording-status">View</a>
+    </div>
+    <div class="active-banner" id="banner-pulse">
+      <div class="live"></div>
+      <div class="body">
+        <strong>Pulse watching over you</strong>
+        Session in progress.
+      </div>
+      <a class="cta" href="/pulse">Open</a>
+    </div>
+    <div class="active-banner" id="banner-safelink">
+      <div class="live"></div>
+      <div class="body">
+        <strong>SafeLink sharing location</strong>
+        Trusted contacts can follow your journey.
+      </div>
+      <a class="cta" href="/safelink">Open</a>
+    </div>
+
+    <!-- SOS card -->
+    <div class="sos-card">
+      <div class="pulse-ring"></div>
+      <div class="sos-label"><i class="fas fa-bolt"></i> Emergency</div>
+      <div class="sos-title">SOS — Record & Protect</div>
+      <p class="sos-desc">Instantly alert your trusted contacts, share live GPS, and begin a tamper-resistant audio recording.</p>
+      <button class="sos-button" id="sos-btn">
+        <i class="fas fa-triangle-exclamation"></i> Trigger SOS
+      </button>
+    </div>
+
+    <!-- Tools -->
+    <div class="section-head">
+      <div class="section-title">Safety Tools</div>
+    </div>
+    <div class="tools-grid">
+      <a class="tool-card" href="/safelink">
+        <div class="tool-icon warm"><i class="fas fa-link"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">SafeLink</div>
+          <div class="tool-desc">Share live location with trusted contacts</div>
+        </div>
+      </a>
+      <a class="tool-card" href="/tether">
+        <div class="tool-icon violet"><i class="fas fa-people-arrows"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">Tether</div>
+          <div class="tool-desc">Walk together with a friend in real time</div>
+        </div>
+      </a>
+      <a class="tool-card" href="/pulse">
+        <div class="tool-icon red"><i class="fas fa-heartbeat"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">Pulse</div>
+          <div class="tool-desc">Real-time session watch + check-ins</div>
+        </div>
+      </a>
+      <a class="tool-card" href="/red-flag-scanner">
+        <div class="tool-icon amber"><i class="fas fa-magnifying-glass"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">Conversation Scanner</div>
+          <div class="tool-desc">AI red-flag detection for chats</div>
+        </div>
+      </a>
+      <a class="tool-card" href="/vault">
+        <div class="tool-icon green"><i class="fas fa-lock"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">Safety Vault</div>
+          <div class="tool-desc">Encrypted journal &amp; evidence storage</div>
+        </div>
+      </a>
+      <a class="tool-card" href="/recording-status" id="tool-recording">
+        <div class="tool-icon"><i class="fas fa-circle-dot"></i></div>
+        <div class="tool-body">
+          <div class="tool-name">Live Recording</div>
+          <div class="tool-desc" id="tool-recording-desc">View any active SOS session</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Area alerts -->
+    <div class="section-head">
+      <div class="section-title">Area Safety Alerts</div>
+      <a href="#" class="section-link" id="alerts-refresh"><i class="fas fa-rotate"></i> Refresh</a>
+    </div>
+    <div class="alerts-card">
+      <div id="alerts-loading" class="alerts-loading">
+        <i class="fas fa-circle-notch"></i> Checking your area…
+      </div>
+      <div id="alerts-content" style="display:none"></div>
+    </div>
+
+    <!-- Community / Tea Talk -->
+    <div class="section-head">
+      <div class="section-title">Tea Talk — Community</div>
+      <a href="/city" class="section-link">View all <i class="fas fa-chevron-right"></i></a>
+    </div>
+    <div class="feed-card">
+      <div id="feed-loading" class="feed-loading">
+        <i class="fas fa-circle-notch"></i> Loading recent posts…
+      </div>
+      <div id="feed-content"></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
+    <div class="bottom-nav-inner">
+      <a href="/dashboard" class="nav-item active">
+        <i class="fas fa-house"></i>
+        <span>Home</span>
+      </a>
+      <a href="/city" class="nav-item">
+        <i class="fas fa-users"></i>
+        <span>Tea Talk</span>
+        <span class="badge" id="msg-badge" style="display:none">1</span>
+      </a>
+      <div class="nav-item" onclick="openSosModal()">
+        <div class="nav-sos"><i class="fas fa-triangle-exclamation"></i></div>
+        <span class="nav-sos-label">SOS</span>
+      </div>
+      <a href="/vault" class="nav-item">
+        <i class="fas fa-shield-halved"></i>
+        <span>Vault</span>
+      </a>
+      <a href="/settings" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- SOS confirm modal -->
+  <div class="modal-overlay" id="sos-modal">
+    <div class="modal">
+      <h3>Trigger SOS now?</h3>
+      <p>This will alert every trusted contact you've saved, share your live GPS, and begin a tamper-resistant audio recording.</p>
+      <div class="modal-note" id="sos-modal-note">
+        <i class="fas fa-circle-info" style="margin-right:6px"></i>
+        SOS Record &amp; Protect requires LinkHer+. We'll let you know if you need to upgrade.
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" onclick="closeSosModal()">Cancel</button>
+        <button class="btn btn-confirm" id="sos-confirm">
+          <i class="fas fa-triangle-exclamation"></i> Yes, send SOS
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var API_BASE = '/api';
+    var TOKEN_KEY = 'safetea_token';
+    var USER_KEY  = 'safetea_user';
+
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) { window.location.href = '/login'; return; }
+
+    var els = {
+      splash:        document.getElementById('splash'),
+      app:           document.getElementById('app'),
+      nav:           document.getElementById('bottom-nav'),
+      avatar:        document.getElementById('avatar'),
+      greetingText:  document.getElementById('greeting-text'),
+      greetingSub:   document.getElementById('greeting-sub'),
+      sosBtn:        document.getElementById('sos-btn'),
+      sosConfirm:    document.getElementById('sos-confirm'),
+      sosModal:      document.getElementById('sos-modal'),
+      sosModalNote:  document.getElementById('sos-modal-note'),
+      bannerRec:     document.getElementById('banner-recording'),
+      bannerRecLink: document.getElementById('banner-recording-link'),
+      bannerPulse:   document.getElementById('banner-pulse'),
+      bannerSL:      document.getElementById('banner-safelink'),
+      toolRecDesc:   document.getElementById('tool-recording-desc'),
+      alertsLoading: document.getElementById('alerts-loading'),
+      alertsContent: document.getElementById('alerts-content'),
+      alertsRefresh: document.getElementById('alerts-refresh'),
+      feedLoading:   document.getElementById('feed-loading'),
+      feedContent:   document.getElementById('feed-content'),
+      msgBadge:      document.getElementById('msg-badge'),
+      messagesBtn:   document.getElementById('messages-btn'),
+      toast:         document.getElementById('toast')
+    };
+
+    // -------- helpers --------
+    function api(method, path, body) {
+      return fetch(API_BASE + path, {
+        method: method,
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          return { ok: r.ok, status: r.status, data: data };
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      var d = new Date(dateStr);
+      if (isNaN(d)) return '';
+      var s = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (s < 60)        return 'just now';
+      if (s < 3600)      return Math.floor(s / 60) + 'm ago';
+      if (s < 86400)     return Math.floor(s / 3600) + 'h ago';
+      if (s < 86400 * 7) return Math.floor(s / 86400) + 'd ago';
+      return d.toLocaleDateString();
+    }
+
+    function toast(msg, kind) {
+      els.toast.textContent = msg;
+      els.toast.className = 'toast ' + (kind || '');
+      els.toast.classList.add('show');
+      setTimeout(function () { els.toast.classList.remove('show'); }, 3000);
+    }
+
+    function getGeo() {
+      if (window.LinkHerNative && window.LinkHerNative.geo && window.LinkHerNative.geo.current) {
+        return window.LinkHerNative.geo.current()
+          .then(function (p) { return p ? { lat: p.lat, lng: p.lng } : null; })
+          .catch(function () { return null; });
+      }
+      return new Promise(function (resolve) {
+        if (!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          function (pos) { resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+          function () { resolve(null); },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        );
+      });
+    }
+
+    // -------- boot --------
+    function boot() {
+      var cached = null;
+      try { cached = JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch (e) {}
+      if (cached) applyUser(cached);
+
+      api('GET', '/auth/me').then(function (r) {
+        if (r.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+          window.location.href = '/login';
+          return;
+        }
+        if (r.ok && r.data && r.data.user) {
+          localStorage.setItem(USER_KEY, JSON.stringify(r.data.user));
+          applyUser(r.data.user);
+        }
+        els.splash.style.display = 'none';
+        els.app.style.display = 'block';
+        els.nav.style.display = 'block';
+      }).catch(function () {
+        els.splash.style.display = 'none';
+        els.app.style.display = 'block';
+        els.nav.style.display = 'block';
+      });
+
+      checkActiveSessions();
+      loadAreaAlerts();
+      loadFeed();
+      loadBadges();
+    }
+
+    function applyUser(user) {
+      var name = user.custom_display_name || user.display_name || user.name || user.email || 'LinkHer User';
+      var first = String(name).split(' ')[0];
+      els.greetingText.textContent = 'Hi, ' + first + ' 👋';
+
+      var initials = String(name).split(' ').map(function (w) { return w[0]; })
+        .join('').toUpperCase().slice(0, 2) || '?';
+      els.avatar.textContent = initials;
+
+      if (user.city) {
+        els.greetingSub.innerHTML = '<i class="fas fa-location-dot"></i>' + escapeHtml(user.city + (user.state ? ', ' + user.state : ''));
+      }
+
+      var tier = user.subscription_tier;
+      if (tier === 'plus' || tier === 'pro' || tier === 'premium') {
+        els.sosModalNote.innerHTML = '<i class="fas fa-circle-check" style="margin-right:6px;color:#2ecc71"></i>You\'re on LinkHer+. SOS is ready.';
+      }
+    }
+
+    // -------- active sessions --------
+    function checkActiveSessions() {
+      try {
+        var pulseRaw = localStorage.getItem('safetea_pulse_active');
+        if (pulseRaw) {
+          var p = JSON.parse(pulseRaw);
+          if (p && p.expectedEndAt && new Date(p.expectedEndAt).getTime() > Date.now()) {
+            els.bannerPulse.classList.add('visible');
+          } else {
+            localStorage.removeItem('safetea_pulse_active');
+          }
+        }
+      } catch (e) {}
+
+      try {
+        var slRaw = localStorage.getItem('safetea_safelink_active');
+        if (slRaw) {
+          var s = JSON.parse(slRaw);
+          if (s && s.sessionKey) els.bannerSL.classList.add('visible');
+        }
+      } catch (e) {}
+
+      try {
+        var recRaw = localStorage.getItem('safetea_recording_session');
+        if (recRaw) {
+          var r = JSON.parse(recRaw);
+          if (r && r.sessionKey) {
+            els.bannerRec.classList.add('visible');
+            els.bannerRecLink.href = '/recording-status?key=' + encodeURIComponent(r.sessionKey);
+            els.toolRecDesc.textContent = 'Session active — open live tracker';
+          }
+        }
+      } catch (e) {}
+    }
+
+    // -------- area alerts --------
+    function loadAreaAlerts() {
+      els.alertsLoading.style.display = 'block';
+      els.alertsContent.style.display = 'none';
+
+      getGeo().then(function (coords) {
+        if (!coords) {
+          renderAlertsError(
+            '<i class="fas fa-location-crosshairs" style="font-size:22px;color:#FF40BD;display:block;margin-bottom:8px"></i>' +
+            'Enable location to see crime alerts in your area.' +
+            '<div class="hint" style="margin-top:8px"><a href="#" id="enable-loc" style="color:#FF40BD;font-weight:600">Try again</a></div>'
+          );
+          var btn = document.getElementById('enable-loc');
+          if (btn) btn.addEventListener('click', function (e) { e.preventDefault(); loadAreaAlerts(); });
+          return;
+        }
+        return api('GET', '/alerts/area?lat=' + coords.lat + '&lon=' + coords.lng + '&radius=2&days=14&limit=8')
+          .then(function (r) {
+            if (!r.ok) {
+              renderAlertsError('Couldn\'t reach the alerts service. Try again later.');
+              return;
+            }
+            renderAlerts(r.data);
+          });
+      }).catch(function () {
+        renderAlertsError('Couldn\'t check your area right now.');
+      });
+    }
+
+    function renderAlertsError(html) {
+      els.alertsLoading.style.display = 'none';
+      els.alertsContent.style.display = 'block';
+      els.alertsContent.innerHTML = '<div class="alerts-error">' + html + '</div>';
+    }
+
+    function renderAlerts(data) {
+      els.alertsLoading.style.display = 'none';
+      els.alertsContent.style.display = 'block';
+
+      var total = (data && data.total) || 0;
+      var alerts = (data && data.alerts) || [];
+      var radius = (data && data.radius_miles) || 2;
+      var days = (data && data.days_back) || 14;
+
+      if (total === 0) {
+        els.alertsContent.innerHTML =
+          '<div class="alerts-empty">' +
+          '<i class="fas fa-shield-heart"></i>' +
+          'All clear within ' + radius + ' miles.' +
+          '<div class="hint">No incidents reported in the last ' + days + ' days.</div>' +
+          '</div>';
+        return;
+      }
+
+      var summaryHtml =
+        '<div class="alerts-summary">' +
+          '<div class="summary-num">' + total + '</div>' +
+          '<div class="summary-meta">' +
+            'incident' + (total === 1 ? '' : 's') + ' within <strong>' + radius + ' mi</strong>' +
+            '<br><span class="dim">past ' + days + ' days</span>' +
+          '</div>' +
+        '</div>';
+
+      var rowsHtml = alerts.slice(0, 5).map(function (a) {
+        var severity = (a.severity || '').toLowerCase();
+        if (severity !== 'high' && severity !== 'medium') {
+          severity = (a.crime_type && /assault|kidnap|sexual|stalking|domestic|trafficking/i.test(a.crime_type)) ? 'high' : 'medium';
+        }
+        var iconClass = severity === 'high' ? 'high' : 'medium';
+        var icon = severity === 'high' ? '🚨' : '⚠️';
+        var label = formatType(a.crime_type) || 'Incident reported';
+        var dist = a.distance_miles != null ? (Number(a.distance_miles).toFixed(1) + ' mi') : '';
+        var when = timeAgo(a.occurred_at);
+        var loc = a.location_name || a.neighborhood || a.city || '';
+        return (
+          '<div class="alert-row">' +
+            '<div class="alert-icon ' + iconClass + '">' + icon + '</div>' +
+            '<div class="alert-text">' +
+              '<div class="alert-line1">' + escapeHtml(label) + '</div>' +
+              '<div class="alert-line2">' +
+                (when ? escapeHtml(when) : '') +
+                (when && (dist || loc) ? '<span class="dot-sep">·</span>' : '') +
+                (dist ? escapeHtml(dist) : '') +
+                (dist && loc ? '<span class="dot-sep">·</span>' : '') +
+                (loc ? escapeHtml(loc) : '') +
+              '</div>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      els.alertsContent.innerHTML = summaryHtml + rowsHtml;
+    }
+
+    function formatType(t) {
+      if (!t) return '';
+      return String(t).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+
+    els.alertsRefresh.addEventListener('click', function (e) {
+      e.preventDefault();
+      loadAreaAlerts();
+    });
+
+    // -------- community feed --------
+    function loadFeed() {
+      els.feedLoading.style.display = 'block';
+      els.feedContent.innerHTML = '';
+
+      api('GET', '/community?limit=5').then(function (r) {
+        els.feedLoading.style.display = 'none';
+
+        if (r.status === 403) {
+          els.feedContent.innerHTML =
+            '<div class="feed-gate">' +
+              '<i class="fas fa-venus"></i>' +
+              'Tea Talk is a women-only safety space. Once your verification is approved, your posts and replies will appear here.' +
+              '<div style="margin-top:10px"><a href="/verify" style="color:#FF40BD;font-weight:600">Complete verification</a></div>' +
+            '</div>';
+          return;
+        }
+        if (!r.ok) {
+          els.feedContent.innerHTML = '<div class="feed-empty"><i class="fas fa-cloud-bolt"></i>Couldn\'t load the feed.</div>';
+          return;
+        }
+        var posts = Array.isArray(r.data) ? r.data : [];
+        if (posts.length === 0) {
+          els.feedContent.innerHTML =
+            '<div class="feed-empty">' +
+              '<i class="fas fa-comments"></i>' +
+              'No recent posts yet.' +
+              '<div class="hint">Be the first to share something in <a href="/city" style="color:#FF40BD;font-weight:600">Tea Talk</a>.</div>' +
+            '</div>';
+          return;
+        }
+        els.feedContent.innerHTML = posts.slice(0, 4).map(renderPost).join('');
+      }).catch(function () {
+        els.feedLoading.style.display = 'none';
+        els.feedContent.innerHTML = '<div class="feed-empty"><i class="fas fa-cloud-bolt"></i>Couldn\'t load the feed.</div>';
+      });
+    }
+
+    function renderPost(p) {
+      var name = p.author_custom_name || p.author_name || 'Anonymous';
+      var initial = (p.avatar_initial || (name[0] || '?')).toUpperCase();
+      var when = timeAgo(p.created_at);
+      var loc = p.city || '';
+      var title = p.title || '';
+      var body  = p.body || '';
+      var bgColor = p.avatar_color || null;
+      var avatarStyle = bgColor ? ' style="background:' + escapeHtml(bgColor) + '"' : '';
+      var replyCount = parseInt(p.reply_count, 10) || 0;
+      var likeCount = parseInt(p.like_count, 10) || 0;
+      var bumpCount = parseInt(p.bump_count, 10) || 0;
+
+      return (
+        '<div class="feed-post">' +
+          '<div class="feed-avatar"' + avatarStyle + '>' + escapeHtml(initial) + '</div>' +
+          '<div class="feed-body">' +
+            '<div class="feed-meta">' +
+              '<strong>' + escapeHtml(name) + '</strong>' +
+              (when ? escapeHtml(when) : '') +
+              (loc ? '<span class="dot-sep">·</span>' + escapeHtml(loc) : '') +
+            '</div>' +
+            (title ? '<div class="feed-title">' + escapeHtml(title) + '</div>' : '') +
+            (body ? '<div class="feed-snippet">' + escapeHtml(body) + '</div>' : '') +
+            '<div class="feed-stats">' +
+              '<span><i class="fas fa-comment"></i>' + replyCount + '</span>' +
+              '<span><i class="fas fa-heart"></i>' + likeCount + '</span>' +
+              (bumpCount > 0 ? '<span><i class="fas fa-arrow-up"></i>' + bumpCount + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>'
+      );
+    }
+
+    // -------- badges --------
+    function loadBadges() {
+      api('GET', '/messages/unread/count').then(function (r) {
+        if (r.ok && r.data && r.data.unread > 0) {
+          els.msgBadge.textContent = r.data.unread > 9 ? '9+' : String(r.data.unread);
+          els.msgBadge.style.display = 'flex';
+          els.messagesBtn.classList.add('has-badge');
+        }
+      }).catch(function () { /* non-critical */ });
+    }
+
+    // -------- SOS flow --------
+    function openSosModal() {
+      els.sosModal.classList.add('visible');
+    }
+    function closeSosModal() {
+      els.sosModal.classList.remove('visible');
+    }
+    window.openSosModal = openSosModal;
+    window.closeSosModal = closeSosModal;
+
+    els.sosBtn.addEventListener('click', openSosModal);
+    els.sosModal.addEventListener('click', function (e) {
+      if (e.target === els.sosModal) closeSosModal();
+    });
+
+    els.sosConfirm.addEventListener('click', function () {
+      els.sosConfirm.disabled = true;
+      els.sosConfirm.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending…';
+      if (window.LinkHerNative && window.LinkHerNative.haptics) {
+        try { window.LinkHerNative.haptics.notify('WARNING'); } catch (e) {}
+      }
+
+      getGeo().then(function (coords) {
+        return api('POST', '/recording/start', {
+          latitude:  coords ? coords.lat : null,
+          longitude: coords ? coords.lng : null
+        });
+      }).then(function (r) {
+        els.sosConfirm.disabled = false;
+        els.sosConfirm.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Yes, send SOS';
+
+        if (r.status === 403) {
+          closeSosModal();
+          toast('SOS Record & Protect requires LinkHer+', 'error');
+          setTimeout(function () { window.location.href = '/subscribe'; }, 1200);
+          return;
+        }
+        if (!r.ok || !r.data || !r.data.sessionKey) {
+          toast((r.data && r.data.error) || 'Could not start SOS', 'error');
+          return;
+        }
+
+        localStorage.setItem('safetea_recording_session', JSON.stringify({
+          sessionKey: r.data.sessionKey,
+          startedAt:  Date.now()
+        }));
+
+        closeSosModal();
+        var n = (r.data.contactsNotified || 0) + (r.data.emailsSent || 0);
+        toast(n > 0
+          ? 'SOS sent. Notified ' + n + ' contact' + (n === 1 ? '' : 's') + '.'
+          : 'SOS active. Add trusted contacts to be alerted.',
+          'success');
+
+        setTimeout(function () {
+          window.location.href = '/recording-status?key=' + encodeURIComponent(r.data.sessionKey);
+        }, 1200);
+      }).catch(function () {
+        els.sosConfirm.disabled = false;
+        els.sosConfirm.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Yes, send SOS';
+        toast('Network error — try again', 'error');
+      });
+    });
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

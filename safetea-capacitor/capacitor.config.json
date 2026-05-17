@@ -14,7 +14,7 @@
     ]
   },
   "ios": {
-    "contentInset": "always",
+    "contentInset": "automatic",
     "limitsNavigationsToAppBoundDomains": false,
     "scrollEnabled": true
   },
@@ -45,8 +45,8 @@
       "overlaysWebView": false
     },
     "Keyboard": {
-      "resize": "body",
-      "resizeOnFullScreen": true
+      "resize": "none",
+      "resizeOnFullScreen": false
     },
     "Geolocation": {
       "permissions": ["location"]

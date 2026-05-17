@@ -92,7 +92,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'app.linkher.mobile',
-    buildNumber: '8',
+    buildNumber: '11',
     infoPlist: IOS_PERMISSIONS,
   },
   android: {

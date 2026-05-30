@@ -1,0 +1,48 @@
+{
+  "appId": "app.linkher.mobile",
+  "appName": "LinkHer",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://getsafetea.app",
+    "cleartext": false,
+    "iosScheme": "https",
+    "allowNavigation": [
+      "getsafetea.app",
+      "*.getsafetea.app",
+      "*.vercel.app",
+      "*.railway.app",
+      "verify.didit.me",
+      "*.didit.me"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false,
+    "scrollEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#1A1A2E",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#1A1A2E",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "Geolocation": {
+      "permissions": ["location"]
+    }
+  }
+}

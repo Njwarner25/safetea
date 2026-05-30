@@ -1,0 +1,30 @@
+{
+  "name": "safetea-capacitor-ios",
+  "version": "2026.05.07.1",
+  "description": "Capacitor iOS shell for LinkHer — loads https://getsafetea.app in a native WebView. iOS-ONLY. Android lives in ../safetea-capacitor.",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync ios",
+    "open": "cap open ios",
+    "add": "cap add ios",
+    "update": "cap update ios",
+    "doctor": "cap doctor"
+  },
+  "dependencies": {
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/browser": "^6.0.3",
+    "@capacitor/camera": "^6.1.0",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/geolocation": "^6.0.1",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/keyboard": "^6.0.2",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/share": "^6.0.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}

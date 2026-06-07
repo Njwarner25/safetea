@@ -21,10 +21,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
-    <title>SafeTea — City Waitlist</title>
+    <title>LinkHer — City Waitlist</title>
     <link rel="icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -81,7 +81,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <a href="/"><span class="logo">SafeTea</span></a>
+            <a href="/"><span class="logo">LinkHer</span></a>
         </div>
 
         <div id="loading" class="loading">
@@ -91,7 +91,7 @@
         <div id="city-content" style="display:none;"></div>
 
         <div class="footer">
-            <p>&copy; 2026 SafeTea. All rights reserved.</p>
+            <p>&copy; 2026 LinkHer. All rights reserved.</p>
             <p style="margin-top:6px;"><a href="/">Home</a> &middot; <a href="/login.html">Log In</a></p>
         </div>
     </div>
@@ -140,7 +140,7 @@
             });
 
         function renderActiveCity(city) {
-            document.title = 'SafeTea — ' + city.name + ' is Live!';
+            document.title = 'LinkHer — ' + city.name + ' is Live!';
             document.getElementById('city-content').innerHTML =
                 '<div class="city-card">' +
                     '<div class="city-emoji">' + (city.emoji || '🏙️') + '</div>' +
@@ -154,7 +154,7 @@
         }
 
         function renderWaitlistCity(request, signups) {
-            document.title = 'SafeTea — Help bring SafeTea to ' + request.city_name;
+            document.title = 'LinkHer — Help bring LinkHer to ' + request.city_name;
             var pct = Math.min(request.progress || 0, 100);
 
             var avatarsHtml = '';
@@ -171,11 +171,11 @@
                 if (request.signup_count > 8) {
                     avatarsHtml += '<div class="avatar-circle">+' + (request.signup_count - 8) + '</div>';
                 }
-                avatarsHtml += '</div><div class="social-text">' + request.signup_count + ' people want SafeTea here</div></div>';
+                avatarsHtml += '</div><div class="social-text">' + request.signup_count + ' people want LinkHer here</div></div>';
             }
 
             var shareUrl = 'https://getsafetea.app/city/' + request.slug;
-            var shareText = 'Help bring SafeTea to ' + request.city_name + '! Sign up for the waitlist:';
+            var shareText = 'Help bring LinkHer to ' + request.city_name + '! Sign up for the waitlist:';
 
             document.getElementById('city-content').innerHTML =
                 '<div class="city-card">' +

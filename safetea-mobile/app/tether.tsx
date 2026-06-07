@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Colors, Spacing, FontSize, BorderRadius } from '../constants/colors';
+import { Colors, Spacing, FontSize, BorderRadius, APP_NAME } from '../constants/colors';
 import { useTetherStore, TetherMember } from '../store/tetherStore';
 
 type ScreenView = 'idle' | 'config' | 'join' | 'pending' | 'active';
@@ -119,7 +119,7 @@ export default function TetherScreen() {
   const renderIdle = () => (
     <View style={styles.centered}>
       <FontAwesome5 name="users" size={48} color={Colors.info} style={styles.heroIcon} />
-      <Text style={styles.heroTitle}>SafeTea Tether</Text>
+      <Text style={styles.heroTitle}>{APP_NAME} Tether</Text>
       <Text style={styles.heroSub}>Stay connected with your group</Text>
 
       <Pressable style={[styles.bigButton, { backgroundColor: Colors.coral }]} onPress={() => setView('config')}>
@@ -383,7 +383,7 @@ export default function TetherScreen() {
       </ScrollView>
 
       <Text style={styles.disclaimer}>
-        Location accuracy may vary. SafeTea Tether is a communication tool and does not guarantee safety.
+        Location accuracy may vary. {APP_NAME} Tether is a communication tool and does not guarantee safety.
       </Text>
     </View>
   );

@@ -8,7 +8,7 @@ type Props = {
 };
 
 /**
- * Renders a "PLUS" pill badge next to usernames for SafeTea+ members.
+ * Renders a "PLUS" pill badge next to usernames for Plus members.
  * Shows on all posts (including anonymous) to reward Plus members.
  *
  * Usage:

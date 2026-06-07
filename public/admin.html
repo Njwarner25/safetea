@@ -12,7 +12,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <title>Admin Dashboard - SafeTea</title>
+    <title>Admin Dashboard - LinkHer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
@@ -198,10 +198,6 @@
         }
     </style>
     <link rel="stylesheet" href="/mobile-viewport-lock.css">
-    <link rel="stylesheet" href="/css/ios-keyboard-fix.css">
-    <script src="/js/ios-keyboard-fix.js" defer></script>
-    <script src="/js/sentry.js" defer></script>
-    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
     <!-- Mobile hamburger button -->
@@ -211,7 +207,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="admin-sidebar">
         <div class="sidebar-logo">
-            <img src="/logo.png?v=2" alt="SafeTea">
+            <img src="/linkher-icon.png" alt="LinkHer">
             <span>safetea</span>
             <span class="sidebar-badge">ADMIN</span>
         </div>
@@ -512,55 +508,13 @@
                     </div>
                     <div id="delete-user-result" style="margin-top:12px"></div>
                 </div>
-                <div class="card" style="margin-top:16px">
-                    <h3><i class="fas fa-shield-heart" style="color:#E8A0B5"></i> Alessia (AI Companion) Diagnostics</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Verify the OpenAI key is wired and the three required tables exist. If <em>Alessia is not online</em> errors appear in the app, hit <strong>Check Health</strong> first — if any table is missing, hit <strong>Run Migration</strong> to create them.</p>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="btn btn-primary" onclick="alessiaHealth()"><i class="fas fa-heart-pulse"></i> Check Health</button>
-                        <button class="btn btn-secondary" onclick="alessiaMigrate()"><i class="fas fa-database"></i> Run Migration</button>
-                    </div>
-                    <div id="alessia-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
-                </div>
-                <div class="card" style="margin-top:16px">
-                    <h3><i class="fas fa-seedling" style="color:#2ecc71"></i> Community Feed Seeder</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Re-seed the community feed with the current safety-concern templates. Wipes all <code>@seed.safetea.local</code> accounts (and their posts/replies/likes), then recreates 12 seed accounts across 8 cities and 40 location-aware safety-concern posts with backdated timestamps. Safe to re-run.</p>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="btn btn-primary" onclick="seedCommunity()"><i class="fas fa-rotate"></i> Re-seed Community</button>
-                    </div>
-                    <div id="seed-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
-                </div>
-                <div class="card" style="margin-top:16px">
-                    <h3><i class="fas fa-city" style="color:#5CB3F0"></i> Restore City List</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Re-seed the canonical 8 cities into <code>cities</code> + <code>city_votes</code>: Chicago, New York, Los Angeles, Houston, Miami, Atlanta, Dallas, Philadelphia. Deactivates anything else (Austin/Denver/Portland/etc.) so the community city picker shows the right set with matching images. Idempotent — safe to re-run.</p>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="btn btn-primary" onclick="restoreCities()"><i class="fas fa-arrows-rotate"></i> Restore Cities</button>
-                    </div>
-                    <div id="cities-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
-                </div>
-                <div class="card" style="margin-top:16px">
-                    <h3><i class="fas fa-apple-alt" style="color:#FF6BA8"></i> LinkHer Admin / Reviewer Accounts</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:14px">Create or refresh a LinkHer-branded full-access account separate from your SafeTea operator login. Sets role <code>admin</code>, tier <code>plus</code>, all verifications true, trust 100. Idempotent — same email will be upgraded if it exists. Use the App Store Reviewer preset for App Store Connect's <em>Sign-In Required</em> field; use the LinkHer Admin preset for ongoing iOS-side admin work.</p>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-                        <button class="btn btn-ghost" type="button" onclick="useReviewerDefaults()" style="font-size:12px"><i class="fas fa-apple-alt"></i> Use App Store Reviewer defaults</button>
-                        <button class="btn btn-ghost" type="button" onclick="useLinkHerAdminDefaults()" style="font-size:12px"><i class="fas fa-shield-heart"></i> Use LinkHer Admin defaults</button>
-                    </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-                        <input type="email" class="form-input" id="reviewer-email" placeholder="Email" value="appstore-reviewer@linkher.app" style="flex:1;min-width:240px">
-                        <input type="text" class="form-input" id="reviewer-password" placeholder="Password (8+ chars)" value="LinkHerReview2026!" style="flex:1;min-width:200px">
-                        <input type="text" class="form-input" id="reviewer-name" placeholder="Display name" value="App Store Reviewer" style="flex:1;min-width:200px">
-                    </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <button class="btn btn-primary" onclick="createReviewerAccount()"><i class="fas fa-user-plus"></i> Create / Upgrade Account</button>
-                    </div>
-                    <div id="reviewer-result" style="margin-top:16px;display:none;background:#0F0F1E;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px"></div>
-                </div>
             </div>
 
             <!-- WATERMARK DECODER -->
             <div id="section-watermark" class="section">
                 <div class="card">
                     <h3><i class="fas fa-fingerprint"></i> Steganographic Watermark Decoder</h3>
-                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Upload a screenshot or leaked image to decode the embedded viewer ID. Every photo on SafeTea is invisibly watermarked with the viewer's user ID — if someone screenshots and shares it, this tool traces it back to them.</p>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:16px">Upload a screenshot or leaked image to decode the embedded viewer ID. Every photo on LinkHer is invisibly watermarked with the viewer's user ID — if someone screenshots and shares it, this tool traces it back to them.</p>
                     <div id="wm-drop-zone" style="border:2px dashed rgba(232,160,181,0.3);border-radius:12px;padding:48px 24px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(232,160,181,0.03)" ondragover="event.preventDefault();this.style.borderColor='#E8A0B5';this.style.background='rgba(232,160,181,0.08)'" ondragleave="this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)'" ondrop="event.preventDefault();this.style.borderColor='rgba(232,160,181,0.3)';this.style.background='rgba(232,160,181,0.03)';handleWmDrop(event)" onclick="document.getElementById('wm-file-input').click()">
                         <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:#E8A0B5;margin-bottom:12px;display:block"></i>
                         <p style="color:#fff;font-weight:600;margin-bottom:4px">Drop an image here or click to upload</p>
@@ -1607,151 +1561,6 @@
             }
         }
 
-        // ===== ALESSIA DIAGNOSTICS =====
-        function renderAlessiaResult(data, kind) {
-            var el = document.getElementById('alessia-result');
-            el.style.display = 'block';
-            var pretty = JSON.stringify(data, null, 2);
-            var badge;
-            if (kind === 'health') {
-                badge = data.ok
-                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> All systems green.</span>'
-                    : '<span style="color:#f1c40f;font-weight:600"><i class="fas fa-triangle-exclamation"></i> ' + escapeHtml(data.notes || 'Something is not configured.') + '</span>';
-            } else {
-                badge = (data.ok || data.success)
-                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Migration applied.</span>'
-                    : '<span style="color:#e74c3c;font-weight:600"><i class="fas fa-times-circle"></i> ' + escapeHtml(data.error || 'Migration failed.') + '</span>';
-            }
-            el.innerHTML = badge + '<pre style="margin-top:10px;font-size:12px;color:#B0B0C8;overflow:auto;max-height:340px">' + escapeHtml(pretty) + '</pre>';
-        }
-        async function alessiaHealth() {
-            var el = document.getElementById('alessia-result');
-            el.style.display = 'block';
-            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Checking…</span>';
-            try {
-                var res = await fetch(API_BASE + '/ai/health', { headers: authHeaders() });
-                var data = await res.json();
-                renderAlessiaResult(data, 'health');
-            } catch (err) {
-                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
-            }
-        }
-        async function alessiaMigrate() {
-            if (!confirm('Run the AI Companion migration? Idempotent — safe to re-run.')) return;
-            var el = document.getElementById('alessia-result');
-            el.style.display = 'block';
-            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Migrating…</span>';
-            try {
-                var res = await fetch(API_BASE + '/migrate-ai-companion', { headers: authHeaders() });
-                var data = await res.json();
-                renderAlessiaResult(data, 'migrate');
-                // Re-run health check automatically so the user sees a green status after
-                setTimeout(alessiaHealth, 400);
-            } catch (err) {
-                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
-            }
-        }
-
-        // ===== COMMUNITY SEEDER =====
-        async function seedCommunity() {
-            if (!confirm('Re-seed the community feed?\n\nThis wipes ALL existing @seed.safetea.local accounts (their posts, replies, likes) and recreates the feed with the current safety-concern templates. Safe to re-run, but takes ~15-30 seconds.')) return;
-            var el = document.getElementById('seed-result');
-            el.style.display = 'block';
-            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Re-seeding (this can take 15-30s)…</span>';
-            try {
-                var res = await fetch(API_BASE + '/seed-community', { method: 'POST', headers: authHeaders() });
-                var data = await res.json();
-                if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-                var summary = '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Community feed re-seeded.</span>';
-                if (typeof data.accounts_created === 'number') {
-                    summary += '<div style="margin-top:8px;font-size:13px;color:#B0B0C8">'
-                        + 'Accounts: ' + escapeHtml(String(data.accounts_deleted ?? 0)) + ' deleted, ' + escapeHtml(String(data.accounts_created ?? 0)) + ' created · '
-                        + 'Posts: ' + escapeHtml(String(data.posts_created ?? 0)) + ' · '
-                        + 'Replies: ' + escapeHtml(String(data.replies_created ?? 0)) + ' · '
-                        + 'Likes: ' + escapeHtml(String(data.likes_created ?? 0))
-                        + '</div>';
-                }
-                el.innerHTML = summary + '<pre style="margin-top:10px;font-size:12px;color:#7080A0;overflow:auto;max-height:280px">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
-            } catch (err) {
-                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
-            }
-        }
-
-        // ===== RESTORE CITIES =====
-        async function restoreCities() {
-            if (!confirm('Restore the canonical 8-city list and deactivate everything else?\n\nIdempotent — safe to re-run.')) return;
-            var el = document.getElementById('cities-result');
-            el.style.display = 'block';
-            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Restoring cities…</span>';
-            try {
-                var res = await fetch(API_BASE + '/admin/fix-cities', { method: 'POST', headers: authHeaders() });
-                var data = await res.json();
-                if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-                var ok = !!data.ok;
-                var summary = ok
-                    ? '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> Cities restored.</span>'
-                    : '<span style="color:#f1c40f;font-weight:600"><i class="fas fa-triangle-exclamation"></i> Completed with errors — see JSON below.</span>';
-                var ct = data.cities_table || {};
-                var cv = data.city_votes_table || {};
-                if (ct.upserted || cv.upserted) {
-                    summary += '<div style="margin-top:8px;font-size:13px;color:#B0B0C8">'
-                        + 'cities: ' + (ct.upserted ? ct.upserted.length + ' upserted, ' + (ct.deactivated_other || 0) + ' deactivated' : 'skipped') + ' · '
-                        + 'city_votes: ' + (cv.upserted ? cv.upserted.length + ' upserted, ' + (cv.deactivated_other || 0) + ' deactivated' : 'skipped')
-                        + '</div>';
-                }
-                el.innerHTML = summary + '<pre style="margin-top:10px;font-size:12px;color:#7080A0;overflow:auto;max-height:280px">' + escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
-            } catch (err) {
-                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
-            }
-        }
-
-        // ===== APP STORE REVIEWER ACCOUNT =====
-        function useReviewerDefaults() {
-            document.getElementById('reviewer-email').value = 'appstore-reviewer@linkher.app';
-            document.getElementById('reviewer-password').value = 'LinkHerReview2026!';
-            document.getElementById('reviewer-name').value = 'App Store Reviewer';
-        }
-        function useLinkHerAdminDefaults() {
-            document.getElementById('reviewer-email').value = 'admin@linkher.app';
-            document.getElementById('reviewer-password').value = 'LinkHerAdmin2026!';
-            document.getElementById('reviewer-name').value = 'LinkHer Admin';
-        }
-        async function createReviewerAccount() {
-            var email = (document.getElementById('reviewer-email').value || '').trim();
-            var password = document.getElementById('reviewer-password').value || '';
-            var displayName = (document.getElementById('reviewer-name').value || '').trim() || 'App Store Reviewer';
-            if (!email || password.length < 8) {
-                alert('Email required and password must be at least 8 characters.');
-                return;
-            }
-            var el = document.getElementById('reviewer-result');
-            el.style.display = 'block';
-            el.innerHTML = '<span style="color:#8080A0"><i class="fas fa-spinner fa-spin"></i> Creating reviewer account…</span>';
-            try {
-                var res = await fetch(API_BASE + '/admin/create-tester', {
-                    method: 'POST',
-                    headers: authHeaders(),
-                    body: JSON.stringify({ email: email, password: password, display_name: displayName, tier: 'plus' })
-                });
-                var data = await res.json();
-                if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-                var safeEmail = escapeHtml(email);
-                var safePass = escapeHtml(password);
-                el.innerHTML =
-                    '<span style="color:#2ecc71;font-weight:600"><i class="fas fa-check-circle"></i> ' + escapeHtml(data.message || 'Reviewer account ready.') + '</span>' +
-                    '<div style="margin-top:14px;padding:14px;background:rgba(255,107,168,0.08);border:1px solid rgba(255,107,168,0.3);border-radius:10px">' +
-                        '<div style="font-size:11px;font-weight:700;color:#FF6BA8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Paste these into App Store Connect → Sign-In Required</div>' +
-                        '<div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:#fff;line-height:1.8">' +
-                            '<div>Email: <strong>' + safeEmail + '</strong></div>' +
-                            '<div>Password: <strong>' + safePass + '</strong></div>' +
-                        '</div>' +
-                        '<div style="margin-top:10px;font-size:12px;color:#B0B0C8">Role: admin · Tier: plus · All verifications: true · Trust score: 100. Bypasses every gate so the reviewer can use any feature.</div>' +
-                    '</div>';
-            } catch (err) {
-                el.innerHTML = '<span style="color:#e74c3c"><i class="fas fa-times"></i> ' + escapeHtml(err.message) + '</span>';
-            }
-        }
-
         // ===== ROOM REPORTS =====
         async function loadRoomReports() {
             var list = document.getElementById('room-reports-list');
@@ -2170,7 +1979,7 @@
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '20px Inter, sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('SafeTea Watermark Test — userId=' + testUserId, w / 2, h / 2);
+                ctx.fillText('LinkHer Watermark Test — userId=' + testUserId, w / 2, h / 2);
                 ctx.font = '14px Inter, sans-serif';
                 ctx.fillText('Upload this to the decoder above to verify', w / 2, h / 2 + 30);
 
@@ -2488,7 +2297,7 @@
                 }
 
                 if (!data.viewer && !data.uploader) {
-                    html += '<p style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> No watermark detected. The image may not have been viewed through SafeTea, or the watermark was removed.</p>';
+                    html += '<p style="color:#f1c40f"><i class="fas fa-exclamation-triangle"></i> No watermark detected. The image may not have been viewed through LinkHer, or the watermark was removed.</p>';
                 }
 
                 if (data.aiResponse && data.aiResponse.notes) {

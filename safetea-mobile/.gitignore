@@ -4,3 +4,4 @@ dist/
 .expo/
 *.hbc
 *.tsbuildinfo
+AuthKey_*.p8

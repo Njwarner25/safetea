@@ -1,4 +1,4 @@
-// ============ SafeTea SOS System — Record & Protect ============
+// ============ LinkHer SOS System — Record & Protect ============
 // Floating SOS button → Action sheet (Fake Call, Record & Alert, Call 911)
 
 (function() {
@@ -245,7 +245,7 @@
     // ============ SHARE API ============
     function composeShareText(displayName, gpsLink, trackingUrl) {
         return 'SAFETEA EMERGENCY REPORT\n\n' +
-            (displayName || 'A SafeTea user') + ' may need immediate help and activated SafeTea\'s emergency system.\n\n' +
+            (displayName || 'A LinkHer user') + ' may need immediate help and activated LinkHer\'s emergency system.\n\n' +
             'LIVE TRACKING (auto-updates every 10s):\n' + (trackingUrl || '') + '\n\n' +
             (gpsLink ? 'CURRENT LOCATION:\n' + gpsLink + '\n\n' : '') +
             'WHAT\'S HAPPENING:\n' +
@@ -258,14 +258,14 @@
             '2. Try to contact ' + (displayName || 'them') + ' directly\n' +
             '3. If no response, call 911 with the GPS location\n' +
             '4. Save this message\n\n' +
-            'Sent via SafeTea Record & Protect';
+            'Sent via LinkHer Record & Protect';
     }
 
     function shareEmergencyReport(displayName, gpsLink, trackingUrl) {
         var text = composeShareText(displayName, gpsLink, trackingUrl);
         if (navigator.share) {
             navigator.share({
-                title: 'SafeTea Emergency Report',
+                title: 'LinkHer Emergency Report',
                 text: text
             }).catch(function(err) {
                 if (err.name !== 'AbortError') {
@@ -283,8 +283,8 @@
         if (existing) existing.remove();
 
         var encoded = encodeURIComponent(text);
-        var smsBody = encodeURIComponent('SafeTea Emergency: ' + (displayName || 'Someone') + ' may need help. Live tracking: ' + (trackingUrl || ''));
-        var emailSubject = encodeURIComponent('EMERGENCY: ' + (displayName || 'A SafeTea user') + ' may need your help');
+        var smsBody = encodeURIComponent('LinkHer Emergency: ' + (displayName || 'Someone') + ' may need help. Live tracking: ' + (trackingUrl || ''));
+        var emailSubject = encodeURIComponent('EMERGENCY: ' + (displayName || 'A LinkHer user') + ' may need your help');
 
         var backdrop = document.createElement('div');
         backdrop.id = 'share-fallback-modal';
@@ -467,13 +467,13 @@
                     '<div style="background:#1A1A2E;border:1px solid rgba(232,160,181,0.2);border-radius:20px;max-width:400px;width:100%;padding:28px 24px;text-align:center">' +
                         '<div style="width:56px;height:56px;background:rgba(231,76,60,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><span style="color:#e74c3c;font-weight:800;font-size:16px">SOS</span></div>' +
                         '<h3 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:6px">Unlock Emergency Tools</h3>' +
-                        '<p style="color:#8080A0;font-size:13px;margin-bottom:20px;line-height:1.5">SafeTea+ gives you a complete safety toolkit for every date.</p>' +
+                        '<p style="color:#8080A0;font-size:13px;margin-bottom:20px;line-height:1.5">LinkHer+ gives you a complete safety toolkit for every date.</p>' +
                         '<div style="text-align:left;margin-bottom:20px">' +
                             '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="min-width:36px;height:36px;background:rgba(232,160,181,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-phone" style="color:#E8A0B5;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Fake Call</div><div style="color:#8080A0;font-size:11px">AI-generated excuse to leave any situation</div></div></div>' +
                             '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)"><div style="min-width:36px;height:36px;background:rgba(231,76,60,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-microphone" style="color:#e74c3c;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Record & Alert</div><div style="color:#8080A0;font-size:11px">Audio recording + GPS alerts to trusted contacts</div></div></div>' +
                             '<div style="display:flex;align-items:center;gap:12px;padding:10px 0"><div style="min-width:36px;height:36px;background:rgba(231,76,60,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center"><i class="fas fa-exclamation-triangle" style="color:#e74c3c;font-size:14px"></i></div><div><div style="color:#fff;font-size:13px;font-weight:600">Call 911</div><div style="color:#8080A0;font-size:11px">One-tap emergency services with location sharing</div></div></div>' +
                         '</div>' +
-                        '<button onclick="document.getElementById(\'sos-upgrade-pitch\').remove();if(typeof showUpgradePrompt===\'function\')showUpgradePrompt()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif;margin-bottom:10px">Subscribe to SafeTea+ — $7.99/mo</button>' +
+                        '<button onclick="document.getElementById(\'sos-upgrade-pitch\').remove();if(typeof showUpgradePrompt===\'function\')showUpgradePrompt()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#f27059,#E8A0B5);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:\'Inter\',sans-serif;margin-bottom:10px">Subscribe to LinkHer+ — $7.99/mo</button>' +
                         '<button onclick="document.getElementById(\'sos-upgrade-pitch\').remove()" style="width:100%;padding:10px;border:none;background:transparent;color:#8080A0;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif">Maybe Later</button>' +
                     '</div>';
                 document.body.appendChild(pitch);
@@ -988,9 +988,9 @@
                         '<h3 style="color:#fff;font-size:18px;margin-bottom:4px">Important: Recording laws vary by state</h3>' +
                     '</div>' +
                     '<div style="color:#C0C0D0;font-size:13px;line-height:1.7;margin-bottom:20px">' +
-                        '<p style="margin-bottom:12px">SafeTea\'s Record & Protect feature captures audio and shares your live location with trusted contacts.</p>' +
+                        '<p style="margin-bottom:12px">LinkHer\'s Record & Protect feature captures audio and shares your live location with trusted contacts.</p>' +
                         '<p style="margin-bottom:12px">Some states require all parties to consent to audio recording (including Illinois, California, Florida, and others). You are solely responsible for knowing and following the recording laws in your location.</p>' +
-                        '<p style="margin-bottom:12px">SafeTea provides this tool for personal safety documentation. How you use recordings \u2014 including whether to share them with law enforcement or other parties \u2014 is your decision and responsibility.</p>' +
+                        '<p style="margin-bottom:12px">LinkHer provides this tool for personal safety documentation. How you use recordings \u2014 including whether to share them with law enforcement or other parties \u2014 is your decision and responsibility.</p>' +
                         '<p style="margin:0">Recordings are encrypted and stored securely. Only you control access.</p>' +
                     '</div>' +
                     '<div style="display:flex;flex-direction:column;gap:10px">' +
@@ -1464,7 +1464,7 @@
                 shareEmergencyReport(state.shareData.displayName, state.shareData.gpsLink, state.shareData.trackingUrl);
             } else if (state.sessionKey) {
                 var user = getUser();
-                var name = user ? (user.custom_display_name || user.display_name || 'A SafeTea user') : 'A SafeTea user';
+                var name = user ? (user.custom_display_name || user.display_name || 'A LinkHer user') : 'A LinkHer user';
                 var gps = state.lastLat && state.lastLng ? 'https://maps.google.com/?q=' + state.lastLat + ',' + state.lastLng : null;
                 var tracking = 'https://www.getsafetea.app/recording-status?key=' + state.sessionKey;
                 shareEmergencyReport(name, gps, tracking);
@@ -1526,7 +1526,7 @@
     async function startRecording() {
         var user = getUser();
         if (!isPaidUser(user)) {
-            if (typeof showToast === 'function') showToast('Record & Protect requires SafeTea+ ($7.99/mo). Upgrade to access this feature.');
+            if (typeof showToast === 'function') showToast('Record & Protect requires LinkHer+ ($7.99/mo). Upgrade to access this feature.');
             return;
         }
 
@@ -1825,10 +1825,10 @@
 
                     // Offer to share "I'm safe" message
                     if (savedShareData && navigator.share) {
-                        var safeName = savedShareData.displayName || 'A SafeTea user';
+                        var safeName = savedShareData.displayName || 'A LinkHer user';
                         navigator.share({
-                            title: 'SafeTea — All Clear',
-                            text: safeName + ' has marked themselves safe on SafeTea. Live tracking deactivated. No further action needed.'
+                            title: 'LinkHer — All Clear',
+                            text: safeName + ' has marked themselves safe on LinkHer. Live tracking deactivated. No further action needed.'
                         }).catch(function() {});
                     }
                 }

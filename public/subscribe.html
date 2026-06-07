@@ -18,8 +18,8 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#E8A0B5">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <title>Subscribe — LinkHer/SafeTea</title>
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <title>Subscribe — LinkHer/LinkHer</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/ipad-responsive.css">
@@ -57,7 +57,7 @@
 <body>
   <nav class="sub-nav">
     <a href="/dashboard.html"><i class="fas fa-arrow-left"></i></a>
-    <h1>LinkHer/SafeTea+</h1>
+    <h1>LinkHer/LinkHer+</h1>
   </nav>
 
   <div class="sub-container">
@@ -65,13 +65,13 @@
       <div style="width:72px;height:72px;background:linear-gradient(135deg,#E8A0B5,#9b59b6);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
         <i class="fas fa-crown" style="font-size:32px;color:#fff"></i>
       </div>
-      <h2>Upgrade to LinkHer/SafeTea+</h2>
+      <h2>Upgrade to LinkHer/LinkHer+</h2>
       <p>Unlock the full safety toolkit</p>
     </div>
 
     <ul class="features-list">
       <li><i class="fas fa-check-circle"></i> Name Watch — alerts when someone is mentioned</li>
-      <li><i class="fas fa-check-circle"></i> SafeTea Check-In with live location sharing</li>
+      <li><i class="fas fa-check-circle"></i> LinkHer Check-In with live location sharing</li>
       <li><i class="fas fa-check-circle"></i> SOS Record & Protect emergency tools</li>
       <li><i class="fas fa-check-circle"></i> Photo Verification scans</li>
       <li><i class="fas fa-check-circle"></i> Direct messaging</li>
@@ -161,8 +161,8 @@
       var productId = IAP_PRODUCTS[selectedPlan];
 
       // Use Capacitor plugin bridge to trigger StoreKit purchase
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SafeTeaIAP) {
-        window.Capacitor.Plugins.SafeTeaIAP.purchase({ productId: productId })
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LinkHerIAP) {
+        window.Capacitor.Plugins.LinkHerIAP.purchase({ productId: productId })
           .then(function(result) {
             if (result && result.receipt) {
               // Send receipt to backend for validation
@@ -172,7 +172,7 @@
             }
           })
           .then(function() {
-            showSuccess('Welcome to SafeTea+! Your subscription is active.');
+            showSuccess('Welcome to LinkHer+! Your subscription is active.');
             setTimeout(function() { window.location.href = '/dashboard.html'; }, 2000);
           })
           .catch(function(err) {
@@ -211,12 +211,12 @@
     }
 
     function handleRestore() {
-      if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.SafeTeaIAP) {
+      if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.LinkHerIAP) {
         showError('Restore is only available in the iOS app.');
         return;
       }
       hideMessages();
-      window.Capacitor.Plugins.SafeTeaIAP.restore()
+      window.Capacitor.Plugins.LinkHerIAP.restore()
         .then(function(result) {
           if (result && result.receipt) {
             return verifyReceipt(result.receipt);
@@ -226,7 +226,7 @@
         })
         .then(function(data) {
           if (data && data.tier === 'plus') {
-            showSuccess('Purchase restored! Welcome back to SafeTea+.');
+            showSuccess('Purchase restored! Welcome back to LinkHer+.');
             setTimeout(function() { window.location.href = '/dashboard.html'; }, 2000);
           }
         })

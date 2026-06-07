@@ -25,7 +25,7 @@
       "channel": "production",
       "autoIncrement": true,
       "ios": {
-        "image": "latest"
+        "image": "macos-sequoia-15.6-xcode-26.2"
       }
     }
   },
@@ -33,8 +33,11 @@
     "production": {
       "ios": {
         "appleId": "njwarner25@gmail.com",
-        "ascAppId": "6761035751",
-        "appleTeamId": "DZ3NZHNLHX"
+        "ascAppId": "6766141570",
+        "appleTeamId": "DZ3NZHNLHX",
+        "ascApiKeyId": "YXU3LTGUT5",
+        "ascApiKeyIssuerId": "fa4a4c84-5d8f-4a9f-ba22-d20d31a6ba69",
+        "ascApiKeyPath": "./AuthKey_YXU3LTGUT5.p8"
       },
       "android": {
         "serviceAccountKeyPath": "./google-services.json",

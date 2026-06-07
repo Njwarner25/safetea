@@ -305,7 +305,7 @@ export default function SafeWalkScreen() {
         </View>
       }
     />
-    {activeSession && user?.tier !== 'free' && <SOSFloatingButton />}
+    {activeSession && user?.tier && <SOSFloatingButton />}
     </View>
   );
 }

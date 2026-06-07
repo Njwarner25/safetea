@@ -22,7 +22,7 @@ export interface NameMentionsResponse {
     state?: string;
   };
   totalMentions: number;
-  teaTalkCount: number;
+  safetyChatCount: number;
   goodGuysCount: number;
   posts: CommunityMention[];
 }

@@ -137,7 +137,7 @@ export default function NameFeedIntegration({
               <Pressable
                 style={[
                   styles.tab,
-                  activeTab === 'tea-talk' && styles.tabTeaTalkActive,
+                  activeTab === 'tea-talk' && styles.tabSafetyChatActive,
                 ]}
                 onPress={() => setActiveTab('tea-talk')}
               >
@@ -147,7 +147,7 @@ export default function NameFeedIntegration({
                     activeTab === 'tea-talk' && styles.tabTextActive,
                   ]}
                 >
-                  Tea Talk ({data.teaTalkCount})
+                  Safety Chat ({data.safetyChatCount})
                 </Text>
               </Pressable>
 
@@ -230,7 +230,7 @@ function MentionCard({ post }: { post: CommunityMention }) {
               { color: isGoodGuy ? Colors.success : Colors.coral },
             ]}
           >
-            {isGoodGuy ? 'Good Guys' : 'Tea Talk'}
+            {isGoodGuy ? 'Good Guys' : 'Safety Chat'}
           </Text>
         </View>
       </View>
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     alignItems: 'center',
   },
-  tabTeaTalkActive: {
+  tabSafetyChatActive: {
     backgroundColor: Colors.coral,
   },
   tabGoodGuysActive: {

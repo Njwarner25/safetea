@@ -1,4 +1,4 @@
-// SafeTea Record & Protect — Upload Service Worker (Progressive Enhancement)
+// LinkHer Record & Protect — Upload Service Worker (Progressive Enhancement)
 // Retries pending uploads when user returns to the page.
 // Cannot record audio (browser limitation) — recording is handled by the main page.
 

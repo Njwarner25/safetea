@@ -21,10 +21,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
-  <title>Settings - SafeTea</title>
+  <title>Settings - LinkHer</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -847,7 +847,7 @@
             <div class="row-icon orange"><i class="fas fa-shield-halved"></i></div>
             <div class="row-text">
               <div class="label">Safety Alerts</div>
-              <div class="sublabel">SafeTea check-in reminders & SOS</div>
+              <div class="sublabel">LinkHer check-in reminders & SOS</div>
             </div>
           </div>
           <div class="toggle on" id="toggle-safety"><div class="knob"></div></div>
@@ -855,7 +855,7 @@
       </div>
     </div>
 
-    <!-- LINKING PREFERENCES (verified + SafeTea+ only) -->
+    <!-- LINKING PREFERENCES (verified + LinkHer+ only) -->
     <div class="settings-section">
       <div class="section-label">Linking Preferences</div>
       <div class="settings-group" id="linking-pref-group">
@@ -863,7 +863,7 @@
         <div class="lp-locked" id="lp-locked-state" style="display:none;">
           <div class="lp-lock-icon"><i class="fas fa-lock"></i></div>
           <h4>Who you're open to linking with</h4>
-          <p>Tell SafeTea who you'd prefer to connect with. This stays 100% private &mdash; only visible to you.</p>
+          <p>Tell LinkHer who you'd prefer to connect with. This stays 100% private &mdash; only visible to you.</p>
           <div class="lp-gate-list">
             <div class="lp-gate-item" id="lp-gate-verified">
               <span class="lp-status"><i class="fas fa-times"></i></span>
@@ -872,7 +872,7 @@
             </div>
             <div class="lp-gate-item" id="lp-gate-paid">
               <span class="lp-status"><i class="fas fa-times"></i></span>
-              <span class="lp-gate-text">SafeTea+ membership</span>
+              <span class="lp-gate-text">LinkHer+ membership</span>
               <a href="/dashboard.html#upgrade">Upgrade &rsaquo;</a>
             </div>
           </div>
@@ -882,13 +882,13 @@
         <!-- Unlocked state -->
         <div class="linking-card" id="lp-unlocked-state" style="display:none;">
           <div class="lp-private"><i class="fas fa-eye-slash"></i> Private &mdash; only you can see this</div>
-          <div class="lp-intro">Choose who you're open to linking with on SafeTea. Select all that apply.</div>
+          <div class="lp-intro">Choose who you're open to linking with on LinkHer. Select all that apply.</div>
           <div class="lp-chips" id="lp-chips">
             <!-- chips injected by JS -->
           </div>
           <button class="lp-save-btn" id="lp-save-btn" onclick="saveLinkingPreferences()">Save Preferences</button>
           <div class="lp-disclaimer">
-            SafeTea will never display this on your profile, in search results, or to other users. You can change or clear it anytime.
+            LinkHer will never display this on your profile, in search results, or to other users. You can change or clear it anytime.
           </div>
         </div>
       </div>
@@ -902,7 +902,7 @@
           <div class="row-left">
             <div class="row-icon pink"><i class="fas fa-crown"></i></div>
             <div class="row-text">
-              <div class="label" id="sub-plan">SafeTea+</div>
+              <div class="label" id="sub-plan">LinkHer+</div>
               <div class="sublabel" id="sub-details">Loading...</div>
             </div>
           </div>
@@ -1024,7 +1024,7 @@
       </div>
     </div>
 
-    <div class="app-version">SafeTea v1.0.0</div>
+    <div class="app-version">LinkHer v1.0.0</div>
   </div>
 
   <!-- EDIT MODAL (bottom sheet) -->
@@ -1117,7 +1117,7 @@
       document.getElementById('avatar-initials').textContent = initials;
 
       // Profile card
-      document.getElementById('user-name').textContent = name || 'SafeTea User';
+      document.getElementById('user-name').textContent = name || 'LinkHer User';
       document.getElementById('user-email').textContent = user.email || '';
       if (user.is_verified) {
         document.getElementById('verified-badge').style.display = 'inline-flex';
@@ -1137,7 +1137,7 @@
       // Subscription info
       if (user.subscription_tier && user.subscription_tier !== 'free') {
         document.getElementById('subscription-section').style.display = 'block';
-        document.getElementById('sub-plan').textContent = 'SafeTea+';
+        document.getElementById('sub-plan').textContent = 'LinkHer+';
         document.getElementById('sub-details').textContent = user.subscription_status === 'active'
           ? '$7.99/mo \u00b7 Renews ' + (user.subscription_end ? new Date(user.subscription_end).toLocaleDateString() : 'monthly')
           : 'Inactive';

@@ -1,7 +1,7 @@
-import { useColorScheme } from 'react-native';
-import { DarkColors, LightColors } from './colors';
+import { DarkColors } from './colors';
 
+// Dark-only by design — matches userInterfaceStyle: 'dark' in app.config.ts.
+// Don't reintroduce a light-mode switch.
 export function useThemeColors() {
-  const scheme = useColorScheme();
-  return scheme === 'light' ? LightColors : DarkColors;
+  return DarkColors;
 }

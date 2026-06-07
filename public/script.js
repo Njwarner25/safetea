@@ -1,12 +1,12 @@
 // Capacitor (Android app) branding override.
-// The website serves the unified LinkHer/SafeTea Rebrand3 logo, but the
-// Android Capacitor wrapper should show SafeTea-only branding. The
+// The website serves the unified LinkHer/LinkHer Rebrand3 logo, but the
+// Android Capacitor wrapper should show LinkHer-only branding. The
 // safetea-mobile RN iOS app handles its own assets natively, so this only
 // fires on Android (Capacitor injects window.Capacitor in the WebView).
 (function () {
   if (typeof window === 'undefined' || !window.Capacitor) return;
 
-  function applySafeTeaBranding() {
+  function applyLinkHerBranding() {
     document.querySelectorAll('img').forEach(function (img) {
       var src = img.getAttribute('src') || '';
       if (/(^|\/)logo\.png(\?|$)/.test(src)) {
@@ -16,7 +16,7 @@
         img.style.webkitMaskImage = 'none';
       } else if (src.indexOf('linkher-safetea-banner') !== -1) {
         // Hero/banner image is the unified marketing graphic — fall back to
-        // the SafeTea-only SVG illustration on Android.
+        // the LinkHer-only SVG illustration on Android.
         img.src = 'images/hero-illustration.svg';
         img.style.mixBlendMode = 'normal';
         img.style.maskImage = 'none';
@@ -26,9 +26,9 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applySafeTeaBranding);
+    document.addEventListener('DOMContentLoaded', applyLinkHerBranding);
   } else {
-    applySafeTeaBranding();
+    applyLinkHerBranding();
   }
 })();
 

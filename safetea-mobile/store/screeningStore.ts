@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type TeaScoreLevel = 'safe' | 'caution' | 'warning' | 'danger';
+export type SafetyScoreLevel = 'safe' | 'caution' | 'warning' | 'danger';
 
 export interface RedFlag {
   id: string;
@@ -19,8 +19,8 @@ export interface ScreeningResult {
   id: string;
   profileName: string;
   platform: string;
-  teaScore: number;
-  teaScoreLevel: TeaScoreLevel;
+  safetyScore: number;
+  safetyScoreLevel: SafetyScoreLevel;
   redFlags: RedFlag[];
   greenFlags: GreenFlag[];
   scannedAt: string;

@@ -1,0 +1,15 @@
+# EAS Build ignore - reduce upload size from monorepo
+.git
+node_modules/.cache
+.expo
+dist
+web-build
+*.tsbuildinfo
+AuthKey_*.p8
+
+# Parent repo files not needed for mobile build
+public/
+api/
+tiktok_*
+*.py
+capacitor-app/

@@ -23,10 +23,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
-  <title>Safety Vault — SafeTea</title>
+  <title>Safety Vault — LinkHer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -531,7 +531,7 @@
           if (!r.ok) throw new Error(r.data && r.data.error || 'Could not save');
           el.input.value = '';
           el.input.style.height = 'auto';
-          if (window.SafeTeaNative && window.SafeTeaNative.haptics) window.SafeTeaNative.haptics.impact('Light');
+          if (window.LinkHerNative && window.LinkHerNative.haptics) window.LinkHerNative.haptics.impact('Light');
           reloadEntries();
           // If the folder has AI enabled, quietly organize in the background.
           // Failures don't bother the user — the original content is saved.

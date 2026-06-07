@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Alessia — LinkHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Inter',sans-serif;
+      background:radial-gradient(ellipse at 50% 0%,#1a0b2e 0%,#0a0518 55%,#050210 100%);
+      color:#fff;min-height:100vh;-webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    .stage{max-width:520px;margin:0 auto;padding:24px 20px 120px;position:relative}
+    .stage::before{
+      content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);
+      width:600px;height:600px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,107,168,0.18) 0%,transparent 60%);
+      pointer-events:none;z-index:0;
+    }
+    .stage > *{position:relative;z-index:1}
+
+    .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800}
+    .brand .heart{
+      width:28px;height:28px;border-radius:50%;
+      background:linear-gradient(135deg,#FF6BA8,#9B59B6);
+      display:inline-flex;align-items:center;justify-content:center;font-size:12px;
+      box-shadow:0 0 14px rgba(255,107,168,0.5);
+    }
+    .brand .heart i{color:#fff}
+    .brand .pink{color:#FF6BA8}
+    .icon-btn{
+      background:transparent;border:1px solid rgba(255,255,255,0.14);color:#B0B0C8;
+      width:38px;height:38px;border-radius:11px;display:inline-flex;align-items:center;
+      justify-content:center;font-size:14px;cursor:pointer;text-decoration:none;
+    }
+    .icon-btn:active{transform:scale(0.95)}
+
+    .view{display:none;animation:fadeIn 0.35s ease}
+    .view.active{display:block}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    .eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;color:#FF6BA8;text-transform:uppercase;margin-bottom:6px}
+    .title{font-size:34px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px;
+      background:linear-gradient(135deg,#fff 0%,#E8C8E8 50%,#9B59B6 100%);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .subtitle{font-size:15px;color:#B0A0C0;line-height:1.55;margin-bottom:28px}
+
+    .avatar-stage{
+      position:relative;width:100%;aspect-ratio:1/1;max-height:360px;
+      border-radius:32px;overflow:hidden;
+      background:radial-gradient(ellipse at 50% 40%,rgba(155,89,182,0.35) 0%,rgba(255,107,168,0.18) 35%,#1a0b2e 75%);
+      border:1px solid rgba(255,107,168,0.25);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 60px rgba(255,107,168,0.18),inset 0 0 80px rgba(155,89,182,0.15);
+      margin-bottom:20px;
+    }
+    .avatar-stage::after{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 50% 50%,transparent 30%,rgba(0,0,0,0.4) 100%);
+      pointer-events:none;
+    }
+    .avatar-circle{
+      width:78%;aspect-ratio:1/1;border-radius:50%;
+      background:radial-gradient(circle at 50% 35%,rgba(255,107,168,0.2) 0%,rgba(155,89,182,0.15) 60%,rgba(20,8,40,0.4) 100%);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 0 60px rgba(255,107,168,0.55),0 0 120px rgba(155,89,182,0.35),inset 0 -20px 60px rgba(0,0,0,0.3);
+      position:relative;overflow:hidden;
+    }
+    .avatar-circle img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;border-radius:50%}
+    .avatar-circle img.is-default{object-position:50% 35%}
+    .avatar-circle i{font-size:90px;color:#fff;text-shadow:0 0 20px rgba(255,255,255,0.5)}
+    .avatar-rim{
+      position:absolute;inset:-3%;border-radius:50%;
+      border:2px solid rgba(255,107,168,0.5);
+      box-shadow:0 0 30px rgba(255,107,168,0.5);
+      pointer-events:none;
+    }
+
+    .traits{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+    .trait{display:flex;align-items:flex-start;gap:14px}
+    .trait-icon{
+      width:42px;height:42px;border-radius:12px;flex-shrink:0;
+      background:rgba(255,107,168,0.12);border:1px solid rgba(255,107,168,0.25);
+      display:flex;align-items:center;justify-content:center;color:#FF6BA8;font-size:15px;
+    }
+    .trait-text .t-title{font-size:14px;font-weight:700;margin-bottom:2px}
+    .trait-text .t-sub{font-size:12px;color:#9080A0;line-height:1.5}
+
+    .btn-row{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+    .btn{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      width:100%;padding:16px 20px;border-radius:14px;border:none;
+      font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;
+      transition:transform 0.12s ease,opacity 0.15s ease;
+    }
+    .btn:active{transform:scale(0.98)}
+    .btn[disabled]{opacity:0.45;cursor:not-allowed}
+    .btn-primary{
+      background:linear-gradient(135deg,#FF6BA8,#9B59B6);color:#fff;
+      box-shadow:0 8px 28px rgba(255,107,168,0.4);
+    }
+    .btn-ghost{
+      background:rgba(255,255,255,0.04);color:#fff;
+      border:1px solid rgba(255,255,255,0.12);
+    }
+
+    .preset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0 24px}
+    .preset{
+      position:relative;aspect-ratio:1/1.35;border-radius:18px;cursor:pointer;
+      background:radial-gradient(circle at 50% 35%,rgba(155,89,182,0.18) 0%,rgba(20,8,40,0.6) 100%);
+      border:2px solid rgba(255,255,255,0.06);overflow:hidden;
+      transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s;
+    }
+    .preset:active{transform:scale(0.97)}
+    .preset.selected{border-color:#FF6BA8;box-shadow:0 0 0 3px rgba(255,107,168,0.25),0 0 30px rgba(255,107,168,0.4)}
+    .preset img.thumb{width:100%;height:80%;object-fit:cover;display:block}
+    .preset .label{
+      position:absolute;left:0;right:0;bottom:0;height:20%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;color:#fff;text-align:center;
+      background:linear-gradient(180deg,rgba(10,5,24,0) 0%,rgba(10,5,24,0.85) 60%);
+    }
+
+    .field{margin-bottom:18px}
+    .field-label{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#B0A0C0;text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}
+    .swatch-row{display:flex;gap:8px;flex-wrap:wrap}
+    .swatch{
+      width:34px;height:34px;border-radius:50%;cursor:pointer;
+      border:2px solid rgba(255,255,255,0.08);transition:transform 0.12s,border-color 0.15s;
+      flex-shrink:0;
+    }
+    .swatch.selected{border-color:#FF6BA8;transform:scale(1.1);box-shadow:0 0 12px rgba(255,107,168,0.5)}
+    .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#B0A0C0;
+      padding:9px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;
+      font-family:inherit;transition:all 0.15s;
+    }
+    .chip.selected{background:rgba(255,107,168,0.15);border-color:#FF6BA8;color:#fff}
+    .select-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px}
+    .select-row select{flex:1;background:transparent;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none}
+    .select-row select option{background:#1a0b2e;color:#fff}
+
+    .name-input{
+      width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+      border-radius:12px;padding:13px 16px;color:#fff;font-size:15px;font-family:inherit;
+    }
+    .name-input:focus{outline:none;border-color:rgba(255,107,168,0.5)}
+
+    .preview-card{
+      padding:20px;border-radius:18px;margin-bottom:18px;
+      background:linear-gradient(135deg,rgba(255,107,168,0.12),rgba(155,89,182,0.12));
+      border:1px solid rgba(255,107,168,0.3);
+    }
+    .preview-bubble{
+      background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,168,0.25);
+      border-radius:16px;padding:16px 18px;color:#E8D8F0;font-size:14px;line-height:1.55;
+      margin-top:14px;
+    }
+
+    /* Chat surface */
+    .chat-header{
+      display:flex;align-items:center;gap:12px;padding:14px 16px;
+      background:rgba(20,10,40,0.6);backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(255,107,168,0.15);
+      z-index:10;flex-shrink:0;
+      padding-top:calc(14px + env(safe-area-inset-top));
+    }
+    .chat-avatar{
+      width:40px;height:40px;border-radius:50%;
+      background:linear-gradient(135deg,#FF6BA8,#9B59B6);
+      display:flex;align-items:center;justify-content:center;color:#fff;
+      box-shadow:0 0 12px rgba(255,107,168,0.45);overflow:hidden;flex-shrink:0;
+    }
+    .chat-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .chat-meta{flex:1}
+    .chat-name{font-size:14px;font-weight:700}
+    .chat-status{font-size:11px;color:#7e9b7e;display:flex;align-items:center;gap:5px}
+    .chat-status .dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80}
+
+    .messages{padding:18px 20px 8px;display:flex;flex-direction:column;gap:12px}
+    .msg{max-width:84%;padding:11px 15px;border-radius:18px;font-size:14px;line-height:1.5;word-wrap:break-word}
+    .msg.bot{background:rgba(155,89,182,0.16);border:1px solid rgba(155,89,182,0.25);align-self:flex-start;border-bottom-left-radius:6px}
+    .msg.user{background:linear-gradient(135deg,#FF6BA8,#9B59B6);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+    .msg.typing{background:rgba(155,89,182,0.16);border:1px solid rgba(155,89,182,0.25);align-self:flex-start;border-bottom-left-radius:6px;display:inline-flex;gap:5px}
+    .msg.typing span{width:6px;height:6px;border-radius:50%;background:#FF6BA8;animation:dot 1.2s infinite}
+    .msg.typing span:nth-child(2){animation-delay:0.15s}
+    .msg.typing span:nth-child(3){animation-delay:0.3s}
+    @keyframes dot{0%,60%,100%{opacity:0.3}30%{opacity:1}}
+
+    .compose{
+      padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+      background:rgba(10,5,24,0.85);backdrop-filter:blur(14px);border-top:1px solid rgba(255,107,168,0.15);
+      display:flex;gap:10px;align-items:flex-end;
+      flex-shrink:0;
+      transition:padding-bottom 0.18s ease;
+    }
+    /* Safe-area bottom padding only when keyboard is hidden — when keyboard is
+       up there's no home indicator gap to clear. */
+    body.kb-open .compose{padding-bottom:12px}
+    .compose textarea{
+      flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+      border-radius:18px;padding:11px 14px;color:#fff;
+      /* 16px minimum prevents iOS auto-zoom on focus */
+      font-size:16px;font-family:inherit;
+      resize:none;outline:none;max-height:120px;line-height:1.4;
+    }
+    .compose textarea:focus{border-color:rgba(255,107,168,0.5)}
+    .compose .send-btn{
+      width:42px;height:42px;border-radius:50%;border:none;
+      background:linear-gradient(135deg,#FF6BA8,#9B59B6);color:#fff;font-size:15px;
+      cursor:pointer;flex-shrink:0;box-shadow:0 4px 12px rgba(255,107,168,0.4);
+    }
+    .compose .send-btn:disabled{opacity:0.4}
+
+    /* Chat view = fullscreen flex column with keyboard-aware transform.
+       Capacitor's Keyboard plugin runs in resize:'none', so the WebView does
+       NOT shrink when the keyboard appears. Instead we translate the whole
+       chat container up by the keyboard height so the compose bar lands
+       directly above the keyboard, like iMessage/Telegram. */
+    body.in-chat{overflow:hidden}
+    #view-chat.active{
+      display:flex;
+      flex-direction:column;
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100dvh;
+      z-index:50;
+      background:radial-gradient(ellipse at 50% 0%,#1a0b2e 0%,#0a0518 55%,#050210 100%);
+      transform:translateY(0);
+      transition:transform 0.22s cubic-bezier(0.4,0,0.2,1);
+      will-change:transform;
+      animation:none;
+    }
+    #view-chat.kb-up{
+      transform:translateY(calc(-1 * var(--kb-h, 0px)));
+    }
+    #view-chat .chat-header,
+    #view-chat .messages,
+    #view-chat .compose{
+      max-width:520px;width:100%;margin-left:auto;margin-right:auto;
+    }
+    #view-chat .messages{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+    }
+
+    .feature-strip{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+      padding:14px 0;margin-top:8px;
+    }
+    .feat{
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;padding:10px 6px;text-align:center;
+    }
+    .feat i{font-size:14px;color:#FF6BA8;display:block;margin-bottom:4px}
+    .feat-label{font-size:9px;font-weight:600;color:#B0A0C0;line-height:1.2}
+
+    .briefs-list{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+    .brief-card{
+      position:relative;padding:18px 18px 14px;border-radius:18px;
+      background:linear-gradient(135deg,rgba(255,107,168,0.08),rgba(155,89,182,0.10));
+      border:1px solid rgba(255,107,168,0.22);
+      backdrop-filter:blur(14px);
+      box-shadow:0 8px 28px rgba(20,8,40,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
+      animation:briefIn 0.4s ease;
+    }
+    @keyframes briefIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .brief-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .brief-icon{
+      width:36px;height:36px;border-radius:11px;flex-shrink:0;
+      background:rgba(255,107,168,0.14);border:1px solid rgba(255,107,168,0.25);
+      display:flex;align-items:center;justify-content:center;color:#FF6BA8;font-size:14px;
+      box-shadow:0 0 14px rgba(255,107,168,0.2);
+    }
+    .brief-meta{flex:1;min-width:0}
+    .brief-type{font-size:10px;font-weight:700;color:#FF6BA8;text-transform:uppercase;letter-spacing:1.1px;line-height:1.1}
+    .brief-time{font-size:11px;color:#7e6f8a;margin-top:2px}
+    .brief-dismiss{background:transparent;border:none;color:#7e6f8a;font-size:13px;cursor:pointer;padding:4px 8px;font-family:inherit;border-radius:8px}
+    .brief-dismiss:active{background:rgba(255,255,255,0.06)}
+    .brief-body{font-size:14px;line-height:1.55;color:#E8D8F0;margin-bottom:12px;white-space:pre-line}
+    .brief-actions{display:flex;flex-wrap:wrap;gap:8px}
+    .brief-action{
+      background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+      color:#fff;padding:8px 13px;border-radius:999px;font-size:12px;font-weight:600;
+      cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;
+    }
+    .brief-action:active{transform:scale(0.97)}
+    .brief-action.primary{background:linear-gradient(135deg,#FF6BA8,#9B59B6);border-color:transparent}
+    .brief-action i{font-size:11px}
+    .briefs-empty{text-align:center;padding:60px 24px 20px}
+
+    .feature-grid-full{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+    .feature-card{
+      background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+      border-radius:14px;padding:14px;
+    }
+    .feature-card i{color:#FF6BA8;font-size:18px;margin-bottom:8px;display:block}
+    .feature-card .fc-title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .feature-card .fc-sub{font-size:11px;color:#7e6f8a;line-height:1.4}
+
+    .gate-card{
+      padding:24px 22px;border-radius:18px;margin-top:14px;
+      background:linear-gradient(135deg,rgba(255,107,168,0.16),rgba(155,89,182,0.16));
+      border:1px solid rgba(255,107,168,0.35);text-align:center;
+    }
+    .gate-card .crown{font-size:32px;color:#FFD700;margin-bottom:10px}
+    .gate-card h3{font-size:18px;font-weight:800;margin-bottom:8px}
+    .gate-card p{font-size:13px;color:#C0B0D0;line-height:1.5;margin-bottom:16px}
+    .gate-card .price{font-size:24px;font-weight:800;color:#fff;margin-bottom:14px}
+    .gate-card .price small{font-size:12px;color:#9080A0;font-weight:500}
+
+    .toast{
+      position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+      background:rgba(20,10,40,0.95);border:1px solid rgba(255,107,168,0.3);padding:11px 18px;
+      border-radius:999px;font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:100;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    .err-banner{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);padding:10px 12px;border-radius:10px;font-size:12px;color:#ff8074;margin-bottom:14px}
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="top-bar">
+      <div class="brand">
+        <span class="heart"><i class="fa-solid fa-heart"></i></span>
+        Link<span class="pink">Her</span>
+      </div>
+      <a href="https://getsafetea.app/dashboard" class="icon-btn" id="exit-btn" aria-label="Back to dashboard"><i class="fa-solid fa-xmark"></i></a>
+    </div>
+
+    <!-- GATE (non-paid users) -->
+    <div id="view-gate" class="view">
+      <div class="eyebrow">LinkHer+</div>
+      <h1 class="title">Meet Alessia</h1>
+      <p class="subtitle">Your AI protector. Always here. Always listening. Always on your side.</p>
+
+      <div class="avatar-stage">
+        <div class="avatar-circle"><img data-asset-target="hero" alt=""><div class="avatar-rim"></div></div>
+      </div>
+
+      <div class="gate-card">
+        <i class="fa-solid fa-crown crown"></i>
+        <h3>Alessia is part of LinkHer+</h3>
+        <p>Unlock your AI protector — chat anytime, journal safely, get smart safety nudges and emotional support.</p>
+        <div class="price">$7.99<small>/mo</small></div>
+        <button class="btn btn-primary" onclick="goUpgrade()"><i class="fa-solid fa-crown"></i> Upgrade to LinkHer+</button>
+      </div>
+    </div>
+
+    <!-- MEET -->
+    <div id="view-meet" class="view">
+      <div class="eyebrow">Meet Alessia</div>
+      <h1 class="title">Alessia</h1>
+      <p class="subtitle">Your AI protector. Always here. Always listening. Always on your side.</p>
+
+      <div class="avatar-stage">
+        <div class="avatar-circle"><img data-asset-target="meet" alt=""><div class="avatar-rim"></div></div>
+      </div>
+
+      <div class="traits">
+        <div class="trait"><div class="trait-icon"><i class="fa-solid fa-shield-halved"></i></div><div class="trait-text"><div class="t-title">Safety First</div><div class="t-sub">I look out for you and help keep you safe.</div></div></div>
+        <div class="trait"><div class="trait-icon"><i class="fa-solid fa-comments"></i></div><div class="trait-text"><div class="t-title">Smart &amp; Supportive</div><div class="t-sub">I listen, understand, and guide you.</div></div></div>
+        <div class="trait"><div class="trait-icon"><i class="fa-solid fa-lock"></i></div><div class="trait-text"><div class="t-title">Private &amp; Secure</div><div class="t-sub">Your conversations stay between us.</div></div></div>
+        <div class="trait"><div class="trait-icon"><i class="fa-solid fa-heart"></i></div><div class="trait-text"><div class="t-title">Empathetic</div><div class="t-sub">I care, I support, I'm always here.</div></div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goView('style')"><i class="fa-solid fa-wand-magic-sparkles"></i> Customize Alessia</button>
+        <button class="btn btn-ghost" onclick="useDefault()">Use Default</button>
+      </div>
+    </div>
+
+    <!-- STYLE -->
+    <div id="view-style" class="view">
+      <div class="eyebrow">Step 1 of 3</div>
+      <h1 class="title" style="font-size:28px">Choose your Alessia style</h1>
+      <p class="subtitle">Pick the look that feels right. You can always change it later.</p>
+
+      <div class="preset-grid" id="preset-grid"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goView('personalize')">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn btn-ghost" onclick="goView('meet')">Back</button>
+      </div>
+    </div>
+
+    <!-- PERSONALIZE -->
+    <div id="view-personalize" class="view">
+      <div class="eyebrow">Step 2 of 3</div>
+      <h1 class="title" style="font-size:28px">Personalize Alessia</h1>
+      <p class="subtitle">Fine-tune her appearance and how she speaks to you.</p>
+
+      <div class="field">
+        <label class="field-label">Companion name</label>
+        <input id="name-input" class="name-input" type="text" maxlength="40" placeholder="Alessia" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label class="field-label">Skin tone</label>
+        <div class="swatch-row" id="skin-row"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Hair color</label>
+        <div class="swatch-row" id="hair-row"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Eye color</label>
+        <div class="swatch-row" id="eye-row"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Voice tone</label>
+        <div class="select-row">
+          <i class="fa-solid fa-waveform-lines" style="color:#FF6BA8"></i>
+          <select id="voice-select">
+            <option value="calm_soothing">Calm &amp; Soothing</option>
+            <option value="direct_clear">Direct &amp; Clear</option>
+            <option value="encouraging">Encouraging</option>
+            <option value="gentle">Gentle</option>
+            <option value="protective">Protective</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Personality tone</label>
+        <div class="chip-row" id="personality-chips">
+          <button class="chip selected" data-val="gentle">Gentle</button>
+          <button class="chip" data-val="motivational">Motivational</button>
+          <button class="chip" data-val="direct">Direct</button>
+          <button class="chip" data-val="calm">Calm</button>
+          <button class="chip selected" data-val="protective">Protective</button>
+          <button class="chip" data-val="supportive">Supportive</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goView('preview')">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        <button class="btn btn-ghost" onclick="goView('style')">Back</button>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div id="view-preview" class="view">
+      <div class="eyebrow">Step 3 of 3</div>
+      <h1 class="title" style="font-size:28px">Preview Alessia</h1>
+      <p class="subtitle">Here she is. Ready to meet you.</p>
+
+      <div class="avatar-stage">
+        <div class="avatar-circle"><img data-asset-target="hero" alt=""><div class="avatar-rim"></div></div>
+      </div>
+
+      <div class="preview-card">
+        <div style="font-size:13px;font-weight:700;color:#FF6BA8;margin-bottom:4px">Hi, I'm <span id="preview-name">Alessia</span></div>
+        <div class="preview-bubble">I'm here to help you feel safe, supported, and never alone.</div>
+      </div>
+
+      <div class="btn-row">
+        <button id="confirm-btn" class="btn btn-primary" onclick="confirmAlessia()"><i class="fa-solid fa-check"></i> Confirm Alessia</button>
+        <button class="btn btn-ghost" onclick="goView('personalize')">Back</button>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="view-chat" class="view">
+      <div class="chat-header">
+        <button class="icon-btn" onclick="goView('home')" aria-label="Back" style="margin-right:2px"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="chat-avatar"><img data-asset-target="chat" alt=""></div>
+        <div class="chat-meta">
+          <div class="chat-name" id="chat-name">Alessia</div>
+          <div class="chat-status"><span class="dot"></span> Online · Always with you</div>
+        </div>
+        <button class="icon-btn" onclick="goView('briefs')" aria-label="Safety briefs" style="position:relative">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span id="briefs-badge" style="display:none;position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#FF6BA8;box-shadow:0 0 6px #FF6BA8"></span>
+        </button>
+        <button class="icon-btn" onclick="goView('settings')" aria-label="Settings"><i class="fa-solid fa-sliders"></i></button>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="compose" id="compose">
+        <textarea id="msg-input" rows="1" placeholder="Message Alessia..." oninput="autosize(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" aria-label="Send"><i class="fa-solid fa-arrow-up"></i></button>
+      </div>
+    </div>
+
+    <!-- BRIEFS -->
+    <div id="view-briefs" class="view">
+      <div class="header-row">
+        <div>
+          <div class="eyebrow">Safety Briefs</div>
+          <h1 class="title" style="font-size:22px">Alessia has a few notes for you</h1>
+          <div class="section-sub">Calm, location-aware awareness. Always optional.</div>
+        </div>
+        <button class="icon-btn" onclick="goView('chat')" aria-label="Back to chat"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="briefs-list" class="briefs-list"></div>
+      <div class="briefs-empty" id="briefs-empty" style="display:none">
+        <i class="fa-solid fa-shield-heart" style="font-size:28px;color:#FF6BA8;margin-bottom:10px"></i>
+        <div style="font-size:14px;color:#9080A0;line-height:1.5">All caught up. Alessia will let you know if anything else needs your attention.</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS / FEATURE GRID -->
+    <div id="view-settings" class="view">
+      <div class="eyebrow">Settings</div>
+      <h1 class="title" style="font-size:24px">Alessia has your back</h1>
+      <p class="subtitle">Here's everything she helps with.</p>
+
+      <div class="feature-grid-full">
+        <div class="feature-card"><i class="fa-solid fa-phone-volume"></i><div class="fc-title">Emergency Help</div><div class="fc-sub">One tap to alert your circle</div></div>
+        <div class="feature-card"><i class="fa-solid fa-location-dot"></i><div class="fc-title">Location Sharing</div><div class="fc-sub">Live share with trusted people</div></div>
+        <div class="feature-card"><i class="fa-solid fa-shield-halved"></i><div class="fc-title">Safe Check-Ins</div><div class="fc-sub">Auto check-ins on a date</div></div>
+        <div class="feature-card"><i class="fa-solid fa-triangle-exclamation"></i><div class="fc-title">Threat Detection</div><div class="fc-sub">Conversation red-flag scan</div></div>
+        <div class="feature-card"><i class="fa-solid fa-book-open"></i><div class="fc-title">Resources &amp; Guidance</div><div class="fc-sub">Verified safety resources</div></div>
+        <div class="feature-card"><i class="fa-solid fa-heart"></i><div class="fc-title">Emotional Support</div><div class="fc-sub">A safe space to talk</div></div>
+        <div class="feature-card"><i class="fa-solid fa-bell"></i><div class="fc-title">Smart Reminders</div><div class="fc-sub">Gentle nudges that matter</div></div>
+        <div class="feature-card"><i class="fa-solid fa-calendar-check"></i><div class="fc-title">Daily Check-In</div><div class="fc-sub">A 30-second pulse on you</div></div>
+        <div class="feature-card"><i class="fa-solid fa-bolt"></i><div class="fc-title">Quick Actions</div><div class="fc-sub">Fake call · Record · 911</div></div>
+        <div class="feature-card"><i class="fa-solid fa-mobile-screen"></i><div class="fc-title">Lock Screen Widget</div><div class="fc-sub">Alessia on your home screen</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goView('chat')"><i class="fa-solid fa-comments"></i> Back to chat</button>
+        <button class="btn btn-ghost" onclick="goView('personalize')">Edit appearance</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  (function(){
+    'use strict';
+    var API_BASE='https://getsafetea.app';
+    var TOKEN_KEY='safetea_token';
+    var token=localStorage.getItem(TOKEN_KEY);
+    if(!token){ window.location.href=API_BASE+'/login'; return; }
+
+    var STYLES=[
+      {id:'futuristic',label:'Futuristic'},
+      {id:'warm_human',label:'Warm Human'},
+      {id:'guardian',label:'Guardian'},
+      {id:'professional',label:'Professional'},
+      {id:'soft_anime',label:'Soft Anime'},
+      {id:'minimal_android',label:'Minimal Android'},
+    ];
+    // Safety Briefs — v1 mock pool. Tone rules: never use "danger/unsafe/attack/crime is likely".
+    // Use "reported incidents", "recent activity", "consider", "Alessia noticed", "you may want to".
+    var BRIEFS=[
+      {
+        id:'transit-1', type:'TRANSIT', icon:'fa-train-subway',
+        body:"Alessia noticed several reported incidents on transit lines between 5 PM and 7 PM this week. If possible, consider riding near the conductor and staying aware of your phone use during peak hours.",
+        actions:['share_location','check_in','dismiss']
+      },
+      {
+        id:'area-1', type:'AREA AWARENESS', icon:'fa-location-dot',
+        body:"Recent reports show an increase in vehicle break-ins within a few blocks of your current area. Consider removing visible valuables before parking.",
+        actions:['notify_contact','dismiss']
+      },
+      {
+        id:'route-1', type:'ROUTE', icon:'fa-route',
+        body:"Alessia noticed your usual walking route has had recent disturbance reports after dark. You may want to choose a brighter or more populated route tonight.",
+        actions:['safer_route','share_location','dismiss']
+      },
+      {
+        id:'event-1', type:'CROWD ACTIVITY', icon:'fa-people-group',
+        body:"There's unusually heavy crowd activity near you tonight due to nearby events. Keep your phone secured and establish a meetup point if you're with friends.",
+        actions:['check_in','dismiss']
+      },
+      {
+        id:'travel-1', type:'RIDESHARE', icon:'fa-car',
+        body:"Alessia detected a recent uptick in rideshare impersonation reports in this district. Before entering a vehicle, confirm the license plate and driver name in your rideshare app.",
+        actions:['dismiss']
+      },
+      {
+        id:'night-1', type:'NIGHTTIME', icon:'fa-moon',
+        body:"It's getting late and your route appears less populated than usual. Would you like to start a Safe Walk session or notify a trusted contact?",
+        actions:['safe_walk','share_location','dismiss']
+      },
+      {
+        id:'weather-1', type:'WEATHER', icon:'fa-cloud-bolt',
+        body:"There are reduced-visibility conditions in your area. Consider delaying travel or using a safer indoor pickup location.",
+        actions:['dismiss']
+      },
+    ];
+    var ACTIONS={
+      share_location:{label:'Share Location', icon:'fa-location-arrow', primary:true,  go:function(){window.location.href=API_BASE+'/safelink';}},
+      check_in:     {label:'Start Check-In',  icon:'fa-clock',          primary:false, go:function(){window.location.href=API_BASE+'/date-status';}},
+      safer_route:  {label:'Safer Route',     icon:'fa-route',          primary:false, go:function(){window.location.href='https://maps.apple.com/?dirflg=w';}},
+      notify_contact:{label:'Notify Contact', icon:'fa-bell',           primary:false, go:function(){window.location.href=API_BASE+'/dashboard';}},
+      safe_walk:    {label:'Start Safe Walk', icon:'fa-shoe-prints',    primary:true,  go:function(){window.location.href=API_BASE+'/pulse';}},
+      dismiss:      {label:'Dismiss',         icon:'fa-xmark',          primary:false, go:null},
+    };
+
+    var SKIN_TONES=['#F1D4B6','#E5B894','#C99876','#A07050','#6B4733'];
+    var HAIR_COLORS=['#1A1A1A','#3D2817','#7A4A1F','#C99973','#F0CFB6','#E455B2','#6CACE4'];
+    var EYE_COLORS=['#3F6FB7','#3A8A6E','#7E4A1F','#9C9C9C','#7C5BC0','#1F4A6E'];
+
+    var state={
+      view:'meet',
+      isPremium:true,            // Will be detected; default true so we don't gate while loading
+      avatar_style:'futuristic',
+      companion_name:'Alessia',
+      skin_tone:SKIN_TONES[1],
+      hair_color:HAIR_COLORS[2],
+      eye_color:EYE_COLORS[0],
+      voice_tone:'calm_soothing',
+      personality_tones:['gentle','protective'],
+      messages:[],
+      sending:false,
+      briefs:[],                   // populated from /api/ai/briefs (or fallback)
+      briefsLoading:false,
+      briefsLoaded:false,
+      briefsViewed:false,
+      lastFetchLatLng:null,        // last lat/lng we fetched briefs for
+      lastFetchTs:0,
+      watchId:null,                // navigator.geolocation watch handle
+    };
+
+    // Keyboard avoidance for resize:'none' WebView.
+    // Strategy: when the keyboard appears, shift the whole chat container up
+    // by the exact keyboard height using transform: translateY. The chat is a
+    // flex column at 100dvh so its compose bar lands directly above the
+    // keyboard. Capacitor.Keyboard events give us the exact height on native;
+    // visualViewport is the fallback for mobile Safari and edge cases.
+    function setKbHeight(px){
+      px = Math.max(0, Math.round(px || 0));
+      var chat = document.getElementById('view-chat');
+      if(px > 80){
+        document.body.classList.add('kb-open');
+        document.body.style.setProperty('--kb-h', px + 'px');
+        if(chat) chat.classList.add('kb-up');
+        // Keep the latest message visible above the input as the chat shifts up
+        var msgs = document.getElementById('messages');
+        if(msgs){
+          requestAnimationFrame(function(){
+            msgs.scrollTop = msgs.scrollHeight;
+          });
+        }
+      } else {
+        document.body.classList.remove('kb-open');
+        document.body.style.setProperty('--kb-h', '0px');
+        if(chat) chat.classList.remove('kb-up');
+      }
+    }
+
+    (function setupKeyboardAvoidance(){
+      // 1) Capacitor Keyboard events — dispatched on `window` on iOS/Android.
+      //    keyboardWillShow fires before the keyboard animates in with the
+      //    exact final keyboardHeight, which is what we want.
+      window.addEventListener('keyboardWillShow', function(e){
+        var h = (e && (e.keyboardHeight || (e.detail && e.detail.keyboardHeight))) || 0;
+        if(h > 0) setKbHeight(h);
+      });
+      window.addEventListener('keyboardDidShow', function(e){
+        var h = (e && (e.keyboardHeight || (e.detail && e.detail.keyboardHeight))) || 0;
+        if(h > 0) setKbHeight(h);
+      });
+      window.addEventListener('keyboardWillHide', function(){ setKbHeight(0); });
+      window.addEventListener('keyboardDidHide',  function(){ setKbHeight(0); });
+
+      // 2) visualViewport fallback — for mobile Safari (no Capacitor events)
+      //    and to catch edge cases where the native event doesn't fire.
+      if(window.visualViewport){
+        var vv = window.visualViewport;
+        var vvUpdate = function(){
+          var kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+          setKbHeight(kbHeight);
+        };
+        vv.addEventListener('resize', vvUpdate);
+        vv.addEventListener('scroll', vvUpdate);
+      }
+
+      // 3) Defensive reset on blur — if no keyboard event fires (rare iOS
+      //    quirk after dismissing via the toolbar), focusout still tells us
+      //    the input lost focus.
+      document.addEventListener('focusout', function(){
+        setTimeout(function(){
+          if(window.visualViewport){
+            var vv2 = window.visualViewport;
+            var h = Math.max(0, window.innerHeight - vv2.height - vv2.offsetTop);
+            if(h < 80) setKbHeight(0);
+          } else {
+            setKbHeight(0);
+          }
+        }, 150);
+      });
+    })();
+
+    function $(id){return document.getElementById(id);}
+    function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    function headers(){return{'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
+    function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2400);}
+
+    function goView(name){
+      document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+      var v=$('view-'+name);if(v) v.classList.add('active');
+      state.view=name;
+      // in-chat locks body scroll so the chat container owns the viewport
+      if(name==='chat') document.body.classList.add('in-chat');
+      else document.body.classList.remove('in-chat');
+      window.scrollTo(0,0);
+      if(name==='chat'){
+        loadHistory();refreshBriefsBadge();startLocationWatch();
+        // Pin to latest message after layout settles
+        setTimeout(function(){
+          var msgs=$('messages');
+          if(msgs) msgs.scrollTop = msgs.scrollHeight;
+        }, 50);
+      }
+      else if(name==='briefs'){loadBriefs();state.briefsViewed=true;refreshBriefsBadge();startLocationWatch();}
+      else { stopLocationWatch(); }
+    }
+
+    function refreshBriefsBadge(){
+      var b=$('briefs-badge');if(!b)return;
+      b.style.display=(state.briefs.length && !state.briefsViewed)?'block':'none';
+    }
+    function renderBriefs(){
+      var list=$('briefs-list'), empty=$('briefs-empty');
+      if(!state.briefs.length){ list.innerHTML=''; empty.style.display='block'; return; }
+      empty.style.display='none';
+      list.innerHTML=state.briefs.map(function(b){
+        var actions=b.actions.map(function(a){
+          var def=ACTIONS[a];if(!def)return '';
+          return '<button class="brief-action'+(def.primary?' primary':'')+'" data-brief="'+esc(b.id)+'" data-action="'+esc(a)+'">'+
+                 '<i class="fa-solid '+def.icon+'"></i> '+esc(def.label)+'</button>';
+        }).join('');
+        // For pattern briefs we show the source ("FBI NIBRS") instead of "Recent activity"
+        var subline = (b.type==='PATTERN' && b.source) ? ('Source: '+esc(b.source)) : 'Recent activity';
+        return '<div class="brief-card" data-id="'+esc(b.id)+'">'+
+          '<div class="brief-head">'+
+            '<div class="brief-icon"><i class="fa-solid '+b.icon+'"></i></div>'+
+            '<div class="brief-meta"><div class="brief-type">'+esc(b.type)+'</div><div class="brief-time">'+subline+'</div></div>'+
+            '<button class="brief-dismiss" data-brief="'+esc(b.id)+'" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>'+
+          '</div>'+
+          '<div class="brief-body">'+esc(b.body)+'</div>'+
+          (actions?'<div class="brief-actions">'+actions+'</div>':'')+
+        '</div>';
+      }).join('');
+      list.querySelectorAll('.brief-action').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          var a=ACTIONS[btn.dataset.action];
+          if(a && a.go){ a.go(); }
+          if(btn.dataset.action==='dismiss'){ dismissBrief(btn.dataset.brief); }
+        });
+      });
+      list.querySelectorAll('.brief-dismiss').forEach(function(btn){
+        btn.addEventListener('click',function(){ dismissBrief(btn.dataset.brief); });
+      });
+    }
+    function dismissBrief(id){
+      state.briefs=state.briefs.filter(function(b){return b.id!==id;});
+      renderBriefs();refreshBriefsBadge();
+    }
+
+    // ---- Real-time location-aware briefs ----
+    // Distance between two lat/lng pairs (meters), Haversine.
+    function distMeters(a, b){
+      if(!a || !b) return Infinity;
+      var R=6371000, toRad=function(d){return d*Math.PI/180;};
+      var dLat=toRad(b.lat-a.lat), dLng=toRad(b.lng-a.lng);
+      var lat1=toRad(a.lat), lat2=toRad(b.lat);
+      var s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)*Math.sin(dLng/2);
+      return 2*R*Math.atan2(Math.sqrt(s),Math.sqrt(1-s));
+    }
+    function startLocationWatch(){
+      if(state.watchId!=null) return;
+      if(!navigator.geolocation || !navigator.geolocation.watchPosition) return;
+      try {
+        state.watchId = navigator.geolocation.watchPosition(
+          function(p){ onLocationUpdate(p.coords.latitude, p.coords.longitude); },
+          function(){ /* permission denied or transient — silent */ },
+          { enableHighAccuracy:false, maximumAge:120000, timeout:30000 }
+        );
+      } catch(e){ /* unsupported */ }
+    }
+    function stopLocationWatch(){
+      if(state.watchId==null) return;
+      try { navigator.geolocation.clearWatch(state.watchId); } catch(e){}
+      state.watchId=null;
+    }
+    async function onLocationUpdate(lat,lng){
+      var now={lat:lat,lng:lng};
+      var moved = distMeters(state.lastFetchLatLng, now);
+      var fresh = (Date.now() - state.lastFetchTs) < 120000;       // 2-min throttle
+      // Refresh if moved >= 100m, OR first lock and >= 60s since last (covers initial fetch).
+      if (state.lastFetchLatLng && moved < 100 && fresh) return;
+      state.lastFetchLatLng = now;
+      state.lastFetchTs = Date.now();
+      try {
+        var prevIds = {};
+        state.briefs.forEach(function(b){ prevIds[b.id]=1; });
+        var localHour=new Date().getHours();
+        var dow=new Date().getDay();
+        var url=API_BASE+'/api/ai/briefs?lat='+encodeURIComponent(lat)+'&lng='+encodeURIComponent(lng)+'&local_hour='+localHour+'&dow='+dow;
+        var res=await fetch(url,{headers:headers()});
+        if(!res.ok) return;
+        var data=await res.json();
+        var fetched=(data && data.briefs)||[];
+        if(!fetched.length) return;
+        // Detect NEW briefs (ids we didn't have before)
+        var newOnes = fetched.filter(function(b){ return !prevIds[b.id]; });
+        // Replace state with the fresh list (the API decides what's relevant for current location)
+        state.briefs = fetched.map(function(b){
+          return {
+            id:String(b.id),
+            type:String(b.type||'NOTE'),
+            icon:String(b.icon||'fa-shield-halved'),
+            body:String(b.body||''),
+            source:b.source?String(b.source):null,
+            actions:Array.isArray(b.actions)?b.actions:['dismiss'],
+          };
+        });
+        renderBriefs();
+        if(newOnes.length){
+          state.briefsViewed = (state.view === 'briefs');     // only mark viewed if user is on the briefs screen
+          refreshBriefsBadge();
+          var headline = newOnes[0].body.split('.')[0];
+          toast('Alessia: ' + headline.slice(0,80) + (headline.length>80?'…':''));
+        }
+      } catch(e){/* silent */}
+    }
+    function getQuickPosition(){
+      return new Promise(function(resolve){
+        if(!navigator.geolocation) return resolve(null);
+        navigator.geolocation.getCurrentPosition(
+          function(p){resolve({lat:p.coords.latitude,lng:p.coords.longitude});},
+          function(){resolve(null);},
+          {enableHighAccuracy:false, timeout:6000, maximumAge:300000}
+        );
+      });
+    }
+    async function loadBriefs(){
+      // Render whatever's cached immediately, then refresh.
+      renderBriefs();
+      if(state.briefsLoading) return;
+      state.briefsLoading=true;
+      var listEl=$('briefs-list');
+      var emptyEl=$('briefs-empty');
+      if(!state.briefs.length){
+        emptyEl.style.display='block';
+        emptyEl.innerHTML='<i class="fa-solid fa-shield-heart" style="font-size:28px;color:#FF6BA8;margin-bottom:10px"></i>'+
+          '<div style="font-size:14px;color:#9080A0;line-height:1.5">Alessia is gathering signals for your area…</div>';
+      }
+      try{
+        var loc=await getQuickPosition();
+        if(!loc){
+          // No location → fall back to canned briefs so user sees something useful
+          state.briefs=BRIEFS.slice();
+          state.briefsLoaded=true;
+          renderBriefs();
+          return;
+        }
+        var localHour=new Date().getHours();
+        var dow=new Date().getDay();
+        var url=API_BASE+'/api/ai/briefs?lat='+encodeURIComponent(loc.lat)+'&lng='+encodeURIComponent(loc.lng)+'&local_hour='+localHour+'&dow='+dow;
+        var res=await fetch(url,{headers:headers()});
+        if(!res.ok) throw new Error('briefs '+res.status);
+        var data=await res.json();
+        var fetched=(data && data.briefs)||[];
+        // Convert API briefs into the same shape as canned ones, mapping unknown actions to 'dismiss'.
+        var keepIds={};state.briefs.forEach(function(b){keepIds[b.id]=1;});
+        var fresh=fetched.map(function(b){
+          return {
+            id:String(b.id),
+            type:String(b.type||'NOTE'),
+            icon:String(b.icon||'fa-shield-halved'),
+            body:String(b.body||''),
+            source:b.source?String(b.source):null,
+            actions:Array.isArray(b.actions)?b.actions:['dismiss'],
+          };
+        });
+        // If API returned nothing AND we have no cached briefs, fall back to canned so the
+        // user has something rather than an empty screen.
+        if(!fresh.length && !state.briefs.length){
+          state.briefs=BRIEFS.slice();
+        } else if (fresh.length){
+          state.briefs=fresh;
+        }
+        state.briefsLoaded=true;
+        renderBriefs();
+      }catch(e){
+        if(!state.briefs.length){
+          state.briefs=BRIEFS.slice();
+          renderBriefs();
+        }
+      }finally{
+        state.briefsLoading=false;
+      }
+    }
+    window.goView=goView;
+    window.useDefault=function(){ saveAndStartChat(); };
+    window.confirmAlessia=function(){ saveAndStartChat(); };
+    window.goUpgrade=function(){ window.location.href=API_BASE+'/subscribe'; };
+
+    // ---- Renderers ----
+    function assetFor(styleId){
+      var A = (window.ALESSIA_ASSETS || {});
+      // Futuristic = LinkHer's flagship Alessia. Always show the high-quality
+      // default face for it (better resolution than the per-card thumbnail).
+      if (styleId === 'futuristic' && A.avatar_default) return A.avatar_default;
+      return A[styleId] || A.avatar_default || '';
+    }
+    function refreshAvatarTargets(){
+      // Meet hero always uses the high-quality default face (first impression).
+      // Preview / chat use the user's chosen style.
+      var A = (window.ALESSIA_ASSETS || {});
+      var styleSrc = assetFor(state.avatar_style);
+      document.querySelectorAll('img[data-asset-target]').forEach(function(img){
+        var target = img.getAttribute('data-asset-target');
+        var src = (target === 'meet') ? (A.avatar_default || styleSrc) : styleSrc;
+        if (src) img.src = src;
+        // Default face has the head positioned higher in frame than the per-style
+        // card crops, so use a different object-position for centered display.
+        if (src === A.avatar_default) img.classList.add('is-default');
+        else img.classList.remove('is-default');
+      });
+    }
+    function renderPresets(){
+      var grid=$('preset-grid');
+      var A = (window.ALESSIA_ASSETS || {});
+      grid.innerHTML=STYLES.map(function(s){
+        var src = A[s.id] || '';
+        return '<div class="preset'+(s.id===state.avatar_style?' selected':'')+'" data-id="'+esc(s.id)+'">'+
+               (src ? '<img class="thumb" src="'+src+'" alt="">' : '<div class="thumb" style="height:80%;background:radial-gradient(circle at 50% 35%,rgba(155,89,182,0.4),rgba(20,8,40,0.6))"></div>')+
+               '<div class="label">'+esc(s.label)+'</div>'+
+               '</div>';
+      }).join('');
+      grid.querySelectorAll('.preset').forEach(function(p){
+        p.addEventListener('click',function(){
+          state.avatar_style=p.dataset.id;
+          grid.querySelectorAll('.preset').forEach(function(x){x.classList.remove('selected');});
+          p.classList.add('selected');
+          refreshAvatarTargets();
+        });
+      });
+    }
+    function renderSwatches(rowId,colors,key){
+      var row=$(rowId);
+      row.innerHTML=colors.map(function(c){
+        var sel=(state[key]===c);
+        return '<div class="swatch'+(sel?' selected':'')+'" data-c="'+c+'" style="background:'+c+'"></div>';
+      }).join('');
+      row.querySelectorAll('.swatch').forEach(function(s){
+        s.addEventListener('click',function(){
+          state[key]=s.dataset.c;
+          row.querySelectorAll('.swatch').forEach(function(x){x.classList.remove('selected');});
+          s.classList.add('selected');
+        });
+      });
+    }
+    function renderPersonalityChips(){
+      $('personality-chips').querySelectorAll('.chip').forEach(function(c){
+        c.addEventListener('click',function(){
+          var v=c.dataset.val;
+          var i=state.personality_tones.indexOf(v);
+          if(i>=0){ state.personality_tones.splice(i,1); c.classList.remove('selected'); }
+          else { state.personality_tones.push(v); c.classList.add('selected'); }
+        });
+      });
+    }
+    function renderName(){
+      $('name-input').value=state.companion_name;
+      $('name-input').addEventListener('input',function(e){
+        state.companion_name=(e.target.value||'').trim()||'Alessia';
+        $('preview-name').textContent=state.companion_name;
+        $('chat-name').textContent=state.companion_name;
+      });
+    }
+    function renderVoiceSelect(){
+      $('voice-select').value=state.voice_tone;
+      $('voice-select').addEventListener('change',function(e){state.voice_tone=e.target.value;});
+    }
+
+    // ---- Chat ----
+    function autosize(el){
+      el.style.height='auto';
+      el.style.height=Math.min(el.scrollHeight,120)+'px';
+      // The compose grows from the bottom — keep the latest message visible
+      // as available space for messages shrinks.
+      var msgs=$('messages');
+      if(msgs) msgs.scrollTop = msgs.scrollHeight;
+    }
+    window.autosize=autosize;
+
+    function appendMsg(role,content){
+      state.messages.push({role:role,content:content});
+      var el=document.createElement('div');
+      el.className='msg '+(role==='user'?'user':'bot');
+      el.textContent=content;
+      var messagesEl=$('messages');
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop=messagesEl.scrollHeight;
+    }
+    function appendTyping(){
+      var el=document.createElement('div');
+      el.className='msg typing';el.id='typing';
+      el.innerHTML='<span></span><span></span><span></span>';
+      var messagesEl=$('messages');
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop=messagesEl.scrollHeight;
+    }
+    function removeTyping(){var t=$('typing');if(t) t.remove();}
+
+    async function loadHistory(){
+      try{
+        var res=await fetch(API_BASE+'/api/ai/chat?limit=50',{headers:headers()});
+        if(res.status===503){
+          $('messages').innerHTML='<div class="err-banner">Alessia is being prepared. Try again in a moment.</div>';
+          return;
+        }
+        if(!res.ok) return;
+        var data=await res.json();
+        $('messages').innerHTML='';
+        if(!data.messages||!data.messages.length){
+          appendMsg('bot',"Hi, I'm "+state.companion_name+". I'm here to help you feel safe, supported, and never alone.");
+        } else {
+          data.messages.forEach(function(m){ appendMsg(m.role==='assistant'?'bot':'user',m.content); });
+        }
+      }catch(e){/* silent */}
+    }
+    async function sendMessage(){
+      if(state.sending) return;
+      var input=$('msg-input');
+      var text=(input.value||'').trim();
+      if(!text) return;
+      input.value='';autosize(input);
+      appendMsg('user',text);
+      appendTyping();
+      state.sending=true;$('send-btn').disabled=true;
+      try{
+        var res=await fetch(API_BASE+'/api/ai/chat',{
+          method:'POST',headers:headers(),
+          body:JSON.stringify({message:text})
+        });
+        var data=await res.json();
+        removeTyping();
+        if(res.status===503){ appendMsg('bot',"I'm not quite online yet. Please try me again in a few moments."); }
+        else if(!res.ok){ appendMsg('bot',"Something went wrong on my end. "+(data.error||'')); }
+        else { appendMsg('bot',data.reply||"I heard you."); }
+      }catch(e){
+        removeTyping();
+        appendMsg('bot',"I couldn't reach the server. Are you online?");
+      } finally {
+        state.sending=false;$('send-btn').disabled=false;
+      }
+    }
+    window.sendMessage=sendMessage;
+    document.addEventListener('keydown',function(e){
+      if(state.view==='chat'&&e.key==='Enter'&&!e.shiftKey){
+        e.preventDefault();sendMessage();
+      }
+    });
+
+    // ---- Persist settings then start chat ----
+    async function saveAndStartChat(){
+      var btn=$('confirm-btn');
+      if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Saving…';}
+      try{
+        var personality=state.personality_tones.length?state.personality_tones.join(','):'gentle';
+        await fetch(API_BASE+'/api/ai/settings',{
+          method:'PUT',headers:headers(),
+          body:JSON.stringify({
+            companion_name:state.companion_name,
+            avatar_style:state.avatar_style,
+            theme_color:'linkher_neon',
+            tone:personality
+          })
+        });
+      }catch(e){/* non-blocking */}
+      finally{
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-check"></i> Confirm Alessia';}
+        goView('chat');
+      }
+    }
+
+    // ---- Boot ----
+    async function boot(){
+      // Try to load existing settings
+      try{
+        var res=await fetch(API_BASE+'/api/ai/settings',{headers:headers()});
+        if(res.ok){
+          var data=await res.json();
+          if(data.settings){
+            state.companion_name=data.settings.companion_name||state.companion_name;
+            state.avatar_style=data.settings.avatar_style||state.avatar_style;
+            // If user already onboarded, jump straight to chat
+            if(data.settings.onboarded_at){
+              renderName();
+              $('chat-name').textContent=state.companion_name;
+              refreshAvatarTargets();
+              goView('chat');
+              return;
+            }
+          }
+        }
+      }catch(e){/* fallthrough to onboarding */}
+
+      renderPresets();
+      renderSwatches('skin-row',SKIN_TONES,'skin_tone');
+      renderSwatches('hair-row',HAIR_COLORS,'hair_color');
+      renderSwatches('eye-row',EYE_COLORS,'eye_color');
+      renderPersonalityChips();
+      renderName();
+      renderVoiceSelect();
+      refreshAvatarTargets();
+      goView('meet');
+    }
+    boot();
+  })();
+  </script>
+</body>
+</html>

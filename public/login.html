@@ -17,22 +17,22 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#E8A0B5">
+  <meta name="theme-color" content="#FF40BD">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
-    <title>Log In - SafeTea</title>
+    <title>Log In - LinkHer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
             font-family: 'Inter', sans-serif;
-      background: #1A1A2E;
-      color: #F0D0C0;
+      background: #121826;
+      color: #FFFFFF;
             min-height: 100vh;
       display: flex;
       align-items: center;
@@ -53,7 +53,7 @@
 }
     .auth-logo img { height: 48px; width: auto; }
           .auth-card {
-            background: #22223A;
+            background: #1A1F2E;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 16px;
       padding: 40px;
@@ -92,7 +92,7 @@
       outline: none;
 }
     .form-group input:focus, .form-group select:focus {
-            border-color: #E8A0B5;
+            border-color: #FF40BD;
       }
           .form-group input::placeholder { color: #555; }
     .form-group .input-icon {
@@ -117,7 +117,7 @@
     .btn-primary {
             width: 100%;
       padding: 16px;
-      background: linear-gradient(135deg, #E8A0B5, #D4768E);
+      background: linear-gradient(135deg, #FF40BD, #8A2BE2);
               color: #fff;
               border: none;
       border-radius: 10px;
@@ -144,7 +144,7 @@
       color: #8080A0;
 }
     .auth-footer a {
-            color: #E8A0B5;
+            color: #FF40BD;
             text-decoration: none;
       font-weight: 500;
 }
@@ -190,7 +190,7 @@
       font-family: 'Inter', sans-serif;
 }
     .tab-switch button.active {
-      background: #E8A0B5;
+      background: #FF40BD;
             color: #fff;
             }
     .form-section { display: none; }
@@ -233,7 +233,7 @@
       align-items: center;
       gap: 6px;
 }
-    .back-link a:hover { color: #F0D0C0; }
+    .back-link a:hover { color: #FFFFFF; }
     .spinner {
             display: inline-block;
       width: 18px;
@@ -252,15 +252,12 @@
     <!-- Vercel Web Analytics + Speed Insights -->
     <script defer src="/_vercel/insights/script.js"></script>
     <script defer src="/_vercel/speed-insights/script.js"></script>
-    <link rel="stylesheet" href="/css/ios-keyboard-fix.css">
-    <script src="/js/ios-keyboard-fix.js" defer></script>
-    <script src="/js/sentry.js" defer></script>
 </head>
       <body>
         <div class="auth-container">
           <div class="auth-logo">
             <a href="/">
-              <img src="/logo.png?v=2" alt="SafeTea">
+              <img src="/linkher-icon.png" alt="LinkHer">
             </a>
           </div>
 
@@ -276,7 +273,7 @@
             <!-- LOGIN FORM -->
             <div id="login-form" class="form-section active">
               <h1>Welcome back</h1>
-              <p class="subtitle">Log in to access your SafeTea community</p>
+              <p class="subtitle">Log in to access your LinkHer community</p>
 
         <form onsubmit="handleLogin(event)">
           <div class="form-group">
@@ -302,7 +299,7 @@
                   <i class="fas fa-arrow-right"></i> Log In
           </button>
                 <div style="text-align:center;margin-top:12px">
-                  <a href="#" onclick="showForgotPassword();return false" style="color:#E8A0B5;font-size:13px;text-decoration:none">Forgot password?</a>
+                  <a href="#" onclick="showForgotPassword();return false" style="color:#FF40BD;font-size:13px;text-decoration:none">Forgot password?</a>
                 </div>
               </form>
             </div>
@@ -320,14 +317,14 @@
                   <i class="fas fa-paper-plane"></i> Send Reset Link
                 </button>
                 <div style="text-align:center;margin-top:12px">
-                  <a href="#" onclick="hideForgotPassword();return false" style="color:#E8A0B5;font-size:13px;text-decoration:none"><i class="fas fa-arrow-left"></i> Back to Login</a>
+                  <a href="#" onclick="hideForgotPassword();return false" style="color:#FF40BD;font-size:13px;text-decoration:none"><i class="fas fa-arrow-left"></i> Back to Login</a>
                 </div>
               </form>
             </div>
 
             <!-- REGISTER FORM -->
             <div id="register-form" class="form-section">
-              <h1>Join SafeTea</h1>
+              <h1>Join LinkHer</h1>
               <p class="subtitle">Create your account and join a safer dating community</p>
 
         <form onsubmit="handleRegister(event)">
@@ -361,7 +358,7 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label>City</label>
-                    <select id="reg-city" required style="width:100%;padding:12px 16px;background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
+                    <select id="reg-city" required style="width:100%;padding:12px 16px;background:#1A1F2E;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
                       <option value="" disabled selected style="color:#8080A0">Select your city</option>
                       <option value="Los Angeles">Los Angeles</option>
                       <option value="Miami">Miami</option>
@@ -376,13 +373,13 @@
                       <option value="other">My city isn't listed</option>
                     </select>
                     <div id="city-request-form" style="display:none;margin-top:8px">
-                      <input type="email" id="city-request-email" placeholder="Your email — we'll notify you when we expand" style="width:100%;padding:10px 14px;background:#22223A;border:1px solid rgba(232,160,181,0.3);border-radius:8px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
-                      <button type="button" onclick="submitCityRequest()" style="margin-top:6px;background:#E8A0B5;color:#1A1A2E;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Request My City</button>
+                      <input type="email" id="city-request-email" placeholder="Your email — we'll notify you when we expand" style="width:100%;padding:10px 14px;background:#1A1F2E;border:1px solid rgba(232,160,181,0.3);border-radius:8px;color:#fff;font-family:'Inter',sans-serif;font-size:13px;outline:none">
+                      <button type="button" onclick="submitCityRequest()" style="margin-top:6px;background:#FF40BD;color:#121826;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Request My City</button>
                     </div>
                   </div>
                   <div class="form-group">
                     <label>State</label>
-                    <select id="reg-state" required style="width:100%;padding:12px 16px;background:#22223A;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
+                    <select id="reg-state" required style="width:100%;padding:12px 16px;background:#1A1F2E;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
                       <option value="" disabled selected style="color:#8080A0">State</option>
                       <option value="IL">IL</option>
                       <option value="TX">TX</option>
@@ -396,19 +393,19 @@
                 </div>
 
                 <label style="display:flex;align-items:flex-start;gap:10px;margin:8px 0 14px;font-size:13px;color:#C8C8E0;line-height:1.5;cursor:pointer">
-                  <input type="checkbox" id="reg-consent" required style="margin-top:3px;flex-shrink:0;accent-color:#E8A0B5;width:16px;height:16px;cursor:pointer">
-                  <span>I am 18 or older and I agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:#E8A0B5">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:#E8A0B5">Privacy Policy</a>.</span>
+                  <input type="checkbox" id="reg-consent" required style="margin-top:3px;flex-shrink:0;accent-color:#FF40BD;width:16px;height:16px;cursor:pointer">
+                  <span>I am 18 or older and I agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:#FF40BD">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:#FF40BD">Privacy Policy</a>.</span>
                 </label>
 
                 <button type="submit" class="btn-primary" id="register-btn">
-                  <img src="/images/safetea-logo.svg" alt="" style="height:18px"> Create Account
+                  <img src="/linkher-icon.png" alt="" style="height:18px"> Create Account
           </button>
               </form>
             </div>
           </div>
 
           <div class="back-link">
-            <a href="/"><i class="fas fa-arrow-left"></i> Back to SafeTea</a>
+            <a href="/"><i class="fas fa-arrow-left"></i> Back to LinkHer</a>
     </div>
   </div>
 
@@ -425,7 +422,7 @@
     function submitCityRequest() {
       const email = document.getElementById('city-request-email').value.trim();
       if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return; }
-      alert('Thanks! We\'ll notify you at ' + email + ' when SafeTea expands to your city.');
+      alert('Thanks! We\'ll notify you at ' + email + ' when LinkHer expands to your city.');
       document.getElementById('city-request-form').style.display = 'none';
       document.getElementById('reg-city').value = '';
     }
@@ -480,21 +477,6 @@
       var params = new URLSearchParams(window.location.search);
       var ref = params.get('ref');
       if (ref) localStorage.setItem('safetea_referral_code', ref);
-
-      // Account-scheduled-for-deletion banner. The settings.html redirects
-      // here with ?deleted=1 right after a successful POST /api/account/delete.
-      if (params.get('deleted') === '1') {
-        try {
-          // Clear any stale session so the user sees the login form.
-          localStorage.removeItem('safetea_token');
-          localStorage.removeItem('safetea_user');
-        } catch (_) {}
-        var el = document.getElementById('success-msg');
-        if (el) {
-          el.textContent = 'Your account is scheduled for deletion. Check email to undo within 30 days.';
-          el.style.display = 'block';
-        }
-      }
     })();
 
     function togglePassword(inputId, btn) {
@@ -594,7 +576,7 @@
       } catch (err) {
         showError(err.message);
         btn.disabled = false;
-        btn.innerHTML = '<img src="/images/safetea-logo.svg" alt="" style="height:18px"> Create Account';
+        btn.innerHTML = '<img src="/linkher-icon.png" alt="" style="height:18px"> Create Account';
 }
 }
 

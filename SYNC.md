@@ -722,3 +722,23 @@ Implemented the page-side delta you asked for against the locked deep-link URL s
 - Files touched: `public/save-to-vault.html` only. Syntax verified (parse-only). No backend/API change.
 - Status: DONE (web side). Gated on MAC adding `@capacitor/filesystem` + shipping build 37 with the Share Extension target wired in pbxproj.
 - Needs from MAC: install `@capacitor/filesystem` in the iOS shell; finish the Share Extension pbxproj wire-up (still BLOCKED on the operator portal work noted in your build-36 entry). Then end-to-end test: share a photo from Photos → app icon → tap → lands in vault under "Shared from Apps".
+
+### [2026-06-17 12:30 CT] PC → MAC | DONE | Community Safety Reports — briefs layer 3 shipped (backend)
+
+Finished the stubbed community-reports layer of the Alessia briefs system. The `fetchCommunityReports()` placeholder in `api/ai/briefs.js` now returns real aggregated briefs instead of `[]`. No iOS work needed — the briefs surface is web (`getsafetea.app/alessia.html`) inside the WebView, so this flows to mobile automatically once deployed.
+
+**What shipped (all backend, cross-platform `api/`):**
+- `api/migrate-safety-briefs.js` — creates `safety_briefs` table + geo/recency/status/user indexes. `x-migrate-secret: MIGRATE_SECRET` auth, idempotent (same pattern as `migrate-area-alerts.js`).
+- `api/community/safety-report.js` — `POST` files an experience-in-a-place report; `GET` returns the caller's own reports only (raw third-party reports are never exposed — they surface only aggregated/anonymized as briefs). Auth required, ban-gated, 6 reports/user/day cap, lazy `CREATE TABLE IF NOT EXISTS` so it works even if the migration hasn't run.
+- `api/_utils/safety-report-categories.js` — fixed category vocabulary (no free-form), calm brief copy builder, shared by the reader + writer.
+- `api/ai/briefs.js` — `fetchCommunityReports()` now does bounding-box SQL + JS Haversine (5km / 7 days), aggregates by category, returns the top 2 as calm briefs. **Used JS Haversine, NOT the `earthdistance`/`cube` extension the old code comment assumed** — Neon doesn't have it enabled and the rest of the repo (area-alerts) already uses the box+Haversine pattern.
+- `vercel.json` — added rewrites for `/api/community/safety-report` and `/api/migrate-safety-briefs` (consistent with the existing identity rewrites; filesystem routing also covers them).
+
+**Safety/legal guardrails baked in:** reports are about *places, not people*. The note field is screened for structured PII (email/phone/SSN/street address) and for full names (reuses `checkForFullNames`); both are rejected with a clear message. Brief copy follows the Alessia tone rules (no "danger/unsafe/attack"; uses "Alessia noticed", "reported", "consider"). Verified shape + tone across all categories/counts and PII detection with a local test pass.
+
+**Operator (optional, perf only):** `POST /api/migrate-safety-briefs` with `x-migrate-secret: $MIGRATE_SECRET` to add the table + indexes ahead of first write. Not required to function — the write path self-creates the table and the reader is resilient to it being absent.
+
+**Natural follow-up (not in this scope):** a report-submission UI (web card on alessia.html and/or the mobile app) so users actually generate reports. The `POST /api/community/safety-report` contract is ready for it: `{ category, latitude, longitude, note?, city? }` where category ∈ {followed, harassment, uncomfortable, drink_safety, unsafe_venue, aggression, other}.
+
+- Files: `api/ai/briefs.js`, `api/community/safety-report.js`, `api/migrate-safety-briefs.js`, `api/_utils/safety-report-categories.js`, `vercel.json`. Syntax-checked; logic unit-tested locally.
+- Status: DONE (backend). Needs from MAC: none.

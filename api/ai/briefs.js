@@ -20,12 +20,29 @@
 'use strict';
 
 const { authenticate, cors } = require('../_utils/auth');
+const { getMany } = require('../_utils/db');
 const { lookupPlaceType } = require('../../services/safety/osm');
 const { matchPatterns } = require('../../services/safety/crime-patterns');
+const { buildCommunityBrief } = require('../_utils/safety-report-categories');
 
 const CACHE = new Map();              // key -> { at, briefs }
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const NWS_USER_AGENT = '(LinkHer SafeTea Companion, contact: njwarner25@gmail.com)';
+
+const COMMUNITY_RADIUS_M = 5000;      // ~5km, matches the briefs comment
+const COMMUNITY_WINDOW_DAYS = 7;
+const COMMUNITY_MAX_BRIEFS = 2;       // top categories only — keep the surface uncluttered
+
+function haversineMeters(lat1, lng1, lat2, lng2) {
+    const toRad = function (d) { return d * Math.PI / 180; };
+    const R = 6371000;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2))
+        * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 function bucket(n) { return (Math.round(n * 20) / 20).toFixed(2); }      // ~5km buckets
 function inUS(lat, lng) {
@@ -80,12 +97,39 @@ function timeOfDayBrief(localHour) {
 }
 
 async function fetchCommunityReports(lat, lng) {
-    // PLACEHOLDER: returns [] until the safety_briefs table + reporting flow ships.
-    // When implemented, query: SELECT id, type, body, lat, lng, created_at FROM safety_briefs
-    // WHERE created_at > NOW() - INTERVAL '7 days'
-    //   AND earth_box(ll_to_earth($lat,$lng), 5000) @> ll_to_earth(lat,lng)
-    // ORDER BY created_at DESC LIMIT 5
-    return [];
+    // Aggregates active community safety reports within ~5km / 7 days into
+    // calm, anonymized briefs (one per top category). Raw reports are never
+    // surfaced individually. Bounding box in SQL, exact radius in JS — the
+    // same pattern as api/area-alerts/check.js (no earthdistance extension
+    // required on Neon). Stays honest-empty on any error / missing table.
+    try {
+        const latDelta = COMMUNITY_RADIUS_M / 111111;
+        const lngDelta = COMMUNITY_RADIUS_M / (111111 * Math.max(0.0001, Math.cos(lat * Math.PI / 180)));
+        const rows = await getMany(
+            `SELECT category, latitude, longitude
+               FROM safety_briefs
+              WHERE status = 'active'
+                AND created_at > NOW() - INTERVAL '1 day' * $5
+                AND latitude BETWEEN $1 AND $2
+                AND longitude BETWEEN $3 AND $4`,
+            [lat - latDelta, lat + latDelta, lng - lngDelta, lng + lngDelta, COMMUNITY_WINDOW_DAYS]
+        );
+        if (!rows || !rows.length) return [];
+
+        const counts = {};
+        for (const r of rows) {
+            if (r.latitude == null || r.longitude == null) continue;
+            if (haversineMeters(lat, lng, Number(r.latitude), Number(r.longitude)) > COMMUNITY_RADIUS_M) continue;
+            counts[r.category] = (counts[r.category] || 0) + 1;
+        }
+
+        return Object.keys(counts)
+            .sort(function (a, b) { return counts[b] - counts[a]; })
+            .slice(0, COMMUNITY_MAX_BRIEFS)
+            .map(function (cat) { return buildCommunityBrief(cat, counts[cat], COMMUNITY_WINDOW_DAYS); });
+    } catch (e) {
+        return [];
+    }
 }
 
 async function fetchCrimeAdapter(lat, lng) {

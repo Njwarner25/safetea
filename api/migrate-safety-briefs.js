@@ -37,8 +37,13 @@ module.exports = async function handler(req, res) {
       longitude DOUBLE PRECISION NOT NULL,
       city VARCHAR(120),
       status VARCHAR(20) NOT NULL DEFAULT 'active',
+      moderated_by INTEGER,
+      moderated_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`;
+    // Backfill audit columns onto tables created by an earlier version.
+    await sql`ALTER TABLE safety_briefs ADD COLUMN IF NOT EXISTS moderated_by INTEGER`;
+    await sql`ALTER TABLE safety_briefs ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMPTZ`;
     done.push('safety_briefs');
 
     // Geo + window scans (the briefs reader filters by bounding box, then

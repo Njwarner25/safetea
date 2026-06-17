@@ -114,6 +114,7 @@
         { "source": "/api/admin/posts/bulk-flag", "destination": "/api/admin/posts/bulk-flag" },
         { "source": "/api/admin/posts/:id/moderate", "destination": "/api/admin/posts/[id]/moderate" },
         { "source": "/api/admin/posts", "destination": "/api/admin/posts" },
+        { "source": "/api/admin/safety-reports", "destination": "/api/admin/safety-reports" },
         { "source": "/api/users/search", "destination": "/api/users/search" },
         { "source": "/api/photos/upload", "destination": "/api/photos/upload" },
         { "source": "/api/photos/extract", "destination": "/api/photos/extract" },

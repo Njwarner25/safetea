@@ -22,6 +22,7 @@ const { authenticate, cors, parseBody } = require('../_utils/auth');
 const { getOne, getMany, run } = require('../_utils/db');
 const { checkForFullNames } = require('../_utils/check-fullname');
 const { isValidCategory, categoryKeys } = require('../_utils/safety-report-categories');
+const { ensureSafetyBriefsSchema } = require('../_utils/safety-briefs-schema');
 
 const DAILY_LIMIT = 6;          // reports per user per day (anti-spam)
 const NOTE_MAX = 500;
@@ -42,20 +43,6 @@ function detectPII(text) {
   return null;
 }
 
-async function ensureSchema() {
-  await run(`CREATE TABLE IF NOT EXISTS safety_briefs (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    category VARCHAR(40) NOT NULL,
-    note TEXT,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
-    city VARCHAR(120),
-    status VARCHAR(20) NOT NULL DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  )`);
-}
-
 function isBanned(user) {
   if (!user.banned) return false;
   const tempExpired = user.ban_type === 'temporary' && user.ban_until && new Date(user.ban_until) < new Date();
@@ -70,7 +57,7 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
-    await ensureSchema();
+    await ensureSafetyBriefsSchema(run);
 
     if (req.method === 'GET') {
       const mine = await getMany(

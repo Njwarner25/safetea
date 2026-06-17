@@ -219,6 +219,7 @@
             <a data-section="moderators"><i class="fas fa-user-shield"></i> Moderators</a>
             <a data-section="cities"><i class="fas fa-city"></i> City Feeds</a>
             <a data-section="room-reports"><i class="fas fa-door-open"></i> Room Reports</a>
+            <a data-section="safety-reports"><i class="fas fa-triangle-exclamation"></i> Safety Reports</a>
             <a data-section="feedback"><i class="fas fa-comment-dots"></i> Feedback</a>
             <a data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a>
             <a data-section="settings"><i class="fas fa-cog"></i> Settings</a>
@@ -461,6 +462,33 @@
                     <p style="font-size:13px;color:#8080A0;margin-bottom:4px">Posts reported by room members for review.</p>
                 </div>
                 <div id="room-reports-list">
+                    <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading reports...</div>
+                </div>
+            </div>
+
+            <!-- COMMUNITY SAFETY REPORTS -->
+            <div id="section-safety-reports" class="section">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" style="color:#2ecc71" id="sr-count-active">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Flagged</div><div class="stat-value" style="color:#f1c40f" id="sr-count-flagged">&mdash;</div></div>
+                    <div class="stat-card"><div class="stat-label">Removed</div><div class="stat-value" style="color:#e74c3c" id="sr-count-removed">&mdash;</div></div>
+                </div>
+                <div class="card" style="margin-bottom:20px">
+                    <h3><i class="fas fa-triangle-exclamation"></i> Community Safety Reports</h3>
+                    <p style="font-size:13px;color:#8080A0;margin-bottom:0">User-submitted area concerns that feed Alessia briefs. Active reports surface to nearby users — remove or flag anything off-policy. Reports describe places, not people.</p>
+                </div>
+                <div class="mod-toolbar">
+                    <div class="mod-filters">
+                        <select class="mod-filter" id="sr-filter-status" onchange="loadSafetyReports()">
+                            <option value="active" selected>Active</option>
+                            <option value="flagged">Flagged</option>
+                            <option value="removed">Removed</option>
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" onclick="loadSafetyReports()"><i class="fas fa-rotate"></i> Refresh</button>
+                </div>
+                <div id="safety-reports-list">
                     <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading reports...</div>
                 </div>
             </div>
@@ -729,6 +757,7 @@
                 if (section === 'cities') loadCities();
                 if (section === 'reports') loadReports();
                 if (section === 'room-reports') loadRoomReports();
+                if (section === 'safety-reports') loadSafetyReports();
                 if (section === 'feedback') loadFeedback();
                 if (section === 'ai-tasks') loadAiTasks();
                 if (section === 'removal-requests') loadRemovalRequests();
@@ -737,6 +766,64 @@
 
         function authHeaders() {
             return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+        }
+
+        // ── Community Safety Reports moderation ──
+        var SR_CAT_LABELS = {
+            followed: 'Being followed', harassment: 'Harassment', uncomfortable: 'Someone uncomfortable',
+            drink_safety: 'Drink safety', unsafe_venue: 'Uncomfortable venue', aggression: 'Aggressive behavior', other: 'Something else'
+        };
+        function srEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        async function loadSafetyReports() {
+            var listEl = document.getElementById('safety-reports-list');
+            var status = document.getElementById('sr-filter-status').value;
+            listEl.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading reports...</div>';
+            try {
+                var res = await fetch(API_BASE + '/admin/safety-reports' + (status ? ('?status=' + encodeURIComponent(status)) : ''), { headers: authHeaders() });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                var c = data.counts || {};
+                document.getElementById('sr-count-active').textContent = c.active || 0;
+                document.getElementById('sr-count-flagged').textContent = c.flagged || 0;
+                document.getElementById('sr-count-removed').textContent = c.removed || 0;
+                renderSafetyReports(data.reports || []);
+            } catch (e) {
+                listEl.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Couldn’t load reports. ' + srEsc(e.message) + '</p></div>';
+            }
+        }
+        function renderSafetyReports(reports) {
+            var listEl = document.getElementById('safety-reports-list');
+            if (!reports.length) {
+                listEl.innerHTML = '<div class="empty-state"><i class="fas fa-shield-heart"></i><p>No reports in this view.</p></div>';
+                return;
+            }
+            listEl.innerHTML = reports.map(function (r) {
+                var when = new Date(r.created_at).toLocaleString();
+                var cat = SR_CAT_LABELS[r.category] || r.category;
+                var reporter = r.display_name ? srEsc(r.display_name) : (r.email ? srEsc(r.email) : ('user #' + (r.user_id || '?')));
+                var loc = (r.city ? srEsc(r.city) + ' · ' : '') + Number(r.latitude).toFixed(4) + ', ' + Number(r.longitude).toFixed(4);
+                var statusColor = r.status === 'active' ? '#2ecc71' : (r.status === 'flagged' ? '#f1c40f' : '#e74c3c');
+                var actions = '';
+                if (r.status !== 'removed') actions += '<button class="btn btn-danger btn-sm" onclick="moderateSafetyReport(' + r.id + ',\'remove\')"><i class="fas fa-trash"></i> Remove</button>';
+                if (r.status !== 'flagged') actions += '<button class="btn btn-flag btn-sm" onclick="moderateSafetyReport(' + r.id + ',\'flag\')"><i class="fas fa-flag"></i> Flag</button>';
+                if (r.status !== 'active') actions += '<button class="btn btn-approve btn-sm" onclick="moderateSafetyReport(' + r.id + ',\'restore\')"><i class="fas fa-rotate-left"></i> Restore</button>';
+                return '<div class="card" style="margin-bottom:12px">'
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">'
+                    + '<span style="font-weight:700;color:#fff"><i class="fas fa-location-dot" style="color:#E8A0B5"></i> ' + srEsc(cat) + '</span>'
+                    + '<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:' + statusColor + '">' + srEsc(r.status) + '</span>'
+                    + '</div>'
+                    + (r.note ? '<p style="font-size:14px;color:#F0D0C0;margin-bottom:8px;white-space:pre-wrap">' + srEsc(r.note) + '</p>' : '<p style="font-size:13px;color:#555;font-style:italic;margin-bottom:8px">No note provided.</p>')
+                    + '<div style="font-size:12px;color:#8080A0;margin-bottom:10px">' + loc + ' · ' + srEsc(when) + ' · by ' + reporter + '</div>'
+                    + '<div style="display:flex;gap:8px;flex-wrap:wrap">' + actions + '</div>'
+                    + '</div>';
+            }).join('');
+        }
+        async function moderateSafetyReport(id, action) {
+            try {
+                var res = await fetch(API_BASE + '/admin/safety-reports', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ id: id, action: action }) });
+                if (!res.ok) { var d = {}; try { d = await res.json(); } catch (_) {} alert('Action failed: ' + (d.error || res.status)); return; }
+                loadSafetyReports();
+            } catch (e) { alert('Network error: ' + e.message); }
         }
 
         function showToast(msg, isError = false) {

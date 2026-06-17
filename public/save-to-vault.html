@@ -175,7 +175,14 @@
 
     var TOKEN_KEY = 'safetea_token';
     var STASH_KEY = 'safetea_share_pending';
+    var IOS_STASH_KEY = 'ios_share_pending';
     var FOLDER_NAME = 'Shared from Apps';
+
+    // Set by the iOS Share Extension path; invoked by renderSuccess so the
+    // sessionStorage payload and the on-disk inbox file are cleared only
+    // after the file is safely in the vault (lets a mid-flow login bounce
+    // resume from disk).
+    var iosShareCleanup = null;
 
     function $(id) { return document.getElementById(id); }
     function fmtSize(n) {
@@ -210,6 +217,62 @@
         txt: 'text/plain',
       };
       return map[ext] || '';
+    }
+
+    // -------- iOS Share Extension bridge --------
+    // The native Share Extension drops the shared file into the App Group
+    // container and deep-links the WebView with a payload stashed at
+    // sessionStorage[IOS_STASH_KEY]:
+    //   { filePath, name, mime, source: 'ios_share_extension', ts }
+    // We read the bytes back through the Capacitor Filesystem plugin (an
+    // https-origin WebView cannot fetch() a file:// path directly).
+
+    function getCapacitorFs() {
+      try {
+        var cap = window.Capacitor;
+        if (cap && cap.Plugins && cap.Plugins.Filesystem) return cap.Plugins.Filesystem;
+      } catch (_) {}
+      return null;
+    }
+
+    function toFileUrl(p) {
+      if (!p) return p;
+      if (p.indexOf('file://') === 0) return p;
+      if (p.charAt(0) === '/') return 'file://' + p;
+      return p;
+    }
+
+    function base64ToBlob(b64, mime) {
+      var byteChars = atob(b64);
+      var len = byteChars.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) bytes[i] = byteChars.charCodeAt(i);
+      return new Blob([bytes], { type: mime || 'application/octet-stream' });
+    }
+
+    // Reads the App Group file and returns a File (or a name-tagged Blob on
+    // older WebViews) the existing upload path can consume unchanged.
+    async function readIosShareFile(fs, fileUrl, name, mime) {
+      var res = await fs.readFile({ path: fileUrl });
+      var data = res && res.data;
+      if (data == null) throw new Error('empty file data');
+      var resolvedName = name || 'shared-file';
+      var resolvedMime = (mime || '').toLowerCase() || inferMimeFromName(resolvedName) || '';
+      var blob;
+      if (typeof data === 'string') {
+        // Capacitor returns base64 when no text encoding is requested.
+        blob = base64ToBlob(data, resolvedMime);
+      } else if (data instanceof Blob) {
+        blob = data;
+      } else {
+        throw new Error('unsupported file data type');
+      }
+      try {
+        return new File([blob], resolvedName, { type: resolvedMime || blob.type || '' });
+      } catch (_) {
+        blob.name = resolvedName;
+        return blob;
+      }
     }
 
     // -------- Step 1: get the shared file(s) from SW or sessionStorage --------
@@ -478,6 +541,10 @@
     }
 
     function renderSuccess(savedCount) {
+      if (iosShareCleanup) {
+        try { iosShareCleanup(); } catch (_) {}
+        iosShareCleanup = null;
+      }
       var card = $('card-stage');
       card.classList.add('success-card');
       card.innerHTML =
@@ -493,42 +560,9 @@
       setTimeout(function () { location.href = '/vault.html'; }, 3000);
     }
 
-    // -------- Main flow --------
+    // -------- Shared upload routine (web + iOS share paths) --------
 
-    async function main() {
-      var token = getToken();
-      var stash = await loadSharedFiles();
-
-      if (!stash) {
-        renderEmpty(
-          'If you just shared a file from another app, make sure you opened it ' +
-          'through the home screen install.'
-        );
-        return;
-      }
-
-      if (stash.metaOnly) {
-        renderEmpty(
-          'Please go back to the other app and share again — we needed you to ' +
-          'sign in first.'
-        );
-        return;
-      }
-
-      var files = (stash.files || []).filter(function (f) { return f && f.size; });
-      if (!files.length) {
-        renderEmpty('Only text was shared. Pick a file to save it to your vault.');
-        return;
-      }
-
-      // Auth gate: redirect to login if needed.
-      if (!token) {
-        bounceToLogin(files.map(function (f) {
-          return { name: f.name, size: f.size, type: f.type };
-        }));
-        return;
-      }
-
+    async function processFiles(files, token) {
       $('stage-title').textContent = 'Saving ' + files.length + ' ' +
         (files.length === 1 ? 'item' : 'items') + ' to your Vault';
       $('stage-subtitle').textContent = 'We’ll drop ' +
@@ -583,6 +617,104 @@
       }
 
       renderSuccess(saved);
+    }
+
+    // -------- iOS Share Extension flow --------
+
+    async function mainIos(iosRaw) {
+      var payload;
+      try { payload = JSON.parse(iosRaw); } catch (_) { payload = null; }
+      if (!payload || !payload.filePath) {
+        try { sessionStorage.removeItem(IOS_STASH_KEY); } catch (_) {}
+        renderEmpty('We couldn’t read the file that was shared. Please try sharing it again.');
+        return;
+      }
+
+      // Auth gate first. The payload survives the login round-trip in
+      // sessionStorage and the file stays on disk in the App Group container,
+      // so we re-enter this path after sign-in — no metadata stash needed.
+      var token = getToken();
+      if (!token) {
+        location.replace('/login.html?next=' + encodeURIComponent('/save-to-vault.html'));
+        return;
+      }
+
+      var fs = getCapacitorFs();
+      if (!fs) {
+        try { sessionStorage.removeItem(IOS_STASH_KEY); } catch (_) {}
+        renderError('This shared file couldn’t be read on this device.',
+          function () { location.href = '/vault.html'; });
+        return;
+      }
+
+      $('stage-title').textContent = 'Reading shared file…';
+      $('stage-subtitle').textContent = 'One moment while we load what you sent.';
+      $('progress-row').style.display = 'flex';
+      $('progress-text').textContent = 'Reading…';
+
+      var fileUrl = toFileUrl(payload.filePath);
+      var file;
+      try {
+        file = await readIosShareFile(fs, fileUrl, payload.name, payload.mime);
+      } catch (e) {
+        console.warn('[save-to-vault] iOS read failed:', e && e.message);
+        try { sessionStorage.removeItem(IOS_STASH_KEY); } catch (_) {}
+        renderError('We couldn’t read the shared file. Please try sharing it again.',
+          function () { location.href = '/vault.html'; });
+        return;
+      }
+
+      // Clear the stash + on-disk inbox file only once the upload succeeds.
+      iosShareCleanup = function () {
+        try { sessionStorage.removeItem(IOS_STASH_KEY); } catch (_) {}
+        try { fs.deleteFile({ path: fileUrl }); } catch (_) {}
+      };
+
+      return processFiles([file], token);
+    }
+
+    // -------- Main flow --------
+
+    async function main() {
+      // iOS Share Extension path takes priority over the web SW path.
+      var iosRaw = null;
+      try { iosRaw = sessionStorage.getItem(IOS_STASH_KEY); } catch (_) {}
+      if (iosRaw) { return mainIos(iosRaw); }
+
+      var token = getToken();
+      var stash = await loadSharedFiles();
+
+      if (!stash) {
+        renderEmpty(
+          'If you just shared a file from another app, make sure you opened it ' +
+          'through the home screen install.'
+        );
+        return;
+      }
+
+      if (stash.metaOnly) {
+        renderEmpty(
+          'Please go back to the other app and share again — we needed you to ' +
+          'sign in first.'
+        );
+        return;
+      }
+
+      var files = (stash.files || []).filter(function (f) { return f && f.size; });
+      if (!files.length) {
+        renderEmpty('Only text was shared. Pick a file to save it to your vault.');
+        return;
+      }
+
+      // Auth gate: redirect to login if needed.
+      if (!token) {
+        bounceToLogin(files.map(function (f) {
+          return { name: f.name, size: f.size, type: f.type };
+        }));
+        return;
+      }
+
+      return processFiles(files, token);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

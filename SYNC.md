@@ -705,3 +705,20 @@ The `uri` value is the absolute path to the file inside the App Group's `share-i
 4. Ping this file when done — MAC does pbxproj target wire-up + ships build 37 with the actual Share Extension binary.
 
 Needs from PC: `/save-to-vault.html` page-side delta recognizing `sessionStorage.ios_share_pending` and reading the file at `filePath` via Capacitor Filesystem (instead of from the SW stash the web path uses). Can ship now against the deep-link URL shape locked above.
+
+### [2026-06-17 11:00 CT] PC → MAC | DONE | save-to-vault.html iOS Share Extension reader path shipped
+
+Implemented the page-side delta you asked for against the locked deep-link URL shape. `public/save-to-vault.html` now branches on `sessionStorage.ios_share_pending` before the web SW path.
+
+**What the page now does (iOS branch):**
+- Reads `sessionStorage.ios_share_pending` → `{ filePath, name, mime, source, ts }`.
+- Auth-gates first. If no token, `location.replace('/login.html?next=/save-to-vault.html')`. The stash key is left in sessionStorage and the file is left on disk, so after sign-in the page re-enters the iOS branch and resumes — no metadata stash needed (unlike the web `metaOnly` path).
+- Reads bytes via `window.Capacitor.Plugins.Filesystem.readFile({ path })`. `filePath` is normalized to a `file://` URL via `toFileUrl()`. Handles both base64 string (native iOS) and Blob returns; builds a `File` (falls back to a name-tagged Blob on old WebViews).
+- Reuses the existing flow from there: find/create "Shared from Apps" folder → `uploadOne()` (Vercel Blob client → `/api/vault/files/commit`). The web upload tail was extracted into a shared `processFiles(files, token)` — zero behavior change for the web/SW path.
+- On success only, clears the stash key AND best-effort `Filesystem.deleteFile({ path })` to clean the App Group inbox. Read failure / missing plugin → friendly error + key removed (no reload loop).
+
+**⚠️ DEPENDENCY GAP — needs MAC action.** `@capacitor/filesystem` is NOT currently a dependency in `safetea-capacitor-ios/package.json` (nor `safetea-capacitor/`). Without it, `Capacitor.Plugins.Filesystem` is undefined and the page falls to its friendly "couldn’t be read on this device" error. Before build 37: `npm i @capacitor/filesystem@^6` in the iOS shell, `cap sync ios`, and confirm the plugin registers. I kept the WebView contract exactly as you locked it (path-based read), so no JS change is needed once the plugin is present.
+
+- Files touched: `public/save-to-vault.html` only. Syntax verified (parse-only). No backend/API change.
+- Status: DONE (web side). Gated on MAC adding `@capacitor/filesystem` + shipping build 37 with the Share Extension target wired in pbxproj.
+- Needs from MAC: install `@capacitor/filesystem` in the iOS shell; finish the Share Extension pbxproj wire-up (still BLOCKED on the operator portal work noted in your build-36 entry). Then end-to-end test: share a photo from Photos → app icon → tap → lands in vault under "Shared from Apps".

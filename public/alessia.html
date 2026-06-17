@@ -301,6 +301,47 @@
     .brief-action i{font-size:11px}
     .briefs-empty{text-align:center;padding:60px 24px 20px}
 
+    .report-cta{margin-top:20px}
+    .report-cta .hint{font-size:11px;color:#7e6f8a;text-align:center;margin-top:8px}
+    .sheet-overlay{
+      position:fixed;inset:0;z-index:60;display:none;
+      align-items:flex-end;justify-content:center;
+      background:rgba(10,4,20,0.62);backdrop-filter:blur(4px);
+    }
+    .sheet-overlay.show{display:flex}
+    .sheet{
+      width:100%;max-width:560px;max-height:88vh;overflow-y:auto;
+      background:#1a0f26;border:1px solid rgba(255,107,168,0.18);border-bottom:none;
+      border-top-left-radius:22px;border-top-right-radius:22px;
+      padding:18px 18px calc(20px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -10px 40px rgba(10,4,20,0.6);animation:sheetUp .28s ease;
+    }
+    @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+    .sheet-grab{width:40px;height:4px;border-radius:999px;background:rgba(255,255,255,0.18);margin:2px auto 14px}
+    .sheet h2{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+    .sheet .sheet-sub{font-size:12.5px;color:#9080A0;line-height:1.5;margin-bottom:6px}
+    .cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0 4px}
+    .cat-chip{
+      display:flex;align-items:center;gap:10px;padding:13px 12px;border-radius:14px;
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+      color:#E8D8F0;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;text-align:left;
+      transition:transform .1s ease;
+    }
+    .cat-chip:active{transform:scale(0.98)}
+    .cat-chip i{color:#FF6BA8;font-size:15px;width:18px;text-align:center;flex-shrink:0}
+    .cat-chip.selected{background:linear-gradient(135deg,rgba(255,107,168,0.22),rgba(155,89,182,0.22));border-color:#FF6BA8}
+    .report-note{
+      width:100%;margin-top:14px;padding:12px;border-radius:12px;resize:none;
+      background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+      color:#fff;font-family:inherit;font-size:14px;line-height:1.5;
+    }
+    .report-note:focus{outline:none;border-color:#FF6BA8}
+    .report-loc{font-size:12px;color:#7e6f8a;margin:12px 0 0;display:flex;align-items:center;gap:7px}
+    .report-loc i{color:#FF6BA8}
+    .report-err{font-size:13px;color:#FF8B8B;line-height:1.45;margin-top:12px;display:none}
+    .sheet-actions{display:flex;gap:10px;margin-top:18px}
+    .sheet-actions .btn{padding:14px}
+
     .feature-grid-full{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
     .feature-card{
       background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
@@ -513,6 +554,10 @@
         <i class="fa-solid fa-shield-heart" style="font-size:28px;color:#FF6BA8;margin-bottom:10px"></i>
         <div style="font-size:14px;color:#9080A0;line-height:1.5">All caught up. Alessia will let you know if anything else needs your attention.</div>
       </div>
+      <div class="report-cta">
+        <button class="btn btn-ghost" onclick="openReportSheet()"><i class="fa-solid fa-flag"></i> Report a concern nearby</button>
+        <div class="hint">Help others stay aware. About places, not people.</div>
+      </div>
     </div>
 
     <!-- SETTINGS / FEATURE GRID -->
@@ -537,6 +582,23 @@
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goView('chat')"><i class="fa-solid fa-comments"></i> Back to chat</button>
         <button class="btn btn-ghost" onclick="goView('personalize')">Edit appearance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT A CONCERN (bottom sheet) -->
+  <div id="report-overlay" class="sheet-overlay" role="dialog" aria-modal="true" aria-label="Report a concern">
+    <div class="sheet">
+      <div class="sheet-grab"></div>
+      <h2>Report a concern nearby</h2>
+      <div class="sheet-sub">Share what you noticed so others in the area can stay aware. This is about <strong>places, not people</strong> — please don't name anyone or add contact details.</div>
+      <div class="cat-grid" id="report-cats"></div>
+      <textarea id="report-note" class="report-note" rows="3" maxlength="500" placeholder="Optional — what happened and where? (no names or contact details)"></textarea>
+      <div class="report-loc" id="report-loc"><i class="fa-solid fa-location-dot"></i> <span id="report-loc-text">Using your current location</span></div>
+      <div class="report-err" id="report-err"></div>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" onclick="closeReportSheet()">Cancel</button>
+        <button class="btn btn-primary" id="report-submit" onclick="submitReport()"><i class="fa-solid fa-paper-plane"></i> Send report</button>
       </div>
     </div>
   </div>
@@ -768,6 +830,109 @@
       state.briefs=state.briefs.filter(function(b){return b.id!==id;});
       renderBriefs();refreshBriefsBadge();
     }
+
+    // ---- Report a concern (community safety report → /api/community/safety-report) ----
+    // Category keys MUST match api/_utils/safety-report-categories.js.
+    var REPORT_CATS=[
+      {key:'followed',      label:'Being followed',        icon:'fa-eye'},
+      {key:'harassment',    label:'Harassment',            icon:'fa-comment-slash'},
+      {key:'uncomfortable', label:'Someone uncomfortable', icon:'fa-user'},
+      {key:'drink_safety',  label:'Drink safety',          icon:'fa-martini-glass'},
+      {key:'unsafe_venue',  label:'Uncomfortable venue',   icon:'fa-location-dot'},
+      {key:'aggression',    label:'Aggressive behavior',   icon:'fa-triangle-exclamation'},
+      {key:'other',         label:'Something else',         icon:'fa-circle-info'},
+    ];
+    var reportState={cat:null,loc:null,submitting:false};
+
+    function renderReportCats(){
+      var grid=$('report-cats');if(!grid)return;
+      grid.innerHTML=REPORT_CATS.map(function(c){
+        return '<button type="button" class="cat-chip" data-cat="'+esc(c.key)+'">'+
+               '<i class="fa-solid '+c.icon+'"></i> '+esc(c.label)+'</button>';
+      }).join('');
+      grid.querySelectorAll('.cat-chip').forEach(function(btn){
+        btn.addEventListener('click',function(){ selectReportCat(btn.dataset.cat); });
+      });
+    }
+    function selectReportCat(key){
+      reportState.cat=key;
+      var grid=$('report-cats');if(grid){
+        grid.querySelectorAll('.cat-chip').forEach(function(btn){
+          btn.classList.toggle('selected', btn.dataset.cat===key);
+        });
+      }
+      reportErr('');
+    }
+    function reportErr(msg){
+      var e=$('report-err');if(!e)return;
+      e.textContent=msg||'';e.style.display=msg?'block':'none';
+    }
+    function setReportLoc(text,ok){
+      var t=$('report-loc-text');if(t)t.textContent=text;
+      var row=$('report-loc');if(row)row.style.color=(ok===false)?'#FF8B8B':'#7e6f8a';
+    }
+    async function openReportSheet(){
+      reportState.cat=null;reportState.loc=null;reportState.submitting=false;
+      renderReportCats();
+      var note=$('report-note');if(note)note.value='';
+      reportErr('');
+      var btn=$('report-submit');if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Send report';}
+      var o=$('report-overlay');if(o)o.classList.add('show');
+      setReportLoc('Locating you…',true);
+      var loc=await getQuickPosition();
+      if(loc){ reportState.loc=loc; setReportLoc('Using your current location',true); }
+      else { setReportLoc('Location needed — enable it to file a nearby report',false); }
+    }
+    function closeReportSheet(){
+      var o=$('report-overlay');if(o)o.classList.remove('show');
+    }
+    async function submitReport(){
+      if(reportState.submitting)return;
+      if(!reportState.cat){ reportErr('Pick what you noticed.'); return; }
+      if(!reportState.loc){
+        setReportLoc('Locating you…',true);
+        reportState.loc=await getQuickPosition();
+        if(!reportState.loc){
+          reportErr('Alessia needs your location to file a nearby report. Enable location and try again.');
+          setReportLoc('Location needed — enable it to file a nearby report',false);
+          return;
+        }
+        setReportLoc('Using your current location',true);
+      }
+      reportState.submitting=true;
+      var btn=$('report-submit');
+      if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Sending…';}
+      reportErr('');
+      var noteEl=$('report-note');
+      var note=(noteEl&&noteEl.value||'').trim();
+      var payload={category:reportState.cat,latitude:reportState.loc.lat,longitude:reportState.loc.lng};
+      if(note)payload.note=note;
+      try{
+        var res=await fetch(API_BASE+'/api/community/safety-report',{method:'POST',headers:headers(),body:JSON.stringify(payload)});
+        var data={};try{data=await res.json();}catch(_){}
+        if(res.status===201){
+          closeReportSheet();
+          toast('Thanks — Alessia logged your report.');
+          state.lastFetchTs=0;state.lastFetchLatLng=null;   // let the next briefs fetch run
+          loadBriefs();
+          return;
+        }
+        var msg=(data&&data.message)||(data&&data.error)||'Something went wrong. Please try again.';
+        reportErr(msg);
+      }catch(e){
+        reportErr('Network error. Please try again.');
+      }finally{
+        reportState.submitting=false;
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Send report';}
+      }
+    }
+    window.openReportSheet=openReportSheet;
+    window.closeReportSheet=closeReportSheet;
+    window.submitReport=submitReport;
+    (function(){
+      var o=$('report-overlay');
+      if(o)o.addEventListener('click',function(e){ if(e.target===o) closeReportSheet(); });
+    })();
 
     // ---- Real-time location-aware briefs ----
     // Distance between two lat/lng pairs (meters), Haversine.

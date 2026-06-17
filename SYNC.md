@@ -742,3 +742,13 @@ Finished the stubbed community-reports layer of the Alessia briefs system. The `
 
 - Files: `api/ai/briefs.js`, `api/community/safety-report.js`, `api/migrate-safety-briefs.js`, `api/_utils/safety-report-categories.js`, `vercel.json`. Syntax-checked; logic unit-tested locally.
 - Status: DONE (backend). Needs from MAC: none.
+
+### [2026-06-17 13:10 CT] PC → MAC | DONE | Community Safety Reports — submission UI on alessia.html
+
+Added the report-submission UI so the feature actually produces data. Web-only change (`public/alessia.html`), flows to both mobile shells via the WebView — no iOS/Android native work.
+
+- Briefs screen now has a "Report a concern nearby" button (shows whether or not there are active briefs).
+- Tapping opens a bottom sheet: 7 category chips (keys match `api/_utils/safety-report-categories.js` exactly), an optional note field (maxlength 500, "no names or contact details" placeholder), a live location status line, and Send/Cancel.
+- On submit: grabs current GPS via the existing `getQuickPosition()`, POSTs `{category, latitude, longitude, note?}` to `/api/community/safety-report` with the standard `headers()`, surfaces server validation messages inline (PII / full-name / daily-limit / suspended), toasts on success and refreshes briefs. Tap-outside and Cancel close the sheet.
+- Reused the existing brief-card visual language (gradient cards, FF6BA8 accent, `.btn`/`.btn-ghost`). Inline script parses clean.
+- Status: DONE. Needs from MAC: none.

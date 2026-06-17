@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#E8A0B5">
+  <title>Evidentiary Affidavit — Safety Vault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif; background: #1A1A2E; color: #F0D0C0;
+      min-height: 100vh; padding: 0 0 120px;
+      padding-top: env(safe-area-inset-top, 0);
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px;
+      background: #1A1A2E; border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 16px; padding-top: max(16px, env(safe-area-inset-top, 16px));
+    }
+    .topbar a.back { color: #8080A0; font-size: 18px; text-decoration: none; }
+    .topbar h1 { font-size: 16px; font-weight: 700; color: #fff; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 16px; }
+    .intro {
+      background: linear-gradient(135deg, rgba(232,160,181,0.10), rgba(155,89,182,0.10));
+      border: 1px solid rgba(232,160,181,0.22); border-radius: 14px; padding: 16px; margin-bottom: 18px;
+    }
+    .intro h2 { font-size: 16px; color: #fff; margin-bottom: 6px; }
+    .intro p { font-size: 13px; color: #C9B8D8; line-height: 1.55; }
+    .intro .note { margin-top: 10px; font-size: 12px; color: #E8A0B5; }
+    .card {
+      background: #22223A; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px;
+      padding: 18px; margin-bottom: 16px;
+    }
+    .card > h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; display:flex; align-items:center; gap:8px; }
+    .card > h3 i { color: #E8A0B5; }
+    .card > p.hint { font-size: 12px; color: #8080A0; margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #B0A0C0; margin: 12px 0 5px; }
+    input, textarea {
+      width: 100%; background: #141428; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+      color: #fff; font-family: inherit; font-size: 14px; padding: 11px 12px; outline: none;
+    }
+    input:focus, textarea:focus { border-color: #E8A0B5; }
+    textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+    .row-item { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative; }
+    .row-item .row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .row-item .row-head span { font-size: 12px; font-weight: 700; color: #E8A0B5; text-transform: uppercase; letter-spacing: 1px; }
+    .row-remove { background: transparent; border: none; color: #e74c3c; font-size: 13px; cursor: pointer; }
+    .btn-add {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.18);
+      color: #B0A0C0; border-radius: 10px; padding: 11px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-add:hover { color: #fff; border-color: rgba(232,160,181,0.5); }
+    .actionbar {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,40,0.96);
+      border-top: 1px solid rgba(255,255,255,0.08); padding: 14px 16px;
+      padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+      display: flex; gap: 10px; max-width: 640px; margin: 0 auto;
+    }
+    .btn { flex: 1; border: none; padding: 14px; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-primary { background: linear-gradient(135deg, #E8A0B5, #D4768E); color: #fff; }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.12); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .saved-pill { font-size: 12px; color: #2ecc71; text-align: center; padding: 6px 0 2px; min-height: 22px; }
+    .saved-pill.err { color: #e74c3c; }
+    .gate {
+      text-align: center; padding: 50px 24px; display: none;
+    }
+    .gate i { font-size: 40px; color: #E8A0B5; margin-bottom: 14px; }
+    .gate h2 { color: #fff; font-size: 18px; margin-bottom: 8px; }
+    .gate p { color: #8080A0; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+    .toast {
+      position: fixed; left: 50%; transform: translateX(-50%); bottom: 96px;
+      background: #2a2a44; color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 13px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4); opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" id="back-link" href="/vault"><i class="fa-solid fa-chevron-left"></i></a>
+    <h1>Evidentiary Abuse Affidavit</h1>
+  </div>
+
+  <div class="wrap" id="builder" style="display:none">
+    <div class="intro">
+      <h2>Document the abuse — in your own words</h2>
+      <p>This builds a sworn, first-person affidavit: who the person is, the history, specific incidents, threats, and what you fear. It’s saved encrypted in your vault. When you’re ready, download the PDF and have it <strong>signed in front of a notary</strong> to make it a sworn legal document.</p>
+      <p class="note"><i class="fa-solid fa-lock"></i> Private &amp; encrypted. Consider review by a licensed attorney or a domestic-violence advocate.</p>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-user"></i> About you (the affiant)</h3>
+      <label>Your full legal name</label>
+      <input id="affiant_full_name" type="text" placeholder="First Middle Last">
+      <div class="grid2">
+        <div><label>Date of birth</label><input id="affiant_dob" type="text" placeholder="MM/DD/YYYY"></div>
+        <div><label>How to reach you (optional)</label><input id="affiant_contact" type="text" placeholder="phone or email"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-user-shield"></i> The person this affidavit concerns</h3>
+      <p class="hint">Naming this person is the purpose of the affidavit. Be as specific and factual as you can.</p>
+      <label>Full name</label>
+      <input id="abuser_full_name" type="text" placeholder="First Middle Last">
+      <div class="grid2">
+        <div><label>Also known as / aliases</label><input id="abuser_aliases" type="text"></div>
+        <div><label>Relationship to you</label><input id="abuser_relationship" type="text" placeholder="e.g. spouse, ex-partner"></div>
+        <div><label>Date of birth (if known)</label><input id="abuser_dob" type="text"></div>
+        <div><label>Vehicle (if known)</label><input id="abuser_vehicle" type="text" placeholder="make, color, plate"></div>
+        <div><label>Home / last known address</label><input id="abuser_address" type="text"></div>
+        <div><label>Workplace</label><input id="abuser_workplace" type="text"></div>
+      </div>
+      <label>Physical description</label>
+      <textarea id="abuser_description" placeholder="Height, build, distinguishing features…"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-clock-rotate-left"></i> Relationship &amp; background</h3>
+      <textarea id="relationship_context" placeholder="How you know this person, how long, living situation, children involved…"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-book"></i> History of abuse</h3>
+      <textarea id="abuse_history" placeholder="Describe the pattern of abuse over time, in your own words." style="min-height:120px"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-list-ol"></i> Specific incidents</h3>
+      <p class="hint">Add each incident you can recall, with as much detail as possible.</p>
+      <div id="incidents"></div>
+      <button type="button" class="btn-add" onclick="addIncident()"><i class="fa-solid fa-plus"></i> Add an incident</button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-triangle-exclamation"></i> Threats made</h3>
+      <textarea id="threats" placeholder="Any threats, including threats to harm or kill you, your children, pets, or others. Quote them if you can."></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-gun"></i> Access to weapons</h3>
+      <textarea id="weapons" placeholder="Does this person own or have access to firearms or other weapons?"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-file-shield"></i> Prior reports &amp; protective orders</h3>
+      <textarea id="prior_actions" placeholder="Police calls, report numbers, restraining/protective orders, medical records, prior complaints…"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-users"></i> Witnesses</h3>
+      <div id="witnesses"></div>
+      <button type="button" class="btn-add" onclick="addWitness()"><i class="fa-solid fa-plus"></i> Add a witness</button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-shield-heart"></i> My safety concerns</h3>
+      <textarea id="safety_concerns" placeholder="What do you fear will happen? What should someone reading this know?"></textarea>
+    </div>
+
+    <div class="card">
+      <h3><i class="fa-solid fa-pen-nib"></i> Statement in my own words</h3>
+      <textarea id="sworn_statement" placeholder="Anything else you want on the record." style="min-height:110px"></textarea>
+    </div>
+
+    <p class="hint" style="text-align:center;color:#8080A0;font-size:12px">Files you’ve added to this vault folder are listed as numbered exhibits in the PDF.</p>
+  </div>
+
+  <div class="gate" id="gate">
+    <i class="fa-solid fa-lock"></i>
+    <h2>SafeTea+ required</h2>
+    <p>The Safety Vault and Evidentiary Affidavit are SafeTea+ features. Upgrade to unlock encrypted documentation tools.</p>
+    <a class="btn btn-primary" href="/subscription" style="display:inline-flex;text-decoration:none;max-width:240px;margin:0 auto">Upgrade</a>
+  </div>
+
+  <div class="actionbar" id="actionbar" style="display:none">
+    <button class="btn btn-ghost" id="btn-save" onclick="saveAffidavit()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    <button class="btn btn-primary" id="btn-pdf" onclick="downloadPdf()"><i class="fa-solid fa-file-arrow-down"></i> Download PDF</button>
+  </div>
+  <div class="saved-pill" id="saved-pill" style="display:none"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+    var TOKEN_KEY = 'safetea_token';
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) { window.location.href = '/login?next=' + encodeURIComponent(location.pathname + location.search); return; }
+
+    var params = new URLSearchParams(location.search);
+    var folderId = params.get('folder') || params.get('id');
+    if (!folderId) { window.location.href = '/vault'; return; }
+    document.getElementById('back-link').href = '/vault-folder?id=' + encodeURIComponent(folderId);
+
+    function $(id) { return document.getElementById(id); }
+    function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+    function val(id) { var el = $(id); return el ? el.value.trim() : ''; }
+    function setVal(id, v) { var el = $(id); if (el) el.value = v == null ? '' : v; }
+    function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 2600); }
+    function pill(msg, isErr) {
+      var p = $('saved-pill'); p.style.display = 'block'; p.textContent = msg;
+      p.className = 'saved-pill' + (isErr ? ' err' : '');
+    }
+
+    // ── repeatable rows ──
+    function incidentRow(data) {
+      data = data || {};
+      var div = document.createElement('div');
+      div.className = 'row-item incident-row';
+      div.innerHTML =
+        '<div class="row-head"><span>Incident</span><button type="button" class="row-remove" onclick="this.closest(\'.incident-row\').remove()"><i class="fa-solid fa-xmark"></i> Remove</button></div>' +
+        '<div class="grid2">' +
+          '<div><label>Date (approx ok)</label><input class="i-date" type="text"></div>' +
+          '<div><label>Location</label><input class="i-location" type="text"></div>' +
+        '</div>' +
+        '<label>What happened</label><textarea class="i-description"></textarea>' +
+        '<div class="grid2">' +
+          '<div><label>Injuries</label><input class="i-injuries" type="text"></div>' +
+          '<div><label>Police report #</label><input class="i-police" type="text"></div>' +
+        '</div>' +
+        '<label>Medical treatment</label><input class="i-medical" type="text">';
+      div.querySelector('.i-date').value = data.date || '';
+      div.querySelector('.i-location').value = data.location || '';
+      div.querySelector('.i-description').value = data.description || '';
+      div.querySelector('.i-injuries').value = data.injuries || '';
+      div.querySelector('.i-police').value = data.police_report || '';
+      div.querySelector('.i-medical').value = data.medical || '';
+      return div;
+    }
+    function witnessRow(data) {
+      data = data || {};
+      var div = document.createElement('div');
+      div.className = 'row-item witness-row';
+      div.innerHTML =
+        '<div class="row-head"><span>Witness</span><button type="button" class="row-remove" onclick="this.closest(\'.witness-row\').remove()"><i class="fa-solid fa-xmark"></i> Remove</button></div>' +
+        '<label>Name</label><input class="w-name" type="text">' +
+        '<div class="grid2">' +
+          '<div><label>Relationship</label><input class="w-relationship" type="text"></div>' +
+          '<div><label>Contact (optional)</label><input class="w-contact" type="text"></div>' +
+        '</div>';
+      div.querySelector('.w-name').value = data.name || '';
+      div.querySelector('.w-relationship').value = data.relationship || '';
+      div.querySelector('.w-contact').value = data.contact || '';
+      return div;
+    }
+    window.addIncident = function (data) { $('incidents').appendChild(incidentRow(data)); };
+    window.addWitness = function (data) { $('witnesses').appendChild(witnessRow(data)); };
+
+    function collect() {
+      var incidents = [].slice.call(document.querySelectorAll('.incident-row')).map(function (r) {
+        return {
+          date: r.querySelector('.i-date').value.trim(),
+          location: r.querySelector('.i-location').value.trim(),
+          description: r.querySelector('.i-description').value.trim(),
+          injuries: r.querySelector('.i-injuries').value.trim(),
+          police_report: r.querySelector('.i-police').value.trim(),
+          medical: r.querySelector('.i-medical').value.trim(),
+        };
+      });
+      var witnesses = [].slice.call(document.querySelectorAll('.witness-row')).map(function (r) {
+        return {
+          name: r.querySelector('.w-name').value.trim(),
+          relationship: r.querySelector('.w-relationship').value.trim(),
+          contact: r.querySelector('.w-contact').value.trim(),
+        };
+      });
+      return {
+        affiant: { full_name: val('affiant_full_name'), dob: val('affiant_dob'), contact: val('affiant_contact') },
+        abuser: {
+          full_name: val('abuser_full_name'), aliases: val('abuser_aliases'), relationship: val('abuser_relationship'),
+          dob: val('abuser_dob'), description: val('abuser_description'), address: val('abuser_address'),
+          vehicle: val('abuser_vehicle'), workplace: val('abuser_workplace'),
+        },
+        relationship_context: val('relationship_context'),
+        abuse_history: val('abuse_history'),
+        incidents: incidents,
+        threats: val('threats'),
+        weapons: val('weapons'),
+        prior_actions: val('prior_actions'),
+        witnesses: witnesses,
+        safety_concerns: val('safety_concerns'),
+        sworn_statement: val('sworn_statement'),
+      };
+    }
+
+    function populate(a) {
+      if (!a) return;
+      var af = a.affiant || {}, ab = a.abuser || {};
+      setVal('affiant_full_name', af.full_name); setVal('affiant_dob', af.dob); setVal('affiant_contact', af.contact);
+      setVal('abuser_full_name', ab.full_name); setVal('abuser_aliases', ab.aliases); setVal('abuser_relationship', ab.relationship);
+      setVal('abuser_dob', ab.dob); setVal('abuser_description', ab.description); setVal('abuser_address', ab.address);
+      setVal('abuser_vehicle', ab.vehicle); setVal('abuser_workplace', ab.workplace);
+      setVal('relationship_context', a.relationship_context); setVal('abuse_history', a.abuse_history);
+      setVal('threats', a.threats); setVal('weapons', a.weapons); setVal('prior_actions', a.prior_actions);
+      setVal('safety_concerns', a.safety_concerns); setVal('sworn_statement', a.sworn_statement);
+      $('incidents').innerHTML = ''; $('witnesses').innerHTML = '';
+      (a.incidents || []).forEach(function (i) { window.addIncident(i); });
+      (a.witnesses || []).forEach(function (w) { window.addWitness(w); });
+    }
+
+    function showGate() { $('builder').style.display = 'none'; $('actionbar').style.display = 'none'; $('gate').style.display = 'block'; }
+    function showBuilder() { $('builder').style.display = 'block'; $('actionbar').style.display = 'flex'; }
+
+    async function load() {
+      try {
+        var res = await fetch('/api/vault/affidavit?folder_id=' + encodeURIComponent(folderId), { headers: headers() });
+        if (res.status === 403) { showGate(); return; }
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        showBuilder();
+        if (res.ok) {
+          var data = await res.json();
+          if (data.affidavit) populate(data.affidavit);
+        }
+        if (!document.querySelectorAll('.incident-row').length) window.addIncident();
+        if (!document.querySelectorAll('.witness-row').length) window.addWitness();
+      } catch (e) {
+        showBuilder();
+        window.addIncident(); window.addWitness();
+        pill('Could not load a saved draft. You can still start one.', true);
+      }
+    }
+
+    window.saveAffidavit = async function () {
+      var btn = $('btn-save'); btn.disabled = true;
+      pill('Saving…', false);
+      try {
+        var res = await fetch('/api/vault/affidavit', { method: 'POST', headers: headers(), body: JSON.stringify({ folder_id: parseInt(folderId, 10), affidavit: collect() }) });
+        if (res.status === 403) { showGate(); return false; }
+        var data = {}; try { data = await res.json(); } catch (_) {}
+        if (!res.ok) { pill((data && (data.error || data.message)) || 'Save failed.', true); return false; }
+        pill('Saved · encrypted in your vault', false);
+        return true;
+      } catch (e) {
+        pill('Network error while saving.', true); return false;
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    window.downloadPdf = async function () {
+      var btn = $('btn-pdf'); btn.disabled = true;
+      var ok = await window.saveAffidavit();
+      if (!ok) { btn.disabled = false; return; }
+      try {
+        var res = await fetch('/api/vault/affidavit/generate?folder_id=' + encodeURIComponent(folderId), { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) { var d = {}; try { d = await res.json(); } catch (_) {} toast((d && (d.error || d.message)) || 'Could not generate the PDF.'); return; }
+        var blob = await res.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = 'evidentiary-affidavit.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+        toast('Affidavit PDF downloaded.');
+      } catch (e) {
+        toast('Network error generating the PDF.');
+      } finally {
+        btn.disabled = false;
+      }
+    };
+
+    load();
+  })();
+  </script>
+</body>
+</html>

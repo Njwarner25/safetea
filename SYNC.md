@@ -752,3 +752,23 @@ Added the report-submission UI so the feature actually produces data. Web-only c
 - On submit: grabs current GPS via the existing `getQuickPosition()`, POSTs `{category, latitude, longitude, note?}` to `/api/community/safety-report` with the standard `headers()`, surfaces server validation messages inline (PII / full-name / daily-limit / suspended), toasts on success and refreshes briefs. Tap-outside and Cancel close the sheet.
 - Reused the existing brief-card visual language (gradient cards, FF6BA8 accent, `.btn`/`.btn-ghost`). Inline script parses clean.
 - Status: DONE. Needs from MAC: none.
+
+### [2026-06-17 14:40 CT] PC → MAC | DONE | Safety-report moderation view + Vault Evidentiary Abuse Affidavit
+
+Two backend-led features. All web/cross-platform (`api/`, `public/`, `services/`) — no iOS native work; flows to the WebView shells on deploy.
+
+**1. Admin moderation for community safety reports.**
+- `api/admin/safety-reports.js` — GET lists reports + status counts; POST applies remove/flag/restore (soft status, legal-hold friendly) with `moderated_by`/`moderated_at` audit columns. Admin JWT.
+- `api/_utils/safety-briefs-schema.js` — single source of truth for the `safety_briefs` shape (now incl. audit columns); used lazily by the write + admin paths. `safety-report.js` + `migrate-safety-briefs.js` updated to match.
+- `public/admin.html` — new "Safety Reports" sidebar section with status filter, counts, and remove/flag/restore actions (escaped output).
+
+**2. Evidentiary Abuse Affidavit (EAA) in the Vault.**
+- Concept: a sworn, first-person affidavit (affiant, the abuser by name, relationship, history, itemized incidents, threats, weapons, prior reports/POs, witnesses, safety concerns, statement) that the user can fill out, save encrypted, and download as a notarization-ready PDF with a jurat block. Vault files in the folder are listed as numbered exhibits.
+- Built on the existing vault primitives: stored in a new `vault_affidavits` table, **one per folder**, JSON sanitized then encrypted under the folder DEK (envelope encryption, same as entries). PDF rendered with PDFKit, mirroring `services/vault/export.js`.
+- Files: `services/vault/affidavit.js` (sanitize + `renderAffidavitPdf`), `api/vault/affidavit.js` (GET/POST load+save), `api/vault/affidavit/generate.js` (GET → streams the PDF), `api/_utils/vault-affidavit-schema.js`, `api/migrate-vault-affidavit.js`, `public/vault-affidavit.html` (guided builder), entry point added to the folder "..." menu in `public/vault-folder.html`.
+- SafeTea+ + `VAULT_KEK` gated, owner-only. **Design choice:** unlike community reports (places, not people), the EAA names the abuser by design — it's the affiant's own sworn, encrypted record, so NO name/PII screening.
+- Verified: sanitize unit-tested (caps/empties/junk-strip, whitespace preserved) and a real PDF render produced a valid 4928-byte `%PDF` with the test fixture.
+
+**Operator (optional, perf/provisioning):** `POST /api/migrate-safety-briefs` and `POST /api/migrate-vault-affidavit` with `x-migrate-secret: $MIGRATE_SECRET`. Both tables self-create lazily on first use, so this is optional. The Vault (incl. the affidavit) requires `VAULT_KEK` set — same as the rest of the vault.
+
+- Status: DONE. Needs from MAC: none.

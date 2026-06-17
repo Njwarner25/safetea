@@ -393,6 +393,7 @@
             '<button class="folder-menu-btn" onclick="toggleFolderMenu(event)" aria-label="Folder actions">\u2022\u2022\u2022</button>' +
             '<div class="folder-menu-list">' +
               '<button onclick="toggleAi()"><i class="fas fa-wand-magic-sparkles"></i> ' + (f.ai_enabled ? 'Turn AI off' : 'Turn AI on') + '</button>' +
+              '<button onclick="window.location.href=\'/vault-affidavit?folder=' + encodeURIComponent(folderId) + '\'"><i class="fas fa-file-signature"></i> Evidentiary affidavit</button>' +
               '<button class="danger" onclick="deleteFolder()"><i class="fas fa-trash"></i> Delete folder</button>' +
             '</div>' +
           '</div>' +

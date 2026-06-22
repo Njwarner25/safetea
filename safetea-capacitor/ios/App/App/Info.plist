@@ -45,5 +45,34 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>LinkHer needs camera access so you can take photos and verify your identity for safety features.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>LinkHer needs photo library access so you can attach evidence and reference images to your private safety vault.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>LinkHer saves photos you've reviewed back to your library so you can keep your own copies.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>LinkHer needs microphone access for the SOS audio recording feature, so you can capture incidents discreetly.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>LinkHer uses your location while you're using the app to share your live location with trusted contacts during dates and meet-ups, surface area-specific safety briefs, and power Safe Walk sessions.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>LinkHer needs contacts access so you can pick the trusted person who receives your check-ins, SOS alerts, and Safe Walk updates.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>LinkHer uses Face ID to keep your private safety vault locked when you're not using it.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>app.linkher.mobile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app.linkher.mobile</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -1,37 +1,4 @@
-// Capacitor (Android app) branding override.
-// The website serves the unified LinkHer/LinkHer Rebrand3 logo, but the
-// Android Capacitor wrapper should show LinkHer-only branding. The
-// safetea-mobile RN iOS app handles its own assets natively, so this only
-// fires on Android (Capacitor injects window.Capacitor in the WebView).
-(function () {
-  if (typeof window === 'undefined' || !window.Capacitor) return;
-
-  function applyLinkHerBranding() {
-    document.querySelectorAll('img').forEach(function (img) {
-      var src = img.getAttribute('src') || '';
-      if (/(^|\/)logo\.png(\?|$)/.test(src)) {
-        img.src = src.replace(/logo\.png/, 'logo-safetea.png');
-        img.style.mixBlendMode = 'normal';
-        img.style.maskImage = 'none';
-        img.style.webkitMaskImage = 'none';
-      } else if (src.indexOf('linkher-safetea-banner') !== -1) {
-        // Hero/banner image is the unified marketing graphic — fall back to
-        // the LinkHer-only SVG illustration on Android.
-        img.src = 'images/hero-illustration.svg';
-        img.style.mixBlendMode = 'normal';
-        img.style.maskImage = 'none';
-        img.style.webkitMaskImage = 'none';
-      }
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyLinkHerBranding);
-  } else {
-    applyLinkHerBranding();
-  }
-})();
-
+// Shared LinkHer website navigation. Brand artwork is /brand-logo.png.
 document.addEventListener('DOMContentLoaded', () => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   // Content remains visible even if animation APIs or JavaScript fail.

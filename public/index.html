@@ -11,7 +11,7 @@
 </script>
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <script>
     // When loaded inside the LinkHer native shell (Capacitor WebView), skip the
     // marketing landing and go straight to /login — the login page itself
@@ -39,17 +39,17 @@
   <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
   <title>LinkHer by SafeTea — Women's Safety App for Dating, Verified & Free</title>
-  <meta name="description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start — live on iOS & Android.">
+  <meta name="description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start in your browser, with mobile app options below.">
   <link rel="canonical" href="https://getsafetea.app/">
   <meta property="og:title" content="LinkHer by SafeTea — Women's Safety App for Dating, Verified & Free">
-  <meta property="og:description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start — live on iOS & Android.">
+  <meta property="og:description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start in your browser, with mobile app options below.">
   <meta property="og:url" content="https://getsafetea.app/">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://getsafetea.app/linkher-icon.png">
   <meta property="og:site_name" content="LinkHer by SafeTea">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="LinkHer by SafeTea — Women's Safety App for Dating, Verified & Free">
-  <meta name="twitter:description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start — live on iOS & Android.">
+  <meta name="twitter:description" content="LinkHer by SafeTea is the women's safety app built on verified identity. Check in before dates, get Name Watch alerts, and join your city's private safety community. Free to start in your browser, with mobile app options below.">
   <meta name="twitter:image" content="https://getsafetea.app/linkher-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -620,6 +620,7 @@
     <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <!-- NAVIGATION -->
 <nav class="navbar">
@@ -627,27 +628,27 @@
     <a href="#" class="logo">
       <img src="linkher-icon.png" alt="LinkHer by SafeTea" class="logo-img">
     </a>
-    <div class="nav-links">
+    <div class="nav-links" id="primary-navigation">
       <a href="#features">Features</a>
       <a href="#how-it-works">How It Works</a>
       <a href="#name-watch">Name Watch</a>
       <a href="#pricing">Pricing</a>
       <a href="#join">Join</a>
       <a href="login.html" class="mobile-nav-login">Log In</a>
-      <a href="#join" class="mobile-nav-join">Join Your City</a>
+      <a href="login.html#register" class="mobile-nav-join">Get Started Free</a>
     </div>
     <div class="nav-actions">
       <a href="login.html" class="btn btn-ghost">Log In</a>
-      <a href="#join" class="btn btn-primary">Join Your City</a>
+      <a href="login.html#register" class="btn btn-primary">Get Started Free</a>
     </div>
-    <button class="hamburger" aria-label="Toggle menu">
+    <button type="button" class="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="primary-navigation">
       <span></span><span></span><span></span>
     </button>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="main-content" tabindex="-1">
   <div class="container hero-grid">
     <div class="hero-content">
       <div class="hero-badge">
@@ -656,10 +657,10 @@
       </div>
       <h1>The Women's Safety App Built on <span class="text-pink">Verified Identity</span></h1>
       <p class="hero-slogan">LinkHer by SafeTea</p>
-      <p class="hero-subtitle">Stay connected, stay safe.</p>
+      <p class="hero-subtitle">Keep trusted contacts close, plan a check-in, and find support in your city—all in one place.</p>
       <p class="hero-trust">Every user is a verified human. Real images, not AI.</p>
       <div class="hero-cta">
-        <a href="#join" class="btn btn-primary btn-lg">Join Your City</a>
+        <a href="login.html#register" class="btn btn-primary btn-lg">Get Started Free</a>
         <a href="#how-it-works" class="btn btn-ghost">Learn how it works</a>
       </div>
       <div style="display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap">
@@ -1053,7 +1054,7 @@
             <div class="pricing-feature" style="color:#A0A0C0"><i class="fas fa-check" style="color:#2ecc71"></i> Inbox messaging</div>
             <div class="pricing-feature" style="color:#A0A0C0"><i class="fas fa-check" style="color:#2ecc71"></i> Safety alerts</div>
           </div>
-          <a href="/onboarding" class="pricing-btn ghost">Get Started</a>
+          <a href="login.html#register" class="pricing-btn ghost">Get Started</a>
         </div>
         <!-- LinkHer+ -->
         <div class="pricing-card popular">
@@ -1183,7 +1184,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
       <h2>You don't have to navigate safety alone.</h2>
       <p class="section-body">Join thousands of women who look out for each other.</p>
       <div class="cta-actions">
-        <a href="/onboarding" class="btn btn-primary btn-lg">Join Your City</a>
+        <a href="login.html#register" class="btn btn-primary btn-lg">Get Started Free</a>
       </div>
     </div>
   </div>
@@ -1209,7 +1210,7 @@ function toggleLandingBilling(period){var m=document.getElementById('landing-tog
         <a href="/faq">FAQ</a>
         <a href="privacy.html">Privacy Policy</a>
         <a href="terms.html">Terms of Service</a>
-        <a href="dmca.html">DMCA</a>
+        <a href="terms.html">Content Removal &amp; DMCA</a>
         <a href="photo-removal.html">Report Photo</a>
         <a href="mailto:support@getsafetea.app">Support</a>
         <a href="mailto:legal@getsafetea.app">Legal</a>

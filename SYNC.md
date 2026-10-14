@@ -772,3 +772,13 @@ Two backend-led features. All web/cross-platform (`api/`, `public/`, `services/`
 **Operator (optional, perf/provisioning):** `POST /api/migrate-safety-briefs` and `POST /api/migrate-vault-affidavit` with `x-migrate-secret: $MIGRATE_SECRET`. Both tables self-create lazily on first use, so this is optional. The Vault (incl. the affidavit) requires `VAULT_KEK` set — same as the rest of the vault.
 
 - Status: DONE. Needs from MAC: none.
+
+
+### [2026-10-12 CT] CODEX | DONE | Web and landing usability fixes prepared for review
+
+- Scope explicitly requested by Nathaniel: web app and landing page. Changes are on a review branch, not deployed.
+- Web login now validates saved sessions, preserves allowlisted local return destinations (including Save to Vault), and restores form tabs after password recovery. Added form labels, autofill hints, password-toggle names, and announced status messages.
+- Main Vercel Permissions-Policy permits same-origin camera and microphone requests so verification and recording can ask for browser permission.
+- Landing navigation gains Escape/focus handling, responsive menu reset, visible-content fallback, reduced-motion support, and direct registration links. Fixed the missing DMCA destination; separate safetea-landing PR fixes Privacy Policy destination.
+- Validation: 66 mocked-DOM/auth/navigation assertions passed; changed inline JavaScript and configuration parsed; git diff --check passed. Live sessions, media devices, paid flows, and emergency dispatch were not exercised. No visual browser QA was available in this session.
+- Status: DONE (prepared for review; no native source changes).

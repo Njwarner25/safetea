@@ -14,10 +14,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
-  <title>Tether — SafeTea</title>
+  <title>Tether — LinkHer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -490,9 +490,9 @@
     window.copyCode = copyCode;
     function shareCode() {
       if (!state.joinCode) return;
-      var text = 'Join my Tether on SafeTea — code ' + state.joinCode;
+      var text = 'Join my Tether on LinkHer — code ' + state.joinCode;
       if (navigator.share) {
-        navigator.share({ title: 'SafeTea Tether', text: text }).catch(function () {});
+        navigator.share({ title: 'LinkHer Tether', text: text }).catch(function () {});
       } else {
         copyCode();
       }

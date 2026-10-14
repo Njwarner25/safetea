@@ -11,7 +11,7 @@
 </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <!-- Mobile / PWA / native shell branding -->
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
@@ -257,7 +257,7 @@
         <div class="auth-container">
           <div class="auth-logo">
             <a href="/">
-              <img src="/linkher-icon.png" alt="LinkHer">
+              <img src="/brand-logo.png" alt="LinkHer">
             </a>
           </div>
 
@@ -267,8 +267,8 @@
               <button onclick="switchTab('register')">Sign Up</button>
             </div>
 
-            <div id="error-msg" class="error-message"></div>
-            <div id="success-msg" class="success-message"></div>
+            <div id="error-msg" class="error-message" role="alert"></div>
+            <div id="success-msg" class="success-message" role="status"></div>
 
             <!-- LOGIN FORM -->
             <div id="login-form" class="form-section active">
@@ -277,19 +277,19 @@
 
         <form onsubmit="handleLogin(event)">
           <div class="form-group">
-            <label>Email</label>
+            <label for="login-email">Email</label>
             <div class="input-icon">
               <i class="fas fa-envelope"></i>
-              <input type="email" id="login-email" placeholder="Enter your email" required>
+              <input type="email" id="login-email" autocomplete="username" placeholder="Enter your email" required>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label>Password</label>
+                  <label for="login-password">Password</label>
                   <div class="input-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="login-password" placeholder="Enter your password" required>
-                    <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">
+                    <input type="password" id="login-password" autocomplete="current-password" placeholder="Enter your password" required>
+                    <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePassword('login-password', this)">
                       <i class="fas fa-eye"></i>
                     </button>
                   </div>
@@ -311,7 +311,7 @@
               <form onsubmit="handleForgotPassword(event)">
                 <div class="form-group">
                   <label for="forgot-email"><i class="fas fa-envelope"></i> Email</label>
-                  <input type="email" id="forgot-email" placeholder="Enter your email" required>
+                  <input type="email" id="forgot-email" autocomplete="email" placeholder="Enter your email" required>
                 </div>
                 <button type="submit" class="btn-primary" id="forgot-btn">
                   <i class="fas fa-paper-plane"></i> Send Reset Link
@@ -325,31 +325,31 @@
             <!-- REGISTER FORM -->
             <div id="register-form" class="form-section">
               <h1>Join LinkHer</h1>
-              <p class="subtitle">Create your account and join a safer dating community</p>
+              <p class="subtitle">Create your account and join a community focused on women’s safety</p>
 
         <form onsubmit="handleRegister(event)">
           <div class="form-group">
-            <label>Display Name</label>
+            <label for="reg-name">Display Name</label>
             <div class="input-icon">
               <i class="fas fa-user"></i>
-              <input type="text" id="reg-name" placeholder="How you'll appear to others" required minlength="2">
+              <input type="text" id="reg-name" autocomplete="nickname" placeholder="How you'll appear to others" required minlength="2">
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label>Email</label>
+                  <label for="reg-email">Email</label>
                   <div class="input-icon">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="reg-email" placeholder="Your email address" required>
+                    <input type="email" id="reg-email" autocomplete="email" placeholder="Your email address" required>
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label>Password</label>
+                  <label for="reg-password">Password</label>
                   <div class="input-icon">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="reg-password" placeholder="Min 8 characters" required minlength="8">
-                    <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">
+                    <input type="password" id="reg-password" autocomplete="new-password" placeholder="Min 8 characters" required minlength="8">
+                    <button type="button" class="password-toggle" aria-label="Show password" aria-pressed="false" onclick="togglePassword('reg-password', this)">
                       <i class="fas fa-eye"></i>
                     </button>
                   </div>
@@ -357,7 +357,7 @@
 
                 <div class="form-row">
                   <div class="form-group">
-                    <label>City</label>
+                    <label for="reg-city">City</label>
                     <select id="reg-city" required style="width:100%;padding:12px 16px;background:#1A1F2E;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
                       <option value="" disabled selected style="color:#8080A0">Select your city</option>
                       <option value="Los Angeles">Los Angeles</option>
@@ -378,7 +378,7 @@
                     </div>
                   </div>
                   <div class="form-group">
-                    <label>State</label>
+                    <label for="reg-state">State</label>
                     <select id="reg-state" required style="width:100%;padding:12px 16px;background:#1A1F2E;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;outline:none;appearance:none;cursor:pointer">
                       <option value="" disabled selected style="color:#8080A0">State</option>
                       <option value="IL">IL</option>
@@ -398,7 +398,7 @@
                 </label>
 
                 <button type="submit" class="btn-primary" id="register-btn">
-                  <img src="/linkher-icon.png" alt="" style="height:18px"> Create Account
+                  <img src="/brand-logo.png" alt="" style="height:18px"> Create Account
           </button>
               </form>
             </div>
@@ -428,10 +428,43 @@
     }
     window.submitCityRequest = submitCityRequest;
 
-    // Check if already logged in
-    if (localStorage.getItem('safetea_token')) {
-      window.location.href = '/dashboard.html';
+    function getLoginDestination() {
+      const fallback = '/dashboard.html';
+      const next = new URLSearchParams(window.location.search).get('next');
+      if (!next || !next.startsWith('/') || next.startsWith('//')) return fallback;
+      try {
+        const url = new URL(next, window.location.origin);
+        const pages = ['dashboard', 'save-to-vault', 'vault', 'vault-folder',
+          'vault-affidavit', 'vault-contacts', 'settings', 'subscription',
+          'subscribe', 'verify', 'onboarding', 'alessia', 'safelink', 'pulse',
+          'tether', 'recording-status', 'redflag', 'red-flag-scanner'];
+        const page = url.pathname.replace(/^\//, '').replace(/\.html$/, '');
+        if (url.origin !== window.location.origin || !pages.includes(page)) return fallback;
+        return url.pathname + url.search + url.hash;
+      } catch (_) { return fallback; }
     }
+
+    // A saved token can be expired. Validate it before leaving the login page.
+    (async function restoreSession() {
+      const savedToken = localStorage.getItem('safetea_token');
+      if (!savedToken) return;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const response = await fetch(API_BASE + '/auth/me', {
+          headers: { Authorization: 'Bearer ' + savedToken },
+          signal: controller.signal
+        });
+        if (localStorage.getItem('safetea_token') !== savedToken) return;
+        if (response.ok) window.location.replace(getLoginDestination());
+        else if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('safetea_token');
+          localStorage.removeItem('safetea_user');
+        }
+      } catch (_) {
+        // Leave the form usable during an outage; do not erase a valid session.
+      } finally { clearTimeout(timeout); }
+    })();
 
     // Auto-switch tab based on URL hash (e.g. /login#register from welcome page)
     if (window.location.hash === '#register') {
@@ -440,7 +473,10 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.tab-switch button').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(f => {
+        f.classList.remove('active');
+        f.style.display = f.id === 'forgot-form' ? 'none' : '';
+      });
 
       const buttons = document.querySelectorAll('.tab-switch button');
       if (tab === 'login') {
@@ -485,9 +521,13 @@
       if (input.type === 'password') {
         input.type = 'text';
         icon.classList.replace('fa-eye', 'fa-eye-slash');
+        btn.setAttribute('aria-label', 'Hide password');
+        btn.setAttribute('aria-pressed', 'true');
       } else {
         input.type = 'password';
         icon.classList.replace('fa-eye-slash', 'fa-eye');
+        btn.setAttribute('aria-label', 'Show password');
+        btn.setAttribute('aria-pressed', 'false');
       }
     }
 
@@ -523,7 +563,7 @@
         localStorage.setItem('safetea_user', JSON.stringify(data.user));
 
         showSuccess('Login successful! Redirecting...');
-        setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
+        setTimeout(() => { window.location.assign(getLoginDestination()); }, 1000);
       } catch (err) {
         showError(err.message);
         btn.disabled = false;
@@ -572,11 +612,11 @@
         localStorage.setItem('safetea_user', JSON.stringify(data.user));
 
         showSuccess('Account created! Redirecting...');
-        setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
+        setTimeout(() => { window.location.assign(getLoginDestination()); }, 1000);
       } catch (err) {
         showError(err.message);
         btn.disabled = false;
-        btn.innerHTML = '<img src="/linkher-icon.png" alt="" style="height:18px"> Create Account';
+        btn.innerHTML = '<img src="/brand-logo.png" alt="" style="height:18px"> Create Account';
 }
 }
 

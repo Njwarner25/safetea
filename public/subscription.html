@@ -20,8 +20,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="SafeTea">
-  <meta name="application-name" content="SafeTea">
+  <meta name="apple-mobile-web-app-title" content="LinkHer">
+  <meta name="application-name" content="LinkHer">
   <meta name="format-detection" content="telephone=no">
   <title>Manage Subscription</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -130,7 +130,7 @@
     <div class="card" id="tier-card" style="display:none">
       <div class="tier-row">
         <div class="tier-meta">
-          <div class="tier-name" id="tier-name">SafeTea+</div>
+          <div class="tier-name" id="tier-name">LinkHer+</div>
           <div class="tier-sub" id="tier-sub">Loading plan details...</div>
         </div>
         <span class="badge badge-plus" id="tier-badge"><i class="fas fa-crown"></i> <span id="tier-badge-text">Plus</span></span>
@@ -172,7 +172,7 @@
 
     <!-- What's Included -->
     <div class="card">
-      <h3><i class="fas fa-list-check"></i> What's included with SafeTea+</h3>
+      <h3><i class="fas fa-list-check"></i> What's included with LinkHer+</h3>
       <ul class="features">
         <li><i class="fas fa-check-circle"></i> SafeLink — share live trip status with trusted contacts</li>
         <li><i class="fas fa-check-circle"></i> Pulse — real-time area alerts and crime intelligence</li>
@@ -257,7 +257,7 @@
       function renderFreeState() {
         setTierBadge('free');
         el('tier-name').textContent = 'Free plan';
-        el('tier-sub').textContent = 'Upgrade to SafeTea+ to unlock the full safety toolkit.';
+        el('tier-sub').textContent = 'Upgrade to LinkHer+ to unlock the full safety toolkit.';
         el('info-list').style.display = 'none';
         el('cancel-notice').style.display = 'none';
         el('platform-notice').style.display = 'none';
@@ -267,7 +267,7 @@
         var upgradeBtn = document.createElement('a');
         upgradeBtn.className = 'btn btn-primary';
         upgradeBtn.href = '/subscribe.html';
-        upgradeBtn.innerHTML = '<i class="fas fa-crown"></i> Upgrade to SafeTea+';
+        upgradeBtn.innerHTML = '<i class="fas fa-crown"></i> Upgrade to LinkHer+';
         stack.appendChild(upgradeBtn);
 
         el('tier-card').style.display = 'block';
@@ -277,7 +277,7 @@
         var tier = data.tier || 'plus';
         setTierBadge(tier);
 
-        var planLabel = tier === 'pro' ? 'SafeTea+ Pro' : 'SafeTea+';
+        var planLabel = tier === 'pro' ? 'LinkHer+ Pro' : 'LinkHer+';
         el('tier-name').textContent = planLabel;
 
         var intervalLabel = data.interval === 'yearly' ? 'Yearly' : 'Monthly';

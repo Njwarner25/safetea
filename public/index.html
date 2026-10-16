@@ -477,6 +477,25 @@
       .solution-grid { gap: 12px; }
       .features-grid { gap: 10px; }
     }
+
+    /* Blend the neon artwork into the page and feather its outer canvas.
+       Keep the central icon opaque so its existing bevel stays crisp. */
+    .navbar .logo { filter: none; }
+    .navbar .logo-img,
+    .hero-visual .hero-illustration,
+    .footer-brand-block .footer-logo {
+      display: block;
+      border-radius: 24%;
+      mix-blend-mode: screen;
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+      mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+      -webkit-mask-composite: source-in;
+      mask-composite: intersect;
+    }
+    .hero-visual .hero-illustration {
+      position: relative;
+      filter: drop-shadow(0 8px 18px rgba(123,47,255,0.16));
+    }
   </style>
     <link rel="stylesheet" href="/mobile-viewport-lock.css">
     <link rel="stylesheet" href="/ipad-responsive.css">
@@ -677,7 +696,7 @@
       </div>
     </div>
     <div class="hero-visual">
-      <img src="/brand-logo.png" alt="LinkHer — women’s safety and support" class="hero-illustration" style="width:300px;max-width:100%;height:auto;mix-blend-mode:normal;mask-image:none;-webkit-mask-image:none">
+      <img src="/brand-logo.png" alt="LinkHer — women’s safety and support" class="hero-illustration" style="width:300px;max-width:100%;height:auto">
     </div>
   </div>
 </section>

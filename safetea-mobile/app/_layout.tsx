@@ -14,7 +14,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.background } }}>
+      <Stack screenOptions={{ headerShown: false, headerBackTitle: 'LinkHer', contentStyle: { backgroundColor: Colors.background } }}>
         <Stack.Screen name="(tabs)" />
       </Stack>
     </>
